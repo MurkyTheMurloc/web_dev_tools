@@ -283,15 +283,15 @@ export function isEmptyObject(
  */
 export function isInstanceOf<T>(
   value: Nullable<T>,
-  constructor: { new (): T },
+  constructor: { new (...args: unknown[]): T },
 ): value is T;
 export function isInstanceOf<T>(
   value: unknown,
-  constructor: { new (): T },
+  constructor: { new (...args: unknown[]): T },
 ): value is T;
 export function isInstanceOf<T>(
   value: unknown,
-  constructor: { new (): T },
+  constructor: { new (...args: unknown[]): T },
 ): value is T {
   return value instanceof constructor;
 }
@@ -321,21 +321,19 @@ export function parseInteger(
 ): Optional<number> {
   if (isNumber(value)) {
     return Math.floor(value);
-  } else if (isString(value)) {
-    const parsed = Number.parseInt(value, 10);
-    if (isNaN(parsed)) {
-      console.error(
-        `typeguard -> parseInteger: could not parse value: ${formatValueForLog(defaultValue)}`,
-      );
-      return defaultValue;
-    }
-    return parsed;
-  } else {
-    console.error(
-      `typeguard -> parseInteger: could not parse value: ${formatValueForLog(defaultValue)}`,
-    );
-    return defaultValue;
   }
+
+  if (isString(value)) {
+    const parsed = Number(value.trim());
+    if (Number.isInteger(parsed)) {
+      return parsed;
+    }
+  }
+
+  console.error(
+    `typeguard -> parseInteger: could not parse value: ${formatValueForLog(value)}`,
+  );
+  return defaultValue;
 }
 
 /**
@@ -344,7 +342,7 @@ export function parseInteger(
  * @returns {boolean} True if the value is an integer.
  */
 export function isInteger(value: unknown): value is number {
-  return Number.isInteger(value) && !isUndefined(parseInteger(value));
+  return typeof value === "number" && Number.isInteger(value);
 }
 
 /**
@@ -537,9 +535,9 @@ export function parseArray<T, R extends Optional<T[]>>(
  * @param array2 - Second array.
  * @returns {boolean} True if the arrays have at least one common value.
  */
-export function arrayContainsCommonValue(
-  array1: string[],
-  array2: string[],
+export function arrayContainsCommonValue<T>(
+  array1: T[],
+  array2: T[],
 ): boolean {
   if (!isArray(array1) || !isArray(array2)) return false;
 
@@ -574,18 +572,36 @@ export function parseDomainName<T extends string, R extends Optional<T>>(
   url: string,
   defaultValue?: R,
 ): ResolveOptional<T, R> {
-  const match = url.match(/^(?:https?:\/\/)?(?:www\d?\.)?([^/]+)/i);
-  if (!match) {
+  const normalizedValue = url.trim();
+  if (normalizedValue === "" || normalizedValue.startsWith("/")) {
     console.error(
       `typebuddy -> parseDomainName: could not parse domain name: ${url}`,
     );
     return defaultValue as ResolveOptional<T, R>;
   }
 
-  const domainParts = match[1].split(".");
-  if (domainParts.length > 1) {
-    return domainParts[0] as ResolveOptional<T, R>;
+  const urlCandidate = normalizedValue.includes("://")
+    ? normalizedValue
+    : `https://${normalizedValue}`;
+
+  let hostname = "";
+  try {
+    hostname = new URL(urlCandidate).hostname;
+  } catch {
+    console.error(
+      `typebuddy -> parseDomainName: could not parse domain name: ${url}`,
+    );
+    return defaultValue as ResolveOptional<T, R>;
   }
 
-  return match[1] as ResolveOptional<T, R>;
+  const normalizedHostname = hostname.replace(/^www\d?\./i, "");
+  const [domainName] = normalizedHostname.split(".");
+  if (!domainName) {
+    console.error(
+      `typebuddy -> parseDomainName: could not parse domain name: ${url}`,
+    );
+    return defaultValue as ResolveOptional<T, R>;
+  }
+
+  return domainName as ResolveOptional<T, R>;
 }

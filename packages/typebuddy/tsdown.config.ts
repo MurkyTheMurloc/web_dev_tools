@@ -12,6 +12,7 @@ const config = [
     outDir: "dist",
     platform: "neutral",
     treeshake: true,
+    unbundle: true,
   },
   {
     entry: {
@@ -24,6 +25,7 @@ const config = [
     outDir: "dist",
     platform: "node",
     treeshake: true,
+    unbundle: true,
   },
 ] satisfies UserConfig[];
 

@@ -38,6 +38,8 @@ describe("wtfjs-inspired edge cases", () => {
         expect(parseInteger("08")).toBe(8);
         expect(parseInteger("015")).toBe(15);
         expect(parseInteger("0e0")).toBe(0);
+        expect(parseInteger("12px")).toBeUndefined();
+        expect(parseInteger("12.5")).toBeUndefined();
     });
 
     it("should parse float-like strings with dot and comma decimals", () => {

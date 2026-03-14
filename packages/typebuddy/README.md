@@ -13,6 +13,7 @@ TypeBuddy is a utility library for type guards, parsing, and small TypeScript-fi
 -   type-system guards like `isOptional`, `isMaybe`, `isNullable`
 -   global type opt-in through `@murky-web/typebuddy/globals`
 -   custom `oxlint` rules through `@murky-web/typebuddy/oxlint`
+-   tree-shake-friendly ESM output for frontend and backend bundles
 
 ## Installation
 
@@ -115,7 +116,7 @@ That makes these names available globally:
 -   `isRegExp(value: unknown): value is RegExp`
 -   `isSymbol(value: unknown): value is symbol`
 -   `isEmptyObject(value: unknown): value is Record<string, unknown>`
--   `isInstanceOf<T>(value: unknown, constructor: { new (): T }): value is T`
+-   `isInstanceOf<T>(value: unknown, constructor: { new (...args: unknown[]): T }): value is T`
 -   `isArray<T>(value: unknown): value is T[]`
 -   `isEmptyArray<T>(value: unknown): value is T[]`
 -   `isNumber(value: unknown): value is number`
@@ -137,7 +138,7 @@ That makes these names available globally:
 ### Utility Functions
 
 -   `getKeys<T extends Record<string, unknown>>(object: T): Array<keyof T>`
--   `arrayContainsCommonValue(array1: string[], array2: string[]): boolean`
+-   `arrayContainsCommonValue<T>(array1: T[], array2: T[]): boolean`
 -   `isEmptyString(value: unknown): boolean`
 -   `isEmptyLike(value: unknown): boolean`
 -   `hasEmptyValues(value: unknown): boolean`
