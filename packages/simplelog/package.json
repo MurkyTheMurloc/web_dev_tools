@@ -17,6 +17,10 @@
   "scripts": {
     "build": "bun run clean && tsdown",
     "clean": "rm -rf dist",
+    "lint": "oxlint -c ../config/oxc/.oxlintrc.jsonc --type-aware src tsdown.config.ts",
+    "lint:fix": "oxlint -c ../config/oxc/.oxlintrc.jsonc --type-aware --fix src tsdown.config.ts",
+    "format": "oxfmt -c ../config/oxc/.oxfmtrc.jsonc src tsdown.config.ts",
+    "format:check": "oxfmt -c ../config/oxc/.oxfmtrc.jsonc --check src tsdown.config.ts",
     "typecheck": "tsgo --project ./tsconfig.json --noEmit"
   },
   "license": "MIT",

@@ -32,6 +32,10 @@
     "build:local": "bun run build",
     "build": "bun run clean && tsdown && cp ./biome/*.grit ./dist/ && cp ./biome/*.gritt ./dist/",
     "clean": "rm -rf dist",
+    "lint": "oxlint -c ../config/oxc/.oxlintrc.jsonc --type-aware src eslint biome tests tsdown.config.ts",
+    "lint:fix": "oxlint -c ../config/oxc/.oxlintrc.jsonc --type-aware --fix src eslint biome tests tsdown.config.ts",
+    "format": "oxfmt -c ../config/oxc/.oxfmtrc.jsonc src eslint biome tests tsdown.config.ts",
+    "format:check": "oxfmt -c ../config/oxc/.oxfmtrc.jsonc --check src eslint biome tests tsdown.config.ts",
     "typecheck": "tsgo --project ./tsconfig.json --noEmit"
   },
   "files": [
