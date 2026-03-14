@@ -1,5 +1,5 @@
-import type { ResolveOptional, Optional } from "./types/optional.js";
-import type { Success, Failed } from "./types/maybe_promise.ts";
+import type { Optional, ResolveOptional } from "./types/optional.js";
+import type { Failed, Success } from "./types/maybe_promise.js";
 const uuidRegex =
   /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-5][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}$/;
 

@@ -1,8 +1,9 @@
-import type { Optional } from "./optional.ts";
-import type { Maybe } from "./maybe.ts";
-import type { Nullable } from "./null_able.ts";
-import type { Failed, MaybePromise, Success } from "./maybe_promise.ts";
-import type { JsonifiedObject, Stringified, JsonifiedValue } from "./json.ts";
+import type { Failed, MaybePromise, Success } from "./maybe_promise.js";
+import type { JsonifiedObject, JsonifiedValue, Stringified } from "./json.js";
+import type { Maybe } from "./maybe.js";
+import type { Nullable } from "./null_able.js";
+import type { Optional } from "./optional.js";
+
 interface JSON {
   stringify<T>(
     value: T,
@@ -16,7 +17,7 @@ interface JSON {
   ): JsonifiedObject<T>;
 }
 
-export {
+export type {
   JSON,
   Optional,
   Maybe,
@@ -24,7 +25,6 @@ export {
   MaybePromise,
   Success,
   Failed,
-  JsonifiedValue,
   JsonifiedValue,
   Stringified,
 };

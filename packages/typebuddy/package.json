@@ -1,19 +1,36 @@
 {
   "name": "@murky-web/typebuddy",
   "description": "Your new best friend for simple typescript guards every project needs.",
-  "main": "./dist/main.js",
-  "module": "./src/type_helper.ts",
-  "types": "./dist/main.d.ts",
+  "main": "./dist/index.js",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
   "exports": {
-    ".": "./src/type_helper.ts",
-    "./types": "./src/types/index.ts",
-    "./eslint": "./src/eslint/index.ts",
-    "./biome": "./src/biome/index.ts"
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "default": "./dist/index.js"
+    },
+    "./types": {
+      "types": "./dist/types.d.ts",
+      "import": "./dist/types.js",
+      "default": "./dist/types.js"
+    },
+    "./eslint": {
+      "types": "./dist/eslint.d.ts",
+      "import": "./dist/eslint.js",
+      "default": "./dist/eslint.js"
+    },
+    "./biome": {
+      "types": "./dist/biome.d.ts",
+      "import": "./dist/biome.js",
+      "default": "./dist/biome.js"
+    },
+    "./package.json": "./package.json"
   },
   "scripts": {
     "test": "vitest run",
     "build:local": "bun run build",
-    "build": "rm -rf dist && tsdown && cp -r ./src/eslint ./dist/eslint",
+    "build": "bun run clean && tsdown && cp ./biome/*.grit ./dist/ && cp ./biome/*.gritt ./dist/",
     "clean": "rm -rf dist",
     "typecheck": "tsgo --project ./tsconfig.json --noEmit"
   },
@@ -25,5 +42,6 @@
   },
   "license": "ISC",
   "type": "module",
+  "sideEffects": false,
   "private": true
 }

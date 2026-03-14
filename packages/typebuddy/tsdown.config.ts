@@ -1,11 +1,28 @@
 import { defineConfig } from "tsdown";
 
-export default defineConfig({
-  entry: {
-    main: "./src/type_helper.ts",
+export default defineConfig([
+  {
+    entry: {
+      index: "./src/type_helper.ts",
+      types: "./src/types/index.ts",
+    },
+    clean: true,
+    dts: true,
+    format: "esm",
+    outDir: "dist",
+    platform: "neutral",
+    treeshake: true,
   },
-  dts: true,
-  format: "esm",
-  outDir: "dist",
-  platform: "neutral",
-});
+  {
+    entry: {
+      eslint: "./eslint/index.ts",
+      biome: "./biome/index.ts",
+    },
+    clean: false,
+    dts: true,
+    format: "esm",
+    outDir: "dist",
+    platform: "node",
+    treeshake: true,
+  },
+]);
