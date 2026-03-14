@@ -1,0 +1,22 @@
+{
+    "rules": {
+        "check-access": "error",
+        "check-property-names": "error",
+        "check-tag-names": "error",
+        "empty-tags": "error",
+        "implements-on-classes": "error",
+        "no-defaults": "error",
+        "require-param-description": "error",
+        "require-param-name": "error",
+        "require-param-type": "error",
+        "require-param": "error",
+        "require-property-description": "error",
+        "require-property-name": "error",
+        "require-property-type": "error",
+        "require-property": "error",
+        "require-returns-description": "error",
+        "require-returns-type": "error",
+        "require-returns": "error",
+        "require-yields": "error"
+    }
+}

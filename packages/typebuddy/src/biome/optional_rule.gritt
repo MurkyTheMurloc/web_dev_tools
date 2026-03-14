@@ -1,0 +1,8 @@
+or {
+  // T | null -> Maybe<T>
+  `$type | null` where { $type <: not contains `null | undefined` } => `Maybe<$type>`,
+  // T | null | undefined -> Nullable<T>
+  `$type | null | undefined` where { $type <: not contains `null | undefined` } => `Nullable<$type>`,
+  // T | undefined -> Optional<T>
+  `$type | undefined` where { $type <: not contains `undefined` } => `Optional<$type>`
+}

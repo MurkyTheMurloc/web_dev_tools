@@ -1,0 +1,45 @@
+name: Publish to npm
+
+on:
+    push:
+        branches:
+            - main
+    workflow_dispatch:
+
+jobs:
+    publish:
+        runs-on: ubuntu-latest
+
+        steps:
+            # Checkout the repository
+            - name: Checkout code
+              uses: actions/checkout@v3
+
+            # Set up Node.js environment
+            - name: Set up Node.js
+              uses: actions/setup-node@v3
+              with:
+                  node-version: "16"
+                  registry-url: "https://registry.npmjs.org/"
+
+            # Install dependencies and build the project
+            - name: Install dependencies
+              run: npm install
+
+            - name: Build project
+              run: npm run build
+
+            # Publish to npm
+            - name: Publish to npm
+              run: npm publish --access public
+              env:
+                  NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+            # Optionally, create a release on GitHub
+            - name: Create GitHub Release
+              uses: actions/create-release@v1
+              with:
+                  tag_name: v${{ github.sha }}
+                  release_name: Release v${{ github.sha }}
+                  draft: false
+                  prerelease: false

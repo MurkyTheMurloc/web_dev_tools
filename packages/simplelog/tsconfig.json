@@ -1,0 +1,21 @@
+{
+  "$schema": "https://json.schemastore.org/tsconfig",
+  "extends": "../../tsconfig.base.jsonc",
+  "compilerOptions": {
+    "lib": ["ESNext"],
+    "target": "ES2022",
+    "allowJs": true,
+    "allowImportingTsExtensions": false,
+    "declaration": true,
+    "declarationMap": true,
+    "noEmit": false,
+    "noFallthroughCasesInSwitch": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "noPropertyAccessFromIndexSignature": false,
+    "baseUrl": ".",
+    "outDir": "./dist"
+  },
+  "include": ["src/logger.ts"],
+  "exclude": ["node_modules/*"]
+}

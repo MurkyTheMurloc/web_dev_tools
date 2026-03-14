@@ -1,0 +1,26 @@
+{
+  "name": "@murky-web/workspace",
+  "private": true,
+  "packageManager": "bun@1.2.23",
+  "workspaces": [
+    "packages/*"
+  ],
+  "scripts": {
+    "build": "bun run --workspaces --if-present build",
+    "clean": "bun run --workspaces --if-present clean",
+    "test": "bun run --workspaces --if-present test",
+    "typecheck": "bun run --workspaces --if-present typecheck",
+    "lint": "oxlint -c ./packages/config/oxc/.oxlintrc.jsonc --type-aware ./packages",
+    "lint:fix": "oxlint -c ./packages/config/oxc/.oxlintrc.jsonc --type-aware --fix ./packages",
+    "format": "oxfmt -c ./packages/config/oxc/.oxfmtrc.jsonc ./packages",
+    "format:check": "oxfmt -c ./packages/config/oxc/.oxfmtrc.jsonc --check ./packages"
+  },
+  "devDependencies": {
+    "@typescript/native-preview": "^7.0.0-dev.20260314.1",
+    "oxfmt": "^0.40.0",
+    "oxlint": "^1.55.0",
+    "oxlint-tsgolint": "^0.16.0",
+    "tsdown": "0.14.1",
+    "vitest": "3.2.4"
+  }
+}

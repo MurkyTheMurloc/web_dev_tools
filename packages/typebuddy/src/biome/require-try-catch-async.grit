@@ -1,0 +1,5 @@
+or {
+  `async function $name($params) { $body }` where { $body <: not contains `try { $tryBody } catch ($err) { $catchBody }` } => `async function $name($params) { try { $body } catch (err) { // handle error } }`,
+  `(async function($params) { $body })` where { $body <: not contains `try { $tryBody } catch ($err) { $catchBody }` } => `(async function($params) { try { $body } catch (err) { // handle error } })`,
+  `(async ($params) => { $body })` where { $body <: not contains `try { $tryBody } catch ($err) { $catchBody }` } => `(async ($params) => { try { $body } catch (err) { // handle error } })`
+}

@@ -1,0 +1,21 @@
+{
+    "rules": {
+        "consistent-each-for": "error",
+        "consistent-test-filename": "error",
+        "consistent-vitest-vi": "error",
+        "hoisted-apis-on-top": "error",
+        "no-conditional-tests": "error",
+        "no-import-node-test": "error",
+        "no-importing-vitest-globals": "error",
+        "prefer-called-once": "error",
+        "prefer-called-times": "error",
+        "prefer-describe-function-title": "error",
+        "prefer-expect-type-of": "error",
+        "prefer-import-in-mock": "error",
+        "prefer-to-be-falsy": "error",
+        "prefer-to-be-object": "error",
+        "prefer-to-be-truthy": "error",
+        "require-local-test-context-for-concurrent-snapshots": "error",
+        "warn-todo": "error"
+    }
+}

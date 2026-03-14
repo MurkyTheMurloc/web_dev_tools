@@ -1,0 +1,28 @@
+{
+    "$schema": "../../../node_modules/oxlint/configuration_schema.json",
+    "extends": [
+        "./linting/base.jsonc",
+        "./linting/eslint.jsonc",
+        "./linting/typescript.jsonc",
+        "./linting/unicorn.jsonc",
+        "./linting/oxc.jsonc",
+        "./linting/import.jsonc",
+        "./linting/jsx_a11y.jsonc",
+        "./linting/vitest.jsonc",
+        "./linting/promise.jsonc",
+        "./linting/node.jsonc",
+        "./linting/jsdoc.jsonc"
+    ],
+    "plugins": [
+        "eslint",
+        "typescript",
+        "unicorn",
+        "oxc",
+        "import",
+        "jsx-a11y",
+        "vitest",
+        "promise",
+        "node",
+        "jsdoc"
+    ]
+}

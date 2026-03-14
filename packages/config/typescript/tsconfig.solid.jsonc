@@ -1,0 +1,16 @@
+{
+    "$schema": "https://json.schemastore.org/tsconfig",
+    "extends": "./tsconfig.base.jsonc",
+    "compilerOptions": {
+        // Solid wants JSX to stay preserved and typed through solid-js.
+        "jsx": "preserve",
+        "jsxImportSource": "solid-js",
+        // Solid apps target the browser.
+        "lib": ["ESNext", "DOM", "DOM.Iterable"],
+        // For Vite-based Solid apps.
+        "types": [
+            "vite/client"
+            // Add DOM matcher types here when the app uses Solid Testing Library.
+        ]
+    }
+}

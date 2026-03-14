@@ -1,0 +1,20 @@
+{
+    "rules": {
+        "always-return": "error",
+        "avoid-new": "error",
+        "catch-or-return": "error",
+        "no-callback-in-promise": "error",
+        "no-multiple-resolved": "error",
+        "no-nesting": "error",
+        "no-new-statics": "error",
+        "no-promise-in-callback": "error",
+        "no-return-in-finally": "error",
+        "no-return-wrap": "error",
+        "param-names": "error",
+        "prefer-await-to-callbacks": "error",
+        "prefer-await-to-then": "error",
+        "prefer-catch": "error",
+        "spec-only": "error",
+        "valid-params": "error"
+    }
+}

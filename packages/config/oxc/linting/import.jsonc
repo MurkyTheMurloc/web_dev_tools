@@ -1,0 +1,39 @@
+{
+    "rules": {
+        "consistent-type-specifier-style": "error",
+        "default": "error",
+        "export": "error",
+        "exports-last": "error",
+        "extensions": "error",
+        "first": "error",
+        "group-exports": "error",
+        "max-dependencies": "off",
+        "named": "error",
+        "namespace": "error",
+        "no-absolute-path": "error",
+        "no-amd": "error",
+        // Broader than unicorn/no-anonymous-default-export, so this one stays.
+        "no-anonymous-default-export": "error",
+        "no-commonjs": "error",
+        "no-cycle": "error",
+        // Named exports only: keep this and disable conflicting default-export policies.
+        "no-default-export": "error",
+        "no-duplicates": "error",
+        "no-dynamic-require": "error",
+        "no-empty-named-blocks": "error",
+        "no-mutable-exports": "error",
+        "no-named-as-default-member": "error",
+        "no-named-as-default": "error",
+        "no-named-default": "error",
+        "no-named-export": "off",
+        "no-namespace": "error",
+        "no-nodejs-modules": "error",
+        "no-relative-parent-imports": "error",
+        "no-self-import": "error",
+        // Keep CSS side-effect imports allowed for frontend entrypoints.
+        "no-unassigned-import": ["error", { "allow": ["**/*.css"] }],
+        "no-webpack-loader-syntax": "error",
+        "prefer-default-export": "off",
+        "unambiguous": "error"
+    }
+}

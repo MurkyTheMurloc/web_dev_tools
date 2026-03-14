@@ -1,0 +1,26 @@
+{
+  "name": "@murky-web/simplelog",
+  "private": true,
+  "main": "./dist/logger.js",
+  "module": "./dist/logger.js",
+  "types": "./dist/logger.d.ts",
+  "exports": {
+    ".": {
+      "import": "./dist/logger.js",
+      "require": "./dist/logger.js",
+      "types": "./dist/logger.d.ts"
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "bun run clean && tsdown",
+    "clean": "rm -rf dist",
+    "typecheck": "tsgo --project ./tsconfig.json --noEmit"
+  },
+  "license": "MIT",
+  "description": "A simple wrapper around console to make logging enjoyable again",
+  "type": "module",
+  "dependencies": {}
+}

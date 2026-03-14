@@ -1,0 +1,15 @@
+or {
+  // 1. Replace Promise with MaybePromise in return types
+  `: Promise<$type>` => `: MaybePromise<$type>`,
+
+  // 2. Wrap return values in try blocks with { value, isError: false }
+  `try { $tryBody } catch ($err) { $catchBody }` where {
+    $tryBody <: contains `return $value` and {
+      $value <: not contains `{ isError: $isErrorValue }`
+    }
+  } => `try { $tryBody <: replace `return $value` => `return { value: $value, isError: false }` } catch ($err) { $catchBody }`,
+
+  // 3. Handle empty return statements in try blocks
+  `try { $tryBody } catch ($err) { $catchBody }` where {
+    $tryBody <: contains `return;`
+  } => `try { $tryBody <: replace `return;` => `return { value: undefined, isError: false };` } catch ($err) { $catchBody }`,

@@ -1,0 +1,37 @@
+{
+  "name": "@murky-web/config",
+  "version": "0.1.0",
+  "type": "module",
+  "private": true,
+  "bin": {
+    "web-dev-config": "./bin/web-dev-config.mjs"
+  },
+  "files": [
+    "bin",
+    "scripts",
+    "biome",
+    "oxc",
+    "typescript",
+    "README.md"
+  ],
+  "scripts": {
+    "biome:fmt": "biome format --config-path ./biome/biome.jsonc --write .",
+    "biome:fmt:check": "biome format --config-path ./biome/biome.jsonc .",
+    "biome:lint": "biome lint --config-path ./biome/biome.jsonc .",
+    "biome:lint:fix": "biome lint --config-path ./biome/biome.jsonc --write .",
+    "ox:fmt": "oxfmt",
+    "ox:fmt:check": "oxfmt --check",
+    "ox:lint": "oxlint",
+    "ox:lint:fix": "oxlint --fix"
+  },
+  "peerDependencies": {},
+  "devDependencies": {
+    "@biomejs/biome": "2.4.7",
+    "oxfmt": "^0.40.0",
+    "oxlint": "^1.55.0",
+    "oxlint-tsgolint": "^0.16.0"
+  },
+  "dependencies": {
+    "@typescript/native-preview": "^7.0.0-dev.20260314.1"
+  }
+}

@@ -1,0 +1,10 @@
+{
+    "rules": {
+        "global-require": "error",
+        "no-exports-assign": "error",
+        "no-new-require": "error",
+        "no-path-concat": "error",
+        // TODO: Revisit this later as an architecture/deployment policy decision.
+        "no-process-env": "off"
+    }
+}

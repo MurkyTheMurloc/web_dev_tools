@@ -1,0 +1,29 @@
+{
+  "name": "@murky-web/typebuddy",
+  "description": "Your new best friend for simple typescript guards every project needs.",
+  "main": "./dist/main.js",
+  "module": "./src/type_helper.ts",
+  "types": "./dist/main.d.ts",
+  "exports": {
+    ".": "./src/type_helper.ts",
+    "./types": "./src/types/index.ts",
+    "./eslint": "./src/eslint/index.ts",
+    "./biome": "./src/biome/index.ts"
+  },
+  "scripts": {
+    "test": "vitest run",
+    "build:local": "bun run build",
+    "build": "rm -rf dist && tsdown && cp -r ./src/eslint ./dist/eslint",
+    "clean": "rm -rf dist",
+    "typecheck": "tsgo --project ./tsconfig.json --noEmit"
+  },
+  "files": [
+    "dist"
+  ],
+  "dependencies": {
+    "@typescript-eslint/utils": "^8.39.1"
+  },
+  "license": "ISC",
+  "type": "module",
+  "private": true
+}
