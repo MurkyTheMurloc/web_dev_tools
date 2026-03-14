@@ -1,3 +1,5 @@
+import type { Maybe } from "./types/maybe.js";
+import type { Nullable } from "./types/null_able.js";
 import type { Optional, ResolveOptional } from "./types/optional.js";
 import type { Failed, Success } from "./types/maybe_promise.js";
 const uuidRegex =
@@ -65,6 +67,33 @@ export function isNull(value: unknown): value is null {
  */
 export function isUndefined(value: unknown): value is undefined {
   return value === undefined;
+}
+
+/**
+ * Checks whether an Optional value is currently in its missing state.
+ * @param value - The Optional value to check.
+ * @returns True when the value is undefined.
+ */
+export function isOptional<T>(value: Optional<T>): value is undefined {
+  return isUndefined(value);
+}
+
+/**
+ * Checks whether a Maybe value is currently in its missing state.
+ * @param value - The Maybe value to check.
+ * @returns True when the value is null.
+ */
+export function isMaybe<T>(value: Maybe<T>): value is null {
+  return isNull(value);
+}
+
+/**
+ * Checks whether a Nullable value is currently in its missing state.
+ * @param value - The Nullable value to check.
+ * @returns True when the value is null or undefined.
+ */
+export function isNullable<T>(value: Nullable<T>): value is null | undefined {
+  return isNull(value) || isUndefined(value);
 }
 
 /**

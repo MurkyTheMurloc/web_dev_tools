@@ -1,15 +1,18 @@
-# ts-typehelper
-
 # TypeBuddy
 
-TypeBuddy is a utility library for type checking and type parsing in TypeScript. It provides a set of functions to determine the type of a value, parse values into specific types, and perform various type-related operations.
+TypeBuddy is a utility library for type guards, parsing, and small TypeScript-first helper types. It focuses on two things:
+
+- predictable runtime helpers for common JavaScript values
+- a small type system around `Optional`, `Maybe`, and `Nullable`
 
 ## Features
 
--   Type checking for common JavaScript types (e.g., `string`, `number`, `boolean`, `object`, `array`, etc.)
--   Parsing values into specific types (e.g., `number`, `integer`, `float`, `string`, `array`, etc.)
--   Utility functions for working with arrays, objects, and other data structures
--   Regular expressions for validating UUID and ULID strings
+-   runtime guards for common JavaScript values
+-   parsing helpers for strings, numbers, arrays, and URLs
+-   utility types like `Optional<T>`, `Maybe<T>`, `Nullable<T>`
+-   type-system guards like `isOptional`, `isMaybe`, `isNullable`
+-   global type opt-in through `@murky-web/typebuddy/globals`
+-   custom `oxlint` rules through `@murky-web/typebuddy/oxlint`
 
 ## Installation
 
@@ -43,6 +46,49 @@ if (isEmptyObject(obj)) {
 }
 ```
 
+### Type-system guards
+
+```typescript
+import { isNullable, isOptional } from "@murky-web/typebuddy";
+import type { Nullable, Optional } from "@murky-web/typebuddy";
+
+const title: Optional<string> = "ready";
+if (isOptional(title)) {
+    throw new Error("title is missing");
+}
+
+const subtitle: Nullable<string> = "ready";
+if (isNullable(subtitle)) {
+    throw new Error("subtitle is missing");
+}
+
+// after the early guards both values are narrowed to string
+title.toUpperCase();
+subtitle.toUpperCase();
+```
+
+### Global types
+
+If you want the `typebuddy` utility types globally, opt in once in your project:
+
+```typescript
+import type {} from "@murky-web/typebuddy/globals";
+```
+
+That makes these names available globally:
+
+-   `Optional`
+-   `ResolveOptional`
+-   `Maybe`
+-   `ResolveMaybe`
+-   `Nullable`
+-   `ResolveNullable`
+-   `MaybePromise`
+-   `Success`
+-   `Failed`
+-   `JsonifiedValue`
+-   `Stringified`
+
 ## API
 
 ### Type Checking Functions
@@ -51,6 +97,9 @@ if (isEmptyObject(obj)) {
 -   `isBoolean(value: unknown): value is boolean`
 -   `isNull(value: unknown): value is null`
 -   `isUndefined(value: unknown): value is undefined`
+-   `isOptional<T>(value: Optional<T>): value is undefined`
+-   `isMaybe<T>(value: Maybe<T>): value is null`
+-   `isNullable<T>(value: Nullable<T>): value is null | undefined`
 -   `isFunction(value: unknown): value is Function`
 -   `isPromise(value: unknown): value is Promise<unknown>`
 -   `isError(value: unknown): value is Error`
@@ -70,26 +119,37 @@ if (isEmptyObject(obj)) {
 
 ### Parsing Functions
 
--   `parseNumber(value: unknown): number`
--   `parseInteger(value: unknown): number`
--   `parseFloat(value: unknown): number`
--   `parseString(value: unknown): string`
--   `parseArray<T>(value: unknown): T[]`
--   `parseDomainName(url: string): string`
+-   `parseNumber<T extends number, R extends Optional<T>>(value: unknown, defaultValue?: R): ResolveOptional<T, R>`
+-   `parseInteger(value: unknown, defaultValue?: Optional<number>): Optional<number>`
+-   `parseFloat<T extends number, R extends Optional<T>>(value: unknown, defaultValue?: R): ResolveOptional<T, R>`
+-   `parseString<T extends string, R extends Optional<T>>(value: unknown, defaultValue?: R): ResolveOptional<T, R>`
+-   `parseArray<T, R extends Optional<T[]>>(value: unknown, defaultValue?: R): ResolveOptional<T[], R>`
+-   `parseDomainName<T extends string, R extends Optional<T>>(url: string, defaultValue?: R): ResolveOptional<T, R>`
 
 ### Utility Functions
 
--   `getType<T>(value: T): T`
 -   `getKeys<T extends Record<string, unknown>>(object: T): Array<keyof T>`
 -   `arrayContainsCommonValue(array1: string[], array2: string[]): boolean`
 -   `isEmptyString(value: unknown): boolean`
 -   `isNullOrUndefined(value: unknown): boolean`
 -   `hasEmptyValues(value: unknown): boolean`
 
-## Contributing
+### Types
 
-Contributions are welcome! Please open an issue or submit a pull request on GitHub.
+-   `Optional<T>`
+-   `ResolveOptional<T, R>`
+-   `Maybe<T>`
+-   `ResolveMaybe<T, R>`
+-   `Nullable<T>`
+-   `ResolveNullable<T, R>`
+-   `MaybePromise<T>`
+-   `Success<T>`
+-   `Failed<T>`
+-   `JsonifiedObject<T>`
+-   `JsonifiedValue<T>`
+-   `Stringified<T>`
 
-## License
+### Tooling Entries
 
-This project is licensed under the MIT License.
+-   `@murky-web/typebuddy/oxlint`
+-   `@murky-web/typebuddy/globals`

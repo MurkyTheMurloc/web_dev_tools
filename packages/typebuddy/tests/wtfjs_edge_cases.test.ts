@@ -1,5 +1,8 @@
 import {
+    isMaybe,
+    isNullable,
     isNumber,
+    isOptional,
     isObject,
     parseFloat,
     parseInteger,
@@ -14,6 +17,13 @@ describe("wtfjs-inspired edge cases", () => {
         expect(isNumber(Number(" "))).toBe(true);
         expect(isNumber(Number([]))).toBe(true);
         expect(isNumber(new Number(1))).toBe(false);
+    });
+
+    it("should keep the type-system guards aligned with their missing states", () => {
+        expect(isOptional(undefined)).toBe(true);
+        expect(isMaybe(null)).toBe(true);
+        expect(isNullable(undefined)).toBe(true);
+        expect(isNullable(null)).toBe(true);
     });
 
     it("should only treat plain objects as objects", () => {
