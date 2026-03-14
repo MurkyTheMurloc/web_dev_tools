@@ -1,3 +1,5 @@
+import { describe, expect, it } from "vitest";
+
 import { parseString } from "../src/type_helper.js";
 
 describe("parseString", () => {

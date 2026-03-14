@@ -1,15 +1,18 @@
 {
   "$schema": "https://json.schemastore.org/tsconfig",
-  "extends": "./node_modules/@murky-web/config/typescript/tsconfig.base.jsonc",
+  "extends": "./tsconfig.json",
   "compilerOptions": {
-    "rootDir": "."
+    "types": ["node", "vitest/globals"]
   },
   "include": [
     "src/**/*.ts",
     "rules/**/*.ts",
     "oxlint/**/*.ts",
     "biome/**/*.ts",
-    "tsdown.config.ts"
+    "tests/**/*.ts",
+    "smoke/**/*.ts",
+    "tsdown.config.ts",
+    "vitest.config.ts"
   ],
-  "exclude": ["dist", "tests", "smoke", "vitest.config.ts"]
+  "exclude": ["dist"]
 }

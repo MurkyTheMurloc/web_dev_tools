@@ -1,5 +1,6 @@
 {
   "name": "@murky-web/simplelog",
+  "version": "0.1.0",
   "private": true,
   "main": "./dist/logger.js",
   "module": "./dist/logger.js",
@@ -17,14 +18,17 @@
   "scripts": {
     "build": "bun run clean && tsdown",
     "clean": "rm -rf dist",
-    "lint": "oxlint -c ../config/oxc/.oxlintrc.jsonc --type-aware src tsdown.config.ts",
-    "lint:fix": "oxlint -c ../config/oxc/.oxlintrc.jsonc --type-aware --fix src tsdown.config.ts",
-    "format": "oxfmt -c ../config/oxc/.oxfmtrc.jsonc src tsdown.config.ts",
-    "format:check": "oxfmt -c ../config/oxc/.oxfmtrc.jsonc --check src tsdown.config.ts",
+    "lint": "oxlint -c ./.oxlintrc.jsonc --tsconfig ./tsconfig.json --type-aware src tsdown.config.ts",
+    "lint:fix": "oxlint -c ./.oxlintrc.jsonc --tsconfig ./tsconfig.json --type-aware --fix src tsdown.config.ts",
+    "format": "oxfmt -c ./node_modules/@murky-web/config/oxc/.oxfmtrc.jsonc src tsdown.config.ts",
+    "format:check": "oxfmt -c ./node_modules/@murky-web/config/oxc/.oxfmtrc.jsonc --check src tsdown.config.ts",
     "typecheck": "tsgo --project ./tsconfig.json --noEmit"
   },
   "license": "MIT",
   "description": "A simple wrapper around console to make logging enjoyable again",
   "type": "module",
-  "dependencies": {}
+  "dependencies": {},
+  "devDependencies": {
+    "@murky-web/config": "workspace:*"
+  }
 }

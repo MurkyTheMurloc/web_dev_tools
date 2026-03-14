@@ -7,15 +7,18 @@
   ],
   "scripts": {
     "build": "bun run --workspaces --if-present build",
+    "changeset": "changeset",
     "clean": "bun run --workspaces --if-present clean",
     "test": "bun run --workspaces --if-present test",
     "typecheck": "bun run --workspaces --if-present typecheck",
     "lint": "oxlint -c ./packages/config/oxc/.oxlintrc.jsonc --type-aware ./packages",
     "lint:fix": "oxlint -c ./packages/config/oxc/.oxlintrc.jsonc --type-aware --fix ./packages",
     "format": "oxfmt -c ./packages/config/oxc/.oxfmtrc.jsonc ./packages",
-    "format:check": "oxfmt -c ./packages/config/oxc/.oxfmtrc.jsonc --check ./packages"
+    "format:check": "oxfmt -c ./packages/config/oxc/.oxfmtrc.jsonc --check ./packages",
+    "version-packages": "changeset version"
   },
   "devDependencies": {
+    "@changesets/cli": "^2.30.0",
     "@typescript/native-preview": "^7.0.0-dev.20260314.1",
     "oxfmt": "^0.40.0",
     "oxlint": "^1.55.0",

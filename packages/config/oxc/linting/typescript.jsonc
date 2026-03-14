@@ -11,7 +11,7 @@
         "consistent-indexed-object-style": "error",
         "consistent-return": "error",
         "consistent-type-assertions": "error",
-        "consistent-type-definitions": "error",
+        "consistent-type-definitions": ["error", "type"],
         "consistent-type-exports": "error",
         "consistent-type-imports": "error",
         "dot-notation": "error",

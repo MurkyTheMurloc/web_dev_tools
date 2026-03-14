@@ -1,17 +1,4 @@
 const rule = {
-  meta: {
-    type: "suggestion",
-    hasSuggestions: true,
-    docs: {
-      description: "Use Maybe<T> for T | null",
-    },
-    fixable: "code",
-    schema: [],
-    messages: {
-      useMaybe: "Use Maybe<{{type}}> instead of {{type}} | null",
-    },
-  },
-  defaultOptions: [],
   create(context: {
     getSourceCode(): { getText(node: unknown): string };
     report(descriptor: {
@@ -51,6 +38,19 @@ const rule = {
         }
       },
     };
+  },
+  defaultOptions: [],
+  meta: {
+    type: "suggestion",
+    hasSuggestions: true,
+    docs: {
+      description: "Use Maybe<T> for T | null",
+    },
+    fixable: "code",
+    schema: [],
+    messages: {
+      useMaybe: "Use Maybe<{{type}}> instead of {{type}} | null",
+    },
   },
 };
 

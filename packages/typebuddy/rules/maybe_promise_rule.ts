@@ -18,36 +18,21 @@ type RuleContext = {
   }): void;
 };
 
+function isNode(value: unknown): value is AstNode {
+  return typeof value === "object" && value !== null && "type" in value;
+}
+
+function isAsyncFunction(node: AstNode): boolean {
+  return node.async === true;
+}
+
+function hasTypeParameters(value: unknown): value is { params: unknown[] } {
+  return isNode(value) && Array.isArray(value.params);
+}
+
 const rule = {
-  meta: {
-    type: "suggestion",
-    docs: {
-      description:
-        "Ensure async functions' return values follow the MaybePromise pattern.",
-    },
-    fixable: "code",
-    schema: [],
-    messages: {
-      replaceWithMaybePromise:
-        "Use 'MaybePromise' instead of 'Promise' as the return type in async functions.",
-      wrapReturn: "Wrap return value with { value: value, isError: false }.",
-      returnVoidPromise:
-        "Return VOID_PROMISE for async functions with Promise<void> return type.",
-      returnFailedPromise:
-        "Return FAILED_PROMISE in catch block of async functions.",
-    },
-  },
-  defaultOptions: [],
   create(context: RuleContext) {
     const sourceCode = context.getSourceCode();
-
-    function isNode(value: unknown): value is AstNode {
-      return typeof value === "object" && value !== null && "type" in value;
-    }
-
-    function isAsyncFunction(node: AstNode): boolean {
-      return node.async === true;
-    }
 
     function isTypeReference(node: unknown): node is AstNode {
       return isNode(node) && node.type === "TSTypeReference";
@@ -61,12 +46,10 @@ const rule = {
 
     function getTypeArgument(node: AstNode): AstNode | null {
       const typeArguments = node.typeArguments;
-      if (!isNode(typeArguments)) return null;
-      const params = Array.isArray(typeArguments.params)
-        ? typeArguments.params
-        : null;
-      if (!params?.[0] || !isNode(params[0])) return null;
-      return params[0];
+      if (!hasTypeParameters(typeArguments)) return null;
+      const [firstParam] = typeArguments.params;
+      if (!isNode(firstParam)) return null;
+      return firstParam;
     }
 
     function getPromiseTypeArgument(node: AstNode): AstNode | null {
@@ -239,6 +222,25 @@ const rule = {
       TSMethodSignature: checkReturnType,
       TryStatement: processTryCatch,
     };
+  },
+  defaultOptions: [],
+  meta: {
+    type: "suggestion",
+    docs: {
+      description:
+        "Ensure async functions' return values follow the MaybePromise pattern.",
+    },
+    fixable: "code",
+    schema: [],
+    messages: {
+      replaceWithMaybePromise:
+        "Use 'MaybePromise' instead of 'Promise' as the return type in async functions.",
+      wrapReturn: "Wrap return value with { value: value, isError: false }.",
+      returnVoidPromise:
+        "Return VOID_PROMISE for async functions with Promise<void> return type.",
+      returnFailedPromise:
+        "Return FAILED_PROMISE in catch block of async functions.",
+    },
   },
 };
 

@@ -5,8 +5,8 @@ import { nullableRule } from "../rules/nullable_rule.js";
 import { optionalRule } from "../rules/optional_rule.js";
 
 const rules = {
-  "prefer-maybe-promise": errorSafeAsyncRule,
   "prefer-maybe": maybeRule,
+  "prefer-maybe-promise": errorSafeAsyncRule,
   "prefer-nullable": nullableRule,
   "prefer-optional": optionalRule,
   "require-try-catch": requireTryCatchAsyncRule,

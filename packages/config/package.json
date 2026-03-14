@@ -3,6 +3,7 @@
   "version": "0.1.0",
   "type": "module",
   "private": true,
+  "tsconfig": "./typescript/tsconfig.base.jsonc",
   "bin": {
     "web-dev-config": "./bin/web-dev-config.mjs"
   },

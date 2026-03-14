@@ -1,18 +1,4 @@
 const rule = {
-  meta: {
-    type: "suggestion",
-    hasSuggestions: true,
-    docs: {
-      description: "Use Nullable<T> instead of T | null | undefined",
-    },
-    fixable: "code",
-    schema: [],
-    messages: {
-      useNullable:
-        "Use Nullable<{{type}}> instead of {{type}} | null | undefined",
-    },
-  },
-  defaultOptions: [],
   create(context: {
     getSourceCode(): { getText(node: unknown): string };
     report(descriptor: {
@@ -53,6 +39,20 @@ const rule = {
         }
       },
     };
+  },
+  defaultOptions: [],
+  meta: {
+    type: "suggestion",
+    hasSuggestions: true,
+    docs: {
+      description: "Use Nullable<T> instead of T | null | undefined",
+    },
+    fixable: "code",
+    schema: [],
+    messages: {
+      useNullable:
+        "Use Nullable<{{type}}> instead of {{type}} | null | undefined",
+    },
   },
 };
 

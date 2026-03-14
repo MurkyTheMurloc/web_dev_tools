@@ -1,0 +1,23 @@
+{
+    "$schema": "../../node_modules/oxlint/configuration_schema.json",
+    "extends": ["./node_modules/@murky-web/config/oxc/.oxlintrc.jsonc"],
+    "globals": {
+        "console": "readonly",
+        "URL": "readonly"
+    },
+    "overrides": [
+        {
+            "files": ["tsdown.config.ts"],
+            "globals": {
+                "URL": "readonly"
+            },
+            "rules": {
+                "arrow-body-style": "off",
+                "explicit-function-return-type": "off",
+                "group-exports": "off",
+                "no-default-export": "off",
+                "sort-keys": "off"
+            }
+        }
+    ]
+}

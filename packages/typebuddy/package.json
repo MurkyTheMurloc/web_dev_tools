@@ -1,5 +1,6 @@
 {
   "name": "@murky-web/typebuddy",
+  "version": "0.1.0",
   "description": "Your new best friend for simple typescript guards every project needs.",
   "main": "./dist/index.js",
   "module": "./dist/index.js",
@@ -11,7 +12,7 @@
       "default": "./dist/index.js"
     },
     "./globals": {
-      "types": "./src/types/globals.ts",
+      "types": "./globals.d.ts",
       "import": "./dist/globals.js",
       "default": "./dist/globals.js"
     },
@@ -32,10 +33,10 @@
     "build:local": "bun run build",
     "build": "bun run clean && tsdown && cp ./biome/*.grit ./dist/ && cp ./biome/*.gritt ./dist/",
     "clean": "rm -rf dist",
-    "lint": "oxlint -c ../config/oxc/.oxlintrc.jsonc --type-aware src rules biome tests tsdown.config.ts vitest.config.ts",
-    "lint:fix": "oxlint -c ../config/oxc/.oxlintrc.jsonc --type-aware --fix src rules biome tests tsdown.config.ts vitest.config.ts",
-    "format": "oxfmt -c ../config/oxc/.oxfmtrc.jsonc src rules biome tests tsdown.config.ts vitest.config.ts",
-    "format:check": "oxfmt -c ../config/oxc/.oxfmtrc.jsonc --check src rules biome tests tsdown.config.ts vitest.config.ts",
+    "lint": "oxlint -c ./.oxlintrc.jsonc --tsconfig ./tsconfig.lint.json --type-aware src biome tsdown.config.ts vitest.config.ts",
+    "lint:fix": "oxlint -c ./.oxlintrc.jsonc --tsconfig ./tsconfig.lint.json --type-aware --fix src biome tsdown.config.ts vitest.config.ts",
+    "format": "oxfmt -c ./node_modules/@murky-web/config/oxc/.oxfmtrc.jsonc src rules biome tests tsdown.config.ts vitest.config.ts",
+    "format:check": "oxfmt -c ./node_modules/@murky-web/config/oxc/.oxfmtrc.jsonc --check src rules biome tests tsdown.config.ts vitest.config.ts",
     "smoke:globals": "bun run build && tsgo --project ./smoke/globals/tsconfig.json --noEmit",
     "smoke:oxlint": "bun run build && oxlint -c ./smoke/oxlint/.oxlintrc.jsonc ./smoke/oxlint/violations.ts ./smoke/oxlint/async-violations.ts",
     "smoke:oxlint:fix": "bun run build && bun ./smoke/oxlint/run-fix-smoke.ts",
@@ -44,6 +45,7 @@
   },
   "files": [
     "dist",
+    "globals.d.ts",
     "src/index.ts",
     "src/type_helper.ts",
     "src/types",
@@ -54,5 +56,8 @@
   "license": "ISC",
   "type": "module",
   "sideEffects": false,
-  "private": true
+  "private": true,
+  "devDependencies": {
+    "@murky-web/config": "workspace:*"
+  }
 }

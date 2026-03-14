@@ -11,7 +11,7 @@
         "error-message": "error",
         "escape-case": "error",
         "explicit-length-check": "error",
-        "filename-case": "error",
+        "filename-case": ["error", { "case": "snakeCase" }],
         "new-for-builtins": "error",
         "no-abusive-eslint-disable": "error",
         "no-accessor-recursion": "error",

@@ -1,3 +1,5 @@
+import { describe, expect, it } from "vitest";
+
 import { hasEmptyValues, parseArray } from "../src/type_helper.js";
 
 describe("json and array edge cases", () => {

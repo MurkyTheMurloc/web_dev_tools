@@ -1,16 +1,4 @@
 const rule = {
-  meta: {
-    type: "suggestion",
-    docs: {
-      description: "Enforce using Optional<T> instead of T | undefined",
-    },
-    fixable: "code",
-    schema: [],
-    messages: {
-      preferOptional: "Use Optional<{{type}}> instead of {{type}} | undefined",
-    },
-  },
-  defaultOptions: [],
   create(context: {
     getSourceCode(): { getText(node: unknown): string };
     report(descriptor: {
@@ -48,6 +36,18 @@ const rule = {
         }
       },
     };
+  },
+  defaultOptions: [],
+  meta: {
+    type: "suggestion",
+    docs: {
+      description: "Enforce using Optional<T> instead of T | undefined",
+    },
+    fixable: "code",
+    schema: [],
+    messages: {
+      preferOptional: "Use Optional<{{type}}> instead of {{type}} | undefined",
+    },
   },
 };
 

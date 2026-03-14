@@ -1,0 +1,15 @@
+{
+  "$schema": "https://unpkg.com/@changesets/config@3.1.1/schema.json",
+  "access": "public",
+  "baseBranch": "master",
+  "changelog": false,
+  "commit": false,
+  "fixed": [],
+  "ignore": ["@murky-web/config"],
+  "linked": [],
+  "privatePackages": {
+    "tag": false,
+    "version": true
+  },
+  "updateInternalDependencies": "patch"
+}

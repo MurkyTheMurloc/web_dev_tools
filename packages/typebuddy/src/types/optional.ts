@@ -8,7 +8,7 @@ type ResolveBasicOptional<T, R extends Optional<T>> = R extends undefined
   ? Optional<T>
   : T;
 
-type ResolveOptional<T, R extends Optional<T>> = T extends Array<unknown>
+type ResolveOptional<T, R extends Optional<T>> = T extends unknown[]
   ? ResolveOptionalArray<T, R>
   : ResolveBasicOptional<T, R>;
 

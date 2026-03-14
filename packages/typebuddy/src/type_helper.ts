@@ -1,33 +1,44 @@
 import type { Maybe } from "./types/maybe.js";
-import type { Nullable } from "./types/null_able.js";
-import type { Optional, ResolveOptional } from "./types/optional.js";
+import type { Nullable } from "./types/nullable.js";
+import type { Optional } from "./types/optional.js";
 import type { Failed, Success } from "./types/maybe_promise.js";
+
+type UnknownFunction = (...args: readonly never[]) => unknown;
+const EMPTY_LENGTH = 0;
 const uuidRegex =
   /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-5][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}$/;
 
 const ulidRegex = /^[0123456789ABCDEFGHJKMNPQRSTVWXYZ]{26}$/;
 
-function formatValueForLog(value: unknown): string {
-  return typeof value === "symbol" ? value.toString() : String(value);
+function cloneDefaultArray(
+  defaultValue?: readonly unknown[],
+): unknown[] | undefined {
+  if (!defaultValue) {
+    return defaultValue;
+  }
+
+  return [...defaultValue];
 }
 
 /**
  * Checks if the provided result is a `Success` type.
  *
  * @template T The type of the value contained in the `Success` type.
- * @param result The result to check, which can be either a `Success<T>` or `Failed`.
- * @returns `true` if the result is a `Success<T>`, `false` if it is a `Failed`.
- * @remarks This function acts as a type guard, narrowing the type of `result` to `Success<T>` when the condition is met.
+ * @param {Readonly<Success<T> | Failed>} result The result to check, which can
+ * be either a `Success<T>` or `Failed`.
+ * @returns {boolean} `true` if the result is a `Success<T>`, `false` if it is a `Failed`.
+ * This function acts as a type guard, narrowing the type of `result`
+ * to `Success<T>` when the condition is met.
  * @example
  * ```typescript
  * const result = await someAsyncFunction();
- * if (isSuccess(result)) {
- *   console.log(result.value); // TypeScript knows `value` is of type `T`
- * }
+* if (isSuccess(result)) {
+*   return result.value; // TypeScript knows `value` is of type `T`
+* }
  * ```
  */
-export function isSuccess<T>(
-  result: Success<T> | Failed,
+function isSuccess<T>(
+  result: Readonly<Success<T> | Failed>,
 ): result is Success<T> {
   return !result.isError;
 }
@@ -37,9 +48,9 @@ export function isSuccess<T>(
  * @param {unknown} value - The value to check.
  * @returns {boolean} True if the value is a string.
  */
-export function isString<T extends string>(value: Nullable<T>): value is T;
-export function isString(value: unknown): value is string;
-export function isString(value: unknown): value is string {
+function isString<T extends string>(value: Nullable<T>): value is T;
+function isString(value: unknown): value is string;
+function isString(value: unknown): value is string {
   return typeof value === "string";
 }
 
@@ -48,8 +59,8 @@ export function isString(value: unknown): value is string {
  * @param {unknown} value - The value to check.
  * @returns {boolean} True if the value is a string.
  */
-export function isEmptyString(value: unknown): boolean {
-  if (!isString(value)) return false;
+function isEmptyString(value: unknown): boolean {
+  if (!isString(value)) {return false;}
   return value.trim() === "";
 }
 
@@ -58,7 +69,7 @@ export function isEmptyString(value: unknown): boolean {
  * @param {unknown} value - The value to check.
  * @returns {boolean} True if the value is null.
  */
-export function isNull(value: unknown): value is null {
+function isNull(value: unknown): value is null {
   return value === null;
 }
 
@@ -67,34 +78,34 @@ export function isNull(value: unknown): value is null {
  * @param {unknown} value - The value to check.
  * @returns {boolean} True if the value is undefined.
  */
-export function isUndefined(value: unknown): value is undefined {
-  return value === undefined;
+function isUndefined(value: unknown): value is undefined {
+  return typeof value === "undefined";
 }
 
 /**
  * Checks whether an Optional value is currently in its missing state.
- * @param value - The Optional value to check.
- * @returns True when the value is undefined.
+ * @param {Optional<T>} value - The Optional value to check.
+ * @returns {boolean} True when the value is undefined.
  */
-export function isOptional<T>(value: Optional<T>): value is undefined {
+function isOptional<T>(value: Optional<T>): value is undefined {
   return isUndefined(value);
 }
 
 /**
  * Checks whether a Maybe value is currently in its missing state.
- * @param value - The Maybe value to check.
- * @returns True when the value is null.
+ * @param {Maybe<T>} value - The Maybe value to check.
+ * @returns {boolean} True when the value is null.
  */
-export function isMaybe<T>(value: Maybe<T>): value is null {
+function isMaybe<T>(value: Maybe<T>): value is null {
   return isNull(value);
 }
 
 /**
  * Checks whether a Nullable value is currently in its missing state.
- * @param value - The Nullable value to check.
- * @returns True when the value is null or undefined.
+ * @param {Nullable<T>} value - The Nullable value to check.
+ * @returns {boolean} True when the value is null or undefined.
  */
-export function isNullable<T>(value: Nullable<T>): value is null | undefined {
+function isNullable<T>(value: Nullable<T>): value is null | undefined {
   return isNull(value) || isUndefined(value);
 }
 
@@ -103,9 +114,9 @@ export function isNullable<T>(value: Nullable<T>): value is null | undefined {
  * @param {unknown} value - The value to check.
  * @returns {boolean} True if the value is an array.
  */
-export function isArray<T>(value: Nullable<T[]>): value is T[];
-export function isArray<T>(value: unknown): value is T[];
-export function isArray<T>(value: unknown): value is T[] {
+function isArray<T>(value: Nullable<readonly T[]>): value is readonly T[];
+function isArray(value: unknown): value is readonly unknown[];
+function isArray(value: unknown): value is readonly unknown[] {
   return Array.isArray(value);
 }
 
@@ -114,10 +125,10 @@ export function isArray<T>(value: unknown): value is T[] {
  * @param {unknown} value - The value to check.
  * @returns {boolean} True if the value is an empty array.
  */
-export function isEmptyArray<T>(value: Nullable<T[]>): value is T[];
-export function isEmptyArray<T>(value: unknown): value is T[];
-export function isEmptyArray<T>(value: unknown): value is T[] {
-  return Array.isArray(value) && value.length === 0;
+function isEmptyArray<T>(value: Nullable<readonly T[]>): value is readonly T[];
+function isEmptyArray(value: unknown): value is readonly unknown[];
+function isEmptyArray(value: unknown): value is readonly unknown[] {
+  return Array.isArray(value) && value.length === EMPTY_LENGTH;
 }
 
 /**
@@ -125,9 +136,9 @@ export function isEmptyArray<T>(value: unknown): value is T[] {
  * @param {unknown} value - The value to check.
  * @returns {boolean} True if the value is an array.
  */
-export function fastIsArray<T>(value: Nullable<T[]>): value is T[];
-export function fastIsArray<T>(value: unknown): value is T[];
-export function fastIsArray<T>(value: unknown): value is T[] {
+function fastIsArray<T>(value: Nullable<readonly T[]>): value is readonly T[];
+function fastIsArray(value: unknown): value is readonly unknown[];
+function fastIsArray(value: unknown): value is readonly unknown[] {
   return Object.prototype.toString.call(value) === "[object Array]";
 }
 
@@ -136,15 +147,13 @@ export function fastIsArray<T>(value: unknown): value is T[] {
  * @param {unknown} value - The value to check.
  * @returns {boolean} True if the value is a number.
  */
-export function isNumber<T extends number>(value: Nullable<T>): value is T;
-export function isNumber(value: unknown): value is number;
-export function isNumber(value: unknown): value is number {
+function isNumber<T extends number>(value: Nullable<T>): value is T;
+function isNumber(value: unknown): value is number;
+function isNumber(value: unknown): value is number {
   if (typeof value === "string" && value.trim() === "") {
     return false;
   }
-  return (
-    typeof value === "number" && !Number.isNaN(value) && Number.isFinite(+value)
-  );
+  return typeof value === "number" && !Number.isNaN(value) && Number.isFinite(value);
 }
 
 /**
@@ -152,9 +161,11 @@ export function isNumber(value: unknown): value is number {
  * @param {unknown} value - The value to check.
  * @returns {boolean} True if the value is an object.
  */
-export function isObject<T extends object>(value: Nullable<T>): value is T;
-export function isObject(value: unknown): value is object;
-export function isObject(value: unknown): value is object {
+function isObject<T extends Record<string, unknown>>(
+  value: Nullable<T>,
+): value is T;
+function isObject(value: unknown): value is Record<string, unknown>;
+function isObject(value: unknown): value is Record<string, unknown> {
   if (
     typeof value !== "object" ||
     value === null ||
@@ -164,10 +175,8 @@ export function isObject(value: unknown): value is object {
     return false;
   }
 
-  const prototype = Object.getPrototypeOf(value);
-  return (
-    prototype === Object.prototype
-  );
+  const objectValue: object = value;
+  return Object.getPrototypeOf(objectValue) === Object.prototype;
 }
 
 /**
@@ -175,9 +184,9 @@ export function isObject(value: unknown): value is object {
  * @param {unknown} value - The value to check.
  * @returns {boolean} True if the value is a boolean.
  */
-export function isBoolean<T extends boolean>(value: Nullable<T>): value is T;
-export function isBoolean(value: unknown): value is boolean;
-export function isBoolean(value: unknown): value is boolean {
+function isBoolean<T extends boolean>(value: Nullable<T>): value is T;
+function isBoolean(value: unknown): value is boolean;
+function isBoolean(value: unknown): value is boolean {
   return typeof value === "boolean";
 }
 
@@ -186,9 +195,11 @@ export function isBoolean(value: unknown): value is boolean {
  * @param {unknown} value - The value to check.
  * @returns {boolean} True if the value is a function.
  */
-export function isFunction<T extends Function>(value: Nullable<T>): value is T;
-export function isFunction(value: unknown): value is Function;
-export function isFunction(value: unknown): value is Function {
+function isFunction<T extends UnknownFunction>(
+  value: Nullable<T>,
+): value is T;
+function isFunction(value: unknown): value is UnknownFunction;
+function isFunction(value: unknown): value is UnknownFunction {
   return typeof value === "function";
 }
 
@@ -197,14 +208,16 @@ export function isFunction(value: unknown): value is Function {
  * @param {unknown} value - The value to check.
  * @returns {boolean} True if the value is a promise.
  */
-export function isPromise<T>(value: Nullable<Promise<T>>): value is Promise<T>;
-export function isPromise(value: unknown): value is Promise<unknown>;
-export function isPromise(value: unknown): value is Promise<unknown> {
-  return (
-    typeof value === "object" &&
-    value !== null &&
-    typeof (value as Promise<unknown>).then === "function"
-  );
+function isPromise<T>(
+  value: Nullable<Readonly<PromiseLike<T>>>,
+): value is PromiseLike<T>;
+function isPromise(value: unknown): value is PromiseLike<unknown>;
+function isPromise(value: unknown): value is PromiseLike<unknown> {
+  if (typeof value !== "object" || value === null) {
+    return false;
+  }
+
+  return typeof Reflect.get(value, "then") === "function";
 }
 
 /**
@@ -212,9 +225,9 @@ export function isPromise(value: unknown): value is Promise<unknown> {
  * @param {unknown} value - The value to check.
  * @returns {boolean} True if the value is an error.
  */
-export function isError<T extends Error>(value: Nullable<T>): value is T;
-export function isError(value: unknown): value is Error;
-export function isError(value: unknown): value is Error {
+function isError<T extends Error>(value: Nullable<T>): value is T;
+function isError(value: unknown): value is Error;
+function isError(value: unknown): value is Error {
   return value instanceof Error;
 }
 
@@ -223,9 +236,9 @@ export function isError(value: unknown): value is Error {
  * @param {unknown} value - The value to check.
  * @returns {boolean} True if the value is a date.
  */
-export function isDate<T extends Date>(value: Nullable<T>): value is T;
-export function isDate(value: unknown): value is Date;
-export function isDate(value: unknown): value is Date {
+function isDate<T extends Date>(value: Nullable<T>): value is T;
+function isDate(value: unknown): value is Date;
+function isDate(value: unknown): value is Date {
   return value instanceof Date;
 }
 
@@ -234,9 +247,9 @@ export function isDate(value: unknown): value is Date {
  * @param {unknown} value - The value to check.
  * @returns {boolean} True if the value is a RegExp.
  */
-export function isRegExp<T extends RegExp>(value: Nullable<T>): value is T;
-export function isRegExp(value: unknown): value is RegExp;
-export function isRegExp(value: unknown): value is RegExp {
+function isRegExp<T extends RegExp>(value: Nullable<T>): value is T;
+function isRegExp(value: unknown): value is RegExp;
+function isRegExp(value: unknown): value is RegExp {
   return value instanceof RegExp;
 }
 
@@ -245,9 +258,9 @@ export function isRegExp(value: unknown): value is RegExp {
  * @param {unknown} value - The value to check.
  * @returns {boolean} True if the value is a symbol.
  */
-export function isSymbol<T extends symbol>(value: Nullable<T>): value is T;
-export function isSymbol(value: unknown): value is symbol;
-export function isSymbol(value: unknown): value is symbol {
+function isSymbol<T extends symbol>(value: Nullable<T>): value is T;
+function isSymbol(value: unknown): value is symbol;
+function isSymbol(value: unknown): value is symbol {
   return typeof value === "symbol";
 }
 
@@ -256,13 +269,13 @@ export function isSymbol(value: unknown): value is symbol {
  * @param {unknown} value - The value to check.
  * @returns {boolean} True if the value is a plain object.
  */
-export function isEmptyObject<T extends Record<string, unknown>>(
+function isEmptyObject<T extends Record<string, unknown>>(
   value: Nullable<T>,
 ): value is T;
-export function isEmptyObject(
+function isEmptyObject(
   value: unknown,
 ): value is Record<string, unknown>;
-export function isEmptyObject(
+function isEmptyObject(
   value: unknown,
 ): value is Record<string, unknown> {
   return (
@@ -271,7 +284,7 @@ export function isEmptyObject(
     !isUndefined(value) &&
     !isEmptyArray(value) &&
     Object.getPrototypeOf(value) === Object.prototype &&
-    Object.keys(value).length === 0
+    Object.keys(value).length === EMPTY_LENGTH
   );
 }
 
@@ -281,17 +294,9 @@ export function isEmptyObject(
  * @param {unknown} constructor - The class constructor to check against.
  * @returns {boolean} True if the value is an instance of the class.
  */
-export function isInstanceOf<T>(
-  value: Nullable<T>,
-  constructor: { new (...args: unknown[]): T },
-): value is T;
-export function isInstanceOf<T>(
+function isInstanceOf<T>(
   value: unknown,
-  constructor: { new (...args: unknown[]): T },
-): value is T;
-export function isInstanceOf<T>(
-  value: unknown,
-  constructor: { new (...args: unknown[]): T },
+  constructor: new (...args: unknown[]) => T,
 ): value is T {
   return value instanceof constructor;
 }
@@ -301,10 +306,10 @@ export function isInstanceOf<T>(
  * @param {unknown} object - The object to get the keys of.
  * @returns {Array} Keys of object.
  */
-export function getKeys<T extends Record<string, unknown>>(
+function getKeys<T extends Record<string, unknown>>(
   object: T,
-): Array<keyof T> {
-  return Object.keys(object) as Array<keyof T>;
+): (keyof T)[] {
+  return Object.keys(object) as (keyof T)[];
 }
 
 /**
@@ -315,9 +320,11 @@ export function getKeys<T extends Record<string, unknown>>(
  * be parsed.
  * @returns {number} The parsed integer.
  */
-export function parseInteger(
+function parseInteger(value: unknown): Optional<number>;
+function parseInteger(value: unknown, defaultValue: number): number;
+function parseInteger(
   value: unknown,
-  defaultValue: Optional<number> = undefined,
+  defaultValue?: number,
 ): Optional<number> {
   if (isNumber(value)) {
     return Math.floor(value);
@@ -329,10 +336,6 @@ export function parseInteger(
       return parsed;
     }
   }
-
-  console.error(
-    `typeguard -> parseInteger: could not parse value: ${formatValueForLog(value)}`,
-  );
   return defaultValue;
 }
 
@@ -341,7 +344,7 @@ export function parseInteger(
  * @param {unknown} value - The value to check.
  * @returns {boolean} True if the value is an integer.
  */
-export function isInteger(value: unknown): value is number {
+function isInteger(value: unknown): value is number {
   return typeof value === "number" && Number.isInteger(value);
 }
 
@@ -350,7 +353,7 @@ export function isInteger(value: unknown): value is number {
  * @param {unknown} value - The value to check.
  * @returns {boolean} True if the value is a float.
  */
-export function isFloat(value: unknown): value is number {
+function isFloat(value: unknown): value is number {
   return (
     typeof value === "number" &&
     !Number.isNaN(value) &&
@@ -366,22 +369,23 @@ export function isFloat(value: unknown): value is number {
  * be parsed.
  * @returns {number} The parsed float.
  */
-export function parseFloat<T extends number, R extends Optional<T>>(
+function parseFloat(value: unknown): Optional<number>;
+function parseFloat(value: unknown, defaultValue: number): number;
+function parseFloat(
   value: unknown,
-  defaultValue?: R,
-): ResolveOptional<T, R> {
+  defaultValue?: number,
+): Optional<number> {
   if (isNumber(value)) {
-    return value as ResolveOptional<T, R>;
+    return value;
   }
   if (isString(value)) {
     const normalizedValue = value.trim().replace(",", ".");
     const parsed = Number.parseFloat(normalizedValue);
-    return Number.isNaN(parsed)
-      ? (defaultValue as ResolveOptional<T, R>)
-      : (parsed as ResolveOptional<T, R>);
+    if (!Number.isNaN(parsed)) {
+      return parsed;
+    }
   }
-  console.error(`typebuddy -> parseFloat: could not parse ${formatValueForLog(value)} `);
-  return defaultValue as ResolveOptional<T, R>;
+  return defaultValue;
 }
 /**
  * Parses the input value as a number. Returns NaN if the value cannot be
@@ -391,23 +395,23 @@ export function parseFloat<T extends number, R extends Optional<T>>(
  * be parsed.
  * @returns {number} The parsed number.
  */
-export function parseNumber<T extends number, R extends Optional<T>>(
+function parseNumber(value: unknown): Optional<number>;
+function parseNumber(value: unknown, defaultValue: number): number;
+function parseNumber(
   value: unknown,
-  defaultValue?: R,
-): ResolveOptional<T, R> {
+  defaultValue?: number,
+): Optional<number> {
   if (isNumber(value)) {
-    return value as ResolveOptional<T, R>;
+    return value;
   }
   if (isString(value)) {
     const normalizedValue = value.trim().replace(",", ".");
     const parsed = Number(normalizedValue);
     if (Number.isFinite(parsed)) {
-      return parsed as ResolveOptional<T, R>;
+      return parsed;
     }
-    return defaultValue as ResolveOptional<T, R>;
   }
-  console.error(`typebuddy -> parseNumber: could not parse ${formatValueForLog(value)} `);
-  return defaultValue as ResolveOptional<T, R>;
+  return defaultValue;
 }
 
 /**
@@ -418,21 +422,20 @@ export function parseNumber<T extends number, R extends Optional<T>>(
  * be parsed.
  * @returns {string} The parsed string.
  */
-export function parseString<T extends string, R extends Optional<T>>(
+function parseString(
   value: unknown,
-  defaultValue?: R,
-): ResolveOptional<T, R> {
+  defaultValue = "",
+): string {
   if (isString(value)) {
-    return value as ResolveOptional<T, R>;
+    return value;
   }
   if (isNumber(value)) {
-    return value.toString() as ResolveOptional<T, R>;
+    return value.toString();
   }
   if (typeof value === "boolean") {
-    return value.toString() as ResolveOptional<T, R>;
+    return value.toString();
   }
-  console.error(`typebuddy -> parseString: could not parse ${formatValueForLog(value)} `);
-  return (defaultValue ?? "") as ResolveOptional<T, R>;
+  return defaultValue;
 }
 
 /**
@@ -441,7 +444,7 @@ export function parseString<T extends string, R extends Optional<T>>(
  * @returns {boolean} True if the value is nullish, empty string, empty array,
  * false, or a plain object whose values are all empty-like.
  */
-export function isEmptyLike(value: unknown): boolean {
+function isEmptyLike(value: unknown): boolean {
   if (isNull(value) || isUndefined(value)) {
     return true;
   }
@@ -449,17 +452,17 @@ export function isEmptyLike(value: unknown): boolean {
     return isEmptyString(value);
   }
   if (isArray(value)) {
-    return value.length === 0 || value.every((entry) => isEmptyLike(entry));
+    return value.every((entry) => {return isEmptyLike(entry)});
   }
   if (isBoolean(value)) {
-    return value === false;
+    return !value;
   }
   if (isObject(value)) {
     if (Object.getPrototypeOf(value) !== Object.prototype) {
       return false;
     }
-    return Object.values(value as Record<string, unknown>).every((entry) =>
-      isEmptyLike(entry),
+    return Object.values(value).every((entry) =>
+      {return isEmptyLike(entry)},
     );
   }
   return false;
@@ -471,14 +474,14 @@ export function isEmptyLike(value: unknown): boolean {
  * This function determines if the given value is either an empty string,
  * an empty object, or a string representation of an empty object.
  *
- * @param value - The value to check for emptiness. It can be of any type.
- * @returns `true` if the value is an empty string, an empty object, or a string
+ * @param {unknown} value - The value to check for emptiness. It can be of any type.
+ * @returns {boolean} `true` if the value is an empty string, an empty object, or a string
  *          representation of an empty object; otherwise, `false`.
  */
-export function hasEmptyValues(value: unknown): boolean {
+function hasEmptyValues(value: unknown): boolean {
   if (isString(value)) {
     try {
-      if (isEmptyObject(JSON.parse(value))) return true;
+      if (isEmptyObject(JSON.parse(value))) {return true;}
     } catch {
       return isEmptyString(value);
     }
@@ -496,53 +499,53 @@ export function hasEmptyValues(value: unknown): boolean {
  * @returns {Optional<T[]>} The parsed array.
  */
 
-export function parseArray<T, R extends Optional<T[]>>(
+function parseArray<T>(value: readonly T[]): T[];
+function parseArray(value: string): string[];
+function parseArray(value: number): number[];
+function parseArray<T extends Record<string, unknown>>(value: T): T[];
+function parseArray<T>(value: unknown, defaultValue: readonly T[]): T[];
+function parseArray(value: unknown): unknown[] | undefined;
+function parseArray(
   value: unknown,
-  defaultValue?: R,
-): ResolveOptional<T[], R> {
-  if (Array.isArray(value)) {
-    return value as ResolveOptional<T[], R>;
+  defaultValue?: readonly unknown[],
+): unknown[] | undefined {
+  if (isArray(value)) {
+    return [...value];
   }
   if (isString(value)) {
     const parsed = value
       .split(/[,|;\n\t ]+/)
-      .map((entry) => entry.trim())
-      .filter((entry) => entry.length > 0);
-    return parsed as ResolveOptional<T[], R>;
+      .map((entry) => {return entry.trim()})
+      .filter((entry) => {return entry.length > EMPTY_LENGTH});
+    return parsed;
   }
   if (isNumber(value)) {
-    return [value] as unknown as ResolveOptional<T[], R>;
+    return [value];
   }
   if (isEmptyObject(value)) {
-    return [value] as unknown as ResolveOptional<T[], R>;
+    return [value];
   }
 
   if (isNull(value) || isUndefined(value)) {
-    console.error(
-      `typeguard -> parseArray: could not parse ${formatValueForLog(value)} `,
-    );
-    return defaultValue as ResolveOptional<T[], R>;
+    return cloneDefaultArray(defaultValue);
   }
-  console.error(
-    `typeguard -> parseArray: could not parse ${formatValueForLog(value)} `,
-  );
-  return defaultValue as ResolveOptional<T[], R>;
+  return cloneDefaultArray(defaultValue);
 }
 
 /**
  * Compares two arrays and returns true if they have at least one common value.
- * @param array1 - First array.
- * @param array2 - Second array.
+ * @param {readonly T[]} array1 - First array.
+ * @param {readonly T[]} array2 - Second array.
  * @returns {boolean} True if the arrays have at least one common value.
  */
-export function arrayContainsCommonValue<T>(
-  array1: T[],
-  array2: T[],
+function arrayContainsCommonValue<T>(
+  array1: readonly T[],
+  array2: readonly T[],
 ): boolean {
-  if (!isArray(array1) || !isArray(array2)) return false;
+  if (!isArray(array1) || !isArray(array2)) {return false;}
 
   const valueOccurrences = new Set(array1);
-  return array2.some((value) => valueOccurrences.has(value));
+  return array2.some((value) => {return valueOccurrences.has(value)});
 }
 
 /**
@@ -550,7 +553,7 @@ export function arrayContainsCommonValue<T>(
  * @param {string} input - The input to check.
  * @returns {boolean} True if the input is a UUID string.
  */
-export function isUuidString(input: unknown): input is string {
+function isUuidString(input: unknown): input is string {
   return isString(input) && uuidRegex.test(input);
 }
 
@@ -559,49 +562,83 @@ export function isUuidString(input: unknown): input is string {
  * @param {string }input - The input to check.
  * @returns {boolean} True if the input is a ULID string.
  */
-export function isUlidString(input: unknown): input is string {
+function isUlidString(input: unknown): input is string {
   return typeof input === "string" && ulidRegex.test(input);
 }
 
 /**
  * Parses the domain name from a URL.
  * @param {string} url - The URL to parse.
+ * @param {Optional<T>} defaultValue - The fallback when parsing fails.
  * @returns {string} The domain name.
  */
-export function parseDomainName<T extends string, R extends Optional<T>>(
+function parseDomainName(url: string): Optional<string>;
+function parseDomainName(url: string, defaultValue: string): string;
+function parseDomainName(
   url: string,
-  defaultValue?: R,
-): ResolveOptional<T, R> {
+  defaultValue?: string,
+): Optional<string> {
   const normalizedValue = url.trim();
   if (normalizedValue === "" || normalizedValue.startsWith("/")) {
-    console.error(
-      `typebuddy -> parseDomainName: could not parse domain name: ${url}`,
-    );
-    return defaultValue as ResolveOptional<T, R>;
+    return defaultValue;
   }
 
-  const urlCandidate = normalizedValue.includes("://")
-    ? normalizedValue
-    : `https://${normalizedValue}`;
+  let urlCandidate = normalizedValue;
+  if (!normalizedValue.includes("://")) {
+    urlCandidate = `https://${normalizedValue}`;
+  }
 
   let hostname = "";
   try {
-    hostname = new URL(urlCandidate).hostname;
+    ({ hostname } = new URL(urlCandidate));
   } catch {
-    console.error(
-      `typebuddy -> parseDomainName: could not parse domain name: ${url}`,
-    );
-    return defaultValue as ResolveOptional<T, R>;
+    return defaultValue;
   }
 
   const normalizedHostname = hostname.replace(/^www\d?\./i, "");
   const [domainName] = normalizedHostname.split(".");
   if (!domainName) {
-    console.error(
-      `typebuddy -> parseDomainName: could not parse domain name: ${url}`,
-    );
-    return defaultValue as ResolveOptional<T, R>;
+    return defaultValue;
   }
 
-  return domainName as ResolveOptional<T, R>;
+  return domainName;
 }
+
+export {
+  arrayContainsCommonValue,
+  fastIsArray,
+  getKeys,
+  hasEmptyValues,
+  isArray,
+  isBoolean,
+  isDate,
+  isEmptyArray,
+  isEmptyLike,
+  isEmptyObject,
+  isEmptyString,
+  isError,
+  isFloat,
+  isFunction,
+  isInstanceOf,
+  isInteger,
+  isMaybe,
+  isNull,
+  isNullable,
+  isNumber,
+  isObject,
+  isOptional,
+  isPromise,
+  isRegExp,
+  isString,
+  isSuccess,
+  isSymbol,
+  isUlidString,
+  isUndefined,
+  isUuidString,
+  parseArray,
+  parseDomainName,
+  parseFloat,
+  parseInteger,
+  parseNumber,
+  parseString,
+};

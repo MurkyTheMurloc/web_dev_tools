@@ -1,3 +1,5 @@
+import { describe, expect, it } from "vitest";
+
 import { isDate } from "../src/type_helper.js";
 
 describe("isDate", () => {

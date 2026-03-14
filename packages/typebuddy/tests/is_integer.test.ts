@@ -1,3 +1,5 @@
+import { describe, expect, it, vi } from "vitest";
+
 import { isInteger } from "../src/type_helper.js";
 
 describe("isInteger", () => {

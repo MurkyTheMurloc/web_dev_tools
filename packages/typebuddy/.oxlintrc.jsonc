@@ -1,0 +1,68 @@
+{
+    "$schema": "../../node_modules/oxlint/configuration_schema.json",
+    "extends": ["./node_modules/@murky-web/config/oxc/.oxlintrc.jsonc"],
+    "ignorePatterns": ["smoke/treeshake/.output/**"],
+    "globals": {
+        "console": "readonly",
+        "URL": "readonly"
+    },
+    "overrides": [
+        {
+            "files": ["tests/**/*.ts", "smoke/**/*.ts"],
+            "globals": {
+                "Bun": "readonly",
+                "describe": "readonly",
+                "expect": "readonly",
+                "it": "readonly",
+                "vi": "readonly"
+            },
+            "rules": {
+                "explicit-function-return-type": "off",
+                "no-magic-numbers": "off",
+                "no-null": "off",
+                "no-relative-parent-imports": "off",
+                "no-undef": "off",
+                "no-undefined": "off",
+                "no-importing-vitest-globals": "off",
+                "no-unsafe-type-assertion": "off",
+                "no-useless-undefined": "off",
+                "filename-case": "off",
+                "prefer-describe-function-title": "off",
+                "prefer-readonly-parameter-types": "off",
+                "prefer-to-be-falsy": "off",
+                "prefer-to-be-truthy": "off",
+                "prefer-number-properties": "off",
+                "sort-keys": "off",
+                "symbol-description": "off"
+            }
+        },
+        {
+            "files": ["tsdown.config.ts", "vitest.config.ts", "biome/**/*.ts"],
+            "globals": {
+                "URL": "readonly"
+            },
+            "rules": {
+                "arrow-body-style": "off",
+                "explicit-function-return-type": "off",
+                "exports-last": "off",
+                "group-exports": "off",
+                "no-default-export": "off",
+                "sort-keys": "off"
+            }
+        },
+        {
+            "files": ["rules/**/*.ts", "oxlint/**/*.ts", "smoke/oxlint/**/*.ts", "smoke/globals/**/*.d.ts"],
+            "rules": {
+                "complexity": "off",
+                "consistent-type-definitions": "off",
+                "consistent-function-scoping": "off",
+                "exports-last": "off",
+                "filename-case": "off",
+                "group-exports": "off",
+                "no-empty-named-blocks": "off",
+                "no-invalid-void-type": "off",
+                "prefer-readonly-parameter-types": "off"
+            }
+        }
+    ]
+}

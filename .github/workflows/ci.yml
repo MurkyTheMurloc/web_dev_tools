@@ -1,0 +1,45 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches:
+      - master
+  workflow_dispatch:
+
+jobs:
+  typebuddy:
+    name: Typebuddy
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version-file: "package.json"
+
+      - name: Install dependencies
+        run: bun install --frozen-lockfile
+
+      - name: Typecheck typebuddy
+        run: bun --cwd packages/typebuddy run typecheck
+
+      - name: Lint typebuddy
+        run: bun --cwd packages/typebuddy run lint
+
+      - name: Test typebuddy
+        run: bun --cwd packages/typebuddy run test
+
+      - name: Smoke globals
+        run: bun --cwd packages/typebuddy run smoke:globals
+
+      - name: Smoke oxlint
+        run: bun --cwd packages/typebuddy run smoke:oxlint
+
+      - name: Smoke oxlint fix
+        run: bun --cwd packages/typebuddy run smoke:oxlint:fix
+
+      - name: Smoke treeshaking
+        run: bun --cwd packages/typebuddy run smoke:treeshake
