@@ -1,0 +1,10 @@
+{
+  "jsPlugins": ["../../dist/oxlint.js"],
+  "rules": {
+    "typebuddy/prefer-maybe-promise": "error",
+    "typebuddy/prefer-optional": "error",
+    "typebuddy/prefer-maybe": "error",
+    "typebuddy/prefer-nullable": "error",
+    "typebuddy/require-try-catch": "error",
+  },
+}

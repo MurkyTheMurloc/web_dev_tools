@@ -16,6 +16,7 @@ export default defineConfig([
   {
     entry: {
       eslint: "./eslint/index.ts",
+      oxlint: "./oxlint/index.ts",
       biome: "./biome/index.ts",
     },
     clean: false,

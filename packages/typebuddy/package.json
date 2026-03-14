@@ -20,6 +20,11 @@
       "import": "./dist/eslint.js",
       "default": "./dist/eslint.js"
     },
+    "./oxlint": {
+      "types": "./dist/oxlint.d.ts",
+      "import": "./dist/oxlint.js",
+      "default": "./dist/oxlint.js"
+    },
     "./biome": {
       "types": "./dist/biome.d.ts",
       "import": "./dist/biome.js",
@@ -36,6 +41,8 @@
     "lint:fix": "oxlint -c ../config/oxc/.oxlintrc.jsonc --type-aware --fix src eslint biome tests tsdown.config.ts",
     "format": "oxfmt -c ../config/oxc/.oxfmtrc.jsonc src eslint biome tests tsdown.config.ts",
     "format:check": "oxfmt -c ../config/oxc/.oxfmtrc.jsonc --check src eslint biome tests tsdown.config.ts",
+    "smoke:oxlint": "bun run build && oxlint -c ./smoke/oxlint/.oxlintrc.jsonc ./smoke/oxlint/violations.ts ./smoke/oxlint/async-violations.ts",
+    "smoke:oxlint:fix": "bun run build && bun ./smoke/oxlint/run-fix-smoke.ts",
     "typecheck": "tsgo --project ./tsconfig.json --noEmit"
   },
   "files": [

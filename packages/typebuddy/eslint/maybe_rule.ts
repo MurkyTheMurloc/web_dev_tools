@@ -4,16 +4,13 @@ const rule = {
     hasSuggestions: true,
 
     docs: {
-      description:
-        "Use Maybe<T> for T | null and Nullable<T> for T | null | undefined",
+      description: "Use Maybe<T> for T | null",
     },
 
     fixable: "code",
     schema: [],
     messages: {
       useMaybe: "Use Maybe<{{type}}> instead of {{type}} | null",
-      useNullable:
-        "Use Nullable<{{type}}> instead of {{type}} | null | undefined",
     },
   },
   defaultOptions: [],
@@ -32,7 +29,6 @@ const rule = {
         );
 
         if (nullType && !undefinedType && otherTypes.length === 1) {
-          // T | null -> Maybe<T>
           const typeText = sourceCode.getText(otherTypes[0]);
           context.report({
             node,
@@ -40,17 +36,6 @@ const rule = {
             data: { type: typeText },
             fix(fixer) {
               return fixer.replaceText(node, `Maybe<${typeText}>`);
-            },
-          });
-        } else if (nullType && undefinedType && otherTypes.length === 1) {
-          // T | null | undefined -> Nullable<T>
-          const typeText = sourceCode.getText(otherTypes[0]);
-          context.report({
-            node,
-            messageId: "useNullable",
-            data: { type: typeText },
-            fix(fixer) {
-              return fixer.replaceText(node, `Nullable<${typeText}>`);
             },
           });
         }
