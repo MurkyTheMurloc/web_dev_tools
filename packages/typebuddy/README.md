@@ -49,7 +49,7 @@ if (isEmptyObject(obj)) {
 ### Type-system guards
 
 ```typescript
-import { isNullable, isOptional } from "@murky-web/typebuddy";
+import { isArray, isNullable, isOptional } from "@murky-web/typebuddy";
 import type { Nullable, Optional } from "@murky-web/typebuddy";
 
 const title: Optional<string> = "ready";
@@ -65,6 +65,14 @@ if (isNullable(subtitle)) {
 // after the early guards both values are narrowed to string
 title.toUpperCase();
 subtitle.toUpperCase();
+
+const tags: Nullable<string[]> = ["a", "b"];
+if (!isArray(tags)) {
+    throw new Error("tags missing");
+}
+
+// tags is narrowed to string[]
+tags.map((tag) => tag.toUpperCase());
 ```
 
 ### Global types

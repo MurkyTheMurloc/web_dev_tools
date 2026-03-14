@@ -37,6 +37,8 @@ export function isSuccess<T>(
  * @param {unknown} value - The value to check.
  * @returns {boolean} True if the value is a string.
  */
+export function isString<T extends string>(value: Nullable<T>): value is T;
+export function isString(value: unknown): value is string;
 export function isString(value: unknown): value is string {
   return typeof value === "string";
 }
@@ -101,6 +103,8 @@ export function isNullable<T>(value: Nullable<T>): value is null | undefined {
  * @param {unknown} value - The value to check.
  * @returns {boolean} True if the value is an array.
  */
+export function isArray<T>(value: Nullable<T[]>): value is T[];
+export function isArray<T>(value: unknown): value is T[];
 export function isArray<T>(value: unknown): value is T[] {
   return Array.isArray(value);
 }
@@ -110,6 +114,8 @@ export function isArray<T>(value: unknown): value is T[] {
  * @param {unknown} value - The value to check.
  * @returns {boolean} True if the value is an empty array.
  */
+export function isEmptyArray<T>(value: Nullable<T[]>): value is T[];
+export function isEmptyArray<T>(value: unknown): value is T[];
 export function isEmptyArray<T>(value: unknown): value is T[] {
   return Array.isArray(value) && value.length === 0;
 }
@@ -119,6 +125,8 @@ export function isEmptyArray<T>(value: unknown): value is T[] {
  * @param {unknown} value - The value to check.
  * @returns {boolean} True if the value is an array.
  */
+export function fastIsArray<T>(value: Nullable<T[]>): value is T[];
+export function fastIsArray<T>(value: unknown): value is T[];
 export function fastIsArray<T>(value: unknown): value is T[] {
   return Object.prototype.toString.call(value) === "[object Array]";
 }
@@ -128,6 +136,8 @@ export function fastIsArray<T>(value: unknown): value is T[] {
  * @param {unknown} value - The value to check.
  * @returns {boolean} True if the value is a number.
  */
+export function isNumber<T extends number>(value: Nullable<T>): value is T;
+export function isNumber(value: unknown): value is number;
 export function isNumber(value: unknown): value is number {
   if (typeof value === "string" && value.trim() === "") {
     return false;
@@ -142,6 +152,8 @@ export function isNumber(value: unknown): value is number {
  * @param {unknown} value - The value to check.
  * @returns {boolean} True if the value is an object.
  */
+export function isObject<T extends object>(value: Nullable<T>): value is T;
+export function isObject(value: unknown): value is object;
 export function isObject(value: unknown): value is object {
   if (
     typeof value !== "object" ||
@@ -163,6 +175,8 @@ export function isObject(value: unknown): value is object {
  * @param {unknown} value - The value to check.
  * @returns {boolean} True if the value is a boolean.
  */
+export function isBoolean<T extends boolean>(value: Nullable<T>): value is T;
+export function isBoolean(value: unknown): value is boolean;
 export function isBoolean(value: unknown): value is boolean {
   return typeof value === "boolean";
 }
@@ -172,6 +186,8 @@ export function isBoolean(value: unknown): value is boolean {
  * @param {unknown} value - The value to check.
  * @returns {boolean} True if the value is a function.
  */
+export function isFunction<T extends Function>(value: Nullable<T>): value is T;
+export function isFunction(value: unknown): value is Function;
 export function isFunction(value: unknown): value is Function {
   return typeof value === "function";
 }
@@ -181,6 +197,8 @@ export function isFunction(value: unknown): value is Function {
  * @param {unknown} value - The value to check.
  * @returns {boolean} True if the value is a promise.
  */
+export function isPromise<T>(value: Nullable<Promise<T>>): value is Promise<T>;
+export function isPromise(value: unknown): value is Promise<unknown>;
 export function isPromise(value: unknown): value is Promise<unknown> {
   return (
     typeof value === "object" &&
@@ -194,6 +212,8 @@ export function isPromise(value: unknown): value is Promise<unknown> {
  * @param {unknown} value - The value to check.
  * @returns {boolean} True if the value is an error.
  */
+export function isError<T extends Error>(value: Nullable<T>): value is T;
+export function isError(value: unknown): value is Error;
 export function isError(value: unknown): value is Error {
   return value instanceof Error;
 }
@@ -203,6 +223,8 @@ export function isError(value: unknown): value is Error {
  * @param {unknown} value - The value to check.
  * @returns {boolean} True if the value is a date.
  */
+export function isDate<T extends Date>(value: Nullable<T>): value is T;
+export function isDate(value: unknown): value is Date;
 export function isDate(value: unknown): value is Date {
   return value instanceof Date;
 }
@@ -212,6 +234,8 @@ export function isDate(value: unknown): value is Date {
  * @param {unknown} value - The value to check.
  * @returns {boolean} True if the value is a RegExp.
  */
+export function isRegExp<T extends RegExp>(value: Nullable<T>): value is T;
+export function isRegExp(value: unknown): value is RegExp;
 export function isRegExp(value: unknown): value is RegExp {
   return value instanceof RegExp;
 }
@@ -221,6 +245,8 @@ export function isRegExp(value: unknown): value is RegExp {
  * @param {unknown} value - The value to check.
  * @returns {boolean} True if the value is a symbol.
  */
+export function isSymbol<T extends symbol>(value: Nullable<T>): value is T;
+export function isSymbol(value: unknown): value is symbol;
 export function isSymbol(value: unknown): value is symbol {
   return typeof value === "symbol";
 }
@@ -230,6 +256,12 @@ export function isSymbol(value: unknown): value is symbol {
  * @param {unknown} value - The value to check.
  * @returns {boolean} True if the value is a plain object.
  */
+export function isEmptyObject<T extends Record<string, unknown>>(
+  value: Nullable<T>,
+): value is T;
+export function isEmptyObject(
+  value: unknown,
+): value is Record<string, unknown>;
 export function isEmptyObject(
   value: unknown,
 ): value is Record<string, unknown> {
@@ -249,6 +281,14 @@ export function isEmptyObject(
  * @param {unknown} constructor - The class constructor to check against.
  * @returns {boolean} True if the value is an instance of the class.
  */
+export function isInstanceOf<T>(
+  value: Nullable<T>,
+  constructor: { new (): T },
+): value is T;
+export function isInstanceOf<T>(
+  value: unknown,
+  constructor: { new (): T },
+): value is T;
 export function isInstanceOf<T>(
   value: unknown,
   constructor: { new (): T },
