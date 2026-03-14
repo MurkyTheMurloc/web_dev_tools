@@ -11,6 +11,7 @@ Zusätzlich liegen TypeScript-Templates bereit:
 
 - `typescript/tsconfig.base.jsonc`
 - `typescript/tsconfig.solid.jsonc`
+- `typescript/typebuddy-globals.d.ts`
 
 ## CLI Workflow
 
@@ -185,6 +186,37 @@ Wenn `--frontend-solid` gesetzt ist:
 - `./tsconfig.json` erweitert dann `./tsconfig.base.jsonc`
 - vorhandene Vite-Template-Dateien wie `tsconfig.app.json` und `tsconfig.node.json` werden entfernt, damit unsere Templates die single source of truth bleiben
 - aktuell werden Template-`tsconfig`s dabei bewusst direkt ersetzt und nicht automatisch gemerged
+
+## Optionale TypeBuddy Integration
+
+Wenn ein Projekt `@murky-web/typebuddy` nutzt, gibt es in `config` zwei opt-in
+Bausteine:
+
+### TypeScript Globals
+
+`typescript/typebuddy-globals.d.ts` aktiviert die globalen `typebuddy`-Typen:
+
+```ts
+import type {} from "@murky-web/typebuddy/globals";
+```
+
+Die Datei kann einfach ins Projekt-Root kopiert werden. Wenn sie dort liegt,
+wird sie von TypeScript automatisch mit aufgenommen.
+
+### Oxc Regeln
+
+`oxc/linting/typebuddy.jsonc` aktiviert die `typebuddy`-Regeln, und
+`oxc/.oxlintrc.typebuddy.jsonc` haengt zusaetzlich das `oxlint`-Plugin ein:
+
+```jsonc
+{
+  "extends": ["./.oxlintrc.jsonc", "./linting/typebuddy.jsonc"],
+  "jsPlugins": ["@murky-web/typebuddy/oxlint"]
+}
+```
+
+Damit bleibt die Standard-Config generisch, und `typebuddy` kann nur dort
+zugeschaltet werden, wo das Paket auch wirklich genutzt wird.
 
 ## Optionen
 

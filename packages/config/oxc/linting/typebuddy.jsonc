@@ -1,0 +1,9 @@
+{
+    "rules": {
+        "typebuddy/prefer-maybe-promise": "error",
+        "typebuddy/prefer-maybe": "error",
+        "typebuddy/prefer-nullable": "error",
+        "typebuddy/prefer-optional": "error",
+        "typebuddy/require-try-catch": "error"
+    }
+}
