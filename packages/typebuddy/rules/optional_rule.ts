@@ -5,23 +5,32 @@ const rule = {
       description: "Enforce using Optional<T> instead of T | undefined",
     },
     fixable: "code",
-
     schema: [],
     messages: {
       preferOptional: "Use Optional<{{type}}> instead of {{type}} | undefined",
     },
   },
   defaultOptions: [],
-  create(context) {
+  create(context: {
+    getSourceCode(): { getText(node: unknown): string };
+    report(descriptor: {
+      node: unknown;
+      messageId: string;
+      data: { type: string };
+      fix(fixer: { replaceText(node: unknown, text: string): unknown }): unknown;
+    }): void;
+  }) {
     return {
-      TSUnionType(node) {
+      TSUnionType(node: {
+        types: Array<{ type: string }>;
+      }) {
         if (node.types.length !== 2) return;
 
         const undefinedType = node.types.find(
-          (t) => t.type === "TSUndefinedKeyword"
+          (typeNode) => typeNode.type === "TSUndefinedKeyword",
         );
         const otherType = node.types.find(
-          (t) => t.type !== "TSUndefinedKeyword"
+          (typeNode) => typeNode.type !== "TSUndefinedKeyword",
         );
 
         if (undefinedType && otherType) {
@@ -41,4 +50,5 @@ const rule = {
     };
   },
 };
+
 export { rule as optionalRule };

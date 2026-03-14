@@ -2,11 +2,9 @@ const rule = {
   meta: {
     type: "suggestion",
     hasSuggestions: true,
-
     docs: {
       description: "Use Maybe<T> for T | null",
     },
-
     fixable: "code",
     schema: [],
     messages: {
@@ -14,18 +12,30 @@ const rule = {
     },
   },
   defaultOptions: [],
-  create(context) {
+  create(context: {
+    getSourceCode(): { getText(node: unknown): string };
+    report(descriptor: {
+      node: unknown;
+      messageId: string;
+      data: { type: string };
+      fix(fixer: { replaceText(node: unknown, text: string): unknown }): unknown;
+    }): void;
+  }) {
     return {
-      TSUnionType(node) {
+      TSUnionType(node: {
+        types: Array<{ type: string }>;
+      }) {
         const types = node.types;
         const sourceCode = context.getSourceCode();
 
-        const nullType = types.find((t) => t.type === "TSNullKeyword");
+        const nullType = types.find((typeNode) => typeNode.type === "TSNullKeyword");
         const undefinedType = types.find(
-          (t) => t.type === "TSUndefinedKeyword"
+          (typeNode) => typeNode.type === "TSUndefinedKeyword",
         );
         const otherTypes = types.filter(
-          (t) => t.type !== "TSNullKeyword" && t.type !== "TSUndefinedKeyword"
+          (typeNode) =>
+            typeNode.type !== "TSNullKeyword" &&
+            typeNode.type !== "TSUndefinedKeyword",
         );
 
         if (nullType && !undefinedType && otherTypes.length === 1) {

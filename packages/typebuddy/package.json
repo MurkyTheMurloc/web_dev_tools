@@ -10,15 +10,10 @@
       "import": "./dist/index.js",
       "default": "./dist/index.js"
     },
-    "./types": {
-      "types": "./dist/types.d.ts",
-      "import": "./dist/types.js",
-      "default": "./dist/types.js"
-    },
-    "./eslint": {
-      "types": "./dist/eslint.d.ts",
-      "import": "./dist/eslint.js",
-      "default": "./dist/eslint.js"
+    "./globals": {
+      "types": "./dist/globals.d.ts",
+      "import": "./dist/globals.js",
+      "default": "./dist/globals.js"
     },
     "./oxlint": {
       "types": "./dist/oxlint.d.ts",
@@ -37,20 +32,18 @@
     "build:local": "bun run build",
     "build": "bun run clean && tsdown && cp ./biome/*.grit ./dist/ && cp ./biome/*.gritt ./dist/",
     "clean": "rm -rf dist",
-    "lint": "oxlint -c ../config/oxc/.oxlintrc.jsonc --type-aware src eslint biome tests tsdown.config.ts",
-    "lint:fix": "oxlint -c ../config/oxc/.oxlintrc.jsonc --type-aware --fix src eslint biome tests tsdown.config.ts",
-    "format": "oxfmt -c ../config/oxc/.oxfmtrc.jsonc src eslint biome tests tsdown.config.ts",
-    "format:check": "oxfmt -c ../config/oxc/.oxfmtrc.jsonc --check src eslint biome tests tsdown.config.ts",
+    "lint": "oxlint -c ../config/oxc/.oxlintrc.jsonc --type-aware src rules biome tests tsdown.config.ts vitest.config.ts",
+    "lint:fix": "oxlint -c ../config/oxc/.oxlintrc.jsonc --type-aware --fix src rules biome tests tsdown.config.ts vitest.config.ts",
+    "format": "oxfmt -c ../config/oxc/.oxfmtrc.jsonc src rules biome tests tsdown.config.ts vitest.config.ts",
+    "format:check": "oxfmt -c ../config/oxc/.oxfmtrc.jsonc --check src rules biome tests tsdown.config.ts vitest.config.ts",
+    "smoke:globals": "bun run build && tsgo --project ./smoke/globals/tsconfig.json --noEmit",
     "smoke:oxlint": "bun run build && oxlint -c ./smoke/oxlint/.oxlintrc.jsonc ./smoke/oxlint/violations.ts ./smoke/oxlint/async-violations.ts",
     "smoke:oxlint:fix": "bun run build && bun ./smoke/oxlint/run-fix-smoke.ts",
-    "typecheck": "tsgo --project ./tsconfig.json --noEmit"
+    "typecheck": "tsgo --project ./tsconfig.json --noEmit && tsgo --project ./tsconfig.vitest.json --noEmit"
   },
   "files": [
     "dist"
   ],
-  "dependencies": {
-    "@typescript-eslint/utils": "^8.39.1"
-  },
   "license": "ISC",
   "type": "module",
   "sideEffects": false,

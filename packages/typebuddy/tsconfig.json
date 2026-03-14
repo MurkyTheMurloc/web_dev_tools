@@ -3,5 +3,13 @@
   "extends": "../../tsconfig.base.jsonc",
   "compilerOptions": {
     "rootDir": "."
-  }
+  },
+  "include": [
+    "src/**/*.ts",
+    "rules/**/*.ts",
+    "oxlint/**/*.ts",
+    "biome/**/*.ts",
+    "tsdown.config.ts"
+  ],
+  "exclude": ["dist", "tests", "smoke", "vitest.config.ts"]
 }

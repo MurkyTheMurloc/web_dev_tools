@@ -12,4 +12,4 @@ type ResolveOptional<T, R extends Optional<T>> = T extends Array<unknown>
   ? ResolveOptionalArray<T, R>
   : ResolveBasicOptional<T, R>;
 
-export { Optional, ResolveOptional };
+export type { Optional, ResolveOptional };

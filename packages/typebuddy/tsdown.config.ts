@@ -1,10 +1,10 @@
-import { defineConfig } from "tsdown";
+import type { UserConfig } from "tsdown";
 
-export default defineConfig([
+const config = [
   {
     entry: {
       index: "./src/type_helper.ts",
-      types: "./src/types/index.ts",
+      globals: "./src/types/globals.ts",
     },
     clean: true,
     dts: true,
@@ -15,7 +15,6 @@ export default defineConfig([
   },
   {
     entry: {
-      eslint: "./eslint/index.ts",
       oxlint: "./oxlint/index.ts",
       biome: "./biome/index.ts",
     },
@@ -26,4 +25,6 @@ export default defineConfig([
     platform: "node",
     treeshake: true,
   },
-]);
+] satisfies UserConfig[];
+
+export default config;

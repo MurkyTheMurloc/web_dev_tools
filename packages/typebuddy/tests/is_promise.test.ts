@@ -2,9 +2,12 @@ import { isPromise } from "../src/type_helper.js";
 
 describe("isPromise", () => {
     it("should return true for promise inputs", () => {
+        const rejectedPromise = Promise.reject(new Error("expected rejection"));
+        void rejectedPromise.catch(() => undefined);
+
         expect(isPromise(Promise.resolve())).toBe(true);
         expect(isPromise(new Promise(() => {}))).toBe(true);
-        expect(isPromise(Promise.reject())).toBe(true);
+        expect(isPromise(rejectedPromise)).toBe(true);
         expect(isPromise(Promise.all([]))).toBe(true);
     });
 

@@ -1,8 +1,8 @@
-import { requireTryCatchAsyncRule } from "../eslint/async_rule.js";
-import { errorSafeAsyncRule } from "../eslint/maybe_promise_rule.js";
-import { maybeRule } from "../eslint/maybe_rule.js";
-import { nullableRule } from "../eslint/nullable_rule.js";
-import { optionalRule } from "../eslint/optional_rule.js";
+import { requireTryCatchAsyncRule } from "../rules/async_rule.js";
+import { errorSafeAsyncRule } from "../rules/maybe_promise_rule.js";
+import { maybeRule } from "../rules/maybe_rule.js";
+import { nullableRule } from "../rules/nullable_rule.js";
+import { optionalRule } from "../rules/optional_rule.js";
 
 const rules = {
   "prefer-maybe-promise": errorSafeAsyncRule,

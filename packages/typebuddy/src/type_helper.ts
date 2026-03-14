@@ -5,6 +5,10 @@ const uuidRegex =
 
 const ulidRegex = /^[0123456789ABCDEFGHJKMNPQRSTVWXYZ]{26}$/;
 
+function formatValueForLog(value: unknown): string {
+  return typeof value === "symbol" ? value.toString() : String(value);
+}
+
 /**
  * Checks if the provided result is a `Success` type.
  *
@@ -110,11 +114,18 @@ export function isNumber(value: unknown): value is number {
  * @returns {boolean} True if the value is an object.
  */
 export function isObject(value: unknown): value is object {
+  if (
+    typeof value !== "object" ||
+    value === null ||
+    isArray(value) ||
+    Object.prototype.toString.call(value) !== "[object Object]"
+  ) {
+    return false;
+  }
+
+  const prototype = Object.getPrototypeOf(value);
   return (
-    typeof value === "object" &&
-    !isNull(value) &&
-    !isUndefined(value) &&
-    !isEmptyArray(value)
+    prototype === Object.prototype
   );
 }
 
@@ -245,14 +256,14 @@ export function parseInteger(
     const parsed = Number.parseInt(value, 10);
     if (isNaN(parsed)) {
       console.error(
-        `typeguard -> parseInteger: could not parse value: ${defaultValue}`,
+        `typeguard -> parseInteger: could not parse value: ${formatValueForLog(defaultValue)}`,
       );
       return defaultValue;
     }
     return parsed;
   } else {
     console.error(
-      `typeguard -> parseInteger: could not parse value: ${defaultValue}`,
+      `typeguard -> parseInteger: could not parse value: ${formatValueForLog(defaultValue)}`,
     );
     return defaultValue;
   }
@@ -294,15 +305,16 @@ export function parseFloat<T extends number, R extends Optional<T>>(
 ): ResolveOptional<T, R> {
   if (isNumber(value)) {
     return value as ResolveOptional<T, R>;
-  } else if (isString(value) && value.includes(",")) {
-    const parsed = Number.parseFloat(value);
-    return isNaN(parsed)
+  }
+  if (isString(value)) {
+    const normalizedValue = value.trim().replace(",", ".");
+    const parsed = Number.parseFloat(normalizedValue);
+    return Number.isNaN(parsed)
       ? (defaultValue as ResolveOptional<T, R>)
       : (parsed as ResolveOptional<T, R>);
-  } else {
-    console.error(`typebuddy -> parseFloat: could not parse ${value} `);
-    return defaultValue as ResolveOptional<T, R>;
   }
+  console.error(`typebuddy -> parseFloat: could not parse ${formatValueForLog(value)} `);
+  return defaultValue as ResolveOptional<T, R>;
 }
 /**
  * Parses the input value as a number. Returns NaN if the value cannot be
@@ -318,15 +330,17 @@ export function parseNumber<T extends number, R extends Optional<T>>(
 ): ResolveOptional<T, R> {
   if (isNumber(value)) {
     return value as ResolveOptional<T, R>;
-  } else if (isString(value)) {
-    if (value.includes(",")) {
-      return parseFloat(value) as ResolveOptional<T, R>;
+  }
+  if (isString(value)) {
+    const normalizedValue = value.trim().replace(",", ".");
+    const parsed = Number(normalizedValue);
+    if (Number.isFinite(parsed)) {
+      return parsed as ResolveOptional<T, R>;
     }
-    return parseInteger(value) as ResolveOptional<T, R>;
-  } else {
-    console.error(`typebuddy -> parseNumber: could not parse ${value} `);
     return defaultValue as ResolveOptional<T, R>;
   }
+  console.error(`typebuddy -> parseNumber: could not parse ${formatValueForLog(value)} `);
+  return defaultValue as ResolveOptional<T, R>;
 }
 
 /**
@@ -349,10 +363,9 @@ export function parseString<T extends string, R extends Optional<T>>(
   }
   if (typeof value === "boolean") {
     return value.toString() as ResolveOptional<T, R>;
-  } else {
-    console.error(`typebuddy -> parseString: could not parse ${value} `);
-    return defaultValue as ResolveOptional<T, R>;
   }
+  console.error(`typebuddy -> parseString: could not parse ${formatValueForLog(value)} `);
+  return (defaultValue ?? "") as ResolveOptional<T, R>;
 }
 
 /**
@@ -361,23 +374,25 @@ export function parseString<T extends string, R extends Optional<T>>(
  * @returns {boolean} True if the value is an empty string, an empty object, or an empty number.
  */
 export function isNullOrUndefined(value: unknown): boolean {
+  if (isNull(value) || isUndefined(value)) {
+    return true;
+  }
   if (isString(value)) {
     return isEmptyString(value);
-  } else if (!isEmptyObject(value) && isObject(value)) {
-    for (const key in value) {
-      if (!isNullOrUndefined(value[key])) {
-        return false;
-      }
+  }
+  if (isArray(value)) {
+    return value.length === 0 || value.every((entry) => isNullOrUndefined(entry));
+  }
+  if (isBoolean(value)) {
+    return value === false;
+  }
+  if (isObject(value)) {
+    if (Object.getPrototypeOf(value) !== Object.prototype) {
+      return false;
     }
-    return true;
-  } else if (isArray(value)) {
-    return value.length === 0;
-  } else if (isNumber(value)) {
-    return isNaN(value) && value === 0;
-  } else if (isBoolean(value)) {
-    return !value;
-  } else if (isNull(value) || isUndefined(value)) {
-    return true;
+    return Object.values(value as Record<string, unknown>).every((entry) =>
+      isNullOrUndefined(entry),
+    );
   }
   return false;
 }
@@ -394,7 +409,11 @@ export function isNullOrUndefined(value: unknown): boolean {
  */
 export function hasEmptyValues(value: unknown): boolean {
   if (isString(value)) {
-    if (isEmptyObject(JSON.parse(value))) return true;
+    try {
+      if (isEmptyObject(JSON.parse(value))) return true;
+    } catch {
+      return isEmptyString(value);
+    }
     return isEmptyString(value);
   }
   return isEmptyObject(value);
@@ -417,7 +436,11 @@ export function parseArray<T, R extends Optional<T[]>>(
     return value as ResolveOptional<T[], R>;
   }
   if (isString(value)) {
-    return value.split(/[,|;\n\t ]+/) as ResolveOptional<T[], R>;
+    const parsed = value
+      .split(/[,|;\n\t ]+/)
+      .map((entry) => entry.trim())
+      .filter((entry) => entry.length > 0);
+    return parsed as ResolveOptional<T[], R>;
   }
   if (isNumber(value)) {
     return [value] as unknown as ResolveOptional<T[], R>;
@@ -427,10 +450,14 @@ export function parseArray<T, R extends Optional<T[]>>(
   }
 
   if (isNullOrUndefined(value)) {
-    console.error(`typeguard -> parseArray: could not parse ${value} `);
+    console.error(
+      `typeguard -> parseArray: could not parse ${formatValueForLog(value)} `,
+    );
     return defaultValue as ResolveOptional<T[], R>;
   }
-  console.error(`typeguard -> parseArray: could not parse ${value} `);
+  console.error(
+    `typeguard -> parseArray: could not parse ${formatValueForLog(value)} `,
+  );
   return defaultValue as ResolveOptional<T[], R>;
 }
 

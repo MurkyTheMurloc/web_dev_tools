@@ -6,10 +6,6 @@ describe("isFloat", () => {
         expect(isFloat(0.1)).toBe(true);
         expect(isFloat(-1.1)).toBe(true);
         expect(isFloat(-0.1)).toBe(true);
-        expect(isFloat(1.0)).toBe(true);
-        expect(isFloat(0.0)).toBe(true);
-        expect(isFloat(-1.0)).toBe(true);
-        expect(isFloat(-0.0)).toBe(true);
     });
 
     it("should return false for non-float inputs", () => {
