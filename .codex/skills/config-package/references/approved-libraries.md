@@ -1,0 +1,24 @@
+# Approved Context7 Libraries
+
+- Oxc Website
+  - `/oxc-project/website`
+- Biome
+  - `/biomejs/biome`
+- TypeScript Go
+  - `/microsoft/typescript-go`
+- Bun
+  - `/oven-sh/bun`
+- ESLint
+  - `/eslint/eslint`
+- TypeScript ESLint
+  - `/typescript-eslint/typescript-eslint`
+- ESLint Plugin Unicorn
+  - `/sindresorhus/eslint-plugin-unicorn`
+- eslint-plugin-import-x
+  - `/un-ts/eslint-plugin-import-x`
+- eslint-plugin-jsx-a11y
+  - `/jsx-eslint/eslint-plugin-jsx-a11y`
+- Vitest
+  - `/vitest-dev/vitest`
+- Vitest ESLint Plugin
+  - `/vitest-dev/eslint-plugin-vitest`
