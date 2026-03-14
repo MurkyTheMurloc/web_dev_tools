@@ -1,1 +1,1 @@
-import type {} from "../../src/types/globals.ts";
+import type {} from "@murky-web/typebuddy/globals";

@@ -438,11 +438,12 @@ export function parseString<T extends string, R extends Optional<T>>(
 }
 
 /**
- * Returns true if the value is an empty string, an empty object, or an empty number.
+ * Returns true for values that behave like "empty" application input.
  * @param {unknown} value - The value to check.
- * @returns {boolean} True if the value is an empty string, an empty object, or an empty number.
+ * @returns {boolean} True if the value is nullish, empty string, empty array,
+ * false, or a plain object whose values are all empty-like.
  */
-export function isNullOrUndefined(value: unknown): boolean {
+export function isEmptyLike(value: unknown): boolean {
   if (isNull(value) || isUndefined(value)) {
     return true;
   }
@@ -450,7 +451,7 @@ export function isNullOrUndefined(value: unknown): boolean {
     return isEmptyString(value);
   }
   if (isArray(value)) {
-    return value.length === 0 || value.every((entry) => isNullOrUndefined(entry));
+    return value.length === 0 || value.every((entry) => isEmptyLike(entry));
   }
   if (isBoolean(value)) {
     return value === false;
@@ -460,7 +461,7 @@ export function isNullOrUndefined(value: unknown): boolean {
       return false;
     }
     return Object.values(value as Record<string, unknown>).every((entry) =>
-      isNullOrUndefined(entry),
+      isEmptyLike(entry),
     );
   }
   return false;
@@ -518,7 +519,7 @@ export function parseArray<T, R extends Optional<T[]>>(
     return [value] as unknown as ResolveOptional<T[], R>;
   }
 
-  if (isNullOrUndefined(value)) {
+  if (isNull(value) || isUndefined(value)) {
     console.error(
       `typeguard -> parseArray: could not parse ${formatValueForLog(value)} `,
     );

@@ -3,11 +3,11 @@ import type { UserConfig } from "tsdown";
 const config = [
   {
     entry: {
-      index: "./src/type_helper.ts",
+      index: "./src/index.ts",
       globals: "./src/types/globals.ts",
     },
     clean: true,
-    dts: true,
+    dts: false,
     format: "esm",
     outDir: "dist",
     platform: "neutral",
@@ -19,7 +19,7 @@ const config = [
       biome: "./biome/index.ts",
     },
     clean: false,
-    dts: true,
+    dts: false,
     format: "esm",
     outDir: "dist",
     platform: "node",

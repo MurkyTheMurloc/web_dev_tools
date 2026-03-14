@@ -3,25 +3,25 @@
   "description": "Your new best friend for simple typescript guards every project needs.",
   "main": "./dist/index.js",
   "module": "./dist/index.js",
-  "types": "./dist/index.d.ts",
+  "types": "./src/index.ts",
   "exports": {
     ".": {
-      "types": "./dist/index.d.ts",
+      "types": "./src/index.ts",
       "import": "./dist/index.js",
       "default": "./dist/index.js"
     },
     "./globals": {
-      "types": "./dist/globals.d.ts",
+      "types": "./src/types/globals.ts",
       "import": "./dist/globals.js",
       "default": "./dist/globals.js"
     },
     "./oxlint": {
-      "types": "./dist/oxlint.d.ts",
+      "types": "./oxlint/index.ts",
       "import": "./dist/oxlint.js",
       "default": "./dist/oxlint.js"
     },
     "./biome": {
-      "types": "./dist/biome.d.ts",
+      "types": "./biome/index.ts",
       "import": "./dist/biome.js",
       "default": "./dist/biome.js"
     },
@@ -42,7 +42,13 @@
     "typecheck": "tsgo --project ./tsconfig.json --noEmit && tsgo --project ./tsconfig.vitest.json --noEmit"
   },
   "files": [
-    "dist"
+    "dist",
+    "src/index.ts",
+    "src/type_helper.ts",
+    "src/types",
+    "oxlint/index.ts",
+    "biome",
+    "rules"
   ],
   "license": "ISC",
   "type": "module",

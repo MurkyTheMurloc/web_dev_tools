@@ -139,7 +139,7 @@ That makes these names available globally:
 -   `getKeys<T extends Record<string, unknown>>(object: T): Array<keyof T>`
 -   `arrayContainsCommonValue(array1: string[], array2: string[]): boolean`
 -   `isEmptyString(value: unknown): boolean`
--   `isNullOrUndefined(value: unknown): boolean`
+-   `isEmptyLike(value: unknown): boolean`
 -   `hasEmptyValues(value: unknown): boolean`
 
 ### Types

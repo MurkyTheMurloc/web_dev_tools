@@ -1,3 +1,9 @@
+type ImportedOptional = import("@murky-web/typebuddy").Optional<string>;
+type ImportedResolveOptional = import("@murky-web/typebuddy").ResolveOptional<
+  string,
+  ImportedOptional
+>;
+
 type OptionalCase = Optional<string>;
 type MaybeCase = Maybe<string>;
 type NullableCase = Nullable<string>;
@@ -13,9 +19,13 @@ const promiseValue: PromiseCase = Promise.resolve({
   value: "x",
   isError: false,
 });
+const importedOptionalValue: ImportedOptional = undefined;
+const importedResolvedValue: ImportedResolveOptional = "x";
 
 void optionalValue;
 void maybeValue;
 void nullableValue;
 void promiseValue;
 void parsed;
+void importedOptionalValue;
+void importedResolvedValue;
