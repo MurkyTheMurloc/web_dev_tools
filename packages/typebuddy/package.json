@@ -38,7 +38,7 @@
     "format": "oxfmt -c ./node_modules/@murky-web/config/oxc/.oxfmtrc.jsonc src rules biome tests tsdown.config.ts vitest.config.ts",
     "format:check": "oxfmt -c ./node_modules/@murky-web/config/oxc/.oxfmtrc.jsonc --check src rules biome tests tsdown.config.ts vitest.config.ts",
     "smoke:globals": "bun run build && tsgo --project ./smoke/globals/tsconfig.json --noEmit",
-    "smoke:oxlint": "bun run build && oxlint -c ./smoke/oxlint/.oxlintrc.jsonc ./smoke/oxlint/violations.ts ./smoke/oxlint/async-violations.ts",
+    "smoke:oxlint": "bun run build && bun ./smoke/oxlint/run-smoke.ts",
     "smoke:oxlint:fix": "bun run build && bun ./smoke/oxlint/run-fix-smoke.ts",
     "smoke:treeshake": "bun run build && bun ./smoke/treeshake/run.ts",
     "typecheck": "tsgo --project ./tsconfig.json --noEmit && tsgo --project ./tsconfig.vitest.json --noEmit"
