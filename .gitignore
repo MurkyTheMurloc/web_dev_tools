@@ -3,5 +3,7 @@ bun.lock
 .DS_Store
 dist
 coverage
+*.tsbuildinfo
+.output
 
 .npm-cache
