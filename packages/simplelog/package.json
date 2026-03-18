@@ -1,16 +1,36 @@
 {
   "name": "@murky-web/simplelog",
   "version": "0.1.0",
-  "private": true,
+  "private": false,
   "main": "./dist/logger.js",
   "module": "./dist/logger.js",
   "types": "./dist/logger.d.ts",
   "exports": {
     ".": {
       "import": "./dist/logger.js",
-      "require": "./dist/logger.js",
       "types": "./dist/logger.d.ts"
-    }
+    },
+    "./bun": {
+      "import": "./dist/bun_logger.js",
+      "types": "./dist/bun_logger.d.ts"
+    },
+    "./deno": {
+      "import": "./dist/deno_logger.js",
+      "types": "./dist/deno_logger.d.ts"
+    },
+    "./hono": {
+      "import": "./dist/hono_middleware.js",
+      "types": "./dist/hono_middleware.d.ts"
+    },
+    "./node": {
+      "import": "./dist/logger.js",
+      "types": "./dist/logger.d.ts"
+    },
+    "./web": {
+      "import": "./dist/web_logger.js",
+      "types": "./dist/web_logger.d.ts"
+    },
+    "./package.json": "./package.json"
   },
   "files": [
     "dist"
@@ -22,13 +42,35 @@
     "lint:fix": "oxlint -c ./.oxlintrc.jsonc --tsconfig ./tsconfig.json --type-aware --fix src tsdown.config.ts",
     "format": "oxfmt -c ../config/oxc/.oxfmtrc.jsonc src tsdown.config.ts",
     "format:check": "oxfmt -c ../config/oxc/.oxfmtrc.jsonc --check src tsdown.config.ts",
+    "test": "vitest run",
     "typecheck": "tsgo --project ./tsconfig.json --noEmit"
   },
   "license": "MIT",
   "description": "A simple wrapper around console to make logging enjoyable again",
   "type": "module",
-  "dependencies": {},
+  "sideEffects": false,
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/MurkyTheMurloc/web_dev_tools.git",
+    "directory": "packages/simplelog"
+  },
+  "homepage": "https://github.com/MurkyTheMurloc/web_dev_tools/tree/main/packages/simplelog",
+  "bugs": {
+    "url": "https://github.com/MurkyTheMurloc/web_dev_tools/issues"
+  },
+  "publishConfig": {
+    "access": "public",
+    "provenance": true
+  },
+  "dependencies": {
+    "@opentelemetry/api": "^1.9.0"
+  },
   "devDependencies": {
-    "@murky-web/config": "workspace:*"
+    "@murky-web/config": "workspace:*",
+    "@types/node": "^25.5.0",
+    "hono": "^4.12.8"
+  },
+  "peerDependencies": {
+    "hono": "^4.12.8"
   }
 }

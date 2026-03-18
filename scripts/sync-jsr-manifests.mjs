@@ -3,7 +3,9 @@ import { join } from "node:path";
 
 import { publicPackages } from "./public-packages.mjs";
 
-for (const pkg of publicPackages) {
+for (const pkg of publicPackages.filter((publicPackage) => {
+  return publicPackage.publishToJsr;
+})) {
   const packagePath = join(pkg.dir, "package.json");
   const jsrPath = join(pkg.dir, "jsr.json");
 

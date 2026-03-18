@@ -2,7 +2,9 @@ import { publicPackages } from "./public-packages.mjs";
 
 const dryRun = process.argv.includes("--dry-run");
 
-for (const pkg of publicPackages) {
+for (const pkg of publicPackages.filter((publicPackage) => {
+  return publicPackage.publishToJsr;
+})) {
   console.log(`${dryRun ? "Dry-running" : "Publishing"} ${pkg.name} to JSR...`);
 
   if (dryRun) {

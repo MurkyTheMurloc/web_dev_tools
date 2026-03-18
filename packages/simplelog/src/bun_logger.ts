@@ -1,4 +1,4 @@
-import { nodeRuntime } from "./node_runtime";
+import { nodeRuntime as bunRuntime } from "./node_runtime";
 import { LoggerBase } from "./logger_factory";
 import type { LoggerOptions, LoggerParent, LogLevel } from "./logger_factory";
 
@@ -8,7 +8,7 @@ class Logger extends LoggerBase {
     parent?: LoggerParent,
     options: LoggerOptions = {},
   ) {
-    super(Logger, nodeRuntime, name, parent, options);
+    super(Logger, bunRuntime, name, parent, options);
   }
 }
 

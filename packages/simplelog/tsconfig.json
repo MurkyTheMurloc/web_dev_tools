@@ -2,7 +2,8 @@
   "$schema": "https://json.schemastore.org/tsconfig",
   "extends": "../config/typescript/tsconfig.base.jsonc",
   "compilerOptions": {
-    "lib": ["ESNext"],
+    "types": ["node"],
+    "lib": ["DOM", "DOM.Iterable", "ESNext"],
     "target": "ES2022",
     "allowJs": true,
     "allowImportingTsExtensions": false,
@@ -15,6 +16,6 @@
     "noPropertyAccessFromIndexSignature": false,
     "outDir": "./dist"
   },
-  "include": ["src/logger.ts"],
+  "include": ["src/**/*.ts", "tsdown.config.ts"],
   "exclude": ["node_modules/*"]
 }
