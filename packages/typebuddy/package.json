@@ -36,8 +36,8 @@
     "clean": "rm -rf dist",
     "lint": "oxlint -c ./.oxlintrc.jsonc --tsconfig ./tsconfig.lint.json --type-aware src biome tsdown.config.ts vitest.config.ts",
     "lint:fix": "oxlint -c ./.oxlintrc.jsonc --tsconfig ./tsconfig.lint.json --type-aware --fix src biome tsdown.config.ts vitest.config.ts",
-    "format": "oxfmt -c ./node_modules/@murky-web/config/oxc/.oxfmtrc.jsonc src rules biome tests tsdown.config.ts vitest.config.ts",
-    "format:check": "oxfmt -c ./node_modules/@murky-web/config/oxc/.oxfmtrc.jsonc --check src rules biome tests tsdown.config.ts vitest.config.ts",
+    "format": "oxfmt -c ../config/oxc/.oxfmtrc.jsonc src rules biome tests tsdown.config.ts vitest.config.ts",
+    "format:check": "oxfmt -c ../config/oxc/.oxfmtrc.jsonc --check src rules biome tests tsdown.config.ts vitest.config.ts",
     "smoke:globals": "bun run build && tsgo --project ./smoke/globals/tsconfig.json --noEmit",
     "smoke:oxlint": "bun run build && bun ./smoke/oxlint/run-smoke.ts",
     "smoke:oxlint:fix": "bun run build && bun ./smoke/oxlint/run-fix-smoke.ts",
@@ -55,12 +55,21 @@
     "biome",
     "rules"
   ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/MurkyTheMurloc/web_dev_tools.git",
+    "directory": "packages/typebuddy"
+  },
+  "homepage": "https://github.com/MurkyTheMurloc/web_dev_tools/tree/main/packages/typebuddy",
+  "bugs": {
+    "url": "https://github.com/MurkyTheMurloc/web_dev_tools/issues"
+  },
   "license": "ISC",
   "type": "module",
   "sideEffects": false,
   "publishConfig": {
     "access": "public",
-    "provenance":false 
+    "provenance": true
   },
   "devDependencies": {
     "@murky-web/config": "workspace:*"

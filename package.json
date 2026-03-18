@@ -9,6 +9,7 @@
     "build": "bun run --workspaces --if-present build",
     "changeset": "changeset",
     "clean": "bun run --workspaces --if-present clean",
+    "release:verify": "bun run --cwd ./packages/typebuddy lint && bun run --cwd ./packages/typebuddy typecheck && bun run --cwd ./packages/typebuddy test && bun run --cwd ./packages/typebuddy smoke:globals && bun run --cwd ./packages/typebuddy smoke:oxlint && bun run --cwd ./packages/typebuddy smoke:oxlint:fix && bun run --cwd ./packages/typebuddy smoke:treeshake",
     "test": "bun run --workspaces --if-present test",
     "typecheck": "bun run --workspaces --if-present typecheck",
     "lint": "oxlint -c ./packages/config/oxc/.oxlintrc.jsonc --type-aware ./packages",
@@ -18,8 +19,8 @@
     "publish:jsr": "bun ./scripts/publish-jsr.mjs",
     "publish:jsr:dry": "bun ./scripts/publish-jsr.mjs --dry-run",
     "publish:npm:dry": "bun ./scripts/publish-npm-dry.mjs",
-    "release": "bun run publish:npm",
-    "release:dry": "bun run publish:npm:dry",
+    "release": "bun run release:verify && bun run publish:npm",
+    "release:dry": "bun run release:verify && bun run publish:npm:dry",
     "publish:npm": "changeset publish",
     "version-packages": "changeset version && bun ./scripts/sync-jsr-manifests.mjs"
   },

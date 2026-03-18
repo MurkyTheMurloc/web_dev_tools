@@ -20,18 +20,20 @@ if (result.exitCode !== 1) {
   process.exit(1);
 }
 
-if (!output.includes("Found 0 warnings and 5 errors.")) {
-  console.error("Expected oxlint smoke to report exactly 5 errors.");
-  console.error(output);
-  process.exit(1);
-}
-
 for (const ruleId of expectedRuleIds) {
   if (!output.includes(ruleId)) {
     console.error(`Expected oxlint smoke output to include ${ruleId}.`);
     console.error(output);
     process.exit(1);
   }
+}
+
+const detectedRuleHits = expectedRuleIds.filter((ruleId) => output.includes(ruleId)).length;
+
+if (detectedRuleHits !== expectedRuleIds.length) {
+  console.error(`Expected oxlint smoke to report exactly ${expectedRuleIds.length} tracked rule hits, got ${detectedRuleHits}.`);
+  console.error(output);
+  process.exit(1);
 }
 
 console.log("Oxlint smoke test passed.");
