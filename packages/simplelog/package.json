@@ -20,8 +20,8 @@
     "clean": "rm -rf dist",
     "lint": "oxlint -c ./.oxlintrc.jsonc --tsconfig ./tsconfig.json --type-aware src tsdown.config.ts",
     "lint:fix": "oxlint -c ./.oxlintrc.jsonc --tsconfig ./tsconfig.json --type-aware --fix src tsdown.config.ts",
-    "format": "oxfmt -c ../../node_modules/@murky-web/config/oxc/.oxfmtrc.jsonc src tsdown.config.ts",
-    "format:check": "oxfmt -c ../../node_modules/@murky-web/config/oxc/.oxfmtrc.jsonc --check src tsdown.config.ts",
+    "format": "oxfmt -c ./node_modules/@murky-web/config/oxc/.oxfmtrc.jsonc src tsdown.config.ts",
+    "format:check": "oxfmt -c ./node_modules/@murky-web/config/oxc/.oxfmtrc.jsonc --check src tsdown.config.ts",
     "typecheck": "tsgo --project ./tsconfig.json --noEmit"
   },
   "license": "MIT",

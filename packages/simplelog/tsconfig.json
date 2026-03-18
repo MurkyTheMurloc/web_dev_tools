@@ -1,6 +1,6 @@
 {
   "$schema": "https://json.schemastore.org/tsconfig",
-  "extends": "../../node_modules/@murky-web/config/typescript/tsconfig.base.jsonc",
+  "extends": "@murky-web/config/typescript/tsconfig.base.jsonc",
   "compilerOptions": {
     "lib": ["ESNext"],
     "target": "ES2022",

@@ -18,8 +18,8 @@
     "publish:jsr": "bun ./scripts/publish-jsr.mjs",
     "publish:jsr:dry": "bun ./scripts/publish-jsr.mjs --dry-run",
     "publish:npm:dry": "bun ./scripts/publish-npm-dry.mjs",
-    "release": "bun run publish:npm && bun run publish:jsr",
-    "release:dry": "bun run publish:npm:dry && bun run publish:jsr:dry",
+    "release": "bun run publish:npm",
+    "release:dry": "bun run publish:npm:dry",
     "publish:npm": "changeset publish",
     "version-packages": "changeset version && bun ./scripts/sync-jsr-manifests.mjs"
   },
