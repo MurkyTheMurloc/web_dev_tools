@@ -15,7 +15,13 @@
     "lint:fix": "oxlint -c ./packages/config/oxc/.oxlintrc.jsonc --type-aware --fix ./packages",
     "format": "oxfmt -c ./packages/config/oxc/.oxfmtrc.jsonc ./packages",
     "format:check": "oxfmt -c ./packages/config/oxc/.oxfmtrc.jsonc --check ./packages",
-    "version-packages": "changeset version"
+    "publish:jsr": "bun ./scripts/publish-jsr.mjs",
+    "publish:jsr:dry": "bun ./scripts/publish-jsr.mjs --dry-run",
+    "publish:npm:dry": "bun ./scripts/publish-npm-dry.mjs",
+    "release": "bun run publish:npm && bun run publish:jsr",
+    "release:dry": "bun run publish:npm:dry && bun run publish:jsr:dry",
+    "publish:npm": "changeset publish",
+    "version-packages": "changeset version && bun ./scripts/sync-jsr-manifests.mjs"
   },
   "devDependencies": {
     "@changesets/cli": "^2.30.0",

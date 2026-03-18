@@ -1,6 +1,6 @@
 {
     "$schema": "../../node_modules/oxlint/configuration_schema.json",
-    "extends": ["./node_modules/@murky-web/config/oxc/.oxlintrc.jsonc"],
+    "extends": ["../../node_modules/@murky-web/config/oxc/.oxlintrc.jsonc"],
     "globals": {
         "console": "readonly",
         "URL": "readonly"

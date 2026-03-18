@@ -2,6 +2,7 @@
   "name": "@murky-web/typebuddy",
   "version": "0.1.0",
   "description": "Your new best friend for simple typescript guards every project needs.",
+  "private": false,
   "main": "./dist/index.js",
   "module": "./dist/index.js",
   "types": "./src/index.ts",
@@ -12,7 +13,7 @@
       "default": "./dist/index.js"
     },
     "./globals": {
-      "types": "./globals.d.ts",
+      "types": "./globals.ts",
       "import": "./dist/globals.js",
       "default": "./dist/globals.js"
     },
@@ -35,8 +36,8 @@
     "clean": "rm -rf dist",
     "lint": "oxlint -c ./.oxlintrc.jsonc --tsconfig ./tsconfig.lint.json --type-aware src biome tsdown.config.ts vitest.config.ts",
     "lint:fix": "oxlint -c ./.oxlintrc.jsonc --tsconfig ./tsconfig.lint.json --type-aware --fix src biome tsdown.config.ts vitest.config.ts",
-    "format": "oxfmt -c ./node_modules/@murky-web/config/oxc/.oxfmtrc.jsonc src rules biome tests tsdown.config.ts vitest.config.ts",
-    "format:check": "oxfmt -c ./node_modules/@murky-web/config/oxc/.oxfmtrc.jsonc --check src rules biome tests tsdown.config.ts vitest.config.ts",
+    "format": "oxfmt -c ../../node_modules/@murky-web/config/oxc/.oxfmtrc.jsonc src rules biome tests tsdown.config.ts vitest.config.ts",
+    "format:check": "oxfmt -c ../../node_modules/@murky-web/config/oxc/.oxfmtrc.jsonc --check src rules biome tests tsdown.config.ts vitest.config.ts",
     "smoke:globals": "bun run build && tsgo --project ./smoke/globals/tsconfig.json --noEmit",
     "smoke:oxlint": "bun run build && bun ./smoke/oxlint/run-smoke.ts",
     "smoke:oxlint:fix": "bun run build && bun ./smoke/oxlint/run-fix-smoke.ts",
@@ -45,7 +46,8 @@
   },
   "files": [
     "dist",
-    "globals.d.ts",
+    "globals.ts",
+    "jsr.json",
     "src/index.ts",
     "src/type_helper.ts",
     "src/types",
@@ -56,7 +58,10 @@
   "license": "ISC",
   "type": "module",
   "sideEffects": false,
-  "private": true,
+  "publishConfig": {
+    "access": "public",
+    "provenance":false 
+  },
   "devDependencies": {
     "@murky-web/config": "workspace:*"
   }

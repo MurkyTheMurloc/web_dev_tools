@@ -1,6 +1,6 @@
-const resolveAsset = (asset: string) =>
+const resolveAsset = (asset: string): string =>
   decodeURIComponent(new URL(asset, import.meta.url).pathname);
 
-export const MaybePromiseRule = resolveAsset("./maybe_promise_rule.grit");
-export const OptionalRule = resolveAsset("./optional_rule.gritt");
-export const TryCatchAsyncRule = resolveAsset("./require-try-catch-async.grit");
+export const MaybePromiseRule: string = resolveAsset("./maybe_promise_rule.grit");
+export const OptionalRule: string = resolveAsset("./optional_rule.gritt");
+export const TryCatchAsyncRule: string = resolveAsset("./require-try-catch-async.grit");

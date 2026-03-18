@@ -1,10 +1,11 @@
 {
   "$schema": "https://json.schemastore.org/tsconfig",
-  "extends": "./node_modules/@murky-web/config/typescript/tsconfig.base.jsonc",
+  "extends": "../../node_modules/@murky-web/config/typescript/tsconfig.base.jsonc",
   "compilerOptions": {
     "rootDir": "."
   },
   "include": [
+    "globals.ts",
     "src/**/*.ts",
     "rules/**/*.ts",
     "oxlint/**/*.ts",

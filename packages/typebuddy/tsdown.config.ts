@@ -4,7 +4,7 @@ const config = [
   {
     entry: {
       index: "./src/index.ts",
-      globals: "./src/types/globals.ts",
+      globals: "./globals.ts",
     },
     clean: true,
     dts: false,

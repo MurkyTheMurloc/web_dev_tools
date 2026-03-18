@@ -17,8 +17,17 @@ TypeBuddy is a utility library for type guards, parsing, and small TypeScript-fi
 
 ## Installation
 
-TypeBuddy is currently used as an internal workspace package in `web_kit`.
-External publish and install instructions will be added again later.
+From npm:
+
+```bash
+bun add @murky-web/typebuddy
+```
+
+From JSR:
+
+```bash
+npx jsr add @murky-web/typebuddy
+```
 
 ## Usage
 
@@ -77,6 +86,10 @@ tags.map((tag) => tag.toUpperCase());
 ```
 
 ### Global types
+
+This opt-in global entry is available in the npm package surface. The JSR build
+does not expose it because JSR rejects global augmentations in published
+modules.
 
 If you want the `typebuddy` utility types globally, opt in once in your project:
 

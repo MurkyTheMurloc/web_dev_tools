@@ -1,0 +1,29 @@
+{
+  "$schema": "https://jsr.io/schema/config-file.v1.json",
+  "name": "@murky-web/typebuddy",
+  "version": "0.1.0",
+  "license": "ISC",
+  "exports": {
+    ".": "./src/index.ts",
+    "./biome": "./biome/index.ts",
+    "./oxlint": "./oxlint/index.ts"
+  },
+  "publish": {
+    "include": [
+      "README.md",
+      "src/**/*.ts",
+      "oxlint/**/*.ts",
+      "rules/**/*.ts",
+      "biome/**/*.ts",
+      "biome/*.grit",
+      "biome/*.gritt"
+    ],
+    "exclude": [
+      "tests/**",
+      "smoke/**",
+      "globals.ts",
+      "dist/**",
+      "node_modules/**"
+    ]
+  }
+}
