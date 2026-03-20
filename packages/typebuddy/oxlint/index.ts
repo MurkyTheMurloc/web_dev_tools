@@ -5,25 +5,25 @@ import { nullableRule } from "../rules/nullable_rule.js";
 import { optionalRule } from "../rules/optional_rule.js";
 
 const rules = {
-  "prefer-maybe": maybeRule,
-  "prefer-maybe-promise": errorSafeAsyncRule,
-  "prefer-nullable": nullableRule,
-  "prefer-optional": optionalRule,
-  "require-try-catch": requireTryCatchAsyncRule,
+    "prefer-maybe": maybeRule,
+    "prefer-maybe-promise": errorSafeAsyncRule,
+    "prefer-nullable": nullableRule,
+    "prefer-optional": optionalRule,
+    "require-try-catch": requireTryCatchAsyncRule,
 } as const satisfies Record<string, unknown>;
 
 type TypebuddyOxlintPlugin = {
-  meta: {
-    name: string;
-  };
-  rules: Record<string, unknown>;
+    meta: {
+        name: string;
+    };
+    rules: Record<string, unknown>;
 };
 
 const plugin: TypebuddyOxlintPlugin = {
-  meta: {
-    name: "typebuddy",
-  },
-  rules,
+    meta: {
+        name: "typebuddy",
+    },
+    rules,
 };
 
 export default plugin;
