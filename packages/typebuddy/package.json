@@ -1,6 +1,6 @@
 {
   "name": "@murky-web/typebuddy",
-  "version": "0.1.1",
+  "version": "1.0.0",
   "description": "Your new best friend for simple typescript guards every project needs.",
   "private": false,
   "main": "./dist/index.js",
