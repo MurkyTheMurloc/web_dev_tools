@@ -18,6 +18,7 @@ const require = createRequire(import.meta.url);
 
 export async function installOxcConfig({
     frontendSolid = false,
+    typebuddy = false,
     targetDir = process.cwd(),
     packageManager,
     skipInstall = false,
@@ -47,10 +48,12 @@ export async function installOxcConfig({
             solidJsPluginSourceDir,
             path.join(resolvedTargetDir, "oxc", "jsplugins", "solid"),
         );
-        enableSolidInOxcConfig(
-            path.join(resolvedTargetDir, "oxc", ".oxlintrc.jsonc"),
-        );
     }
+
+    updateOxcConfig(path.join(resolvedTargetDir, "oxc", ".oxlintrc.jsonc"), {
+        frontendSolid,
+        typebuddy,
+    });
 
     updatePackageScripts(packageJsonPath, {
         "format:oxc": "oxfmt -c ./oxc/.oxfmtrc.jsonc .",
@@ -98,11 +101,11 @@ function resolveSolidJsPluginSourceDir() {
     }
 }
 
-function enableSolidInOxcConfig(configPath) {
+function updateOxcConfig(configPath, { frontendSolid, typebuddy }) {
     const source = readFileSync(configPath, "utf8");
 
     let next = source;
-    if (!next.includes(`"./linting/solid.jsonc"`)) {
+    if (frontendSolid && !next.includes(`"./linting/solid.jsonc"`)) {
         const extendsMarker = `        "./linting/jsdoc.jsonc"\n    ],`;
         if (!next.includes(extendsMarker)) {
             throw new Error(
@@ -116,21 +119,31 @@ function enableSolidInOxcConfig(configPath) {
         );
     }
 
-    if (!next.includes(`"jsPlugins": [`)) {
-        const pluginMarker = `    "plugins": [`;
-        if (!next.includes(pluginMarker)) {
+    if (typebuddy && !next.includes(`"./linting/typebuddy.jsonc"`)) {
+        const jsdocMarker = `        "./linting/jsdoc.jsonc"`;
+        if (!next.includes(jsdocMarker)) {
             throw new Error(
-                "Could not enable Solid support in .oxlintrc.jsonc: expected plugins marker not found.",
+                "Could not enable TypeBuddy support in .oxlintrc.jsonc: expected jsdoc marker not found.",
             );
         }
 
         next = next.replace(
-            pluginMarker,
-            `    "jsPlugins": [\n        "./jsplugins/solid/index.mjs"\n    ],\n    "plugins": [`,
+            jsdocMarker,
+            `${jsdocMarker},\n        "./linting/typebuddy.jsonc"`,
         );
     }
 
-    if (!next.includes(`"./jsplugins/**"`)) {
+    const jsPlugins = [];
+    if (frontendSolid) {
+        jsPlugins.push(`"./jsplugins/solid/index.mjs"`);
+    }
+    if (typebuddy) {
+        jsPlugins.push(`"@murky-web/typebuddy/oxlint"`);
+    }
+
+    next = upsertJsPlugins(next, jsPlugins);
+
+    if (frontendSolid && !next.includes(`"./jsplugins/**"`)) {
         if (next.includes(`"ignorePatterns": [`)) {
             next = next.replace(
                 `"ignorePatterns": [`,
@@ -150,4 +163,31 @@ function enableSolidInOxcConfig(configPath) {
     }
 
     writeFileSync(configPath, next);
+}
+
+function upsertJsPlugins(configSource, jsPlugins) {
+    if (jsPlugins.length === 0) {
+        return configSource;
+    }
+
+    const desiredEntries = jsPlugins.map((plugin) => `        ${plugin}`);
+
+    if (configSource.includes(`"jsPlugins": [`)) {
+        return configSource.replace(
+            /"jsPlugins": \[[\s\S]*?\n\s*\],/u,
+            `"jsPlugins": [\n${desiredEntries.join(",\n")}\n    ],`,
+        );
+    }
+
+    const pluginMarker = `    "plugins": [`;
+    if (!configSource.includes(pluginMarker)) {
+        throw new Error(
+            "Could not update .oxlintrc.jsonc: expected plugins marker not found.",
+        );
+    }
+
+    return configSource.replace(
+        pluginMarker,
+        `    "jsPlugins": [\n${desiredEntries.join(",\n")}\n    ],\n    "plugins": [`,
+    );
 }

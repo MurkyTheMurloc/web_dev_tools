@@ -9,6 +9,8 @@
     "build": "bun run --workspaces --if-present build",
     "changeset": "changeset",
     "clean": "bun run --workspaces --if-present clean",
+    "config:init": "bun ./packages/config/bin/web-dev-config.mjs init",
+    "config:init:solid": "bun ./packages/config/bin/web-dev-config.mjs init --frontend-solid",
     "release:verify": "bun run release:verify:typebuddy && bun run release:verify:simplelog && bun run release:verify:oxlint-plugin-solid",
     "release:verify:oxlint-plugin-solid": "bun run --cwd ./packages/oxlint-plugin-solid test",
     "release:verify:simplelog": "bun run --cwd ./packages/simplelog lint && bun run --cwd ./packages/simplelog typecheck && bun run --cwd ./packages/simplelog test && bun run --cwd ./packages/simplelog build",

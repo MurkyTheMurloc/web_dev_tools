@@ -1,5 +1,11 @@
 import { spawnSync } from "node:child_process";
-import { cpSync, existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
+import {
+    cpSync,
+    existsSync,
+    mkdirSync,
+    readFileSync,
+    writeFileSync,
+} from "node:fs";
 import path from "node:path";
 
 const PACKAGE_MANAGERS = new Set(["bun", "pnpm", "npm", "yarn"]);
@@ -64,15 +70,31 @@ export function installDevDependencies({
     packages,
     skipInstall,
 }) {
-    if (skipInstall) {
+    installDependencies({
+        dev: true,
+        packageManager,
+        packages,
+        skipInstall,
+        targetDir,
+    });
+}
+
+export function installDependencies({
+    targetDir,
+    packageManager,
+    packages,
+    skipInstall,
+    dev = false,
+}) {
+    if (skipInstall || packages.length === 0) {
         return;
     }
 
     const commandMap = {
-        bun: ["add", "-D"],
-        pnpm: ["add", "-D"],
-        npm: ["install", "-D"],
-        yarn: ["add", "-D"],
+        bun: dev ? ["add", "-D"] : ["add"],
+        pnpm: dev ? ["add", "-D"] : ["add"],
+        npm: dev ? ["install", "-D"] : ["install"],
+        yarn: dev ? ["add", "-D"] : ["add"],
     };
 
     const command = commandMap[packageManager];

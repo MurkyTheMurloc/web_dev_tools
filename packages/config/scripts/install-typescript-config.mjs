@@ -1,5 +1,5 @@
-import path from "node:path";
 import { existsSync, rmSync } from "node:fs";
+import path from "node:path";
 import { fileURLToPath } from "node:url";
 
 import {
@@ -16,6 +16,7 @@ const typescriptSourceDir = path.join(repoRoot, "typescript");
 
 export async function installTypeScriptConfig({
     frontendSolid = false,
+    typebuddy = false,
     targetDir = process.cwd(),
     packageManager,
     skipInstall = false,
@@ -35,7 +36,10 @@ export async function installTypeScriptConfig({
     copyPath(
         path.join(
             typescriptSourceDir,
-            frontendSolid ? "tsconfig.solid.jsonc" : "tsconfig.base.jsonc",
+            resolveTsconfigTemplate({
+                frontendSolid,
+                typebuddy,
+            }),
         ),
         path.join(resolvedTargetDir, "tsconfig.json"),
     );
@@ -58,6 +62,22 @@ export async function installTypeScriptConfig({
         skipInstall,
         targetDir: resolvedTargetDir,
     };
+}
+
+function resolveTsconfigTemplate({ frontendSolid, typebuddy }) {
+    if (frontendSolid && typebuddy) {
+        return "tsconfig.solid.typebuddy.jsonc";
+    }
+
+    if (frontendSolid) {
+        return "tsconfig.solid.jsonc";
+    }
+
+    if (typebuddy) {
+        return "tsconfig.typebuddy.jsonc";
+    }
+
+    return "tsconfig.base.jsonc";
 }
 
 function removeLegacyTypeScriptConfigs(targetDir) {

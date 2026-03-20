@@ -6,16 +6,31 @@ import process from "node:process";
 import { installBiomeConfig } from "../scripts/install-biome-config.mjs";
 import { installOxcConfig } from "../scripts/install-oxc-config.mjs";
 import { installTypeScriptConfig } from "../scripts/install-typescript-config.mjs";
+import {
+    detectPackageManager,
+    installDependencies,
+} from "../scripts/install-utils.mjs";
+
+const DEFAULT_FEATURES = {
+    frontendSolid: true,
+    installSimplelog: true,
+    installTypebuddy: true,
+    useOxc: true,
+    useTypeScript: true,
+};
 
 function printUsage() {
     console.log(`Usage:
-  web-dev-config init [--oxc | --biome] [--typescript] [--frontend-solid] [target-dir] [--skip-install] [--package-manager <pm>]
+  web-dev-config init [--defaults] [--oxc | --biome] [--typescript] [--frontend-solid] [--typebuddy] [--simplelog] [target-dir] [--skip-install] [--package-manager <pm>]
 
 Options:
+  --defaults            Install the default setup: --oxc --typescript --frontend-solid --typebuddy --simplelog
   --oxc                 Install the modular Oxc config
   --biome               Install the Biome config
   --typescript          Install the TypeScript config
   --frontend-solid      Apply Solid frontend presets to selected configs
+  --typebuddy           Install @murky-web/typebuddy and wire its config defaults
+  --simplelog           Install @murky-web/simplelog
   --skip-install        Skip dependency installation
   --package-manager     Force bun, pnpm, npm, or yarn
   -h, --help            Show this help
@@ -41,9 +56,12 @@ function parseArgs(argv) {
     }
 
     let useBiome = false;
+    let useDefaults = false;
     let useOxc = false;
     let useTypeScript = false;
     let frontendSolid = false;
+    let installTypebuddy = false;
+    let installSimplelog = false;
     let skipInstall = false;
     let packageManager;
     let targetDir = process.cwd();
@@ -70,6 +88,11 @@ function parseArgs(argv) {
             continue;
         }
 
+        if (argument === "--defaults") {
+            useDefaults = true;
+            continue;
+        }
+
         if (argument === "--typescript") {
             useTypeScript = true;
             continue;
@@ -77,6 +100,16 @@ function parseArgs(argv) {
 
         if (argument === "--frontend-solid") {
             frontendSolid = true;
+            continue;
+        }
+
+        if (argument === "--typebuddy") {
+            installTypebuddy = true;
+            continue;
+        }
+
+        if (argument === "--simplelog") {
+            installSimplelog = true;
             continue;
         }
 
@@ -116,8 +149,25 @@ function parseArgs(argv) {
         positionalTargetSeen = true;
     }
 
-    if (!useOxc && !useBiome && !useTypeScript) {
-        fail("Select at least one install target: --oxc, --biome, or --typescript.");
+    if (
+        useDefaults ||
+        noExplicitInstallTargetsSelected({
+            installSimplelog,
+            installTypebuddy,
+            useBiome,
+            useOxc,
+            useTypeScript,
+        })
+    ) {
+        frontendSolid = DEFAULT_FEATURES.frontendSolid;
+        installSimplelog = DEFAULT_FEATURES.installSimplelog;
+        installTypebuddy = DEFAULT_FEATURES.installTypebuddy;
+        useOxc = DEFAULT_FEATURES.useOxc;
+        useTypeScript = DEFAULT_FEATURES.useTypeScript;
+    }
+
+    if (useBiome && useOxc) {
+        fail("Use at most one of --oxc or --biome.");
     }
 
     if (frontendSolid && !useOxc && !useBiome && !useTypeScript) {
@@ -126,6 +176,8 @@ function parseArgs(argv) {
 
     return {
         frontendSolid,
+        installSimplelog,
+        installTypebuddy,
         packageManager,
         skipInstall,
         targetDir,
@@ -135,14 +187,35 @@ function parseArgs(argv) {
     };
 }
 
+function noExplicitInstallTargetsSelected({
+    installSimplelog,
+    installTypebuddy,
+    useBiome,
+    useOxc,
+    useTypeScript,
+}) {
+    return (
+        !useOxc &&
+        !useBiome &&
+        !useTypeScript &&
+        !installTypebuddy &&
+        !installSimplelog
+    );
+}
+
 async function main() {
     const options = parseArgs(process.argv.slice(2));
     const results = [];
+    const resolvedPackageManager = detectPackageManager(
+        options.targetDir,
+        options.packageManager,
+    );
 
     if (options.useOxc) {
         results.push(
             await installOxcConfig({
                 frontendSolid: options.frontendSolid,
+                typebuddy: options.installTypebuddy,
                 packageManager: options.packageManager,
                 skipInstall: options.skipInstall,
                 targetDir: options.targetDir,
@@ -165,6 +238,7 @@ async function main() {
         results.push(
             await installTypeScriptConfig({
                 frontendSolid: options.frontendSolid,
+                typebuddy: options.installTypebuddy,
                 packageManager: options.packageManager,
                 skipInstall: options.skipInstall,
                 targetDir: options.targetDir,
@@ -172,15 +246,29 @@ async function main() {
         );
     }
 
+    installDependencies({
+        packageManager: resolvedPackageManager,
+        packages: [
+            ...(options.installTypebuddy ? ["@murky-web/typebuddy"] : []),
+            ...(options.installSimplelog ? ["@murky-web/simplelog"] : []),
+        ],
+        skipInstall: options.skipInstall,
+        targetDir: options.targetDir,
+    });
+
     const installed = [
         options.useOxc ? "oxc" : null,
         options.useBiome ? "biome" : null,
         options.useTypeScript ? "typescript" : null,
         options.frontendSolid ? "frontend-solid" : null,
+        options.installTypebuddy ? "typebuddy" : null,
+        options.installSimplelog ? "simplelog" : null,
     ].filter(Boolean);
 
     console.log(`Installed ${installed.join(", ")} in ${options.targetDir}`);
-    console.log(`Package manager: ${results[0]?.packageManager ?? "npm"}`);
+    console.log(
+        `Package manager: ${results[0]?.packageManager ?? resolvedPackageManager}`,
+    );
     console.log(
         options.skipInstall
             ? "Dependency installation was skipped."
