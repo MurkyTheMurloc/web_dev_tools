@@ -1,6 +1,6 @@
 {
     "name": "@murky-web/simplelog",
-    "version": "0.1.0",
+    "version": "1.0.0",
     "private": false,
     "description": "A simple wrapper around console to make logging enjoyable again",
     "homepage": "https://github.com/MurkyTheMurloc/web_dev_tools/tree/main/packages/simplelog",
