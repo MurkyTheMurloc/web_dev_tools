@@ -37,6 +37,7 @@
     "oxlint-tsgolint": "^0.16.0"
   },
   "dependencies": {
+    "@murky-web/oxlint-plugin-solid": "workspace:*",
     "@typescript/native-preview": "^7.0.0-dev.20260314.1"
   }
 }

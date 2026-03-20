@@ -1,6 +1,9 @@
-# web_dev_config
+# @murky-web/config
 
 Zentrale Config-Sammlung fuer meine Web-Projekte.
+
+Kanonische Quelle:
+https://github.com/MurkyTheMurloc/web_dev_tools/tree/main/packages/config
 
 Aktuell liegen hier zwei installierbare Setups:
 
@@ -15,108 +18,58 @@ Zusätzlich liegen TypeScript-Templates bereit:
 
 ## CLI Workflow
 
-Der Einstieg ist jetzt ueber `bunx` direkt aus GitHub:
+Die CLI heisst `web-dev-config`.
 
 ```bash
-bunx github:MurkyTheMurloc/web_dev_config init --oxc
-```
-
-Oder als volle HTTPS-Variante:
-
-```bash
-bunx --package git+https://github.com/MurkyTheMurloc/web_dev_config.git web-dev-config init --oxc
+web-dev-config init --oxc
 ```
 
 Es gibt bewusst kein `--all`. Kombiniert werden nur orthogonale Feature-Flags.
 
 ## Install Varianten
 
-### GitHub Kurzform
+### CLI
 
 Nur Oxc:
 
 ```bash
-bunx github:MurkyTheMurloc/web_dev_config init --oxc
+web-dev-config init --oxc
 ```
 
 Nur Biome:
 
 ```bash
-bunx github:MurkyTheMurloc/web_dev_config init --biome
+web-dev-config init --biome
 ```
 
 Nur TypeScript:
 
 ```bash
-bunx github:MurkyTheMurloc/web_dev_config init --typescript
+web-dev-config init --typescript
 ```
 
 Oxc + TypeScript:
 
 ```bash
-bunx github:MurkyTheMurloc/web_dev_config init --oxc --typescript
+web-dev-config init --oxc --typescript
 ```
 
 Biome + Solid:
 
 ```bash
-bunx github:MurkyTheMurloc/web_dev_config init --biome --frontend-solid
+web-dev-config init --biome --frontend-solid
 ```
 
 Oxc + TypeScript + Solid:
 
 ```bash
-bunx github:MurkyTheMurloc/web_dev_config init --oxc --typescript --frontend-solid
+web-dev-config init --oxc --typescript --frontend-solid
 ```
 
 TypeScript + Solid:
 
 ```bash
-bunx github:MurkyTheMurloc/web_dev_config init --typescript --frontend-solid
-```
-
-### HTTPS Variante
-
-Nur Oxc:
-
-```bash
-bunx --package git+https://github.com/MurkyTheMurloc/web_dev_config.git web-dev-config init --oxc
-```
-
-Nur Biome:
-
-```bash
-bunx --package git+https://github.com/MurkyTheMurloc/web_dev_config.git web-dev-config init --biome
-```
-
-Nur TypeScript:
-
-```bash
-bunx --package git+https://github.com/MurkyTheMurloc/web_dev_config.git web-dev-config init --typescript
-```
-
-Oxc + TypeScript:
-
-```bash
-bunx --package git+https://github.com/MurkyTheMurloc/web_dev_config.git web-dev-config init --oxc --typescript
-```
-
-Biome + Solid:
-
-```bash
-bunx --package git+https://github.com/MurkyTheMurloc/web_dev_config.git web-dev-config init --biome --frontend-solid
-```
-
-Oxc + TypeScript + Solid:
-
-```bash
-bunx --package git+https://github.com/MurkyTheMurloc/web_dev_config.git web-dev-config init --oxc --typescript --frontend-solid
-```
-
-TypeScript + Solid:
-
-```bash
-bunx --package git+https://github.com/MurkyTheMurloc/web_dev_config.git web-dev-config init --typescript --frontend-solid
+web-dev-config init --typescript --frontend-solid
 ```
 
 ## Was `init --biome` macht
@@ -127,11 +80,11 @@ bunx --package git+https://github.com/MurkyTheMurloc/web_dev_config.git web-dev-
 
 ```json
 {
-  "scripts": {
-    "check:biome": "biome check --config-path ./biome/biome.jsonc .",
-    "format:biome": "biome format --config-path ./biome/biome.jsonc --write .",
-    "lint:biome": "biome lint --config-path ./biome/biome.jsonc ."
-  }
+    "scripts": {
+        "check:biome": "biome check --config-path ./biome/biome.jsonc .",
+        "format:biome": "biome format --config-path ./biome/biome.jsonc --write .",
+        "lint:biome": "biome lint --config-path ./biome/biome.jsonc ."
+    }
 }
 ```
 
@@ -151,19 +104,70 @@ Wenn `--frontend-solid` gesetzt ist:
 
 ```json
 {
-  "scripts": {
-    "format:oxc": "oxfmt -c ./oxc/.oxfmtrc.jsonc .",
-    "format:oxc:check": "oxfmt -c ./oxc/.oxfmtrc.jsonc --check .",
-    "lint:oxc": "oxlint -c ./oxc/.oxlintrc.jsonc --type-aware ."
-  }
+    "scripts": {
+        "format:oxc": "oxfmt -c ./oxc/.oxfmtrc.jsonc .",
+        "format:oxc:check": "oxfmt -c ./oxc/.oxfmtrc.jsonc --check .",
+        "lint:oxc": "oxlint -c ./oxc/.oxlintrc.jsonc --type-aware ."
+    }
 }
 ```
 
 Wenn `--frontend-solid` gesetzt ist:
 
 - haengt `./linting/solid.jsonc` in `./oxc/.oxlintrc.jsonc` ein
-- setzt `jsPlugins: ["eslint-plugin-solid"]`
-- installiert `eslint-plugin-solid`
+- loest `@murky-web/oxlint-plugin-solid` als Paket-Dependency auf
+- kopiert die lokale Regelruntime aus dem aufgeloesten Paket nach
+  `./oxc/jsplugins/solid/`
+- setzt `jsPlugins: ["./jsplugins/solid/index.mjs"]`
+- ignoriert `./jsplugins/**` im Zielprojekt-Lint, damit die kopierte
+  Regelruntime nicht selbst mitgelintet wird
+- aktiviert die komplette von `eslint-plugin-solid` exportierte
+  Upstream-Regelmenge
+- ergaenzt zusaetzlich `validate-jsx-nesting` als lokale Placeholder-Regel, weil
+  upstream im Quellbaum nur eine leere Regeldatei vorliegt
+- installiert die benoetigten Laufzeit-Dependencies fuer den lokalen
+  Solid-Regelport
+- die lokale Runtime erweitert den Upstream-Satz zusaetzlich um
+  `solid/prefer-arrow-components`
+- fuer `*.tsx`/`*.jsx` wird `prefer-readonly-parameter-types` im Solid-Preset
+  bewusst deaktiviert, damit `Component<Props>` und `ParentComponent<Props>`
+  nicht sofort wieder mit dem allgemeinen TS-Set kollidieren
+
+Hinweis:
+
+- `--frontend-solid` geht davon aus, dass das Zielprojekt bereits `solid-js`
+  als normale Projekt-Dependency nutzt, zum Beispiel ueber ein bestehendes
+  Solid- oder SolidStart-/Vite-Setup
+
+Danach kann direkt gelintet werden:
+
+```bash
+oxlint -c ./oxc/.oxlintrc.jsonc --type-aware .
+```
+
+Oder ueber den installierten Script:
+
+```bash
+bun run lint:oxc
+```
+
+Ein typischer Autofix dabei ist `solid/prefer-arrow-components`:
+
+```tsx
+export function Card(props: Props) {
+    return <section>{props.children}</section>;
+}
+```
+
+wird mit `oxlint --fix` zu:
+
+```tsx
+import type { ParentComponent } from "solid-js";
+
+export const Card: ParentComponent<Props> = (props) => {
+    return <section>{props.children}</section>;
+};
+```
 
 ## Was `init --typescript` macht
 
@@ -174,9 +178,9 @@ Wenn `--frontend-solid` gesetzt ist:
 
 ```json
 {
-  "scripts": {
-    "typecheck": "tsgo --project ./tsconfig.json --noEmit"
-  }
+    "scripts": {
+        "typecheck": "tsgo --project ./tsconfig.json --noEmit"
+    }
 }
 ```
 
@@ -184,8 +188,11 @@ Wenn `--frontend-solid` gesetzt ist:
 
 - wird `typescript/tsconfig.solid.jsonc` als `./tsconfig.json` kopiert
 - `./tsconfig.json` erweitert dann `./tsconfig.base.jsonc`
-- vorhandene Vite-Template-Dateien wie `tsconfig.app.json` und `tsconfig.node.json` werden entfernt, damit unsere Templates die single source of truth bleiben
-- aktuell werden Template-`tsconfig`s dabei bewusst direkt ersetzt und nicht automatisch gemerged
+- vorhandene Vite-Template-Dateien wie `tsconfig.app.json` und
+  `tsconfig.node.json` werden entfernt, damit unsere Templates die single source
+  of truth bleiben
+- aktuell werden Template-`tsconfig`s dabei bewusst direkt ersetzt und nicht
+  automatisch gemerged
 
 ## Optionale TypeBuddy Integration
 
@@ -210,8 +217,8 @@ wird sie von TypeScript automatisch mit aufgenommen.
 
 ```jsonc
 {
-  "extends": ["./.oxlintrc.jsonc", "./linting/typebuddy.jsonc"],
-  "jsPlugins": ["@murky-web/typebuddy/oxlint"]
+    "extends": ["./.oxlintrc.jsonc", "./linting/typebuddy.jsonc"],
+    "jsPlugins": ["@murky-web/typebuddy/oxlint"],
 }
 ```
 
@@ -234,16 +241,19 @@ Die CLI unterstuetzt:
 Beispiele:
 
 ```bash
-bunx github:MurkyTheMurloc/web_dev_config init --oxc --package-manager bun
-bunx github:MurkyTheMurloc/web_dev_config init --biome --skip-install
-bunx github:MurkyTheMurloc/web_dev_config init --oxc --typescript --frontend-solid
+web-dev-config init --oxc --package-manager bun
+web-dev-config init --biome --skip-install
+web-dev-config init --oxc --typescript --frontend-solid
 ```
 
 ## Hinweise
 
 - Die CLI erwartet ein vorhandenes `package.json`.
 - Wenn kein Paketmanager explizit gesetzt ist, wird automatisch erkannt:
-  `bun.lock` / `bun.lockb` -> `bun`, `pnpm-lock.yaml` -> `pnpm`, `yarn.lock` -> `yarn`, sonst `npm`.
+  `bun.lock` / `bun.lockb` -> `bun`, `pnpm-lock.yaml` -> `pnpm`, `yarn.lock` ->
+  `yarn`, sonst `npm`.
 - Die Biome-Config bleibt bewusst in `./biome/biome.jsonc`.
-- Die Oxc-Config bleibt bewusst in `./oxc/`, damit alle modularen `jsonc`-Dateien zusammenbleiben.
-- `tsconfig.base.jsonc` ist die moderne TS7-/`tsgo`-Basis, `tsconfig.solid.jsonc` erweitert sie fuer Solid + Vite.
+- Die Oxc-Config bleibt bewusst in `./oxc/`, damit alle modularen
+  `jsonc`-Dateien zusammenbleiben.
+- `tsconfig.base.jsonc` ist die moderne TS7-/`tsgo`-Basis,
+  `tsconfig.solid.jsonc` erweitert sie fuer Solid + Vite.

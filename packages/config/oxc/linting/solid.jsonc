@@ -1,6 +1,6 @@
 {
-    // Review decisions for eslint-plugin-solid via Oxlint jsPlugins.
-    // Intentionally not wired into .oxlintrc.jsonc or the CLI yet.
+    // Solid rules run through a local Oxlint JS plugin.
+    // The plugin provides a local Solid rule port plus project-specific rules.
     "rules": {
         "solid/components-return-once": "error",
         "solid/event-handlers": "error",
@@ -16,11 +16,25 @@
         "solid/no-react-deps": "error",
         "solid/no-react-specific-props": "error",
         "solid/no-unknown-namespaces": "error",
+        "solid/prefer-arrow-components": "error",
         "solid/prefer-classlist": "error",
         "solid/prefer-for": "error",
         "solid/prefer-show": "error",
         "solid/reactivity": "error",
         "solid/self-closing-comp": "error",
-        "solid/style-prop": "error"
-    }
+        "solid/style-prop": "error",
+        "solid/validate-jsx-nesting": "error",
+    },
+    "overrides": [
+        {
+            "files": ["**/*.jsx", "**/*.tsx"],
+            "rules": {
+                // Solid components intentionally use Component<Props> /
+                // ParentComponent<Props> arrow signatures. The generic
+                // prefer-readonly-parameter-types rule conflicts with that
+                // convention and would reject the autofix immediately.
+                "prefer-readonly-parameter-types": "off",
+            },
+        },
+    ],
 }

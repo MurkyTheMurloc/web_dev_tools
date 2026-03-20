@@ -1,21 +1,31 @@
 # Solid Custom Rules
 
-Eigene projektinterne Solid-Konventionen, die aktuell nicht direkt durch Biome oder `eslint-plugin-solid` abgedeckt sind.
+Eigene projektinterne Solid-Konventionen, die aktuell nicht direkt durch Biome
+oder das nackte `eslint-plugin-solid` abgedeckt sind.
 
 Status:
 
-- Noch keine technische Implementierung
-- Erstmal nur gesammelt
-- Spaeterer Zielzustand kann sein:
-  - dokumentierte Team-Konvention
-  - Custom Oxlint JS plugin rule
-  - eigener ESLint-kompatibler Solid-Zusatz fuer Oxlint `jsPlugins`
+- Technisch ueber die lokale Solid-Oxlint-Erweiterung umgesetzt
+- Aktivierbar ueber `--frontend-solid`
+- Das Preset aktiviert jetzt die komplette von `eslint-plugin-solid` exportierte
+  Upstream-Regelmenge
+- Laeuft unter dem `solid/*`-Namespace
+
+Hinweis:
+
+- Im Upstream-Repo liegt zusaetzlich noch `validate-jsx-nesting` im
+  `src/rules`-Ordner.
+- Die Regel ist dort aktuell aber in `src/plugin.ts` auskommentiert und wird vom
+  veroeffentlichten Plugin nicht exportiert.
+- Im lokalen Port existiert sie deshalb als Placeholder-Regel mit leerer
+  Implementierung, damit die komplette Upstream-Rule-Surface im Paket vorhanden
+  ist.
 
 ## prefer-arrow-components
 
 Status:
 
-- [ ] Aufnehmen
+- [x] Aufnehmen
 - [ ] Ablehnen
 
 Kurz:
@@ -50,9 +60,17 @@ Warum:
 - einheitlicher Komponentenstil
 - sofort als Component-Konstante erkennbar
 - passt zu deinem bevorzugten Solid-Stil
-- erleichtert konsistente Typisierung ueber `Component<Props>` oder `ParentComponent<Props>`
+- erleichtert konsistente Typisierung ueber `Component<Props>` oder
+  `ParentComponent<Props>`
 
 Hinweise:
 
-- Das ist aktuell eher eine Team-Konvention als eine vorhandene Standardregel.
-- Wenn wir das spaeter technisch erzwingen wollen, muessen wir wahrscheinlich eine eigene Regel bauen.
+- Die Regel ist jetzt im Workspace-Paket `@murky-web/oxlint-plugin-solid`
+  umgesetzt.
+- `@murky-web/config` bindet dieses Paket als Dependency ein und kopiert die
+  Runtime beim `--frontend-solid`-Install in das Zielprojekt.
+- Sie ergaenzt die Upstream-Solid-Regeln unter demselben `solid/*`-Namespace.
+- Das Solid-Preset schaltet fuer `*.tsx` und `*.jsx` bewusst
+  `prefer-readonly-parameter-types` ab, weil die gewollte
+  `Component<Props>`-/`ParentComponent<Props>`-Signatur sonst direkt wieder vom
+  allgemeinen TypeScript-Regelset verworfen wuerde.

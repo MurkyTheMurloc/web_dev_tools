@@ -1,0 +1,44 @@
+{
+    "name": "@murky-web/oxlint-plugin-solid",
+    "version": "0.0.1",
+    "description": "Local Oxlint JS plugin port for Solid rules plus Murky-specific Solid conventions.",
+    "license": "MIT",
+    "private": false,
+    "type": "module",
+    "exports": {
+        ".": "./src/index.mjs"
+    },
+    "files": [
+        "README.md",
+        "src"
+    ],
+    "scripts": {
+        "test": "bun test ./tests"
+    },
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/MurkyTheMurloc/web_dev_tools.git",
+        "directory": "packages/oxlint-plugin-solid"
+    },
+    "homepage": "https://github.com/MurkyTheMurloc/web_dev_tools/tree/main/packages/oxlint-plugin-solid",
+    "bugs": {
+        "url": "https://github.com/MurkyTheMurloc/web_dev_tools/issues"
+    },
+    "sideEffects": false,
+    "dependencies": {
+        "@typescript-eslint/utils": "^8.57.1",
+        "eslint": "^9.38.0",
+        "estraverse": "^5.3.0",
+        "is-html": "^2.0.0",
+        "kebab-case": "^1.0.2",
+        "known-css-properties": "^0.30.0",
+        "style-to-object": "^1.0.8"
+    },
+    "devDependencies": {
+        "solid-js": "^1.9.11"
+    },
+    "publishConfig": {
+        "access": "public",
+        "provenance": true
+    }
+}
