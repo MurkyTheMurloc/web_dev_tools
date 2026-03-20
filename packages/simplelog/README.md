@@ -1,21 +1,24 @@
 # SimpleLog
 
-`SimpleLog` is a lightweight and flexible logging utility for Node.js, Bun, Deno, and fetch-style edge runtimes. It provides various log levels, performance benchmarking, and the ability to log messages to both the console and a file.
+`SimpleLog` is a lightweight and flexible logging utility for Node.js, Bun,
+Deno, and fetch-style edge runtimes. It provides various log levels, performance
+benchmarking, and the ability to log messages to both the console and a file.
 
 ## Features
 
--   Multiple log levels: `DEBUG`, `INFO`, `WARN`, `ERROR`
--   Performance benchmarking
--   Log messages to console and/or file
--   Colorized console output
--   Nested loggers for hierarchical logging
--   Request-scoped logging for Hono servers
--   Optional OpenTelemetry trace correlation
+- Multiple log levels: `DEBUG`, `INFO`, `WARN`, `ERROR`
+- Performance benchmarking
+- Log messages to console and/or file
+- Colorized console output
+- Nested loggers for hierarchical logging
+- Request-scoped logging for Hono servers
+- Optional OpenTelemetry trace correlation
 
 ## Installation
 
-SimpleLog is currently used as an internal workspace package in `web_kit`.
-External publish and install instructions will be added again later.
+```bash
+bun add @murky-web/simplelog
+```
 
 ## Usage
 
@@ -84,26 +87,34 @@ childLogger.info("This is a message from the child logger");
 
 ## Logger Options
 
--   `writeToFile`: Boolean indicating whether to write logs to a file.
--   `logFilePath`: Path to the log file.
--   `logLevelThreshold`: Minimum log level for logging.
--   `valueColorMode`: `"level" | "syntax" | "off"` for console value coloring.
--   `includeOpenTelemetryContext`: Adds active `trace_id` and `span_id` to each log line when an OpenTelemetry span is active.
+- `writeToFile`: Boolean indicating whether to write logs to a file.
+- `logFilePath`: Path to the log file.
+- `logLevelThreshold`: Minimum log level for logging.
+- `valueColorMode`: `"level" | "syntax" | "off"` for console value coloring.
+- `includeOpenTelemetryContext`: Adds active `trace_id` and `span_id` to each
+  log line when an OpenTelemetry span is active.
 
 `valueColorMode` modes:
 
 - `level`: current default, all console pieces use the log-level color
-- `syntax`: extra values use type-based colors like strings, numbers, booleans, nullish values, symbols, and objects
+- `syntax`: extra values use type-based colors like strings, numbers, booleans,
+  nullish values, symbols, and objects
 - `off`: console output stays plain
 
-`includeOpenTelemetryContext` is intentionally opt-in. When enabled, `simplelog` reads the current active span from `@opentelemetry/api` and appends `trace_id` and `span_id` to console and file output. It does not install an OpenTelemetry SDK or exporter for you.
+`includeOpenTelemetryContext` is intentionally opt-in. When enabled, `simplelog`
+reads the current active span from `@opentelemetry/api` and appends `trace_id`
+and `span_id` to console and file output. It does not install an OpenTelemetry
+SDK or exporter for you.
 
 ## Log Levels
 
--   `DEBUG`: Detailed information, typically of interest only when diagnosing problems.
--   `INFO`: Confirmation that things are working as expected.
--   `WARN`: An indication that something unexpected happened, or indicative of some problem in the near future.
--   `ERROR`: Error events of considerable importance that will prevent normal program execution.
+- `DEBUG`: Detailed information, typically of interest only when diagnosing
+  problems.
+- `INFO`: Confirmation that things are working as expected.
+- `WARN`: An indication that something unexpected happened, or indicative of
+  some problem in the near future.
+- `ERROR`: Error events of considerable importance that will prevent normal
+  program execution.
 
 ## Runtime Variants
 
@@ -111,14 +122,18 @@ childLogger.info("This is a message from the child logger");
 - `@murky-web/simplelog/node`: explicit Node entry
 - `@murky-web/simplelog/bun`: Bun entry
 - `@murky-web/simplelog/deno`: Deno entry
-- `@murky-web/simplelog/web`: runtime-neutral console logger for fetch-style runtimes
+- `@murky-web/simplelog/web`: runtime-neutral console logger for fetch-style
+  runtimes
 - `@murky-web/simplelog/hono`: Hono middleware for request-scoped logging
 
-For Bun, file appends intentionally use Bun's `node:fs` compatibility layer because the native `Bun.file(...).writer()` flow overwrites existing file contents instead of appending in our local runtime check.
+For Bun, file appends intentionally use Bun's `node:fs` compatibility layer
+because the native `Bun.file(...).writer()` flow overwrites existing file
+contents instead of appending in our local runtime check.
 
 ## Hono Middleware
 
-For Hono-based servers and metaframeworks, prefer the runtime-neutral `web` logger together with the Hono middleware entry:
+For Hono-based servers and metaframeworks, prefer the runtime-neutral `web`
+logger together with the Hono middleware entry:
 
 ```typescript
 import { Hono } from "hono";
@@ -144,7 +159,8 @@ app.get("/", (c) => {
 });
 ```
 
-The middleware exposes `c.var.logger`, and it logs request completion with method, path, status, duration, request ID, and Hono's runtime key.
+The middleware exposes `c.var.logger`, and it logs request completion with
+method, path, status, duration, request ID, and Hono's runtime key.
 
 This adapter is intentionally thin:
 
@@ -153,7 +169,8 @@ This adapter is intentionally thin:
 - it works across Node, Bun, Deno, Cloudflare, and Netlify style runtimes
 - it does not own your tracing SDK or framework-specific SSR handoff
 
-If you want a custom request logger name, you can provide one directly or resolve it per request:
+If you want a custom request logger name, you can provide one directly or
+resolve it per request:
 
 ```typescript
 app.use(
@@ -166,6 +183,23 @@ app.use(
 );
 ```
 
+## Oxlint Integration
+
+`@murky-web/simplelog/oxlint` exports the SimpleLog-specific Oxlint JS plugin.
+
+Current rules:
+
+- `simplelog/prefer-simplelog`
+- `simplelog/prefer-child-logger`
+- `simplelog/no-ad-hoc-console-fallback`
+- `simplelog/no-console-alias`
+- `simplelog/prefer-hono-context-logger`
+- `simplelog/prefer-runtime-entry`
+- `simplelog/require-logger-name`
+
+If you use `@murky-web/config`, running `web-dev-config init --oxc --simplelog`
+wires this preset automatically.
+
 ## OpenTelemetry Integration
 
 `simplelog` is OpenTelemetry-aware, but not OpenTelemetry-owning.
@@ -173,8 +207,10 @@ app.use(
 That means:
 
 - `simplelog` reads the active span from `@opentelemetry/api`
-- `simplelog` appends `trace_id` and `span_id` when `includeOpenTelemetryContext` is enabled
-- your application or metaframework is still responsible for installing the OpenTelemetry SDK, context manager, instrumentations, and exporters
+- `simplelog` appends `trace_id` and `span_id` when
+  `includeOpenTelemetryContext` is enabled
+- your application or metaframework is still responsible for installing the
+  OpenTelemetry SDK, context manager, instrumentations, and exporters
 
 Minimal logger setup:
 
@@ -187,13 +223,17 @@ const logger = new Logger("server", undefined, {
 });
 ```
 
-Once your runtime has an active span, log lines automatically include the current trace correlation data:
+Once your runtime has an active span, log lines automatically include the
+current trace correlation data:
 
 ```text
 2026-03-18T22:00:00.000Z [INFO] [server -> request] [trace_id=... span_id=...] - Request completed
 ```
 
-`simplelog` deliberately does not bootstrap tracing for you. In production, that usually belongs in the metaframework or host integration layer, because the exact setup depends on your runtime, deployment target, and exporter infrastructure.
+`simplelog` deliberately does not bootstrap tracing for you. In production, that
+usually belongs in the metaframework or host integration layer, because the
+exact setup depends on your runtime, deployment target, and exporter
+infrastructure.
 
 ## Hono + OpenTelemetry Together
 
@@ -201,16 +241,20 @@ For a Hono-based metaframework, the usual shape is:
 
 1. Your framework boots OpenTelemetry for the current runtime.
 2. Hono request handling creates or activates a request span.
-3. `createHonoLoggerMiddleware()` attaches a request-scoped logger to `c.var.logger`.
+3. `createHonoLoggerMiddleware()` attaches a request-scoped logger to
+   `c.var.logger`.
 4. `simplelog` reads the active span and appends `trace_id` and `span_id`.
 
 That gives you:
 
 - one consistent logger API on server and client
 - request-scoped child loggers during SSR and server work
-- trace-correlated logs that continue to work with real OpenTelemetry infrastructure later
+- trace-correlated logs that continue to work with real OpenTelemetry
+  infrastructure later
 
-For Node-only servers where file logging matters, you can still use the default `@murky-web/simplelog` entry. For truly cross-runtime Hono usage, `@murky-web/simplelog/web` is the safer default.
+For Node-only servers where file logging matters, you can still use the default
+`@murky-web/simplelog` entry. For truly cross-runtime Hono usage,
+`@murky-web/simplelog/web` is the safer default.
 
 ## Example
 
@@ -225,7 +269,7 @@ const logger = new Logger("AppLogger", undefined, {
 
 logger.info("Application started");
 logger.debug(
-    "This debug message will not be logged because the threshold is INFO"
+    "This debug message will not be logged because the threshold is INFO",
 );
 logger.warn("This is a warning");
 logger.error("This is an error");

@@ -11,3 +11,4 @@ Repository-specific pinned Context7 IDs for this project.
 - ESLint: `/eslint/eslint`
 - Biome: `/biomejs/biome`
 - TypeScript Go: `/microsoft/typescript-go`
+- tsdown: `/rolldown/tsdown`

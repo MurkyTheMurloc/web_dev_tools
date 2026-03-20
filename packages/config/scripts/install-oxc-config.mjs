@@ -11,6 +11,20 @@ import {
     updatePackageScripts,
 } from "./install-utils.mjs";
 
+const BASE_EXTENDS = [
+    "./linting/base.jsonc",
+    "./linting/eslint.jsonc",
+    "./linting/typescript.jsonc",
+    "./linting/unicorn.jsonc",
+    "./linting/oxc.jsonc",
+    "./linting/import.jsonc",
+    "./linting/jsx_a11y.jsonc",
+    "./linting/vitest.jsonc",
+    "./linting/promise.jsonc",
+    "./linting/node.jsonc",
+    "./linting/jsdoc.jsonc",
+];
+
 const scriptDir = path.dirname(fileURLToPath(import.meta.url));
 const repoRoot = path.resolve(scriptDir, "..");
 const oxcSourceDir = path.join(repoRoot, "oxc");
@@ -18,6 +32,7 @@ const require = createRequire(import.meta.url);
 
 export async function installOxcConfig({
     frontendSolid = false,
+    simplelog = false,
     typebuddy = false,
     targetDir = process.cwd(),
     packageManager,
@@ -42,16 +57,17 @@ export async function installOxcConfig({
         path.join(oxcSourceDir, "linting"),
         path.join(resolvedTargetDir, "oxc", "linting"),
     );
+
     if (frontendSolid) {
-        const solidJsPluginSourceDir = resolveSolidJsPluginSourceDir();
         copyPath(
-            solidJsPluginSourceDir,
+            resolveSolidJsPluginSourceDir(),
             path.join(resolvedTargetDir, "oxc", "jsplugins", "solid"),
         );
     }
 
     updateOxcConfig(path.join(resolvedTargetDir, "oxc", ".oxlintrc.jsonc"), {
         frontendSolid,
+        simplelog,
         typebuddy,
     });
 
@@ -77,6 +93,7 @@ export async function installOxcConfig({
                       "kebab-case",
                       "known-css-properties",
                       "style-to-object",
+                      "typescript",
                   ]
                 : []),
         ],
@@ -101,65 +118,46 @@ function resolveSolidJsPluginSourceDir() {
     }
 }
 
-function updateOxcConfig(configPath, { frontendSolid, typebuddy }) {
-    const source = readFileSync(configPath, "utf8");
+function updateOxcConfig(configPath, { frontendSolid, simplelog, typebuddy }) {
+    let next = readFileSync(configPath, "utf8");
 
-    let next = source;
-    if (frontendSolid && !next.includes(`"./linting/solid.jsonc"`)) {
-        const extendsMarker = `        "./linting/jsdoc.jsonc"\n    ],`;
-        if (!next.includes(extendsMarker)) {
-            throw new Error(
-                "Could not enable Solid support in .oxlintrc.jsonc: expected extends marker not found.",
-            );
-        }
+    const desiredExtends = [
+        ...BASE_EXTENDS,
+        ...(typebuddy ? ["./linting/typebuddy.jsonc"] : []),
+        ...(simplelog ? ["./linting/simplelog.jsonc"] : []),
+        ...(frontendSolid ? ["./linting/solid.jsonc"] : []),
+    ];
 
-        next = next.replace(
-            extendsMarker,
-            `        "./linting/jsdoc.jsonc",\n        "./linting/solid.jsonc"\n    ],`,
-        );
-    }
-
-    if (typebuddy && !next.includes(`"./linting/typebuddy.jsonc"`)) {
-        const jsdocMarker = `        "./linting/jsdoc.jsonc"`;
-        if (!next.includes(jsdocMarker)) {
-            throw new Error(
-                "Could not enable TypeBuddy support in .oxlintrc.jsonc: expected jsdoc marker not found.",
-            );
-        }
-
-        next = next.replace(
-            jsdocMarker,
-            `${jsdocMarker},\n        "./linting/typebuddy.jsonc"`,
-        );
-    }
+    next = next.replace(
+        /"extends": \[[\s\S]*?\n\s*\],/u,
+        `"extends": [\n${desiredExtends.map((entry) => `        "${entry}"`).join(",\n")}\n    ],`,
+    );
 
     const jsPlugins = [];
     if (frontendSolid) {
-        jsPlugins.push(`"./jsplugins/solid/index.mjs"`);
+        jsPlugins.push("./jsplugins/solid/index.mjs");
     }
     if (typebuddy) {
-        jsPlugins.push(`"@murky-web/typebuddy/oxlint"`);
+        jsPlugins.push("@murky-web/typebuddy/oxlint");
+    }
+    if (simplelog) {
+        jsPlugins.push("@murky-web/simplelog/oxlint");
     }
 
     next = upsertJsPlugins(next, jsPlugins);
 
-    if (frontendSolid && !next.includes(`"./jsplugins/**"`)) {
-        if (next.includes(`"ignorePatterns": [`)) {
-            next = next.replace(
-                `"ignorePatterns": [`,
-                `"ignorePatterns": [\n        "./jsplugins/**",`,
+    if (frontendSolid && !next.includes(`"ignorePatterns": [`)) {
+        const pluginsMarker = `    "plugins": [`;
+        if (!next.includes(pluginsMarker)) {
+            throw new Error(
+                "Could not update .oxlintrc.jsonc: expected plugins marker not found.",
             );
-        } else {
-            const extendsBlockEnd = `    ],\n`;
-            const extendsIndex = next.indexOf(extendsBlockEnd);
-            if (extendsIndex === -1) {
-                throw new Error(
-                    "Could not enable Solid support in .oxlintrc.jsonc: expected extends block not found.",
-                );
-            }
-
-            next = `${next.slice(0, extendsIndex + extendsBlockEnd.length)}    "ignorePatterns": [\n        "./jsplugins/**"\n    ],\n${next.slice(extendsIndex + extendsBlockEnd.length)}`;
         }
+
+        next = next.replace(
+            pluginsMarker,
+            `    "ignorePatterns": [\n        "./jsplugins/**"\n    ],\n    "plugins": [`,
+        );
     }
 
     writeFileSync(configPath, next);
@@ -170,7 +168,7 @@ function upsertJsPlugins(configSource, jsPlugins) {
         return configSource;
     }
 
-    const desiredEntries = jsPlugins.map((plugin) => `        ${plugin}`);
+    const desiredEntries = jsPlugins.map((plugin) => `        "${plugin}"`);
 
     if (configSource.includes(`"jsPlugins": [`)) {
         return configSource.replace(

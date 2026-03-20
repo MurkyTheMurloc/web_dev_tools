@@ -1,0 +1,11 @@
+{
+    "rules": {
+        "simplelog/no-ad-hoc-console-fallback": "error",
+        "simplelog/no-console-alias": "error",
+        "simplelog/prefer-child-logger": "error",
+        "simplelog/prefer-hono-context-logger": "error",
+        "simplelog/prefer-runtime-entry": "error",
+        "simplelog/prefer-simplelog": "error",
+        "simplelog/require-logger-name": "error",
+    },
+}

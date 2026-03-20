@@ -4,33 +4,79 @@ import path from "node:path";
 import process from "node:process";
 
 import { installBiomeConfig } from "../scripts/install-biome-config.mjs";
+import { installContext7DefaultsSkill } from "../scripts/install-context7-defaults-skill.mjs";
+import { installFindDocsSkill } from "../scripts/install-find-docs-skill.mjs";
+import { installFrontendDesignSkill } from "../scripts/install-frontend-design-skill.mjs";
+import { installFrontendTasteSkill } from "../scripts/install-frontend-taste-skill.mjs";
+import { installGitGuardrailsClaudeCodeSkill } from "../scripts/install-git-guardrails-claude-code-skill.mjs";
+import { installGrillMeSkill } from "../scripts/install-grill-me-skill.mjs";
+import { installImproveCodebaseArchitectureSkill } from "../scripts/install-improve-codebase-architecture-skill.mjs";
 import { installOxcConfig } from "../scripts/install-oxc-config.mjs";
+import { installSimplelogSkill } from "../scripts/install-simplelog-skill.mjs";
+import { installSolidjsSkill } from "../scripts/install-solidjs-skill.mjs";
+import { installTailwindcssSkill } from "../scripts/install-tailwindcss-skill.mjs";
+import { installTddSkill } from "../scripts/install-tdd-skill.mjs";
+import { installTypebuddySkill } from "../scripts/install-typebuddy-skill.mjs";
 import { installTypeScriptConfig } from "../scripts/install-typescript-config.mjs";
+import { installUbiquitousLanguageSkill } from "../scripts/install-ubiquitous-language-skill.mjs";
 import {
     detectPackageManager,
+    ensureGitignoreEntries,
     installDependencies,
 } from "../scripts/install-utils.mjs";
+import { installWorkspaceDefaultsSkill } from "../scripts/install-workspace-defaults-skill.mjs";
 
 const DEFAULT_FEATURES = {
     frontendSolid: true,
     installSimplelog: true,
     installTypebuddy: true,
     useOxc: true,
+    useSkillContext7Defaults: true,
+    useSkillFindDocs: true,
+    useSkillFrontendDesign: true,
+    useSkillFrontendTaste: true,
+    useSkillSimplelog: true,
+    useSkillSolidjs: true,
+    useSkillTailwindcss: true,
+    useSkillTdd: true,
+    useSkillTypebuddy: true,
+    useSkillWorkspaceDefaults: true,
     useTypeScript: true,
 };
 
 function printUsage() {
     console.log(`Usage:
-  web-dev-config init [--defaults] [--oxc | --biome] [--typescript] [--frontend-solid] [--typebuddy] [--simplelog] [target-dir] [--skip-install] [--package-manager <pm>]
+  web-dev-config init [--defaults] [--oxc | --biome] [--typescript] [--frontend-solid] [--typebuddy] [--simplelog] [--skill-context7-defaults] [--skill-find-docs] [--skill-frontend-design] [--skill-frontend-taste] [--skill-workspace-defaults] [--skill-grill-me] [--skill-improve-codebase-architecture] [--skill-simplelog] [--skill-solidjs] [--skill-tailwindcss] [--skill-tdd] [--skill-typebuddy] [--skill-ubiquitous-language] [--skill-git-guardrails-claude-code] [target-dir] [--skip-install] [--package-manager <pm>]
 
 Options:
-  --defaults            Install the default setup: --oxc --typescript --frontend-solid --typebuddy --simplelog
+  --defaults            Install the default stack: --oxc --typescript --frontend-solid --typebuddy --simplelog plus the default skills
   --oxc                 Install the modular Oxc config
   --biome               Install the Biome config
   --typescript          Install the TypeScript config
   --frontend-solid      Apply Solid frontend presets to selected configs
   --typebuddy           Install @murky-web/typebuddy and wire its config defaults
-  --simplelog           Install @murky-web/simplelog
+  --simplelog           Install @murky-web/simplelog and wire its Oxc preset when Oxc is enabled
+  --skill-context7-defaults
+                        Install the local Context7 defaults skill
+  --skill-find-docs     Install the local find-docs skill
+  --skill-frontend-design
+                        Install the local frontend-design skill
+  --skill-frontend-taste
+                        Install the local frontend-taste skill
+  --skill-workspace-defaults
+                        Install the local workspace-defaults skill
+  --skill-grill-me      Install the local grill-me skill
+  --skill-git-guardrails-claude-code
+                        Install the local git-guardrails-claude-code skill
+  --skill-improve-codebase-architecture
+                        Install the local improve-codebase-architecture skill
+  --skill-simplelog     Install the local simplelog skill
+  --skill-solidjs       Install the local solidjs skill
+  --skill-tailwindcss   Install the local tailwindcss skill
+  --skill-tdd           Install the local tdd skill
+  --skill-typebuddy     Install the local typebuddy skill
+  --skill-ubiquitous-language
+                        Install the local ubiquitous-language skill
   --skip-install        Skip dependency installation
   --package-manager     Force bun, pnpm, npm, or yarn
   -h, --help            Show this help
@@ -62,6 +108,20 @@ function parseArgs(argv) {
     let frontendSolid = false;
     let installTypebuddy = false;
     let installSimplelog = false;
+    let useSkillContext7Defaults = false;
+    let useSkillFindDocs = false;
+    let useSkillFrontendDesign = false;
+    let useSkillFrontendTaste = false;
+    let useSkillGitGuardrailsClaudeCode = false;
+    let useSkillGrillMe = false;
+    let useSkillImproveCodebaseArchitecture = false;
+    let useSkillSimplelog = false;
+    let useSkillSolidjs = false;
+    let useSkillTailwindcss = false;
+    let useSkillTdd = false;
+    let useSkillTypebuddy = false;
+    let useSkillUbiquitousLanguage = false;
+    let useSkillWorkspaceDefaults = false;
     let skipInstall = false;
     let packageManager;
     let targetDir = process.cwd();
@@ -113,6 +173,76 @@ function parseArgs(argv) {
             continue;
         }
 
+        if (argument === "--skill-context7-defaults") {
+            useSkillContext7Defaults = true;
+            continue;
+        }
+
+        if (argument === "--skill-find-docs") {
+            useSkillFindDocs = true;
+            continue;
+        }
+
+        if (argument === "--skill-frontend-design") {
+            useSkillFrontendDesign = true;
+            continue;
+        }
+
+        if (argument === "--skill-frontend-taste") {
+            useSkillFrontendTaste = true;
+            continue;
+        }
+
+        if (argument === "--skill-workspace-defaults") {
+            useSkillWorkspaceDefaults = true;
+            continue;
+        }
+
+        if (argument === "--skill-grill-me") {
+            useSkillGrillMe = true;
+            continue;
+        }
+
+        if (argument === "--skill-git-guardrails-claude-code") {
+            useSkillGitGuardrailsClaudeCode = true;
+            continue;
+        }
+
+        if (argument === "--skill-improve-codebase-architecture") {
+            useSkillImproveCodebaseArchitecture = true;
+            continue;
+        }
+
+        if (argument === "--skill-simplelog") {
+            useSkillSimplelog = true;
+            continue;
+        }
+
+        if (argument === "--skill-solidjs") {
+            useSkillSolidjs = true;
+            continue;
+        }
+
+        if (argument === "--skill-tailwindcss") {
+            useSkillTailwindcss = true;
+            continue;
+        }
+
+        if (argument === "--skill-tdd") {
+            useSkillTdd = true;
+            continue;
+        }
+
+        if (argument === "--skill-typebuddy") {
+            useSkillTypebuddy = true;
+            continue;
+        }
+
+        if (argument === "--skill-ubiquitous-language") {
+            useSkillUbiquitousLanguage = true;
+            continue;
+        }
+
         if (argument === "--skip-install") {
             skipInstall = true;
             continue;
@@ -149,21 +279,46 @@ function parseArgs(argv) {
         positionalTargetSeen = true;
     }
 
-    if (
-        useDefaults ||
-        noExplicitInstallTargetsSelected({
-            installSimplelog,
-            installTypebuddy,
-            useBiome,
-            useOxc,
-            useTypeScript,
-        })
-    ) {
-        frontendSolid = DEFAULT_FEATURES.frontendSolid;
-        installSimplelog = DEFAULT_FEATURES.installSimplelog;
-        installTypebuddy = DEFAULT_FEATURES.installTypebuddy;
-        useOxc = DEFAULT_FEATURES.useOxc;
-        useTypeScript = DEFAULT_FEATURES.useTypeScript;
+    const noExplicitInstallTargets =
+        !useOxc &&
+        !useBiome &&
+        !useTypeScript &&
+        !installTypebuddy &&
+        !installSimplelog &&
+        !useSkillContext7Defaults &&
+        !useSkillFindDocs &&
+        !useSkillFrontendDesign &&
+        !useSkillFrontendTaste &&
+        !useSkillGitGuardrailsClaudeCode &&
+        !useSkillGrillMe &&
+        !useSkillImproveCodebaseArchitecture &&
+        !useSkillSimplelog &&
+        !useSkillSolidjs &&
+        !useSkillTailwindcss &&
+        !useSkillTdd &&
+        !useSkillTypebuddy &&
+        !useSkillUbiquitousLanguage &&
+        !useSkillWorkspaceDefaults;
+
+    let usedDefaultStack = false;
+
+    if (useDefaults || noExplicitInstallTargets) {
+        frontendSolid = true;
+        installSimplelog = true;
+        installTypebuddy = true;
+        useOxc = true;
+        useTypeScript = true;
+        useSkillContext7Defaults = true;
+        useSkillFindDocs = true;
+        useSkillFrontendDesign = true;
+        useSkillFrontendTaste = true;
+        useSkillSimplelog = true;
+        useSkillSolidjs = true;
+        useSkillTailwindcss = true;
+        useSkillTdd = true;
+        useSkillTypebuddy = true;
+        useSkillWorkspaceDefaults = true;
+        usedDefaultStack = true;
     }
 
     if (useBiome && useOxc) {
@@ -181,26 +336,25 @@ function parseArgs(argv) {
         packageManager,
         skipInstall,
         targetDir,
+        usedDefaultStack,
         useBiome,
         useOxc,
+        useSkillContext7Defaults,
+        useSkillFindDocs,
+        useSkillFrontendDesign,
+        useSkillFrontendTaste,
+        useSkillGitGuardrailsClaudeCode,
+        useSkillGrillMe,
+        useSkillImproveCodebaseArchitecture,
+        useSkillSimplelog,
+        useSkillSolidjs,
+        useSkillTailwindcss,
+        useSkillTdd,
+        useSkillTypebuddy,
+        useSkillUbiquitousLanguage,
+        useSkillWorkspaceDefaults,
         useTypeScript,
     };
-}
-
-function noExplicitInstallTargetsSelected({
-    installSimplelog,
-    installTypebuddy,
-    useBiome,
-    useOxc,
-    useTypeScript,
-}) {
-    return (
-        !useOxc &&
-        !useBiome &&
-        !useTypeScript &&
-        !installTypebuddy &&
-        !installSimplelog
-    );
 }
 
 async function main() {
@@ -210,11 +364,27 @@ async function main() {
         options.targetDir,
         options.packageManager,
     );
+    const installsSkills =
+        options.useSkillContext7Defaults ||
+        options.useSkillFindDocs ||
+        options.useSkillFrontendDesign ||
+        options.useSkillFrontendTaste ||
+        options.useSkillGitGuardrailsClaudeCode ||
+        options.useSkillGrillMe ||
+        options.useSkillImproveCodebaseArchitecture ||
+        options.useSkillSimplelog ||
+        options.useSkillSolidjs ||
+        options.useSkillTailwindcss ||
+        options.useSkillTdd ||
+        options.useSkillTypebuddy ||
+        options.useSkillUbiquitousLanguage ||
+        options.useSkillWorkspaceDefaults;
 
     if (options.useOxc) {
         results.push(
             await installOxcConfig({
                 frontendSolid: options.frontendSolid,
+                simplelog: options.installSimplelog,
                 typebuddy: options.installTypebuddy,
                 packageManager: options.packageManager,
                 skipInstall: options.skipInstall,
@@ -246,6 +416,87 @@ async function main() {
         );
     }
 
+    if (options.useSkillContext7Defaults) {
+        results.push(
+            installContext7DefaultsSkill({ targetDir: options.targetDir }),
+        );
+    }
+
+    if (options.useSkillFindDocs) {
+        results.push(installFindDocsSkill({ targetDir: options.targetDir }));
+    }
+
+    if (options.useSkillFrontendDesign) {
+        results.push(
+            installFrontendDesignSkill({ targetDir: options.targetDir }),
+        );
+    }
+
+    if (options.useSkillFrontendTaste) {
+        results.push(
+            installFrontendTasteSkill({ targetDir: options.targetDir }),
+        );
+    }
+
+    if (options.useSkillWorkspaceDefaults) {
+        results.push(
+            installWorkspaceDefaultsSkill({ targetDir: options.targetDir }),
+        );
+    }
+
+    if (options.useSkillGrillMe) {
+        results.push(installGrillMeSkill({ targetDir: options.targetDir }));
+    }
+
+    if (options.useSkillGitGuardrailsClaudeCode) {
+        results.push(
+            installGitGuardrailsClaudeCodeSkill({
+                targetDir: options.targetDir,
+            }),
+        );
+    }
+
+    if (options.useSkillImproveCodebaseArchitecture) {
+        results.push(
+            installImproveCodebaseArchitectureSkill({
+                targetDir: options.targetDir,
+            }),
+        );
+    }
+
+    if (options.useSkillSimplelog) {
+        results.push(installSimplelogSkill({ targetDir: options.targetDir }));
+    }
+
+    if (options.useSkillSolidjs) {
+        results.push(installSolidjsSkill({ targetDir: options.targetDir }));
+    }
+
+    if (options.useSkillTailwindcss) {
+        results.push(installTailwindcssSkill({ targetDir: options.targetDir }));
+    }
+
+    if (options.useSkillTdd) {
+        results.push(installTddSkill({ targetDir: options.targetDir }));
+    }
+
+    if (options.useSkillTypebuddy) {
+        results.push(installTypebuddySkill({ targetDir: options.targetDir }));
+    }
+
+    if (options.useSkillUbiquitousLanguage) {
+        results.push(
+            installUbiquitousLanguageSkill({ targetDir: options.targetDir }),
+        );
+    }
+
+    if (installsSkills) {
+        ensureGitignoreEntries(options.targetDir, [
+            ".codex/skills/",
+            ".skills/",
+        ]);
+    }
+
     installDependencies({
         packageManager: resolvedPackageManager,
         packages: [
@@ -260,19 +511,49 @@ async function main() {
         options.useOxc ? "oxc" : null,
         options.useBiome ? "biome" : null,
         options.useTypeScript ? "typescript" : null,
-        options.frontendSolid ? "frontend-solid" : null,
         options.installTypebuddy ? "typebuddy" : null,
         options.installSimplelog ? "simplelog" : null,
+        options.useSkillContext7Defaults ? "skill-context7-defaults" : null,
+        options.useSkillFindDocs ? "skill-find-docs" : null,
+        options.useSkillFrontendDesign ? "skill-frontend-design" : null,
+        options.useSkillFrontendTaste ? "skill-frontend-taste" : null,
+        options.useSkillGitGuardrailsClaudeCode
+            ? "skill-git-guardrails-claude-code"
+            : null,
+        options.useSkillGrillMe ? "skill-grill-me" : null,
+        options.useSkillImproveCodebaseArchitecture
+            ? "skill-improve-codebase-architecture"
+            : null,
+        options.useSkillSimplelog ? "skill-simplelog" : null,
+        options.useSkillSolidjs ? "skill-solidjs" : null,
+        options.useSkillTailwindcss ? "skill-tailwindcss" : null,
+        options.useSkillTdd ? "skill-tdd" : null,
+        options.useSkillTypebuddy ? "skill-typebuddy" : null,
+        options.useSkillUbiquitousLanguage ? "skill-ubiquitous-language" : null,
+        options.useSkillWorkspaceDefaults ? "skill-workspace-defaults" : null,
+        options.frontendSolid ? "frontend-solid" : null,
     ].filter(Boolean);
 
-    console.log(`Installed ${installed.join(", ")} in ${options.targetDir}`);
+    const packageManagerUsed =
+        results.find((result) => {
+            return typeof result?.packageManager === "string";
+        })?.packageManager ??
+        (options.installTypebuddy || options.installSimplelog
+            ? resolvedPackageManager
+            : undefined);
+    const installedDependencies =
+        options.installTypebuddy || options.installSimplelog;
+
     console.log(
-        `Package manager: ${results[0]?.packageManager ?? resolvedPackageManager}`,
+        `${options.usedDefaultStack ? "Installed default stack" : "Installed"} ${installed.join(", ")} in ${options.targetDir}`,
     );
+    console.log(`Package manager: ${packageManagerUsed ?? "not used"}`);
     console.log(
-        options.skipInstall
-            ? "Dependency installation was skipped."
-            : "Dependencies were installed.",
+        !installedDependencies
+            ? "No package dependencies were installed."
+            : options.skipInstall
+              ? "Dependency installation was skipped."
+              : "Dependencies were installed.",
     );
 }
 

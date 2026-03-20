@@ -1,0 +1,12 @@
+{
+    "jsPlugins": ["@murky-web/simplelog/oxlint"],
+    "rules": {
+        "simplelog/prefer-simplelog": "error",
+        "simplelog/prefer-child-logger": "error",
+        "simplelog/no-ad-hoc-console-fallback": "error",
+        "simplelog/no-console-alias": "error",
+        "simplelog/prefer-hono-context-logger": "error",
+        "simplelog/prefer-runtime-entry": "error",
+        "simplelog/require-logger-name": "error",
+    },
+}

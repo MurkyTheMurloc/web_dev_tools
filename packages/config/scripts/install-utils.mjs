@@ -54,10 +54,48 @@ export function copyPath(sourcePath, targetPath) {
     cpSync(sourcePath, targetPath, { recursive: true, force: true });
 }
 
+export function ensureGitignoreEntries(targetDir, entries) {
+    const gitignorePath = path.join(targetDir, ".gitignore");
+    const existing = existsSync(gitignorePath)
+        ? readFileSync(gitignorePath, "utf8")
+        : "";
+
+    const normalizedEntries = entries
+        .map((entry) => entry.trim())
+        .filter(Boolean);
+
+    if (normalizedEntries.length === 0) {
+        return;
+    }
+
+    const existingLines = new Set(
+        existing
+            .split(/\r?\n/u)
+            .map((line) => line.trim())
+            .filter(Boolean),
+    );
+
+    const missingEntries = normalizedEntries.filter((entry) => {
+        return !existingLines.has(entry);
+    });
+
+    if (missingEntries.length === 0) {
+        return;
+    }
+
+    const next =
+        existing.endsWith("\n") || existing.length === 0
+            ? existing
+            : `${existing}\n`;
+
+    writeFileSync(gitignorePath, `${next}${missingEntries.join("\n")}\n`);
+}
+
 export function updatePackageScripts(packageJsonPath, scripts) {
     const packageJson = JSON.parse(readFileSync(packageJsonPath, "utf8"));
+    packageJson.scripts ??= {};
     packageJson.scripts = {
-        ...(packageJson.scripts ?? {}),
+        ...packageJson.scripts,
         ...scripts,
     };
 

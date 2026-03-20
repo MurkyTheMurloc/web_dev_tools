@@ -1,76 +1,82 @@
 {
-  "name": "@murky-web/simplelog",
-  "version": "0.1.0",
-  "private": false,
-  "main": "./dist/logger.js",
-  "module": "./dist/logger.js",
-  "types": "./dist/logger.d.ts",
-  "exports": {
-    ".": {
-      "import": "./dist/logger.js",
-      "types": "./dist/logger.d.ts"
+    "name": "@murky-web/simplelog",
+    "version": "0.1.0",
+    "private": false,
+    "description": "A simple wrapper around console to make logging enjoyable again",
+    "homepage": "https://github.com/MurkyTheMurloc/web_dev_tools/tree/main/packages/simplelog",
+    "bugs": {
+        "url": "https://github.com/MurkyTheMurloc/web_dev_tools/issues"
     },
-    "./bun": {
-      "import": "./dist/bun_logger.js",
-      "types": "./dist/bun_logger.d.ts"
+    "license": "MIT",
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/MurkyTheMurloc/web_dev_tools.git",
+        "directory": "packages/simplelog"
     },
-    "./deno": {
-      "import": "./dist/deno_logger.js",
-      "types": "./dist/deno_logger.d.ts"
+    "files": [
+        "dist",
+        "oxlint"
+    ],
+    "type": "module",
+    "sideEffects": false,
+    "main": "./dist/logger.js",
+    "module": "./dist/logger.js",
+    "types": "./dist/logger.d.ts",
+    "exports": {
+        ".": {
+            "import": "./dist/logger.js",
+            "types": "./dist/logger.d.ts"
+        },
+        "./oxlint": {
+            "import": "./oxlint/index.mjs",
+            "default": "./oxlint/index.mjs"
+        },
+        "./bun": {
+            "import": "./dist/bun_logger.js",
+            "types": "./dist/bun_logger.d.ts"
+        },
+        "./deno": {
+            "import": "./dist/deno_logger.js",
+            "types": "./dist/deno_logger.d.ts"
+        },
+        "./hono": {
+            "import": "./dist/hono_middleware.js",
+            "types": "./dist/hono_middleware.d.ts"
+        },
+        "./node": {
+            "import": "./dist/logger.js",
+            "types": "./dist/logger.d.ts"
+        },
+        "./web": {
+            "import": "./dist/web_logger.js",
+            "types": "./dist/web_logger.d.ts"
+        },
+        "./package.json": "./package.json"
     },
-    "./hono": {
-      "import": "./dist/hono_middleware.js",
-      "types": "./dist/hono_middleware.d.ts"
+    "publishConfig": {
+        "access": "public",
+        "provenance": true
     },
-    "./node": {
-      "import": "./dist/logger.js",
-      "types": "./dist/logger.d.ts"
+    "scripts": {
+        "build": "bun run clean && tsdown",
+        "clean": "rm -rf dist",
+        "lint": "oxlint -c ./.oxlintrc.jsonc --tsconfig ./tsconfig.json --type-aware src tsdown.config.ts",
+        "lint:fix": "oxlint -c ./.oxlintrc.jsonc --tsconfig ./tsconfig.json --type-aware --fix src tsdown.config.ts",
+        "format": "oxfmt -c ../config/oxc/.oxfmtrc.jsonc src oxlint smoke tsdown.config.ts",
+        "format:check": "oxfmt -c ../config/oxc/.oxfmtrc.jsonc --check src oxlint smoke tsdown.config.ts",
+        "smoke:oxlint": "bun ./smoke/oxlint/run-smoke.ts",
+        "test": "vitest run",
+        "typecheck": "tsgo --project ./tsconfig.json --noEmit"
     },
-    "./web": {
-      "import": "./dist/web_logger.js",
-      "types": "./dist/web_logger.d.ts"
+    "dependencies": {
+        "@opentelemetry/api": "^1.9.0"
     },
-    "./package.json": "./package.json"
-  },
-  "files": [
-    "dist"
-  ],
-  "scripts": {
-    "build": "bun run clean && tsdown",
-    "clean": "rm -rf dist",
-    "lint": "oxlint -c ./.oxlintrc.jsonc --tsconfig ./tsconfig.json --type-aware src tsdown.config.ts",
-    "lint:fix": "oxlint -c ./.oxlintrc.jsonc --tsconfig ./tsconfig.json --type-aware --fix src tsdown.config.ts",
-    "format": "oxfmt -c ../config/oxc/.oxfmtrc.jsonc src tsdown.config.ts",
-    "format:check": "oxfmt -c ../config/oxc/.oxfmtrc.jsonc --check src tsdown.config.ts",
-    "test": "vitest run",
-    "typecheck": "tsgo --project ./tsconfig.json --noEmit"
-  },
-  "license": "MIT",
-  "description": "A simple wrapper around console to make logging enjoyable again",
-  "type": "module",
-  "sideEffects": false,
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/MurkyTheMurloc/web_dev_tools.git",
-    "directory": "packages/simplelog"
-  },
-  "homepage": "https://github.com/MurkyTheMurloc/web_dev_tools/tree/main/packages/simplelog",
-  "bugs": {
-    "url": "https://github.com/MurkyTheMurloc/web_dev_tools/issues"
-  },
-  "publishConfig": {
-    "access": "public",
-    "provenance": true
-  },
-  "dependencies": {
-    "@opentelemetry/api": "^1.9.0"
-  },
-  "devDependencies": {
-    "@murky-web/config": "workspace:*",
-    "@types/node": "^25.5.0",
-    "hono": "^4.12.8"
-  },
-  "peerDependencies": {
-    "hono": "^4.12.8"
-  }
+    "devDependencies": {
+        "@murky-web/config": "workspace:*",
+        "@types/node": "^25.5.0",
+        "hono": "^4.12.8"
+    },
+    "peerDependencies": {
+        "hono": "^4.12.8"
+    }
 }

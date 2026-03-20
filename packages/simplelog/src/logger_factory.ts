@@ -774,14 +774,7 @@ class LoggerBase {
       stackTrace,
     );
 
-    writeLogLine(
-      this.runtime,
-      this.writeToFile,
-      this.logFilePath,
-      payload.plainLogMessage,
-    );
-    this.runtime.console.log(payload.consoleLogMessage, ...payload.consoleArgs);
-    this.logStackTrace(payload.plainStackTrace, payload.consoleStackTrace);
+    this.emitPayload(payload);
   }
 
   private logStackTrace(
@@ -799,6 +792,17 @@ class LoggerBase {
       plainStackTrace,
     );
     this.runtime.console.error(coloredStackTrace);
+  }
+
+  private emitPayload(payload: LogPayload): void {
+    writeLogLine(
+      this.runtime,
+      this.writeToFile,
+      this.logFilePath,
+      payload.plainLogMessage,
+    );
+    this.runtime.console.log(payload.consoleLogMessage, ...payload.consoleArgs);
+    this.logStackTrace(payload.plainStackTrace, payload.consoleStackTrace);
   }
 
   private mergeLoggers(otherLogger: LoggerParent): LoggerParent {

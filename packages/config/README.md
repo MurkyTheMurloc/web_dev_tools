@@ -5,59 +5,52 @@ Central config package for my web projects.
 Canonical source:
 https://github.com/MurkyTheMurloc/web_dev_tools/tree/main/packages/config
 
-This package currently ships two installable config stacks:
+This package ships:
 
-- `biome/biome.jsonc`
-- `oxc/` with modular `oxlint` and `oxfmt` config files
-
-It also ships TypeScript templates:
-
-- `typescript/tsconfig.base.jsonc`
-- `typescript/tsconfig.solid.jsonc`
-- `typescript/tsconfig.typebuddy.jsonc`
-- `typescript/tsconfig.solid.typebuddy.jsonc`
+- Oxc and Oxfmt config presets
+- Biome config presets
+- TypeScript templates
+- a local Codex skill catalog
+- the `web-dev-config` installer CLI
 
 ## CLI Workflow
 
 The CLI is named `web-dev-config`.
 
-```bash
-web-dev-config init
-```
+`web-dev-config init` now installs the default stack when you do not pass
+explicit install flags.
 
-Running `init` without install target flags now installs the defaults:
+The default stack includes:
 
 - `--oxc`
 - `--typescript`
 - `--frontend-solid`
 - `--typebuddy`
 - `--simplelog`
+- default skills for docs, workflow, frontend, Solid, TypeBuddy, TDD, and
+  SimpleLog
 
 You can also request the same bundle explicitly with `--defaults`.
 
+When skills are installed, the CLI adds these entries to the target project's
+`.gitignore`:
+
+- `.codex/skills/`
+- `.skills/`
+
 ## Install Variants
 
-### CLI
-
-Defaults:
+Default stack:
 
 ```bash
 web-dev-config init
 ```
 
-Or explicitly:
+Explicit default stack:
 
 ```bash
 web-dev-config init --defaults
 ```
-
-The default bundle includes:
-
-- Oxc + Oxfmt
-- TypeScript setup
-- Solid frontend presets
-- `@murky-web/typebuddy` with TypeScript and Oxc integration
-- `@murky-web/simplelog` as the default logger dependency
 
 Only Oxc:
 
@@ -77,61 +70,27 @@ Only TypeScript:
 web-dev-config init --typescript
 ```
 
-Oxc + TypeScript:
-
-```bash
-web-dev-config init --oxc --typescript
-```
-
-Defaults plus Solid:
-
-```bash
-web-dev-config init --frontend-solid
-```
-
-Or explicitly:
-
-```bash
-web-dev-config init --defaults --frontend-solid
-```
-
-Biome + Solid:
-
-```bash
-web-dev-config init --biome --frontend-solid
-```
-
 Oxc + TypeScript + Solid:
 
 ```bash
 web-dev-config init --oxc --typescript --frontend-solid
 ```
 
-TypeScript + Solid:
+Install just the default skill set without config files:
 
 ```bash
-web-dev-config init --typescript --frontend-solid
+web-dev-config init \
+  --skill-context7-defaults \
+  --skill-find-docs \
+  --skill-frontend-design \
+  --skill-frontend-taste \
+  --skill-simplelog \
+  --skill-solidjs \
+  --skill-tailwindcss \
+  --skill-tdd \
+  --skill-typebuddy \
+  --skill-workspace-defaults
 ```
-
-## What `init --biome` Does
-
-- copies `biome/` into your project
-- installs `@biomejs/biome` as a dev dependency
-- adds these `package.json` scripts:
-
-```json
-{
-  "scripts": {
-    "check:biome": "biome check --config-path ./biome/biome.jsonc .",
-    "format:biome": "biome format --config-path ./biome/biome.jsonc --write .",
-    "lint:biome": "biome lint --config-path ./biome/biome.jsonc ."
-  }
-}
-```
-
-When `--frontend-solid` is set:
-
-- enables the Biome Solid domain with `all`
 
 ## What `init --oxc` Does
 
@@ -140,74 +99,39 @@ When `--frontend-solid` is set:
 - copies `oxc/linting/`
 - installs `oxfmt`
 - installs `oxlint`
-- installs `oxlint-tsgolint@latest` for type-aware rules
+- installs `oxlint-tsgolint@latest`
 - adds these `package.json` scripts:
 
 ```json
 {
-  "scripts": {
-    "format:oxc": "oxfmt -c ./oxc/.oxfmtrc.jsonc .",
-    "format:oxc:check": "oxfmt -c ./oxc/.oxfmtrc.jsonc --check .",
-    "lint:oxc": "oxlint -c ./oxc/.oxlintrc.jsonc --type-aware ."
-  }
+    "scripts": {
+        "format:oxc": "oxfmt -c ./oxc/.oxfmtrc.jsonc .",
+        "format:oxc:check": "oxfmt -c ./oxc/.oxfmtrc.jsonc --check .",
+        "lint:oxc": "oxlint -c ./oxc/.oxlintrc.jsonc --type-aware ."
+    }
 }
 ```
 
 When `--frontend-solid` is set:
 
 - extends `./oxc/.oxlintrc.jsonc` with `./linting/solid.jsonc`
-- resolves `@murky-web/oxlint-plugin-solid` as a package dependency
-- copies the local Solid rule runtime from that package into
-  `./oxc/jsplugins/solid/`
-- adds `jsPlugins: ["./jsplugins/solid/index.mjs"]`
-- ignores `./jsplugins/**` in the target project lint config so the copied
-  runtime is not linted as application code
-- enables the complete locally ported Solid rule set
-- includes `solid/prefer-arrow-components`
-- disables `prefer-readonly-parameter-types` for `*.tsx` and `*.jsx` in the
-  Solid preset so `Component<Props>` and `ParentComponent<Props>` do not
-  conflict with the general TypeScript policy
+- resolves `@murky-web/oxlint-plugin-solid`
+- copies the local Solid rule runtime into `./oxc/jsplugins/solid/`
+- adds `./jsplugins/solid/index.mjs` to `jsPlugins`
+- ignores `./jsplugins/**` so the copied runtime is not linted as app code
+- enables the full locally ported Solid rule set
 
 When `--typebuddy` is set:
 
+- installs `@murky-web/typebuddy`
 - extends `./oxc/.oxlintrc.jsonc` with `./linting/typebuddy.jsonc`
 - adds `@murky-web/typebuddy/oxlint` to `jsPlugins`
 
-Note:
+When `--simplelog` is set:
 
-- `--frontend-solid` assumes the target project already uses `solid-js` as a
-  normal project dependency, for example through an existing Solid or
-  SolidStart/Vite setup
-
-After installation you can lint immediately:
-
-```bash
-oxlint -c ./oxc/.oxlintrc.jsonc --type-aware .
-```
-
-Or via the installed script:
-
-```bash
-bun run lint:oxc
-```
-
-A typical autofix is `solid/prefer-arrow-components`:
-
-```tsx
-export function Card(props: Props) {
-  return <section>{props.children}</section>;
-}
-```
-
-which becomes:
-
-```tsx
-import type { ParentComponent } from "solid-js";
-
-export const Card: ParentComponent<Props> = (props) => {
-  return <section>{props.children}</section>;
-};
-```
+- installs `@murky-web/simplelog`
+- extends `./oxc/.oxlintrc.jsonc` with `./linting/simplelog.jsonc`
+- adds `@murky-web/simplelog/oxlint` to `jsPlugins`
 
 ## What `init --typescript` Does
 
@@ -218,89 +142,43 @@ export const Card: ParentComponent<Props> = (props) => {
 
 ```json
 {
-  "scripts": {
-    "typecheck": "tsgo --project ./tsconfig.json --noEmit"
-  }
+    "scripts": {
+        "typecheck": "tsgo --project ./tsconfig.json --noEmit"
+    }
 }
 ```
 
 When `--frontend-solid` is set:
 
 - writes a Solid-oriented `tsconfig.json`
-- keeps JSX preserved with `solid-js` typing
+- keeps JSX preserved with Solid typing
 - uses browser libs and Vite client types
-- removes legacy Vite template files like `tsconfig.app.json` and
-  `tsconfig.node.json` so these templates stay the single source of truth
+- removes legacy Vite template files such as `tsconfig.app.json` and
+  `tsconfig.node.json`
 
 When `--typebuddy` is set:
 
-- writes a TypeScript variant that includes
-  `@murky-web/typebuddy/globals` directly in `compilerOptions.types`
-- enables TypeBuddy globals through the generated TS config itself instead of
-  requiring a separate project file
+- writes a TypeScript variant that includes `@murky-web/typebuddy/globals`
+  directly in `compilerOptions.types`
 
-## Optional TypeBuddy Integration
+## Skills
 
-If a project uses `@murky-web/typebuddy`, `config` ships these reusable pieces:
+Installed skill files live under the target project's `.codex/skills/`
+directory.
 
-### Oxc Rules
+Current skill flags:
 
-`oxc/linting/typebuddy.jsonc` enables the `typebuddy` rule set, and
-`oxc/.oxlintrc.typebuddy.jsonc` shows the minimal plugin wiring:
-
-```jsonc
-{
-  "extends": ["./.oxlintrc.jsonc", "./linting/typebuddy.jsonc"],
-  "jsPlugins": ["@murky-web/typebuddy/oxlint"]
-}
-```
-
-This keeps the base config generic while still allowing TypeBuddy to be layered
-in wherever the package is actually used.
-
-## Simplelog as a Default
-
-When `--simplelog` is set, the CLI installs `@murky-web/simplelog` as a normal
-project dependency. It intentionally does not generate a logger source file, so
-the target project remains free to choose its own runtime-specific wiring and
-integration strategy.
-
-## Options
-
-The CLI supports:
-
-- `init`
-- `--defaults`
-- `--oxc`
-- `--biome`
-- `--typescript`
-- `--frontend-solid`
-- `--typebuddy`
-- `--simplelog`
-- `--skip-install`
-- `--package-manager bun|pnpm|npm|yarn`
-- an optional absolute or relative target path
-
-Examples:
-
-```bash
-web-dev-config init
-web-dev-config init --frontend-solid
-web-dev-config init --typebuddy
-web-dev-config init --simplelog
-web-dev-config init --oxc --package-manager bun
-web-dev-config init --biome --skip-install
-web-dev-config init --oxc --typescript --frontend-solid
-```
-
-## Notes
-
-- The CLI expects an existing `package.json`.
-- If no package manager is explicitly set, it is auto-detected:
-  `bun.lock` / `bun.lockb` -> `bun`, `pnpm-lock.yaml` -> `pnpm`, `yarn.lock` ->
-  `yarn`, otherwise `npm`.
-- The Biome config intentionally lives in `./biome/biome.jsonc`.
-- The Oxc config intentionally lives in `./oxc/` so the modular `jsonc` files
-  stay together.
-- `tsconfig.base.jsonc` is the modern TS7 / `tsgo` base, and the Solid
-  templates extend it for Solid + Vite projects.
+- `--skill-context7-defaults`
+- `--skill-find-docs`
+- `--skill-frontend-design`
+- `--skill-frontend-taste`
+- `--skill-git-guardrails-claude-code`
+- `--skill-grill-me`
+- `--skill-improve-codebase-architecture`
+- `--skill-simplelog`
+- `--skill-solidjs`
+- `--skill-tailwindcss`
+- `--skill-tdd`
+- `--skill-typebuddy`
+- `--skill-ubiquitous-language`
+- `--skill-workspace-defaults`
