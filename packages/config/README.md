@@ -31,6 +31,7 @@ The default stack includes:
 - `--frontend-solid`
 - `--typebuddy`
 - `--simplelog`
+- `--skill-coding-quality`
 - default skills for docs, workflow, frontend, Solid, TypeBuddy, TDD, and
   SimpleLog
 
@@ -91,6 +92,7 @@ Install just the default skill set without config files:
 ```bash
 web-dev-config init \
   --skill-context7-defaults \
+  --skill-coding-quality \
   --skill-find-docs \
   --skill-frontend-design \
   --skill-frontend-taste \
@@ -176,6 +178,7 @@ directory.
 
 Current skill flags:
 
+- `--skill-coding-quality`
 - `--skill-context7-defaults`
 - `--skill-find-docs`
 - `--skill-frontend-design`
