@@ -170,8 +170,9 @@ When `--frontend-solid` is set:
 
 When `--typebuddy` is set:
 
-- writes a TypeScript variant that includes `@murky-web/typebuddy/globals`
-  directly in `compilerOptions.types`
+- writes a TypeScript variant plus `./typebuddy-globals.d.ts`
+- imports `@murky-web/typebuddy/globals` through that shim so the library's
+  global types are available out of the box
 
 ## Skills
 

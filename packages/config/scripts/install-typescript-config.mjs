@@ -44,6 +44,11 @@ export async function installTypeScriptConfig({
         path.join(resolvedTargetDir, "tsconfig.json"),
     );
 
+    syncTypebuddyGlobalsShim({
+        targetDir: resolvedTargetDir,
+        typebuddy,
+    });
+
     removeLegacyTypeScriptConfigs(resolvedTargetDir);
 
     updatePackageScripts(packageJsonPath, {
@@ -86,5 +91,21 @@ function removeLegacyTypeScriptConfigs(targetDir) {
         if (existsSync(filePath)) {
             rmSync(filePath);
         }
+    }
+}
+
+function syncTypebuddyGlobalsShim({ targetDir, typebuddy }) {
+    const shimPath = path.join(targetDir, "typebuddy-globals.d.ts");
+
+    if (typebuddy) {
+        copyPath(
+            path.join(typescriptSourceDir, "typebuddy-globals.d.ts"),
+            shimPath,
+        );
+        return;
+    }
+
+    if (existsSync(shimPath)) {
+        rmSync(shimPath);
     }
 }

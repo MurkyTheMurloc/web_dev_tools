@@ -10,7 +10,6 @@
         // For Vite-based Solid apps.
         "types": [
             "vite/client",
-            "@murky-web/typebuddy/globals",
             // Add DOM matcher types here when the app uses Solid Testing Library.
         ],
     },
