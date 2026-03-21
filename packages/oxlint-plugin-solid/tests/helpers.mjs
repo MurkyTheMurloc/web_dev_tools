@@ -2,7 +2,7 @@ import { existsSync } from "node:fs";
 
 const EXIT_SUCCESS = 0;
 const FIXTURE_FILE_PATH = "src/rule_case.tsx";
-const OXLINT_CONFIG_PATH = "./oxc/.oxlintrc.jsonc";
+const OXLINT_CONFIG_PATH = "./.oxlintrc.jsonc";
 const TEMP_DIRECTORY_PATTERN = "/tmp/oxlint-plugin-solid-XXXXXX";
 const PACKAGE_RUNTIME_DEPENDENCIES = [
     "@typescript-eslint",
@@ -84,10 +84,15 @@ async function createTempPackageManifest(tempDirectoryPath) {
 function initializeTempProject(repoRoot, tempDirectoryPath) {
     const rootNodeModulesPath = `${repoRoot}/node_modules`;
     const packageNodeModulesPath = `${repoRoot}/packages/oxlint-plugin-solid/node_modules`;
+    const solidPluginPackagePath = `${repoRoot}/packages/oxlint-plugin-solid`;
     const dependencyLinkPairs = [
         [
             `${rootNodeModulesPath}/.bin`,
             `${tempDirectoryPath}/node_modules/.bin`,
+        ],
+        [
+            solidPluginPackagePath,
+            `${tempDirectoryPath}/node_modules/@murky-web/oxlint-plugin-solid`,
         ],
         [
             `${rootNodeModulesPath}/@typescript`,
@@ -124,6 +129,10 @@ function initializeTempProject(repoRoot, tempDirectoryPath) {
     );
     runCommandOrThrow(
         ["mkdir", "-p", `${tempDirectoryPath}/node_modules`],
+        repoRoot,
+    );
+    runCommandOrThrow(
+        ["mkdir", "-p", `${tempDirectoryPath}/node_modules/@murky-web`],
         repoRoot,
     );
     for (const [sourcePath, targetPath] of dependencyLinkPairs) {
