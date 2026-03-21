@@ -32,6 +32,7 @@ The default stack includes:
 - `--typebuddy`
 - `--simplelog`
 - `--skill-coding-quality`
+- `--skill-context-mode`
 - default skills for docs, workflow, frontend, Solid, TypeBuddy, TDD, and
   SimpleLog
 
@@ -93,6 +94,7 @@ Install just the default skill set without config files:
 web-dev-config init \
   --skill-context7-defaults \
   --skill-coding-quality \
+  --skill-context-mode \
   --skill-find-docs \
   --skill-frontend-design \
   --skill-frontend-taste \
@@ -180,6 +182,7 @@ Current skill flags:
 
 - `--skill-coding-quality`
 - `--skill-context7-defaults`
+- `--skill-context-mode`
 - `--skill-find-docs`
 - `--skill-frontend-design`
 - `--skill-frontend-taste`

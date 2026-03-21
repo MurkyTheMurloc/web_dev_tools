@@ -5,6 +5,7 @@ import process from "node:process";
 
 import { installBiomeConfig } from "../scripts/install-biome-config.mjs";
 import { installCodingQualitySkill } from "../scripts/install-coding-quality-skill.mjs";
+import { installContextModeSkill } from "../scripts/install-context-mode-skill.mjs";
 import { installContext7DefaultsSkill } from "../scripts/install-context7-defaults-skill.mjs";
 import { installFindDocsSkill } from "../scripts/install-find-docs-skill.mjs";
 import { installFrontendDesignSkill } from "../scripts/install-frontend-design-skill.mjs";
@@ -35,6 +36,7 @@ const DEFAULT_FEATURES = {
     useOxc: true,
     useSkillCodingQuality: true,
     useSkillContext7Defaults: true,
+    useSkillContextMode: true,
     useSkillFindDocs: true,
     useSkillFrontendDesign: true,
     useSkillFrontendTaste: true,
@@ -49,7 +51,7 @@ const DEFAULT_FEATURES = {
 
 function printUsage() {
     console.log(`Usage:
-  web-dev-config init [--defaults] [--oxc | --biome] [--typescript] [--frontend-solid] [--typebuddy] [--simplelog] [--skill-coding-quality] [--skill-context7-defaults] [--skill-find-docs] [--skill-frontend-design] [--skill-frontend-taste] [--skill-workspace-defaults] [--skill-grill-me] [--skill-improve-codebase-architecture] [--skill-simplelog] [--skill-solidjs] [--skill-tailwindcss] [--skill-tdd] [--skill-typebuddy] [--skill-ubiquitous-language] [--skill-git-guardrails-claude-code] [target-dir] [--skip-install] [--package-manager <pm>]
+  web-dev-config init [--defaults] [--oxc | --biome] [--typescript] [--frontend-solid] [--typebuddy] [--simplelog] [--skill-coding-quality] [--skill-context7-defaults] [--skill-context-mode] [--skill-find-docs] [--skill-frontend-design] [--skill-frontend-taste] [--skill-workspace-defaults] [--skill-grill-me] [--skill-improve-codebase-architecture] [--skill-simplelog] [--skill-solidjs] [--skill-tailwindcss] [--skill-tdd] [--skill-typebuddy] [--skill-ubiquitous-language] [--skill-git-guardrails-claude-code] [target-dir] [--skip-install] [--package-manager <pm>]
 
 Options:
   --defaults            Install the default stack: --oxc --typescript --frontend-solid --typebuddy --simplelog plus the default skills
@@ -63,6 +65,7 @@ Options:
                         Install the local coding-quality skill
   --skill-context7-defaults
                         Install the local Context7 defaults skill
+  --skill-context-mode  Install the local context-mode skill
   --skill-find-docs     Install the local find-docs skill
   --skill-frontend-design
                         Install the local frontend-design skill
@@ -115,6 +118,7 @@ function parseArgs(argv) {
     let installSimplelog = false;
     let useSkillCodingQuality = false;
     let useSkillContext7Defaults = false;
+    let useSkillContextMode = false;
     let useSkillFindDocs = false;
     let useSkillFrontendDesign = false;
     let useSkillFrontendTaste = false;
@@ -186,6 +190,11 @@ function parseArgs(argv) {
 
         if (argument === "--skill-context7-defaults") {
             useSkillContext7Defaults = true;
+            continue;
+        }
+
+        if (argument === "--skill-context-mode") {
+            useSkillContextMode = true;
             continue;
         }
 
@@ -298,6 +307,7 @@ function parseArgs(argv) {
         !installSimplelog &&
         !useSkillCodingQuality &&
         !useSkillContext7Defaults &&
+        !useSkillContextMode &&
         !useSkillFindDocs &&
         !useSkillFrontendDesign &&
         !useSkillFrontendTaste &&
@@ -322,6 +332,7 @@ function parseArgs(argv) {
         useTypeScript = true;
         useSkillCodingQuality = true;
         useSkillContext7Defaults = true;
+        useSkillContextMode = true;
         useSkillFindDocs = true;
         useSkillFrontendDesign = true;
         useSkillFrontendTaste = true;
@@ -354,6 +365,7 @@ function parseArgs(argv) {
         useOxc,
         useSkillCodingQuality,
         useSkillContext7Defaults,
+        useSkillContextMode,
         useSkillFindDocs,
         useSkillFrontendDesign,
         useSkillFrontendTaste,
@@ -386,6 +398,7 @@ async function main() {
     const installsSkills =
         options.useSkillCodingQuality ||
         options.useSkillContext7Defaults ||
+        options.useSkillContextMode ||
         options.useSkillFindDocs ||
         options.useSkillFrontendDesign ||
         options.useSkillFrontendTaste ||
@@ -446,6 +459,10 @@ async function main() {
         results.push(
             installCodingQualitySkill({ targetDir: options.targetDir }),
         );
+    }
+
+    if (options.useSkillContextMode) {
+        results.push(installContextModeSkill({ targetDir: options.targetDir }));
     }
 
     if (options.useSkillFindDocs) {
@@ -541,6 +558,7 @@ async function main() {
         options.installSimplelog ? "simplelog" : null,
         options.useSkillCodingQuality ? "skill-coding-quality" : null,
         options.useSkillContext7Defaults ? "skill-context7-defaults" : null,
+        options.useSkillContextMode ? "skill-context-mode" : null,
         options.useSkillFindDocs ? "skill-find-docs" : null,
         options.useSkillFrontendDesign ? "skill-frontend-design" : null,
         options.useSkillFrontendTaste ? "skill-frontend-taste" : null,
