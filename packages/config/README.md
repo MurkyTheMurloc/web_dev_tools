@@ -47,7 +47,7 @@ When skills are installed, the CLI adds these entries to the target project's
 Run directly from GitHub:
 
 ```bash
-bunx github:MurkyTheMurloc/web_dev_tools init
+bunx github:MurkyTheMurloc/web_dev_tools#main init
 ```
 
 Default stack:
