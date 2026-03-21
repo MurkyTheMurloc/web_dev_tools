@@ -6,18 +6,18 @@ import type { Optional } from "./types/optional.js";
 type UnknownFunction = (...args: readonly never[]) => unknown;
 const EMPTY_LENGTH = 0;
 const uuidRegex =
-    /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-5][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}$/;
+	/^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-5][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}$/;
 
 const ulidRegex = /^[0123456789ABCDEFGHJKMNPQRSTVWXYZ]{26}$/;
 
 function cloneDefaultArray(
-    defaultValue?: readonly unknown[],
+	defaultValue?: readonly unknown[],
 ): unknown[] | undefined {
-    if (!defaultValue) {
-        return defaultValue;
-    }
+	if (!defaultValue) {
+		return defaultValue;
+	}
 
-    return [...defaultValue];
+	return [...defaultValue];
 }
 
 /**
@@ -38,9 +38,9 @@ function cloneDefaultArray(
  * ```
  */
 function isSuccess<T>(
-    result: Readonly<Success<T> | Failed>,
+	result: Readonly<Success<T> | Failed>,
 ): result is Success<T> {
-    return !result.isError;
+	return !result.isError;
 }
 
 /**
@@ -50,11 +50,11 @@ function ok(): Success<void>;
 function ok<T>(value: T): Success<T>;
 // oxlint-disable-next-line typescript-eslint/prefer-readonly-parameter-types -- ok() intentionally accepts arbitrary payload values, including mutable ones.
 function ok<T>(...args: readonly [T] | []): Success<T | void> {
-    const [value] = args;
-    return {
-        isError: false,
-        value,
-    };
+	const [value] = args;
+	return {
+		isError: false,
+		value,
+	};
 }
 
 /**
@@ -64,12 +64,12 @@ function err(): Failed;
 function err<T extends null>(value: T): Failed<T>;
 // oxlint-disable-next-line typescript-eslint/prefer-readonly-parameter-types -- err() mirrors ok() and accepts the caller's payload shape without forcing readonly wrappers.
 function err<T extends null>(...args: readonly [T] | []): Failed {
-    const [value] = args;
-    return {
-        isError: true,
-        // oxlint-disable-next-line unicorn/no-null -- TypeBuddy models failed states with null by design.
-        value: value ?? null,
-    };
+	const [value] = args;
+	return {
+		isError: true,
+		// oxlint-disable-next-line unicorn/no-null -- TypeBuddy models failed states with null by design.
+		value: value ?? null,
+	};
 }
 
 /**
@@ -80,7 +80,7 @@ function err<T extends null>(...args: readonly [T] | []): Failed {
 function isString<T extends string>(value: Nullable<T>): value is T;
 function isString(value: unknown): value is string;
 function isString(value: unknown): value is string {
-    return typeof value === "string";
+	return typeof value === "string";
 }
 
 /**
@@ -89,10 +89,10 @@ function isString(value: unknown): value is string {
  * @returns {boolean} True if the value is a string.
  */
 function isEmptyString(value: unknown): boolean {
-    if (!isString(value)) {
-        return false;
-    }
-    return value.trim() === "";
+	if (!isString(value)) {
+		return false;
+	}
+	return value.trim() === "";
 }
 
 /**
@@ -101,7 +101,7 @@ function isEmptyString(value: unknown): boolean {
  * @returns {boolean} True if the value is null.
  */
 function isNull(value: unknown): value is null {
-    return value === null;
+	return value === null;
 }
 
 /**
@@ -110,7 +110,7 @@ function isNull(value: unknown): value is null {
  * @returns {boolean} True if the value is undefined.
  */
 function isUndefined(value: unknown): value is undefined {
-    return typeof value === "undefined";
+	return typeof value === "undefined";
 }
 
 /**
@@ -119,7 +119,7 @@ function isUndefined(value: unknown): value is undefined {
  * @returns {boolean} True when the value is undefined.
  */
 function isOptional<T>(value: Optional<T>): value is undefined {
-    return isUndefined(value);
+	return isUndefined(value);
 }
 
 /**
@@ -128,7 +128,7 @@ function isOptional<T>(value: Optional<T>): value is undefined {
  * @returns {boolean} True when the value is null.
  */
 function isMaybe<T>(value: Maybe<T>): value is null {
-    return isNull(value);
+	return isNull(value);
 }
 
 /**
@@ -137,7 +137,7 @@ function isMaybe<T>(value: Maybe<T>): value is null {
  * @returns {boolean} True when the value is null or undefined.
  */
 function isNullable<T>(value: Nullable<T>): value is null | undefined {
-    return isNull(value) || isUndefined(value);
+	return isNull(value) || isUndefined(value);
 }
 
 /**
@@ -148,7 +148,7 @@ function isNullable<T>(value: Nullable<T>): value is null | undefined {
 function isArray<T>(value: Nullable<readonly T[]>): value is readonly T[];
 function isArray(value: unknown): value is readonly unknown[];
 function isArray(value: unknown): value is readonly unknown[] {
-    return Array.isArray(value);
+	return Array.isArray(value);
 }
 
 /**
@@ -159,7 +159,7 @@ function isArray(value: unknown): value is readonly unknown[] {
 function isEmptyArray<T>(value: Nullable<readonly T[]>): value is readonly T[];
 function isEmptyArray(value: unknown): value is readonly unknown[];
 function isEmptyArray(value: unknown): value is readonly unknown[] {
-    return Array.isArray(value) && value.length === EMPTY_LENGTH;
+	return Array.isArray(value) && value.length === EMPTY_LENGTH;
 }
 
 /**
@@ -170,7 +170,7 @@ function isEmptyArray(value: unknown): value is readonly unknown[] {
 function fastIsArray<T>(value: Nullable<readonly T[]>): value is readonly T[];
 function fastIsArray(value: unknown): value is readonly unknown[];
 function fastIsArray(value: unknown): value is readonly unknown[] {
-    return Object.prototype.toString.call(value) === "[object Array]";
+	return Object.prototype.toString.call(value) === "[object Array]";
 }
 
 /**
@@ -181,14 +181,14 @@ function fastIsArray(value: unknown): value is readonly unknown[] {
 function isNumber<T extends number>(value: Nullable<T>): value is T;
 function isNumber(value: unknown): value is number;
 function isNumber(value: unknown): value is number {
-    if (typeof value === "string" && value.trim() === "") {
-        return false;
-    }
-    return (
-        typeof value === "number" &&
-        !Number.isNaN(value) &&
-        Number.isFinite(value)
-    );
+	if (typeof value === "string" && value.trim() === "") {
+		return false;
+	}
+	return (
+		typeof value === "number" &&
+		!Number.isNaN(value) &&
+		Number.isFinite(value)
+	);
 }
 
 /**
@@ -197,21 +197,21 @@ function isNumber(value: unknown): value is number {
  * @returns {boolean} True if the value is an object.
  */
 function isObject<T extends Record<string, unknown>>(
-    value: Nullable<T>,
+	value: Nullable<T>,
 ): value is T;
 function isObject(value: unknown): value is Record<string, unknown>;
 function isObject(value: unknown): value is Record<string, unknown> {
-    if (
-        typeof value !== "object" ||
-        value === null ||
-        isArray(value) ||
-        Object.prototype.toString.call(value) !== "[object Object]"
-    ) {
-        return false;
-    }
+	if (
+		typeof value !== "object" ||
+		value === null ||
+		isArray(value) ||
+		Object.prototype.toString.call(value) !== "[object Object]"
+	) {
+		return false;
+	}
 
-    const objectValue: object = value;
-    return Object.getPrototypeOf(objectValue) === Object.prototype;
+	const objectValue: object = value;
+	return Object.getPrototypeOf(objectValue) === Object.prototype;
 }
 
 /**
@@ -222,7 +222,7 @@ function isObject(value: unknown): value is Record<string, unknown> {
 function isBoolean<T extends boolean>(value: Nullable<T>): value is T;
 function isBoolean(value: unknown): value is boolean;
 function isBoolean(value: unknown): value is boolean {
-    return typeof value === "boolean";
+	return typeof value === "boolean";
 }
 
 /**
@@ -233,7 +233,7 @@ function isBoolean(value: unknown): value is boolean {
 function isFunction<T extends UnknownFunction>(value: Nullable<T>): value is T;
 function isFunction(value: unknown): value is UnknownFunction;
 function isFunction(value: unknown): value is UnknownFunction {
-    return typeof value === "function";
+	return typeof value === "function";
 }
 
 /**
@@ -242,15 +242,15 @@ function isFunction(value: unknown): value is UnknownFunction {
  * @returns {boolean} True if the value is a promise.
  */
 function isPromise<T>(
-    value: Nullable<Readonly<PromiseLike<T>>>,
+	value: Nullable<Readonly<PromiseLike<T>>>,
 ): value is PromiseLike<T>;
 function isPromise(value: unknown): value is PromiseLike<unknown>;
 function isPromise(value: unknown): value is PromiseLike<unknown> {
-    if (typeof value !== "object" || value === null) {
-        return false;
-    }
+	if (typeof value !== "object" || value === null) {
+		return false;
+	}
 
-    return typeof Reflect.get(value, "then") === "function";
+	return typeof Reflect.get(value, "then") === "function";
 }
 
 /**
@@ -261,7 +261,7 @@ function isPromise(value: unknown): value is PromiseLike<unknown> {
 function isError<T extends Error>(value: Nullable<T>): value is T;
 function isError(value: unknown): value is Error;
 function isError(value: unknown): value is Error {
-    return value instanceof Error;
+	return value instanceof Error;
 }
 
 /**
@@ -272,7 +272,7 @@ function isError(value: unknown): value is Error {
 function isDate<T extends Date>(value: Nullable<T>): value is T;
 function isDate(value: unknown): value is Date;
 function isDate(value: unknown): value is Date {
-    return value instanceof Date;
+	return value instanceof Date;
 }
 
 /**
@@ -283,7 +283,7 @@ function isDate(value: unknown): value is Date {
 function isRegExp<T extends RegExp>(value: Nullable<T>): value is T;
 function isRegExp(value: unknown): value is RegExp;
 function isRegExp(value: unknown): value is RegExp {
-    return value instanceof RegExp;
+	return value instanceof RegExp;
 }
 
 /**
@@ -294,7 +294,7 @@ function isRegExp(value: unknown): value is RegExp {
 function isSymbol<T extends symbol>(value: Nullable<T>): value is T;
 function isSymbol(value: unknown): value is symbol;
 function isSymbol(value: unknown): value is symbol {
-    return typeof value === "symbol";
+	return typeof value === "symbol";
 }
 
 /**
@@ -303,18 +303,18 @@ function isSymbol(value: unknown): value is symbol {
  * @returns {boolean} True if the value is a plain object.
  */
 function isEmptyObject<T extends Record<string, unknown>>(
-    value: Nullable<T>,
+	value: Nullable<T>,
 ): value is T;
 function isEmptyObject(value: unknown): value is Record<string, unknown>;
 function isEmptyObject(value: unknown): value is Record<string, unknown> {
-    return (
-        typeof value === "object" &&
-        !isNull(value) &&
-        !isUndefined(value) &&
-        !isEmptyArray(value) &&
-        Object.getPrototypeOf(value) === Object.prototype &&
-        Object.keys(value).length === EMPTY_LENGTH
-    );
+	return (
+		typeof value === "object" &&
+		!isNull(value) &&
+		!isUndefined(value) &&
+		!isEmptyArray(value) &&
+		Object.getPrototypeOf(value) === Object.prototype &&
+		Object.keys(value).length === EMPTY_LENGTH
+	);
 }
 
 /**
@@ -324,10 +324,10 @@ function isEmptyObject(value: unknown): value is Record<string, unknown> {
  * @returns {boolean} True if the value is an instance of the class.
  */
 function isInstanceOf<T>(
-    value: unknown,
-    constructor: new (...args: unknown[]) => T,
+	value: unknown,
+	constructor: new (...args: unknown[]) => T,
 ): value is T {
-    return value instanceof constructor;
+	return value instanceof constructor;
 }
 
 /**
@@ -336,7 +336,7 @@ function isInstanceOf<T>(
  * @returns {Array} Keys of object.
  */
 function getKeys<T extends Record<string, unknown>>(object: T): (keyof T)[] {
-    return Object.keys(object) as (keyof T)[];
+	return Object.keys(object) as (keyof T)[];
 }
 
 /**
@@ -350,17 +350,17 @@ function getKeys<T extends Record<string, unknown>>(object: T): (keyof T)[] {
 function parseInteger(value: unknown): Optional<number>;
 function parseInteger(value: unknown, defaultValue: number): number;
 function parseInteger(value: unknown, defaultValue?: number): Optional<number> {
-    if (isNumber(value)) {
-        return Math.floor(value);
-    }
+	if (isNumber(value)) {
+		return Math.floor(value);
+	}
 
-    if (isString(value)) {
-        const parsed = Number(value.trim());
-        if (Number.isInteger(parsed)) {
-            return parsed;
-        }
-    }
-    return defaultValue;
+	if (isString(value)) {
+		const parsed = Number(value.trim());
+		if (Number.isInteger(parsed)) {
+			return parsed;
+		}
+	}
+	return defaultValue;
 }
 
 /**
@@ -369,7 +369,7 @@ function parseInteger(value: unknown, defaultValue?: number): Optional<number> {
  * @returns {boolean} True if the value is an integer.
  */
 function isInteger(value: unknown): value is number {
-    return typeof value === "number" && Number.isInteger(value);
+	return typeof value === "number" && Number.isInteger(value);
 }
 
 /**
@@ -378,11 +378,11 @@ function isInteger(value: unknown): value is number {
  * @returns {boolean} True if the value is a float.
  */
 function isFloat(value: unknown): value is number {
-    return (
-        typeof value === "number" &&
-        !Number.isNaN(value) &&
-        !Number.isInteger(value)
-    );
+	return (
+		typeof value === "number" &&
+		!Number.isNaN(value) &&
+		!Number.isInteger(value)
+	);
 }
 
 /**
@@ -396,17 +396,17 @@ function isFloat(value: unknown): value is number {
 function parseFloat(value: unknown): Optional<number>;
 function parseFloat(value: unknown, defaultValue: number): number;
 function parseFloat(value: unknown, defaultValue?: number): Optional<number> {
-    if (isNumber(value)) {
-        return value;
-    }
-    if (isString(value)) {
-        const normalizedValue = value.trim().replace(",", ".");
-        const parsed = Number.parseFloat(normalizedValue);
-        if (!Number.isNaN(parsed)) {
-            return parsed;
-        }
-    }
-    return defaultValue;
+	if (isNumber(value)) {
+		return value;
+	}
+	if (isString(value)) {
+		const normalizedValue = value.trim().replace(",", ".");
+		const parsed = Number.parseFloat(normalizedValue);
+		if (!Number.isNaN(parsed)) {
+			return parsed;
+		}
+	}
+	return defaultValue;
 }
 /**
  * Parses the input value as a number. Returns NaN if the value cannot be
@@ -419,17 +419,17 @@ function parseFloat(value: unknown, defaultValue?: number): Optional<number> {
 function parseNumber(value: unknown): Optional<number>;
 function parseNumber(value: unknown, defaultValue: number): number;
 function parseNumber(value: unknown, defaultValue?: number): Optional<number> {
-    if (isNumber(value)) {
-        return value;
-    }
-    if (isString(value)) {
-        const normalizedValue = value.trim().replace(",", ".");
-        const parsed = Number(normalizedValue);
-        if (Number.isFinite(parsed)) {
-            return parsed;
-        }
-    }
-    return defaultValue;
+	if (isNumber(value)) {
+		return value;
+	}
+	if (isString(value)) {
+		const normalizedValue = value.trim().replace(",", ".");
+		const parsed = Number(normalizedValue);
+		if (Number.isFinite(parsed)) {
+			return parsed;
+		}
+	}
+	return defaultValue;
 }
 
 /**
@@ -441,16 +441,16 @@ function parseNumber(value: unknown, defaultValue?: number): Optional<number> {
  * @returns {string} The parsed string.
  */
 function parseString(value: unknown, defaultValue = ""): string {
-    if (isString(value)) {
-        return value;
-    }
-    if (isNumber(value)) {
-        return value.toString();
-    }
-    if (typeof value === "boolean") {
-        return value.toString();
-    }
-    return defaultValue;
+	if (isString(value)) {
+		return value;
+	}
+	if (isNumber(value)) {
+		return value.toString();
+	}
+	if (typeof value === "boolean") {
+		return value.toString();
+	}
+	return defaultValue;
 }
 
 /**
@@ -460,29 +460,29 @@ function parseString(value: unknown, defaultValue = ""): string {
  * false, or a plain object whose values are all empty-like.
  */
 function isEmptyLike(value: unknown): boolean {
-    if (isNull(value) || isUndefined(value)) {
-        return true;
-    }
-    if (isString(value)) {
-        return isEmptyString(value);
-    }
-    if (isArray(value)) {
-        return value.every((entry) => {
-            return isEmptyLike(entry);
-        });
-    }
-    if (isBoolean(value)) {
-        return !value;
-    }
-    if (isObject(value)) {
-        if (Object.getPrototypeOf(value) !== Object.prototype) {
-            return false;
-        }
-        return Object.values(value).every((entry) => {
-            return isEmptyLike(entry);
-        });
-    }
-    return false;
+	if (isNull(value) || isUndefined(value)) {
+		return true;
+	}
+	if (isString(value)) {
+		return isEmptyString(value);
+	}
+	if (isArray(value)) {
+		return value.every((entry) => {
+			return isEmptyLike(entry);
+		});
+	}
+	if (isBoolean(value)) {
+		return !value;
+	}
+	if (isObject(value)) {
+		if (Object.getPrototypeOf(value) !== Object.prototype) {
+			return false;
+		}
+		return Object.values(value).every((entry) => {
+			return isEmptyLike(entry);
+		});
+	}
+	return false;
 }
 
 /**
@@ -496,17 +496,17 @@ function isEmptyLike(value: unknown): boolean {
  *          representation of an empty object; otherwise, `false`.
  */
 function hasEmptyValues(value: unknown): boolean {
-    if (isString(value)) {
-        try {
-            if (isEmptyObject(JSON.parse(value))) {
-                return true;
-            }
-        } catch {
-            return isEmptyString(value);
-        }
-        return isEmptyString(value);
-    }
-    return isEmptyObject(value);
+	if (isString(value)) {
+		try {
+			if (isEmptyObject(JSON.parse(value))) {
+				return true;
+			}
+		} catch {
+			return isEmptyString(value);
+		}
+		return isEmptyString(value);
+	}
+	return isEmptyObject(value);
 }
 
 /**
@@ -525,34 +525,34 @@ function parseArray<T extends Record<string, unknown>>(value: T): T[];
 function parseArray<T>(value: unknown, defaultValue: readonly T[]): T[];
 function parseArray(value: unknown): unknown[] | undefined;
 function parseArray(
-    value: unknown,
-    defaultValue?: readonly unknown[],
+	value: unknown,
+	defaultValue?: readonly unknown[],
 ): unknown[] | undefined {
-    if (isArray(value)) {
-        return [...value];
-    }
-    if (isString(value)) {
-        const parsed = value
-            .split(/[,|;\n\t ]+/)
-            .map((entry) => {
-                return entry.trim();
-            })
-            .filter((entry) => {
-                return entry.length > EMPTY_LENGTH;
-            });
-        return parsed;
-    }
-    if (isNumber(value)) {
-        return [value];
-    }
-    if (isEmptyObject(value)) {
-        return [value];
-    }
+	if (isArray(value)) {
+		return [...value];
+	}
+	if (isString(value)) {
+		const parsed = value
+			.split(/[,|;\n\t ]+/)
+			.map((entry) => {
+				return entry.trim();
+			})
+			.filter((entry) => {
+				return entry.length > EMPTY_LENGTH;
+			});
+		return parsed;
+	}
+	if (isNumber(value)) {
+		return [value];
+	}
+	if (isEmptyObject(value)) {
+		return [value];
+	}
 
-    if (isNull(value) || isUndefined(value)) {
-        return cloneDefaultArray(defaultValue);
-    }
-    return cloneDefaultArray(defaultValue);
+	if (isNull(value) || isUndefined(value)) {
+		return cloneDefaultArray(defaultValue);
+	}
+	return cloneDefaultArray(defaultValue);
 }
 
 /**
@@ -562,17 +562,17 @@ function parseArray(
  * @returns {boolean} True if the arrays have at least one common value.
  */
 function arrayContainsCommonValue<T>(
-    array1: readonly T[],
-    array2: readonly T[],
+	array1: readonly T[],
+	array2: readonly T[],
 ): boolean {
-    if (!isArray(array1) || !isArray(array2)) {
-        return false;
-    }
+	if (!isArray(array1) || !isArray(array2)) {
+		return false;
+	}
 
-    const valueOccurrences = new Set(array1);
-    return array2.some((value) => {
-        return valueOccurrences.has(value);
-    });
+	const valueOccurrences = new Set(array1);
+	return array2.some((value) => {
+		return valueOccurrences.has(value);
+	});
 }
 
 /**
@@ -581,7 +581,7 @@ function arrayContainsCommonValue<T>(
  * @returns {boolean} True if the input is a UUID string.
  */
 function isUuidString(input: unknown): input is string {
-    return isString(input) && uuidRegex.test(input);
+	return isString(input) && uuidRegex.test(input);
 }
 
 /**
@@ -590,7 +590,7 @@ function isUuidString(input: unknown): input is string {
  * @returns {boolean} True if the input is a ULID string.
  */
 function isUlidString(input: unknown): input is string {
-    return typeof input === "string" && ulidRegex.test(input);
+	return typeof input === "string" && ulidRegex.test(input);
 }
 
 /**
@@ -602,69 +602,69 @@ function isUlidString(input: unknown): input is string {
 function parseDomainName(url: string): Optional<string>;
 function parseDomainName(url: string, defaultValue: string): string;
 function parseDomainName(url: string, defaultValue?: string): Optional<string> {
-    const normalizedValue = url.trim();
-    if (normalizedValue === "" || normalizedValue.startsWith("/")) {
-        return defaultValue;
-    }
+	const normalizedValue = url.trim();
+	if (normalizedValue === "" || normalizedValue.startsWith("/")) {
+		return defaultValue;
+	}
 
-    let urlCandidate = normalizedValue;
-    if (!normalizedValue.includes("://")) {
-        urlCandidate = `https://${normalizedValue}`;
-    }
+	let urlCandidate = normalizedValue;
+	if (!normalizedValue.includes("://")) {
+		urlCandidate = `https://${normalizedValue}`;
+	}
 
-    let hostname = "";
-    try {
-        ({ hostname } = new URL(urlCandidate));
-    } catch {
-        return defaultValue;
-    }
+	let hostname = "";
+	try {
+		({ hostname } = new URL(urlCandidate));
+	} catch {
+		return defaultValue;
+	}
 
-    const normalizedHostname = hostname.replace(/^www\d?\./i, "");
-    const [domainName] = normalizedHostname.split(".");
-    if (!domainName) {
-        return defaultValue;
-    }
+	const normalizedHostname = hostname.replace(/^www\d?\./i, "");
+	const [domainName] = normalizedHostname.split(".");
+	if (!domainName) {
+		return defaultValue;
+	}
 
-    return domainName;
+	return domainName;
 }
 
 export {
-    arrayContainsCommonValue,
-    err,
-    fastIsArray,
-    getKeys,
-    hasEmptyValues,
-    isArray,
-    isBoolean,
-    isDate,
-    isEmptyArray,
-    isEmptyLike,
-    isEmptyObject,
-    isEmptyString,
-    isError,
-    isFloat,
-    isFunction,
-    isInstanceOf,
-    isInteger,
-    isMaybe,
-    isNull,
-    isNullable,
-    isNumber,
-    isObject,
-    isOptional,
-    isPromise,
-    isRegExp,
-    isString,
-    isSuccess,
-    isSymbol,
-    isUlidString,
-    isUndefined,
-    isUuidString,
-    ok,
-    parseArray,
-    parseDomainName,
-    parseFloat,
-    parseInteger,
-    parseNumber,
-    parseString,
+	arrayContainsCommonValue,
+	err,
+	fastIsArray,
+	getKeys,
+	hasEmptyValues,
+	isArray,
+	isBoolean,
+	isDate,
+	isEmptyArray,
+	isEmptyLike,
+	isEmptyObject,
+	isEmptyString,
+	isError,
+	isFloat,
+	isFunction,
+	isInstanceOf,
+	isInteger,
+	isMaybe,
+	isNull,
+	isNullable,
+	isNumber,
+	isObject,
+	isOptional,
+	isPromise,
+	isRegExp,
+	isString,
+	isSuccess,
+	isSymbol,
+	isUlidString,
+	isUndefined,
+	isUuidString,
+	ok,
+	parseArray,
+	parseDomainName,
+	parseFloat,
+	parseInteger,
+	parseNumber,
+	parseString,
 };

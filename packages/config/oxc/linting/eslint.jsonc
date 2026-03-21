@@ -6,21 +6,15 @@
                 "enforceForClassMembers": true,
                 "enforceForTSTypes": true,
                 "getWithoutSet": false,
-                "setWithoutGet": true
-            }
+                "setWithoutGet": true,
+            },
         ],
         "array-callback-return": "error",
-        "arrow-body-style": [
-            "error",
-            "always"
-        ],
+        "arrow-body-style": ["error", "always"],
         "block-scoped-var": "error",
         "capitalized-comments": "off",
         "class-methods-use-this": "error",
-        "complexity": [
-            "error",
-            10
-        ],
+        "complexity": ["error", 10],
         "constructor-super": "error",
         "curly": "error",
         "default-case": "error",
@@ -36,18 +30,9 @@
         "id-length": "off",
         "init-declarations": "error",
         "max-classes-per-file": "error",
-        "max-depth": [
-            "error",
-            4
-        ],
-        "max-lines": [
-            "error",
-            1000
-        ],
-        "max-lines-per-function": [
-            "error",
-            30
-        ],
+        "max-depth": ["error", 4],
+        "max-lines": ["error", 1000],
+        "max-lines-per-function": ["error", 30],
         "max-nested-callbacks": "error",
         "max-params": "off",
         "max-statements": "off",
@@ -79,8 +64,8 @@
         "no-duplicate-imports": [
             "error",
             {
-                "allowSeparateTypeImports": true
-            }
+                "allowSeparateTypeImports": true,
+            },
         ],
         "no-else-return": "error",
         "no-empty": "error",
@@ -148,7 +133,7 @@
         "no-throw-literal": "error",
         "no-unassigned-vars": "error",
         "no-undef": "error",
-        "no-undefined": "error",
+        "no-undefined": "off",
         "no-unexpected-multiline": "error",
         "no-unmodified-loop-condition": "error",
         "no-unneeded-ternary": "error",
@@ -197,6 +182,6 @@
         "use-isnan": "error",
         "valid-typeof": "error",
         "vars-on-top": "error",
-        "yoda": "error"
-    }
+        "yoda": "error",
+    },
 }
