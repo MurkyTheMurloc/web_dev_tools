@@ -44,6 +44,39 @@ function isCallArgumentCallback(node: AstNode): boolean {
     return Array.isArray(parent.arguments) && parent.arguments.includes(node);
 }
 
+function isIdentifierNamed(node: unknown, name: string): boolean {
+    return isNode(node) && node.type === "Identifier" && node.name === name;
+}
+
+function isResultHelperCall(node: unknown, name: "ok" | "err"): boolean {
+    return (
+        isNode(node) &&
+        node.type === "CallExpression" &&
+        isIdentifierNamed(node.callee, name)
+    );
+}
+
+function hasIsErrorFlag(node: unknown, expected: boolean): boolean {
+    if (
+        !isNode(node) ||
+        node.type !== "ObjectExpression" ||
+        !Array.isArray(node.properties)
+    ) {
+        return false;
+    }
+
+    return node.properties.some((property) => {
+        return (
+            isNode(property) &&
+            property.type === "Property" &&
+            isIdentifierNamed(property.key, "isError") &&
+            isNode(property.value) &&
+            property.value.type === "Literal" &&
+            property.value.value === expected
+        );
+    });
+}
+
 const rule = {
     create(context: RuleContext) {
         const sourceCode = context.getSourceCode();
@@ -107,7 +140,7 @@ const rule = {
                         fix(fixer) {
                             return fixer.replaceText(
                                 node,
-                                "return VOID_PROMISE",
+                                "return { isError: false, value: undefined }",
                             );
                         },
                     });
@@ -123,19 +156,17 @@ const rule = {
                 return;
             }
 
-            const hasIsErrorProperty =
-                argument.type === "ObjectExpression" &&
-                Array.isArray(argument.properties) &&
-                argument.properties.some(
-                    (property) =>
-                        isNode(property) &&
-                        property.type === "Property" &&
-                        isNode(property.key) &&
-                        property.key.type === "Identifier" &&
-                        property.key.name === "isError",
-                );
+            if (
+                isResultHelperCall(argument, "ok") ||
+                isResultHelperCall(argument, "err")
+            ) {
+                return;
+            }
 
-            if (!hasIsErrorProperty) {
+            if (
+                !hasIsErrorFlag(argument, true) &&
+                !hasIsErrorFlag(argument, false)
+            ) {
                 context.report({
                     node: argument,
                     messageId: "wrapReturn",
@@ -198,8 +229,10 @@ const rule = {
                 (statement) =>
                     statement.type === "ReturnStatement" &&
                     isNode(statement.argument) &&
-                    statement.argument.type === "Identifier" &&
-                    statement.argument.name === "FAILED_PROMISE",
+                    ((statement.argument.type === "Identifier" &&
+                        statement.argument.name === "FAILED_PROMISE") ||
+                        isResultHelperCall(statement.argument, "err") ||
+                        hasIsErrorFlag(statement.argument, true)),
             );
 
             if (!hasCorrectReturn) {
@@ -215,7 +248,7 @@ const rule = {
                         ) {
                             return fixer.replaceText(
                                 lastStatement,
-                                "return FAILED_PROMISE",
+                                "return { isError: true, value: null }",
                             );
                         }
 
@@ -234,7 +267,7 @@ const rule = {
 
                         return fixer.insertTextBeforeRange(
                             [bodyRange.range[1] - 1, bodyRange.range[1] - 1],
-                            "return FAILED_PROMISE; ",
+                            "return { isError: true, value: null }; ",
                         );
                     },
                 });
@@ -266,9 +299,9 @@ const rule = {
             wrapReturn:
                 "Wrap return value with { value: value, isError: false }.",
             returnVoidPromise:
-                "Return VOID_PROMISE for async functions with Promise<void> return type.",
+                "Return a success result object for async functions with Promise<void> return type.",
             returnFailedPromise:
-                "Return FAILED_PROMISE in catch block of async functions.",
+                "Return an error result object in the catch block of async functions.",
         },
     },
 };

@@ -63,7 +63,7 @@ const rule = {
 ${indent}try {
 ${bodyText}
 ${indent}} catch (err) {
-${innerIndent}return FAILED_PROMISE;
+${innerIndent}return { isError: true, value: null };
 ${indent}}
 }`;
         }
@@ -106,13 +106,13 @@ ${indent}}
         type: "suggestion",
         docs: {
             description:
-                "Async functions should have a try-catch block returning FAILED_PROMISE.",
+                "Async functions should have a try-catch block returning an error result.",
         },
         fixable: "code",
         schema: [],
         messages: {
             missingTryCatch:
-                "Async functions must have a try-catch block returning FAILED_PROMISE.",
+                "Async functions must have a try-catch block returning an error result.",
         },
     },
 };

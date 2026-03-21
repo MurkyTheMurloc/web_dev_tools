@@ -150,11 +150,33 @@ That makes these names available globally:
 
 ### Utility Functions
 
+-   `ok(value)` and `err()` helpers for `MaybePromise` result objects
 -   `getKeys<T extends Record<string, unknown>>(object: T): Array<keyof T>`
 -   `arrayContainsCommonValue<T>(array1: T[], array2: T[]): boolean`
 -   `isEmptyString(value: unknown): boolean`
 -   `isEmptyLike(value: unknown): boolean`
 -   `hasEmptyValues(value: unknown): boolean`
+
+### Result Helpers
+
+Use these when you want small Rust-like `Ok` and `Err` ergonomics without
+hand-writing result objects:
+
+```typescript
+import { err, ok } from "@murky-web/typebuddy";
+
+export async function loadName(): MaybePromise<string> {
+    try {
+        return ok("murky");
+    } catch {
+        return err();
+    }
+}
+
+export async function flush(): MaybePromise<void> {
+    return ok();
+}
+```
 
 ### Types
 

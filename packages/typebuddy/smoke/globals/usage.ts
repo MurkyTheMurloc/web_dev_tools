@@ -1,7 +1,9 @@
+import { err, ok } from "@murky-web/typebuddy";
+
 type ImportedOptional = import("@murky-web/typebuddy").Optional<string>;
 type ImportedResolveOptional = import("@murky-web/typebuddy").ResolveOptional<
-  string,
-  ImportedOptional
+    string,
+    ImportedOptional
 >;
 
 type OptionalCase = Optional<string>;
@@ -16,9 +18,12 @@ const optionalValue: OptionalCase = undefined;
 const maybeValue: MaybeCase = null;
 const nullableValue: NullableCase = null;
 const promiseValue: PromiseCase = Promise.resolve({
-  value: "x",
-  isError: false,
+    value: "x",
+    isError: false,
 });
+const okValue = ok("x");
+const okVoid = ok();
+const errValue = err();
 const importedOptionalValue: ImportedOptional = undefined;
 const importedResolvedValue: ImportedResolveOptional = "x";
 
@@ -26,6 +31,9 @@ void optionalValue;
 void maybeValue;
 void nullableValue;
 void promiseValue;
+void okValue;
+void okVoid;
+void errValue;
 void parsed;
 void importedOptionalValue;
 void importedResolvedValue;
