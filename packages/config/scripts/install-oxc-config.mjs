@@ -1,4 +1,4 @@
-import { readFileSync, writeFileSync } from "node:fs";
+import { existsSync, readFileSync, writeFileSync } from "node:fs";
 import { createRequire } from "node:module";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
@@ -108,11 +108,23 @@ export async function installOxcConfig({
 }
 
 function resolveSolidJsPluginSourceDir() {
+    const localPluginSourceDir = path.resolve(
+        scriptDir,
+        "..",
+        "..",
+        "oxlint-plugin-solid",
+        "src",
+    );
+
+    if (existsSync(path.join(localPluginSourceDir, "index.mjs"))) {
+        return localPluginSourceDir;
+    }
+
     try {
         return path.dirname(require.resolve("@murky-web/oxlint-plugin-solid"));
     } catch (error) {
         throw new Error(
-            "Could not resolve @murky-web/oxlint-plugin-solid. Install @murky-web/config with its workspace dependencies before using --frontend-solid.",
+            "Could not resolve the Solid Oxlint plugin source. Make sure the repository checkout includes packages/oxlint-plugin-solid or install @murky-web/oxlint-plugin-solid before using --frontend-solid.",
             { cause: error },
         );
     }
