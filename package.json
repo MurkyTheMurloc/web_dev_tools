@@ -1,6 +1,9 @@
 {
   "name": "@murky-web/workspace",
   "private": true,
+  "bin": {
+    "web-dev-config": "./bin/web-dev-config.mjs"
+  },
   "packageManager": "bun@1.2.23",
   "workspaces": [
     "packages/*"
