@@ -104,8 +104,8 @@ web-dev-config init \
 
 ## What `init --oxc` Does
 
-- copies `oxc/.oxlintrc.jsonc`
-- copies `oxc/.oxfmtrc.jsonc`
+- copies `./.oxlintrc.jsonc`
+- copies `./.oxfmtrc.jsonc`
 - copies `oxc/linting/`
 - installs `oxfmt`
 - installs `oxlint`
@@ -115,16 +115,16 @@ web-dev-config init \
 ```json
 {
     "scripts": {
-        "format:oxc": "oxfmt -c ./oxc/.oxfmtrc.jsonc .",
-        "format:oxc:check": "oxfmt -c ./oxc/.oxfmtrc.jsonc --check .",
-        "lint:oxc": "oxlint -c ./oxc/.oxlintrc.jsonc --type-aware ."
+        "format:oxc": "oxfmt -c ./.oxfmtrc.jsonc .",
+        "format:oxc:check": "oxfmt -c ./.oxfmtrc.jsonc --check .",
+        "lint:oxc": "oxlint -c ./.oxlintrc.jsonc --type-aware ."
     }
 }
 ```
 
 When `--frontend-solid` is set:
 
-- extends `./oxc/.oxlintrc.jsonc` with `./linting/solid.jsonc`
+- extends `./.oxlintrc.jsonc` with `./oxc/linting/solid.jsonc`
 - installs `@murky-web/oxlint-plugin-solid`
 - adds `@murky-web/oxlint-plugin-solid` to `jsPlugins`
 - enables the full locally ported Solid rule set
@@ -132,13 +132,13 @@ When `--frontend-solid` is set:
 When `--typebuddy` is set:
 
 - installs `@murky-web/typebuddy`
-- extends `./oxc/.oxlintrc.jsonc` with `./linting/typebuddy.jsonc`
+- extends `./.oxlintrc.jsonc` with `./oxc/linting/typebuddy.jsonc`
 - adds `@murky-web/typebuddy/oxlint` to `jsPlugins`
 
 When `--simplelog` is set:
 
 - installs `@murky-web/simplelog`
-- extends `./oxc/.oxlintrc.jsonc` with `./linting/simplelog.jsonc`
+- extends `./.oxlintrc.jsonc` with `./oxc/linting/simplelog.jsonc`
 - adds `@murky-web/simplelog/oxlint` to `jsPlugins`
 
 ## What `init --typescript` Does

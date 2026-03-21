@@ -11,17 +11,17 @@ import {
 } from "./install-utils.mjs";
 
 const BASE_EXTENDS = [
-    "./linting/base.jsonc",
-    "./linting/eslint.jsonc",
-    "./linting/typescript.jsonc",
-    "./linting/unicorn.jsonc",
-    "./linting/oxc.jsonc",
-    "./linting/import.jsonc",
-    "./linting/jsx_a11y.jsonc",
-    "./linting/vitest.jsonc",
-    "./linting/promise.jsonc",
-    "./linting/node.jsonc",
-    "./linting/jsdoc.jsonc",
+    "./oxc/linting/base.jsonc",
+    "./oxc/linting/eslint.jsonc",
+    "./oxc/linting/typescript.jsonc",
+    "./oxc/linting/unicorn.jsonc",
+    "./oxc/linting/oxc.jsonc",
+    "./oxc/linting/import.jsonc",
+    "./oxc/linting/jsx_a11y.jsonc",
+    "./oxc/linting/vitest.jsonc",
+    "./oxc/linting/promise.jsonc",
+    "./oxc/linting/node.jsonc",
+    "./oxc/linting/jsdoc.jsonc",
 ];
 
 const scriptDir = path.dirname(fileURLToPath(import.meta.url));
@@ -45,27 +45,28 @@ export async function installOxcConfig({
 
     copyPath(
         path.join(oxcSourceDir, ".oxlintrc.jsonc"),
-        path.join(resolvedTargetDir, "oxc", ".oxlintrc.jsonc"),
+        path.join(resolvedTargetDir, ".oxlintrc.jsonc"),
     );
     copyPath(
         path.join(oxcSourceDir, ".oxfmtrc.jsonc"),
-        path.join(resolvedTargetDir, "oxc", ".oxfmtrc.jsonc"),
+        path.join(resolvedTargetDir, ".oxfmtrc.jsonc"),
     );
     copyPath(
         path.join(oxcSourceDir, "linting"),
         path.join(resolvedTargetDir, "oxc", "linting"),
     );
 
-    updateOxcConfig(path.join(resolvedTargetDir, "oxc", ".oxlintrc.jsonc"), {
+    updateOxcConfig(path.join(resolvedTargetDir, ".oxlintrc.jsonc"), {
         frontendSolid,
         simplelog,
         typebuddy,
     });
+    updateOxfmtConfig(path.join(resolvedTargetDir, ".oxfmtrc.jsonc"));
 
     updatePackageScripts(packageJsonPath, {
-        "format:oxc": "oxfmt -c ./oxc/.oxfmtrc.jsonc .",
-        "format:oxc:check": "oxfmt -c ./oxc/.oxfmtrc.jsonc --check .",
-        "lint:oxc": "oxlint -c ./oxc/.oxlintrc.jsonc --type-aware .",
+        "format:oxc": "oxfmt -c ./.oxfmtrc.jsonc .",
+        "format:oxc:check": "oxfmt -c ./.oxfmtrc.jsonc --check .",
+        "lint:oxc": "oxlint -c ./.oxlintrc.jsonc --type-aware .",
     });
 
     installDevDependencies({
@@ -92,10 +93,15 @@ function updateOxcConfig(configPath, { frontendSolid, simplelog, typebuddy }) {
 
     const desiredExtends = [
         ...BASE_EXTENDS,
-        ...(typebuddy ? ["./linting/typebuddy.jsonc"] : []),
-        ...(simplelog ? ["./linting/simplelog.jsonc"] : []),
-        ...(frontendSolid ? ["./linting/solid.jsonc"] : []),
+        ...(typebuddy ? ["./oxc/linting/typebuddy.jsonc"] : []),
+        ...(simplelog ? ["./oxc/linting/simplelog.jsonc"] : []),
+        ...(frontendSolid ? ["./oxc/linting/solid.jsonc"] : []),
     ];
+
+    next = next.replace(
+        "../../../node_modules/oxlint/configuration_schema.json",
+        "./node_modules/oxlint/configuration_schema.json",
+    );
 
     next = next.replace(
         /"extends": \[[\s\S]*?\n\s*\],/u,
@@ -114,6 +120,15 @@ function updateOxcConfig(configPath, { frontendSolid, simplelog, typebuddy }) {
     }
 
     next = upsertJsPlugins(next, jsPlugins);
+
+    writeFileSync(configPath, next);
+}
+
+function updateOxfmtConfig(configPath) {
+    const next = readFileSync(configPath, "utf8").replace(
+        "../../../node_modules/oxfmt/configuration_schema.json",
+        "./node_modules/oxfmt/configuration_schema.json",
+    );
 
     writeFileSync(configPath, next);
 }
