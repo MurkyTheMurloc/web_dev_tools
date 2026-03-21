@@ -56,13 +56,6 @@ export async function installOxcConfig({
         path.join(resolvedTargetDir, "oxc", "linting"),
     );
 
-    if (frontendSolid) {
-        copyPath(
-            resolveSolidJsPluginSourceDir(),
-            path.join(resolvedTargetDir, "oxc", "jsplugins", "solid"),
-        );
-    }
-
     updateOxcConfig(path.join(resolvedTargetDir, "oxc", ".oxlintrc.jsonc"), {
         frontendSolid,
         simplelog,
@@ -82,18 +75,7 @@ export async function installOxcConfig({
             "oxfmt",
             "oxlint",
             "oxlint-tsgolint@latest",
-            ...(frontendSolid
-                ? [
-                      "@typescript-eslint/utils",
-                      "eslint",
-                      "estraverse",
-                      "is-html",
-                      "kebab-case",
-                      "known-css-properties",
-                      "style-to-object",
-                      "typescript",
-                  ]
-                : []),
+            ...(frontendSolid ? ["@murky-web/oxlint-plugin-solid"] : []),
         ],
         skipInstall,
     });
@@ -103,10 +85,6 @@ export async function installOxcConfig({
         skipInstall,
         targetDir: resolvedTargetDir,
     };
-}
-
-function resolveSolidJsPluginSourceDir() {
-    return path.join(oxcSourceDir, "jsplugins", "solid");
 }
 
 function updateOxcConfig(configPath, { frontendSolid, simplelog, typebuddy }) {
@@ -126,7 +104,7 @@ function updateOxcConfig(configPath, { frontendSolid, simplelog, typebuddy }) {
 
     const jsPlugins = [];
     if (frontendSolid) {
-        jsPlugins.push("./jsplugins/solid/index.mjs");
+        jsPlugins.push("@murky-web/oxlint-plugin-solid");
     }
     if (typebuddy) {
         jsPlugins.push("@murky-web/typebuddy/oxlint");
@@ -136,20 +114,6 @@ function updateOxcConfig(configPath, { frontendSolid, simplelog, typebuddy }) {
     }
 
     next = upsertJsPlugins(next, jsPlugins);
-
-    if (frontendSolid && !next.includes(`"ignorePatterns": [`)) {
-        const pluginsMarker = `    "plugins": [`;
-        if (!next.includes(pluginsMarker)) {
-            throw new Error(
-                "Could not update .oxlintrc.jsonc: expected plugins marker not found.",
-            );
-        }
-
-        next = next.replace(
-            pluginsMarker,
-            `    "ignorePatterns": [\n        "./jsplugins/**"\n    ],\n    "plugins": [`,
-        );
-    }
 
     writeFileSync(configPath, next);
 }

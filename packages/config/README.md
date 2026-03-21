@@ -125,10 +125,8 @@ web-dev-config init \
 When `--frontend-solid` is set:
 
 - extends `./oxc/.oxlintrc.jsonc` with `./linting/solid.jsonc`
-- resolves `@murky-web/oxlint-plugin-solid`
-- copies the local Solid rule runtime into `./oxc/jsplugins/solid/`
-- adds `./jsplugins/solid/index.mjs` to `jsPlugins`
-- ignores `./jsplugins/**` so the copied runtime is not linted as app code
+- installs `@murky-web/oxlint-plugin-solid`
+- adds `@murky-web/oxlint-plugin-solid` to `jsPlugins`
 - enables the full locally ported Solid rule set
 
 When `--typebuddy` is set:
