@@ -9,19 +9,27 @@ import {
 import path from "node:path";
 
 const PACKAGE_MANAGERS = new Set(["bun", "pnpm", "npm", "yarn"]);
+const LOCKFILE_TO_PACKAGE_MANAGER = [
+    ["bun.lock", "bun"],
+    ["bun.lockb", "bun"],
+    ["pnpm-lock.yaml", "pnpm"],
+    ["yarn.lock", "yarn"],
+    ["package-lock.json", "npm"],
+];
 
-export function ensurePackageJson(targetDir) {
-    const packageJsonPath = path.join(targetDir, "package.json");
+function ensurePackageJson(targetDir) {
+    const packageDir = resolvePackageDir(targetDir);
+    const packageJsonPath = path.join(packageDir, "package.json");
     if (!existsSync(packageJsonPath)) {
         throw new Error(
-            `Expected a package.json in ${targetDir}. Run the installer inside a project root or pass a target directory.`,
+            `Expected a package.json in ${targetDir} or one of its parent directories. Run the installer inside a project root or pass a target directory.`,
         );
     }
 
     return packageJsonPath;
 }
 
-export function detectPackageManager(targetDir, explicitPackageManager) {
+function detectPackageManager(targetDir, explicitPackageManager) {
     if (explicitPackageManager) {
         if (!PACKAGE_MANAGERS.has(explicitPackageManager)) {
             throw new Error(
@@ -32,29 +40,70 @@ export function detectPackageManager(targetDir, explicitPackageManager) {
         return explicitPackageManager;
     }
 
-    const lockfileChecks = [
-        ["bun.lock", "bun"],
-        ["bun.lockb", "bun"],
-        ["pnpm-lock.yaml", "pnpm"],
-        ["yarn.lock", "yarn"],
-        ["package-lock.json", "npm"],
-    ];
-
-    for (const [lockfile, packageManager] of lockfileChecks) {
-        if (existsSync(path.join(targetDir, lockfile))) {
+    for (const currentDir of iterateAncestors(path.resolve(targetDir))) {
+        const packageManager = readPackageManagerField(currentDir);
+        if (packageManager) {
             return packageManager;
+        }
+
+        for (const [
+            lockfile,
+            detectedPackageManager,
+        ] of LOCKFILE_TO_PACKAGE_MANAGER) {
+            if (existsSync(path.join(currentDir, lockfile))) {
+                return detectedPackageManager;
+            }
         }
     }
 
     return "npm";
 }
 
-export function copyPath(sourcePath, targetPath) {
+function resolvePackageDir(targetDir) {
+    const resolvedTargetDir = path.resolve(targetDir);
+    const nearestPackageDir = findNearestPackageDir(resolvedTargetDir);
+
+    if (!nearestPackageDir) {
+        throw new Error(
+            `Expected a package.json in ${resolvedTargetDir} or one of its parent directories. Run the installer inside a project root or pass a target directory.`,
+        );
+    }
+
+    return nearestPackageDir;
+}
+
+function resolveInstallContext(targetDir, explicitPackageManager) {
+    const packageDir = resolvePackageDir(targetDir);
+    const workspaceRoot = findWorkspaceRoot(packageDir) ?? packageDir;
+    const packageManager = detectPackageManager(
+        workspaceRoot,
+        explicitPackageManager,
+    );
+    const workspaceRelativeDir =
+        packageDir === workspaceRoot
+            ? "."
+            : path.relative(workspaceRoot, packageDir);
+    const packageJson = JSON.parse(
+        readFileSync(path.join(packageDir, "package.json"), "utf8"),
+    );
+
+    return {
+        isWorkspacePackage: workspaceRoot !== packageDir,
+        packageDir,
+        packageManager,
+        workspaceName:
+            typeof packageJson.name === "string" ? packageJson.name : undefined,
+        workspaceRelativeDir,
+        workspaceRoot,
+    };
+}
+
+function copyPath(sourcePath, targetPath) {
     mkdirSync(path.dirname(targetPath), { recursive: true });
     cpSync(sourcePath, targetPath, { recursive: true, force: true });
 }
 
-export function ensureGitignoreEntries(targetDir, entries) {
+function ensureGitignoreEntries(targetDir, entries) {
     const gitignorePath = path.join(targetDir, ".gitignore");
     const existing = existsSync(gitignorePath)
         ? readFileSync(gitignorePath, "utf8")
@@ -91,7 +140,7 @@ export function ensureGitignoreEntries(targetDir, entries) {
     writeFileSync(gitignorePath, `${next}${missingEntries.join("\n")}\n`);
 }
 
-export function updatePackageScripts(packageJsonPath, scripts) {
+function updatePackageScripts(packageJsonPath, scripts) {
     const packageJson = JSON.parse(readFileSync(packageJsonPath, "utf8"));
     packageJson.scripts ??= {};
     packageJson.scripts = {
@@ -102,7 +151,7 @@ export function updatePackageScripts(packageJsonPath, scripts) {
     writeFileSync(packageJsonPath, `${JSON.stringify(packageJson, null, 2)}\n`);
 }
 
-export function installDevDependencies({
+function installDevDependencies({
     targetDir,
     packageManager,
     packages,
@@ -117,7 +166,7 @@ export function installDevDependencies({
     });
 }
 
-export function installDependencies({
+function installDependencies({
     targetDir,
     packageManager,
     packages,
@@ -128,6 +177,7 @@ export function installDependencies({
         return;
     }
 
+    const installContext = resolveInstallContext(targetDir, packageManager);
     const commandMap = {
         bun: dev ? ["add", "-D"] : ["add"],
         pnpm: dev ? ["add", "-D"] : ["add"],
@@ -135,19 +185,120 @@ export function installDependencies({
         yarn: dev ? ["add", "-D"] : ["add"],
     };
 
-    const command = commandMap[packageManager];
+    const command = commandMap[installContext.packageManager];
     if (!command) {
-        throw new Error(`Unsupported package manager: ${packageManager}`);
+        throw new Error(
+            `Unsupported package manager: ${installContext.packageManager}.`,
+        );
     }
 
-    const result = spawnSync(packageManager, [...command, ...packages], {
-        cwd: targetDir,
+    const runFromWorkspaceRoot =
+        installContext.packageManager === "npm" &&
+        installContext.isWorkspacePackage;
+    const workspaceSelector =
+        installContext.workspaceName ?? installContext.workspaceRelativeDir;
+    const installArgs = runFromWorkspaceRoot
+        ? [...command, "--workspace", workspaceSelector, ...packages]
+        : [...command, ...packages];
+    const result = spawnSync(installContext.packageManager, installArgs, {
+        cwd: runFromWorkspaceRoot
+            ? installContext.workspaceRoot
+            : installContext.packageDir,
         stdio: "inherit",
     });
 
     if (result.status !== 0) {
         throw new Error(
-            `Dependency installation failed with ${packageManager}.`,
+            `Dependency installation failed with ${installContext.packageManager}.`,
         );
     }
 }
+
+function findNearestPackageDir(startDir) {
+    for (const currentDir of iterateAncestors(startDir)) {
+        if (existsSync(path.join(currentDir, "package.json"))) {
+            return currentDir;
+        }
+    }
+
+    return undefined;
+}
+
+function findWorkspaceRoot(startDir) {
+    let workspaceRoot;
+
+    for (const currentDir of iterateAncestors(startDir)) {
+        if (hasWorkspaceConfig(currentDir)) {
+            workspaceRoot = currentDir;
+        }
+    }
+
+    return workspaceRoot;
+}
+
+function hasWorkspaceConfig(directory) {
+    if (existsSync(path.join(directory, "pnpm-workspace.yaml"))) {
+        return true;
+    }
+
+    const packageJsonPath = path.join(directory, "package.json");
+    if (!existsSync(packageJsonPath)) {
+        return false;
+    }
+
+    const packageJson = JSON.parse(readFileSync(packageJsonPath, "utf8"));
+    const { workspaces } = packageJson;
+
+    if (Array.isArray(workspaces) && workspaces.length > 0) {
+        return true;
+    }
+
+    return (
+        typeof workspaces === "object" &&
+        workspaces !== null &&
+        Array.isArray(workspaces.packages) &&
+        workspaces.packages.length > 0
+    );
+}
+
+function readPackageManagerField(directory) {
+    const packageJsonPath = path.join(directory, "package.json");
+    if (!existsSync(packageJsonPath)) {
+        return undefined;
+    }
+
+    const packageJson = JSON.parse(readFileSync(packageJsonPath, "utf8"));
+    if (typeof packageJson.packageManager !== "string") {
+        return undefined;
+    }
+
+    const [packageManager] = packageJson.packageManager.split("@");
+    return PACKAGE_MANAGERS.has(packageManager) ? packageManager : undefined;
+}
+
+function* iterateAncestors(startDir) {
+    let currentDir = startDir;
+
+    while (true) {
+        yield currentDir;
+
+        const parentDir = path.dirname(currentDir);
+        if (parentDir === currentDir) {
+            break;
+        }
+
+        currentDir = parentDir;
+    }
+}
+
+export {
+    copyPath,
+    detectPackageManager,
+    ensureGitignoreEntries,
+    ensurePackageJson,
+    installDependencies,
+    installDevDependencies,
+    resolveInstallContext,
+    resolvePackageDir,
+    updatePackageScripts,
+};

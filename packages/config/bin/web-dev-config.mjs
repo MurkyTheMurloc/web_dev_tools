@@ -23,6 +23,7 @@ import {
     detectPackageManager,
     ensureGitignoreEntries,
     installDependencies,
+    resolvePackageDir,
 } from "../scripts/install-utils.mjs";
 import { installWorkspaceDefaultsSkill } from "../scripts/install-workspace-defaults-skill.mjs";
 
@@ -358,7 +359,12 @@ function parseArgs(argv) {
 }
 
 async function main() {
-    const options = parseArgs(process.argv.slice(2));
+    const rawOptions = parseArgs(process.argv.slice(2));
+    const resolvedTargetDir = resolvePackageDir(rawOptions.targetDir);
+    const options = {
+        ...rawOptions,
+        targetDir: resolvedTargetDir,
+    };
     const results = [];
     const resolvedPackageManager = detectPackageManager(
         options.targetDir,

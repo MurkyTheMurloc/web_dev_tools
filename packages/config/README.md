@@ -20,6 +20,10 @@ The CLI is named `web-dev-config`.
 `web-dev-config init` now installs the default stack when you do not pass
 explicit install flags.
 
+In monorepos, the CLI resolves the nearest package root above the current
+working directory and detects the workspace package manager from the monorepo
+root.
+
 The default stack includes:
 
 - `--oxc`
