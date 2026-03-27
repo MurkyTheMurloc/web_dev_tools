@@ -19,6 +19,11 @@ type RuleContext = {
     }): void;
 };
 
+type RuleFixer = {
+    replaceText(node: unknown, text: string): unknown;
+    insertTextBeforeRange(range: [number, number], text: string): unknown;
+};
+
 function isNode(value: unknown): value is AstNode {
     return typeof value === "object" && value !== null && "type" in value;
 }
@@ -46,6 +51,43 @@ function isCallArgumentCallback(node: AstNode): boolean {
 
 function isIdentifierNamed(node: unknown, name: string): boolean {
     return isNode(node) && node.type === "Identifier" && node.name === name;
+}
+
+function getProgram(node: AstNode): AstNode | null {
+    let current: AstNode | undefined = node;
+
+    while (current?.parent) {
+        current = current.parent;
+    }
+
+    return current?.type === "Program" ? current : null;
+}
+
+function isImportDeclaration(node: unknown): node is AstNode {
+    return isNode(node) && node.type === "ImportDeclaration";
+}
+
+function getStringLiteralValue(node: unknown): string | null {
+    if (!isNode(node)) {
+        return null;
+    }
+
+    if (
+        (node.type === "Literal" || node.type === "StringLiteral") &&
+        typeof node.value === "string"
+    ) {
+        return node.value;
+    }
+
+    return null;
+}
+
+function getProgramBody(node: AstNode): AstNode[] {
+    if (!Array.isArray(node.body)) {
+        return [];
+    }
+
+    return node.body.filter(isNode);
 }
 
 function isResultHelperCall(node: unknown, name: "ok" | "err"): boolean {
@@ -77,9 +119,92 @@ function hasIsErrorFlag(node: unknown, expected: boolean): boolean {
     });
 }
 
+function getObjectPropertyValue(
+    node: unknown,
+    propertyName: string,
+): AstNode | null {
+    if (
+        !isNode(node) ||
+        node.type !== "ObjectExpression" ||
+        !Array.isArray(node.properties)
+    ) {
+        return null;
+    }
+
+    for (const property of node.properties) {
+        if (
+            isNode(property) &&
+            property.type === "Property" &&
+            isIdentifierNamed(property.key, propertyName) &&
+            isNode(property.value)
+        ) {
+            return property.value;
+        }
+    }
+
+    return null;
+}
+
+function isBooleanLiteral(node: unknown, expected: boolean): boolean {
+    return isNode(node) && node.type === "Literal" && node.value === expected;
+}
+
+function isNullLiteral(node: unknown): boolean {
+    return isNode(node) && node.type === "Literal" && node.value === null;
+}
+
+function hasTypeBuddyHelperImport(program: AstNode, helperName: "ok" | "err") {
+    return getProgramBody(program).some((statement) => {
+        if (!isImportDeclaration(statement)) {
+            return false;
+        }
+
+        if (
+            getStringLiteralValue(statement.source) !== "@murky-web/typebuddy"
+        ) {
+            return false;
+        }
+
+        if (statement.importKind === "type") {
+            return false;
+        }
+
+        const specifiers = Array.isArray(statement.specifiers)
+            ? statement.specifiers
+            : [];
+
+        return specifiers.some((specifier) => {
+            return (
+                isNode(specifier) &&
+                specifier.type === "ImportSpecifier" &&
+                isIdentifierNamed(specifier.local, helperName)
+            );
+        });
+    });
+}
+
+function getTypeBuddyImportInsertRange(
+    program: AstNode,
+): [number, number] | null {
+    const body = getProgramBody(program);
+    const imports = body.filter(isImportDeclaration);
+    const anchor = imports.at(-1) ?? body[0] ?? program;
+
+    if (!Array.isArray(anchor.range) || anchor.range.length < 2) {
+        return null;
+    }
+
+    if (imports.length > 0) {
+        return [anchor.range[1], anchor.range[1]];
+    }
+
+    return [anchor.range[0], anchor.range[0]];
+}
+
 const rule = {
     create(context: RuleContext) {
         const sourceCode = context.getSourceCode();
+        const scheduledHelperImports = new Set<"ok" | "err">();
 
         function isTypeReference(node: unknown): node is AstNode {
             return isNode(node) && node.type === "TSTypeReference";
@@ -103,6 +228,35 @@ const rule = {
         function getPromiseTypeArgument(node: AstNode): AstNode | null {
             if (getTypeName(node) !== "Promise") return null;
             return getTypeArgument(node);
+        }
+
+        function ensureResultHelperImportFixes(
+            node: AstNode,
+            fixer: RuleFixer,
+            helperName: "ok" | "err",
+        ): unknown[] {
+            if (scheduledHelperImports.has(helperName)) {
+                return [];
+            }
+
+            const program = getProgram(node);
+            if (!program || hasTypeBuddyHelperImport(program, helperName)) {
+                return [];
+            }
+
+            const insertRange = getTypeBuddyImportInsertRange(program);
+            if (!insertRange) {
+                return [];
+            }
+
+            scheduledHelperImports.add(helperName);
+
+            const hasImports = insertRange[0] !== 0;
+            const importText = hasImports
+                ? `\nimport { ${helperName} } from "@murky-web/typebuddy";`
+                : `import { ${helperName} } from "@murky-web/typebuddy";\n`;
+
+            return [fixer.insertTextBeforeRange(insertRange, importText)];
         }
 
         function checkReturnType(node: AstNode) {
@@ -138,10 +292,14 @@ const rule = {
                         node,
                         messageId: "returnVoidPromise",
                         fix(fixer) {
-                            return fixer.replaceText(
-                                node,
-                                "return { isError: false, value: undefined }",
-                            );
+                            return [
+                                ...ensureResultHelperImportFixes(
+                                    node,
+                                    fixer,
+                                    "ok",
+                                ),
+                                fixer.replaceText(node, "return ok()"),
+                            ];
                         },
                     });
                 }
@@ -163,6 +321,45 @@ const rule = {
                 return;
             }
 
+            const isErrorValue = getObjectPropertyValue(argument, "isError");
+            const objectValue = getObjectPropertyValue(argument, "value");
+
+            if (isBooleanLiteral(isErrorValue, false) && objectValue) {
+                context.report({
+                    node: argument,
+                    messageId: "preferOkResult",
+                    fix(fixer) {
+                        const valueText = sourceCode.getText(objectValue);
+                        return [
+                            ...ensureResultHelperImportFixes(node, fixer, "ok"),
+                            fixer.replaceText(argument, `ok(${valueText})`),
+                        ];
+                    },
+                });
+                return;
+            }
+
+            if (
+                isBooleanLiteral(isErrorValue, true) &&
+                isNullLiteral(objectValue)
+            ) {
+                context.report({
+                    node: argument,
+                    messageId: "preferErrResult",
+                    fix(fixer) {
+                        return [
+                            ...ensureResultHelperImportFixes(
+                                node,
+                                fixer,
+                                "err",
+                            ),
+                            fixer.replaceText(argument, "err()"),
+                        ];
+                    },
+                });
+                return;
+            }
+
             if (
                 !hasIsErrorFlag(argument, true) &&
                 !hasIsErrorFlag(argument, false)
@@ -172,10 +369,10 @@ const rule = {
                     messageId: "wrapReturn",
                     fix(fixer) {
                         const argumentText = sourceCode.getText(argument);
-                        return fixer.replaceText(
-                            argument,
-                            `{ value: ${argumentText}, isError: false }`,
-                        );
+                        return [
+                            ...ensureResultHelperImportFixes(node, fixer, "ok"),
+                            fixer.replaceText(argument, `ok(${argumentText})`),
+                        ];
                     },
                 });
             }
@@ -225,6 +422,15 @@ const rule = {
                 ? node.handler.body.body.filter(isNode)
                 : [];
 
+            for (const statement of catchBody) {
+                if (
+                    statement.type === "ReturnStatement" &&
+                    isNode(statement.argument)
+                ) {
+                    wrapReturnValue(statement, isAsync, returnType);
+                }
+            }
+
             const hasCorrectReturn = catchBody.some(
                 (statement) =>
                     statement.type === "ReturnStatement" &&
@@ -246,10 +452,17 @@ const rule = {
                             isNode(lastStatement.argument) &&
                             lastStatement.argument.type === "ObjectExpression"
                         ) {
-                            return fixer.replaceText(
-                                lastStatement,
-                                "return { isError: true, value: null }",
-                            );
+                            return [
+                                ...ensureResultHelperImportFixes(
+                                    node,
+                                    fixer,
+                                    "err",
+                                ),
+                                fixer.replaceText(
+                                    lastStatement,
+                                    "return err()",
+                                ),
+                            ];
                         }
 
                         const handler = node.handler;
@@ -265,10 +478,20 @@ const rule = {
                             return null;
                         }
 
-                        return fixer.insertTextBeforeRange(
-                            [bodyRange.range[1] - 1, bodyRange.range[1] - 1],
-                            "return { isError: true, value: null }; ",
-                        );
+                        return [
+                            ...ensureResultHelperImportFixes(
+                                node,
+                                fixer,
+                                "err",
+                            ),
+                            fixer.insertTextBeforeRange(
+                                [
+                                    bodyRange.range[1] - 1,
+                                    bodyRange.range[1] - 1,
+                                ],
+                                "return err(); ",
+                            ),
+                        ];
                     },
                 });
             }
@@ -296,12 +519,15 @@ const rule = {
         messages: {
             replaceWithMaybePromise:
                 "Use 'MaybePromise' instead of 'Promise' as the return type in async functions.",
-            wrapReturn:
-                "Wrap return value with { value: value, isError: false }.",
+            wrapReturn: "Wrap return value with ok(value).",
+            preferOkResult:
+                "Use ok(value) instead of an inline success result object.",
+            preferErrResult:
+                "Use err() instead of an inline error result object.",
             returnVoidPromise:
-                "Return a success result object for async functions with Promise<void> return type.",
+                "Return ok() for async functions with Promise<void> return type.",
             returnFailedPromise:
-                "Return an error result object in the catch block of async functions.",
+                "Return err() in the catch block of async functions.",
         },
     },
 };
