@@ -67,7 +67,6 @@ function err<T extends null>(...args: readonly [T] | []): Failed {
 	const [value] = args;
 	return {
 		isError: true,
-		// oxlint-disable-next-line unicorn/no-null -- TypeBuddy models failed states with null by design.
 		value: value ?? null,
 	};
 }
