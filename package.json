@@ -33,6 +33,7 @@
     "version-packages": "changeset version && bun ./scripts/sync-jsr-manifests.mjs"
   },
   "devDependencies": {
+    "@changesets/changelog-git": "^0.2.1",
     "@changesets/cli": "^2.30.0",
     "@typescript/native-preview": "^7.0.0-dev.20260314.1",
     "oxfmt": "^0.40.0",
