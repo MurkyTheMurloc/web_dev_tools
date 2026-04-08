@@ -1,5 +1,11 @@
 # @murky-web/oxlint-plugin-solid
 
+## 0.1.2
+
+### Patch Changes
+
+- 2118889: Extend `prefer-arrow-components` to trigger on any `function` declaration with a `: JSX.Element` return type annotation, regardless of whether it is exported or PascalCase. Intent to write a component is clear from the return type.
+
 ## 0.1.1
 
 ### Patch Changes
