@@ -417,30 +417,53 @@ export const preferArrowComponentsRule = {
                     usesPropsChildren(node, propsParam.name);
                 const desiredTypeName = getDesiredSolidTypeName(usesChildren);
 
+                const { importDeclaration, localTypeName } = getSolidTypeImportInfo(
+                    programNode,
+                    desiredTypeName,
+                );
+                const resolvedTypeName = localTypeName !== "" ? localTypeName : desiredTypeName;
+                const needsNewImport = localTypeName === "" && !importDeclaration;
+
                 context.report({
                     fix(fixer) {
-                        const importFix = createImportFix({
-                            desiredTypeName,
-                            fixer,
-                            programNode,
-                            sourceCode,
-                        });
-                        const replacementFix = createRuleFix({
-                            fixer,
-                            functionNode: node,
-                            localTypeName: importFix.localTypeName,
-                            propsParam,
-                            sourceCode,
-                            typeReference,
-                            usesChildren,
-                        });
+                        const isExported = node.parent?.type === "ExportNamedDeclaration";
+                        const componentName = node.id.name;
+                        const propsSuffix = getPropsSuffix(typeReference);
+                        const paramsText = propsParam.text;
+                        const bodyText = sourceCode.getText(node.body);
+                        const exportPrefix = isExported ? "export " : "";
 
-                        return [
-                            ...(importFix.operation
-                                ? [importFix.operation]
-                                : []),
-                            replacementFix,
-                        ];
+                        // If we need a new import AND the function is not exported,
+                        // prepend the import declaration directly into the replacement text
+                        // to avoid multi-range fix conflicts.
+                        const importPrefix = needsNewImport
+                            ? `import type { ${desiredTypeName} } from "solid-js";\n`
+                            : "";
+
+                        const replacementText = `${importPrefix}${exportPrefix}const ${componentName}: ${resolvedTypeName}${propsSuffix} = (${paramsText}) => ${bodyText}`;
+                        const nodeToReplace = isExported ? node.parent : node;
+
+                        if (!needsNewImport && localTypeName === "" && importDeclaration) {
+                            // Need to add to existing import — use two fixes only when
+                            // the import is AFTER the function (safe, no overlap).
+                            // Otherwise embed the import in the replacement.
+                            const importEnd = importDeclaration.range?.[1] ?? 0;
+                            const funcStart = nodeToReplace.range?.[0] ?? 0;
+                            if (importEnd < funcStart) {
+                                const typeKeyword = getTypeKeyword(importDeclaration, sourceCode);
+                                const namedSpecifiers = getNamedImportSpecifiers(importDeclaration);
+                                const lastSpec = namedSpecifiers.at(LAST_INDEX);
+                                const importOp = lastSpec
+                                    ? fixer.insertTextAfter(lastSpec, `, ${typeKeyword}${desiredTypeName}`)
+                                    : fixer.insertTextBefore(importDeclaration, `import type { ${desiredTypeName} } from "solid-js";\n`);
+                                return [
+                                    fixer.replaceText(nodeToReplace, replacementText),
+                                    importOp,
+                                ];
+                            }
+                        }
+
+                        return fixer.replaceText(nodeToReplace, replacementText);
                     },
                     message:
                         "Prefer export const components typed as Component<Props> or ParentComponent<Props>.",
