@@ -260,6 +260,30 @@ export function Icon(): JSX.Element {
 }
 `,
     }),
+    Object.freeze({
+        expectedFragment: "const Test: Component<Props> = (props) => {",
+        name: "fixes non-exported function without adding export",
+        source: `import type { JSX } from "solid-js";
+
+type Props = { name: string };
+
+function Test(props: Props): JSX.Element {
+    return <div>{props.name}</div>;
+}
+`,
+    }),
+    Object.freeze({
+        expectedFragment: "const test: Component<Props> = (props) => {",
+        name: "fixes lowercase non-exported function without adding export",
+        source: `import type { JSX } from "solid-js";
+
+type Props = { name: string };
+
+function test(props: Props): JSX.Element {
+    return <div>{props.name}</div>;
+}
+`,
+    }),
 ]);
 
 const preferArrowDiagnosticCases = Object.freeze([

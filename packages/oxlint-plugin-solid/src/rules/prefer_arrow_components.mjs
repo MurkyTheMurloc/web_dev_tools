@@ -338,14 +338,14 @@ function buildReplacementText({
     typeReference,
     usesChildren,
     functionNode,
+    isExported,
 }) {
-    const asyncPrefix = "";
-    const childrenComment = usesChildren ? "" : "";
+    const exportPrefix = isExported ? "export " : "";
     const propsSuffix = getPropsSuffix(typeReference);
     const paramsText = propsParam.text;
     const bodyText = sourceCode.getText(functionNode.body);
 
-    return `export const ${componentName}: ${localTypeName}${propsSuffix} = (${paramsText}) => ${bodyText}${asyncPrefix}${childrenComment}`;
+    return `${exportPrefix}const ${componentName}: ${localTypeName}${propsSuffix} = (${paramsText}) => ${bodyText}`;
 }
 
 function createRuleFix({
@@ -357,10 +357,12 @@ function createRuleFix({
     typeReference,
     usesChildren,
 }) {
+    const isExported = functionNode.parent?.type === "ExportNamedDeclaration";
     const componentName = functionNode.id.name;
     const replacementText = buildReplacementText({
         componentName,
         functionNode,
+        isExported,
         localTypeName,
         propsParam,
         sourceCode,
@@ -368,7 +370,10 @@ function createRuleFix({
         usesChildren,
     });
 
-    return fixer.replaceText(functionNode.parent, replacementText);
+    // For exported functions, replace the ExportNamedDeclaration (the parent).
+    // For non-exported functions, replace only the FunctionDeclaration itself.
+    const nodeToReplace = isExported ? functionNode.parent : functionNode;
+    return fixer.replaceText(nodeToReplace, replacementText);
 }
 
 export const preferArrowComponentsRule = {
