@@ -15,17 +15,43 @@ function isAstNode(value) {
     );
 }
 
-function isExportedFunctionComponent(node) {
-    return (
-        node.type === "FunctionDeclaration" &&
-        node.id?.type === "Identifier" &&
-        isPascalCaseComponentName(node.id.name) &&
-        node.parent?.type === "ExportNamedDeclaration" &&
-        node.async !== true &&
-        node.generator !== true &&
-        !node.typeParameters
-    );
+function hasJsxElementReturnType(node) {
+    const rt = node.returnType?.typeAnnotation;
+    if (!rt) return false;
+    // JSX.Element
+    if (
+        rt.type === "TSTypeReference" &&
+        rt.typeName?.type === "TSQualifiedName" &&
+        rt.typeName.left?.name === "JSX" &&
+        rt.typeName.right?.name === "Element"
+    ) return true;
+    // JSX.Element via plain identifier (rare but possible)
+    if (rt.type === "TSTypeReference" && rt.typeName?.name === "JSXElement") return true;
+    return false;
 }
+
+function isFunctionComponent(node) {
+    if (
+        node.type !== "FunctionDeclaration" ||
+        node.async === true ||
+        node.generator === true ||
+        node.typeParameters
+    ) return false;
+
+    if (node.id?.type !== "Identifier") return false;
+
+    // exported PascalCase — classic component
+    const isExported = node.parent?.type === "ExportNamedDeclaration";
+    if (isExported && isPascalCaseComponentName(node.id.name)) return true;
+
+    // has JSX.Element return type annotation — intent is clear regardless of export/casing
+    if (hasJsxElementReturnType(node)) return true;
+
+    return false;
+}
+
+// Keep old name as alias so call sites don't need changing
+const isExportedFunctionComponent = isFunctionComponent;
 
 function isJsxLikeNode(node) {
     return node?.type === "JSXElement" || node?.type === "JSXFragment";

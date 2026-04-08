@@ -264,7 +264,7 @@ export function Icon(): JSX.Element {
 
 const preferArrowDiagnosticCases = Object.freeze([
     Object.freeze({
-        name: "triggers on function declaration with named props",
+        name: "triggers on exported PascalCase function with named props",
         source: `import type { JSX } from "solid-js";
 type Props = { name: string };
 export function Leaf(props: Props): JSX.Element {
@@ -273,7 +273,7 @@ export function Leaf(props: Props): JSX.Element {
 `,
     }),
     Object.freeze({
-        name: "triggers on function declaration with destructured props",
+        name: "triggers on exported PascalCase function with destructured props",
         source: `import type { JSX } from "solid-js";
 type Props = { title: string };
 export function Card({ title }: Props): JSX.Element {
@@ -282,10 +282,28 @@ export function Card({ title }: Props): JSX.Element {
 `,
     }),
     Object.freeze({
-        name: "triggers on function declaration with no props",
+        name: "triggers on exported PascalCase function with no props",
         source: `import type { JSX } from "solid-js";
 export function Icon(): JSX.Element {
     return <svg />;
+}
+`,
+    }),
+    Object.freeze({
+        name: "triggers on non-exported function with JSX.Element return type",
+        source: `import type { JSX } from "solid-js";
+type Props = { name: string };
+function Test(props: Props): JSX.Element {
+    return <div>{props.name}</div>;
+}
+`,
+    }),
+    Object.freeze({
+        name: "triggers on lowercase function with JSX.Element return type",
+        source: `import type { JSX } from "solid-js";
+type Props = { name: string };
+function test(props: Props): JSX.Element {
+    return <div>{props.name}</div>;
 }
 `,
     }),
