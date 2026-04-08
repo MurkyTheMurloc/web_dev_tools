@@ -1,5 +1,11 @@
 # @murky-web/oxlint-plugin-solid
 
+## 0.1.3
+
+### Patch Changes
+
+- 6057c2d: Fix `prefer-arrow-components` autofix producing overlapping edits when the import and function replacement span different ranges. Import is now embedded directly in the replacement text when needed to avoid multi-range conflicts.
+
 ## 0.1.2
 
 ### Patch Changes
