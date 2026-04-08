@@ -1,6 +1,6 @@
 {
     "name": "@murky-web/oxlint-plugin-solid",
-    "version": "0.1.1",
+    "version": "0.1.2",
     "description": "Local Oxlint JS plugin port for Solid rules plus Murky-specific Solid conventions.",
     "license": "MIT",
     "private": false,
