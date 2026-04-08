@@ -236,6 +236,59 @@ export function Panel(props: Props): JSX.Element {
 }
 `,
     }),
+    Object.freeze({
+        expectedFragment: "export const Card: Component<Props> = ({ title }: Props) => {",
+        name: "preserves destructured props in arrow form",
+        source: `import type { JSX } from "solid-js";
+
+type Props = {
+    readonly title: string;
+};
+
+export function Card({ title }: Props): JSX.Element {
+    return <div>{title}</div>;
+}
+`,
+    }),
+    Object.freeze({
+        expectedFragment: "export const Icon: Component = () => {",
+        name: "handles components with no props",
+        source: `import type { JSX } from "solid-js";
+
+export function Icon(): JSX.Element {
+    return <svg />;
+}
+`,
+    }),
 ]);
 
-export { expectedRuleIds, jsxUsesVarsCase, preferArrowFixCases, ruleCases };
+const preferArrowDiagnosticCases = Object.freeze([
+    Object.freeze({
+        name: "triggers on function declaration with named props",
+        source: `import type { JSX } from "solid-js";
+type Props = { name: string };
+export function Leaf(props: Props): JSX.Element {
+    return <div>{props.name}</div>;
+}
+`,
+    }),
+    Object.freeze({
+        name: "triggers on function declaration with destructured props",
+        source: `import type { JSX } from "solid-js";
+type Props = { title: string };
+export function Card({ title }: Props): JSX.Element {
+    return <div>{title}</div>;
+}
+`,
+    }),
+    Object.freeze({
+        name: "triggers on function declaration with no props",
+        source: `import type { JSX } from "solid-js";
+export function Icon(): JSX.Element {
+    return <svg />;
+}
+`,
+    }),
+]);
+
+export { expectedRuleIds, jsxUsesVarsCase, preferArrowDiagnosticCases, preferArrowFixCases, ruleCases };

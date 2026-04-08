@@ -4,6 +4,7 @@ import { createLintHarness } from "./helpers.mjs";
 import {
     expectedRuleIds,
     jsxUsesVarsCase,
+    preferArrowDiagnosticCases,
     preferArrowFixCases,
     ruleCases,
 } from "./rule_cases.mjs";
@@ -27,6 +28,17 @@ function registerFixTests() {
             const result = await harness.lint(fixCase.source, { fix: true });
 
             expect(result.source).toContain(fixCase.expectedFragment);
+        });
+    });
+}
+
+function registerPreferArrowDiagnosticTests() {
+    preferArrowDiagnosticCases.forEach((diagCase) => {
+        test(`prefer-arrow-components: ${diagCase.name}`, async () => {
+            const result = await harness.lint(diagCase.source);
+
+            expect(result.exitCode).toBeGreaterThan(0);
+            expect(result.output).toContain("solid(prefer-arrow-components)");
         });
     });
 }
@@ -67,6 +79,7 @@ describe("oxlint-plugin-solid", () => {
     });
 
     registerRuleDiagnosticsTests();
+    registerPreferArrowDiagnosticTests();
 
     test("tracks JSX component usage so no-unused-vars stays quiet", async () => {
         const result = await harness.lint(jsxUsesVarsCase.code);

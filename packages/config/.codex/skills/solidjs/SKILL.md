@@ -42,13 +42,15 @@ plugin enforces instead of drifting into parallel advice.
 
 Follow these conventions by default because the Solid Oxc preset enforces them:
 
-- Prefer exported arrow components over `export function` component
-  declarations.
+- **Always** write components as `export const Foo: Component<Props> = (props) => {}`.
+  Never use `export function Foo(...)`. The `prefer-arrow-components` rule flags
+  all `export function` component declarations regardless of how props are written —
+  named props, destructured props, or no props at all.
 - Use `Component<Props>` for components without children.
 - Use `ParentComponent<Props>` for components that accept or render
   `props.children`.
 - Keep component props as a single `props` object. Do not destructure component
-  props in the parameter list.
+  props in the parameter list — the `no-destructure` rule flags this separately.
 - Use `props.foo`, not `{ foo }`, to preserve Solid reactivity.
 - Keep conditionals inside JSX. Do not early-return different JSX branches from
   a component.
@@ -127,15 +129,21 @@ export const Card: ParentComponent<CardProps> = (props) => {
 };
 ```
 
-Do not reach for this style by default:
+Do not reach for these styles — both are flagged by lint rules:
 
 ```tsx
-export function Card({ title, children }: CardProps): JSX.Element {
-    return <section>{children}</section>;
+// ❌ export function — flagged by prefer-arrow-components
+export function Card(props: CardProps): JSX.Element {
+    return <section>{props.children}</section>;
 }
+
+// ❌ destructured props — flagged by no-destructure (and prefer-arrow-components if function form)
+export const Card = ({ title, children }: CardProps) => {
+    return <section>{children}</section>;
+};
 ```
 
-That shape fights the lint rules and weakens prop reactivity.
+Both shapes fight the lint rules and weaken prop reactivity.
 
 ### 3. Compose loading and error states
 

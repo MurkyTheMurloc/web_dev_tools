@@ -69,7 +69,7 @@ function getImportedName(specifier) {
     return specifier.imported.value;
 }
 
-function getPropsParam(functionNode) {
+function getPropsParam(functionNode, sourceCode) {
     if (functionNode.params.length === NO_PARAMETERS) {
         return {
             name: "",
@@ -82,14 +82,21 @@ function getPropsParam(functionNode) {
     }
 
     const [param] = functionNode.params;
-    if (param.type !== "Identifier") {
-        return FALSE_SENTINEL;
+    if (param.type === "Identifier") {
+        return {
+            name: param.name,
+            text: param.name,
+        };
     }
 
-    return {
-        name: param.name,
-        text: param.name,
-    };
+    if (param.type === "ObjectPattern") {
+        return {
+            name: "",
+            text: sourceCode.getText(param),
+        };
+    }
+
+    return FALSE_SENTINEL;
 }
 
 function getPropsSuffix(typeReference) {
@@ -116,11 +123,14 @@ function getTypeReferenceForProps(functionNode, sourceCode) {
     }
 
     const [param] = functionNode.params;
-    if (param.type !== "Identifier" || !param.typeAnnotation) {
-        return FALSE_SENTINEL;
+    if (
+        (param.type === "Identifier" || param.type === "ObjectPattern") &&
+        param.typeAnnotation
+    ) {
+        return sourceCode.getText(param.typeAnnotation.typeAnnotation);
     }
 
-    return sourceCode.getText(param.typeAnnotation.typeAnnotation);
+    return FALSE_SENTINEL;
 }
 
 function findLocalTypeName(importDeclarations, desiredTypeName) {
@@ -359,7 +369,7 @@ export const preferArrowComponentsRule = {
                     return;
                 }
 
-                const propsParam = getPropsParam(node);
+                const propsParam = getPropsParam(node, sourceCode);
                 const typeReference = getTypeReferenceForProps(
                     node,
                     sourceCode,

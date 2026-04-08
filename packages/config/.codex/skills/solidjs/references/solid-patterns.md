@@ -33,8 +33,21 @@ export const Panel: ParentComponent<PanelProps> = (props) => {
 };
 ```
 
-Avoid `export function` component declarations as the default house style,
-especially when they destructure props.
+Avoid `export function` component declarations entirely — the `prefer-arrow-components`
+lint rule flags all of these forms:
+
+```tsx
+// ❌ named props
+export function Leaf(props: Props): JSX.Element { ... }
+
+// ❌ destructured props
+export function Card({ title }: Props): JSX.Element { ... }
+
+// ❌ no props
+export function Icon(): JSX.Element { ... }
+```
+
+The autofix rewrites all three to the correct arrow form.
 
 ## State And Reactivity
 
