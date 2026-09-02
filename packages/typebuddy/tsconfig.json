@@ -2,6 +2,7 @@
   "$schema": "https://json.schemastore.org/tsconfig",
   "extends": "../config/typescript/tsconfig.base.jsonc",
   "compilerOptions": {
+    "types": ["node"],
     "rootDir": "."
   },
   "include": [

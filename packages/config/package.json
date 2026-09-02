@@ -31,13 +31,13 @@
     },
     "dependencies": {
         "@murky-web/oxlint-plugin-solid": "workspace:*",
-        "@typescript/native-preview": "^7.0.0-dev.20260314.1"
+        "typescript": "^7.0.2"
     },
     "devDependencies": {
         "@biomejs/biome": "2.4.7",
-        "oxfmt": "^0.40.0",
-        "oxlint": "^1.55.0",
-        "oxlint-tsgolint": "^0.16.0"
+        "oxfmt": "^0.66.0",
+        "oxlint": "^1.81.0",
+        "oxlint-tsgolint": "^7.0.2001"
     },
     "peerDependencies": {},
     "tsconfig": "./typescript/tsconfig.base.jsonc"

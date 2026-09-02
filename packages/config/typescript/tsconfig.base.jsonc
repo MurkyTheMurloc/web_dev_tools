@@ -2,23 +2,31 @@
   "$schema": "https://json.schemastore.org/tsconfig",
   "compilerOptions": {
     "target": "ESNext",
-    // Modern bundler-oriented equivalent to the older Solid example with
-    // "module": "ESNext" and "moduleResolution": "node".
+    "lib": ["ESNext"],
     "module": "preserve",
-    "moduleResolution": "bundler",
     "moduleDetection": "force",
     "types": [],
     "allowImportingTsExtensions": true,
-
     "strict": true,
+    "exactOptionalPropertyTypes": true,
+    "noUncheckedIndexedAccess": true,
+    "noPropertyAccessFromIndexSignature": true,
+    "noImplicitOverride": true,
+    "noImplicitReturns": true,
+    "noFallthroughCasesInSwitch": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "noUncheckedSideEffectImports": true,
+    "allowUnreachableCode": false,
+    "allowUnusedLabels": false,
+
+    "erasableSyntaxOnly": true,
+    "resolveJsonModule": true,
+
     "noEmit": true,
     "isolatedModules": true,
-
-    "allowSyntheticDefaultImports": true,
     "esModuleInterop": true,
-    "forceConsistentCasingInFileNames": true,
     "skipLibCheck": true,
-    "useDefineForClassFields": true,
     "verbatimModuleSyntax": true,
   },
 }
