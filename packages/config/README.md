@@ -147,26 +147,36 @@ When `--simplelog` is set:
 
 ## What `init --typescript` Does
 
-- copies `typescript/tsconfig.base.jsonc` to `./tsconfig.base.jsonc`
-- writes `./tsconfig.json`
-- installs `@typescript/native-preview`
+- copies `typescript/tsconfig.base.jsonc` to `./tsconfig.base.jsonc` -- the
+  shared base is only ever extended, never used as `./tsconfig.json` directly
+- writes `./tsconfig.json` from `tsconfig.server.jsonc`, a leaf that extends the
+  base and owns `lib`, `types` and `include` (the three settings `extends`
+  cannot merge)
+- installs `typescript` (7.x ships the native Go compiler as `tsc`)
 - adds this `package.json` script:
 
 ```json
 {
     "scripts": {
-        "typecheck": "tsgo --project ./tsconfig.json --noEmit"
+        "typecheck": "tsc --project ./tsconfig.json --noEmit"
     }
 }
 ```
 
 When `--frontend-solid` is set:
 
-- writes a Solid-oriented `tsconfig.json`
-- keeps JSX preserved with Solid typing
-- uses browser libs and Vite client types
+- writes `./tsconfig.json` from `tsconfig.client.jsonc` instead
+- uses browser libs (`DOM`, `DOM.Iterable`) and Vite client types
 - removes legacy Vite template files such as `tsconfig.app.json` and
   `tsconfig.node.json`
+
+JSX stays preserved with Solid typing in either case -- `jsx` and
+`jsxImportSource` live in the base, where they are inert without `.tsx` files.
+
+The server leaf ships `"types": []`. Pick the runtime types the project
+actually needs (`["node"]`, `["bun"]`, plus `"vite/client"` for server code in
+a meta-framework). A `types` entry that cannot be resolved fails the whole
+project with `TS2688` and nothing else gets checked.
 
 When `--typebuddy` is set:
 

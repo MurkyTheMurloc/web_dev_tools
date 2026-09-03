@@ -1,0 +1,17 @@
+{
+    "$schema": "https://json.schemastore.org/tsconfig",
+    "extends": "./tsconfig.base.jsonc",
+    "compilerOptions": {
+        // Runtime types are project-specific -- pick what this project runs on:
+        //   Node → ["node"]  (add @types/node)
+        //   Bun  → ["bun"]   (add @types/bun)
+        //   Deno → irrelevant, Deno ignores tsconfig.json entirely
+        // Server code in a meta-framework often needs "vite/client" here too.
+        // A missing entry aborts the whole project with TS2688, so keep the
+        // list in sync with the installed @types packages.
+        "types": []
+    },
+    // See tsconfig.client.jsonc for why the globals shim is listed by name.
+    "include": ["**/*.ts", "typebuddy-globals.d.ts"],
+    "exclude": ["dist"]
+}

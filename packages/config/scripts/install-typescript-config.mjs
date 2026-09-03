@@ -36,10 +36,7 @@ export async function installTypeScriptConfig({
     copyPath(
         path.join(
             typescriptSourceDir,
-            resolveTsconfigTemplate({
-                frontendSolid,
-                typebuddy,
-            }),
+            resolveTsconfigTemplate({ frontendSolid }),
         ),
         path.join(resolvedTargetDir, "tsconfig.json"),
     );
@@ -52,13 +49,13 @@ export async function installTypeScriptConfig({
     removeLegacyTypeScriptConfigs(resolvedTargetDir);
 
     updatePackageScripts(packageJsonPath, {
-        typecheck: "tsgo --project ./tsconfig.json --noEmit",
+        typecheck: "tsc --project ./tsconfig.json --noEmit",
     });
 
     installDevDependencies({
         targetDir: resolvedTargetDir,
         packageManager: resolvedPackageManager,
-        packages: ["@typescript/native-preview"],
+        packages: ["typescript"],
         skipInstall,
     });
 
@@ -69,20 +66,8 @@ export async function installTypeScriptConfig({
     };
 }
 
-function resolveTsconfigTemplate({ frontendSolid, typebuddy }) {
-    if (frontendSolid && typebuddy) {
-        return "tsconfig.solid.typebuddy.jsonc";
-    }
-
-    if (frontendSolid) {
-        return "tsconfig.solid.jsonc";
-    }
-
-    if (typebuddy) {
-        return "tsconfig.typebuddy.jsonc";
-    }
-
-    return "tsconfig.base.jsonc";
+function resolveTsconfigTemplate({ frontendSolid }) {
+    return frontendSolid ? "tsconfig.client.jsonc" : "tsconfig.server.jsonc";
 }
 
 function removeLegacyTypeScriptConfigs(targetDir) {

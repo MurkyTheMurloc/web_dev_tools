@@ -1,0 +1,17 @@
+{
+    "$schema": "https://json.schemastore.org/tsconfig",
+    "extends": "./tsconfig.base.jsonc",
+    "compilerOptions": {
+        // Browser surface. `lib` and `types` are replaced, never merged, by
+        // `extends` -- so a leaf that needs either must spell out the full list.
+        "lib": ["ESNext", "DOM", "DOM.Iterable"],
+        // For Vite-based Solid apps.
+        // Add DOM matcher types here when the app uses Solid Testing Library.
+        "types": ["vite/client"]
+    },
+    // `typebuddy-globals.d.ts` must be named explicitly: a narrowed `include`
+    // drops it silently and every global type disappears with it. Listing a
+    // file that does not exist is fine here -- unlike `files`, which errors.
+    "include": ["**/*.ts", "**/*.tsx", "typebuddy-globals.d.ts"],
+    "exclude": ["dist"]
+}
