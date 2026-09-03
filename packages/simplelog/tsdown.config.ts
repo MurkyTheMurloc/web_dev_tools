@@ -7,6 +7,10 @@ export default defineConfig([
       logger: "./src/logger.ts",
     },
     dts: true,
+    // tsdown defaults `fixedExtension` to true for platform "node", which emits
+    // .mjs/.d.mts. The package is "type": "module", so .js is already ESM and
+    // matches what the exports map (and every released version) points at.
+    fixedExtension: false,
     format: "esm",
     outDir: "dist",
     platform: "node",

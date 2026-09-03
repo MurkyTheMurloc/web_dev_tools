@@ -82,7 +82,7 @@ type LogPayload = Readonly<{
 }>;
 
 type PlainLogParts = Readonly<{
-    openTelemetryContext?: OpenTelemetryContext;
+    openTelemetryContext?: OpenTelemetryContext | undefined;
     plainArgs: readonly StringifiedArgument[];
     plainLogMessage: string;
     plainStackTrace: string;
@@ -650,7 +650,7 @@ class LoggerBase {
     private readonly logFilePath: string;
     private readonly logLevelThreshold: LogLevel;
     private readonly name: string;
-    private readonly parent?: LoggerParent;
+    private readonly parent?: LoggerParent | undefined;
     private readonly performanceBenchmarks = new Map<string, number>();
     private readonly runtime: LoggerRuntime;
     private readonly includeOpenTelemetryContext: boolean;
