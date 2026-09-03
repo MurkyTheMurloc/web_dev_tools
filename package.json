@@ -4,7 +4,7 @@
   "bin": {
     "web-dev-config": "./bin/web-dev-config.mjs"
   },
-  "packageManager": "bun@1.2.23",
+  "packageManager": "bun@1.4.0",
   "workspaces": [
     "packages/*"
   ],
