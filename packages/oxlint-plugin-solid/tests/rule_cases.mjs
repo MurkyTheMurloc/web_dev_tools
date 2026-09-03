@@ -204,6 +204,25 @@ export const View = (): JSX.Element => {
 `,
 });
 
+const noDestructureFixCases = Object.freeze([
+    Object.freeze({
+        expectedFragment: 'const rest = omit(props, "name");',
+        name: "extracts the rest with omit",
+        source: `export const OnlyRest = ({ name, ...rest }) => {
+    return <div {...rest}>{name}</div>;
+};
+`,
+    }),
+    Object.freeze({
+        expectedFragment: 'const props = merge({ name: "x" }, _props);',
+        name: "merges defaults with merge",
+        source: `export const OnlyDefaults = ({ name = "x" }) => {
+    return <div>{name}</div>;
+};
+`,
+    }),
+]);
+
 const preferArrowFixCases = Object.freeze([
     Object.freeze({
         expectedFragment: "export const Leaf: Component<Props> = (props) => {",
@@ -331,4 +350,11 @@ function test(props: Props): JSX.Element {
     }),
 ]);
 
-export { expectedRuleIds, jsxUsesVarsCase, preferArrowDiagnosticCases, preferArrowFixCases, ruleCases };
+export {
+    expectedRuleIds,
+    jsxUsesVarsCase,
+    noDestructureFixCases,
+    preferArrowDiagnosticCases,
+    preferArrowFixCases,
+    ruleCases,
+};

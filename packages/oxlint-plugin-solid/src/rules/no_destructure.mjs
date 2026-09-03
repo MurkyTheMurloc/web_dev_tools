@@ -93,10 +93,11 @@ export default createRule({
                 }
             }
             const hasDefaults = propertyInfo.some((info) => info.init);
-            // Replace destructured props with a `props` identifier (`_props` in case of rest params/defaults)
-            const origProps = !(hasDefaults || rest)
-                ? propsName
-                : "_" + propsName;
+            // Replace destructured props with a `props` identifier. Only the
+            // defaults case needs a second binding, because `merge` produces a
+            // new object; `omit` returns just the rest, so the parameter itself
+            // still carries the named props.
+            const origProps = hasDefaults ? "_" + propsName : propsName;
             if (props.typeAnnotation) {
                 // in `{ prop1, prop2 }: Props`, leave `: Props` alone
                 const range = [props.range[0], props.typeAnnotation.range[0]];
@@ -104,13 +105,6 @@ export default createRule({
             } else {
                 yield fixer.replaceText(props, origProps);
             }
-            // KNOWN GAP (Solid 2.0): the fix below still emits
-            // `splitProps(mergeProps(...))`. `mergeProps` is now `merge`, and
-            // `splitProps(props, ["a"])` became `omit(props, "a")` — which
-            // returns the rest object instead of `[picked, rest]`. That is a
-            // change of shape, not a rename, so the generated code needs
-            // rewriting rather than renaming. The report is still correct;
-            // only the autofix produces Solid 1 code.
             const sourceCode = getSourceCode(context);
             const defaultsObjectString = () =>
                 propertyInfo
@@ -120,24 +114,28 @@ export default createRule({
                             `${info.computed ? "[" : ""}${sourceCode.getText(info.real)}${info.computed ? "]" : ""}: ${sourceCode.getText(info.init)}`,
                     )
                     .join(", ");
-            const splitPropsArray = () =>
-                `[${propertyInfo
+            // `omit(props, "a", "b")` takes the keys as varargs, where Solid
+            // 1.x `splitProps(props, ["a", "b"])` took an array.
+            const omitArgs = () =>
+                propertyInfo
                     .map((info) =>
                         info.real.type === "Identifier"
                             ? JSON.stringify(info.real.name)
                             : sourceCode.getText(info.real),
                     )
-                    .join(", ")}]`;
+                    .join(", ");
+            const restName = () =>
+                (rest.argument.type === "Identifier" && rest.argument.name) ||
+                "rest";
             let lineToInsert = "";
             if (hasDefaults && rest) {
-                // Insert a line that assigns _props
-                lineToInsert = `  const [${propsName}, ${(rest.argument.type === "Identifier" && rest.argument.name) || "rest"}] = splitProps(mergeProps({ ${defaultsObjectString()} }, ${origProps}), ${splitPropsArray()});`;
+                // Merge the defaults, then take the rest off the merged object.
+                lineToInsert = `  const ${propsName} = merge({ ${defaultsObjectString()} }, ${origProps});\n  const ${restName()} = omit(${propsName}, ${omitArgs()});\n`;
             } else if (hasDefaults) {
-                // Insert a line that assigns _props merged with defaults to props
-                lineToInsert = `  const ${propsName} = mergeProps({ ${defaultsObjectString()} }, ${origProps});\n`;
+                lineToInsert = `  const ${propsName} = merge({ ${defaultsObjectString()} }, ${origProps});\n`;
             } else if (rest) {
-                // Insert a line that keeps named props and extracts the rest into a new reactive rest object
-                lineToInsert = `  const [${propsName}, ${(rest.argument.type === "Identifier" && rest.argument.name) || "rest"}] = splitProps(${origProps}, ${splitPropsArray()});\n`;
+                // `props` already carries the named props; only the rest is new.
+                lineToInsert = `  const ${restName()} = omit(${origProps}, ${omitArgs()});\n`;
             }
             if (lineToInsert) {
                 const body = func.body;

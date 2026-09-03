@@ -4,6 +4,7 @@ import { createLintHarness } from "./helpers.mjs";
 import {
     expectedRuleIds,
     jsxUsesVarsCase,
+    noDestructureFixCases,
     preferArrowDiagnosticCases,
     preferArrowFixCases,
     ruleCases,
@@ -23,7 +24,7 @@ function readSolidLintConfig(repoRoot) {
 }
 
 function registerFixTests() {
-    preferArrowFixCases.forEach((fixCase) => {
+    [...preferArrowFixCases, ...noDestructureFixCases].forEach((fixCase) => {
         test(fixCase.name, async () => {
             const result = await harness.lint(fixCase.source, { fix: true });
 
