@@ -1,4 +1,4 @@
-import { existsSync } from "node:fs";
+import { existsSync, readFileSync, writeFileSync } from "node:fs";
 
 const EXIT_SUCCESS = 0;
 const FIXTURE_FILE_PATH = "src/rule_case.tsx";
@@ -139,6 +139,51 @@ function initializeTempProject(repoRoot, tempDirectoryPath) {
         runCommandOrThrow(["ln", "-s", sourcePath, targetPath], repoRoot);
     }
     runCommandOrThrow(["mkdir", "-p", `${tempDirectoryPath}/src`], repoRoot);
+    neutralizeUnresolvableTypes(tempDirectoryPath);
+}
+
+// The templates are written for real projects; the harness links a handful of
+// packages by hand and neither vite nor `@solidjs/web` is among them. Two
+// settings would otherwise fail the whole project before any rule runs:
+// `types: ["vite/client"]` raises TS2688, and `jsxImportSource` sends TS
+// looking for `@solidjs/web/jsx-runtime`. Neither is under test here, so both
+// are neutralized and JSX is typed loosely through a local shim.
+function neutralizeUnresolvableTypes(tempDirectoryPath) {
+    const tsconfigPath = `${tempDirectoryPath}/tsconfig.json`;
+    if (!existsSync(tsconfigPath)) {
+        return;
+    }
+    writeFileSync(
+        tsconfigPath,
+        readFileSync(tsconfigPath, "utf8").replace(
+            /"types"\s*:\s*\[[^\]]*\]/,
+            '"types": []',
+        ),
+    );
+    // `jsxImportSource` lives in the shared base that the leaf extends, not in
+    // the leaf itself.
+    const basePath = `${tempDirectoryPath}/tsconfig.base.jsonc`;
+    if (existsSync(basePath)) {
+        writeFileSync(
+            basePath,
+            readFileSync(basePath, "utf8").replace(
+                /\n\s*"jsxImportSource"\s*:\s*"[^"]*",?/,
+                "",
+            ),
+        );
+    }
+    writeFileSync(
+        `${tempDirectoryPath}/jsx-shim.d.ts`,
+        [
+            "declare namespace JSX {",
+            "    type Element = unknown;",
+            "    interface IntrinsicElements {",
+            "        [name: string]: Record<string, unknown>;",
+            "    }",
+            "}",
+            "",
+        ].join("\n"),
+    );
 }
 
 function readTextFile(filePath) {

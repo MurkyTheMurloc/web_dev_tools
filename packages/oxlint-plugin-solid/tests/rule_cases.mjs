@@ -192,9 +192,7 @@ export const View = () => {
 ]);
 
 const jsxUsesVarsCase = Object.freeze({
-    code: `import type { JSX } from "solid-js";
-
-const UsedComponent = (): JSX.Element => {
+    code: `const UsedComponent = (): JSX.Element => {
     return <div>Hello</div>;
 };
 
