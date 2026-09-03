@@ -961,9 +961,6 @@ export default createRule({
                             [
                                 "createMemo",
                                 "children",
-                                "createEffect",
-                                "createRenderEffect",
-                                "createReaction",
                                 "createTrackedEffect",
                                 "createProjection",
                                 "untrack",
@@ -976,9 +973,41 @@ export default createRule({
                         ) ||
                         false /* Solid 2.0 removed createResource */
                     ) {
-                        // createEffect, createMemo, etc. fn arg, and createResource optional
-                        // `source` first argument may be a signal
+                        // The whole first argument is the tracked function.
                         pushTrackedScope(arg0, "function");
+                    } else if (
+                        matchImport(
+                            ["createEffect", "createRenderEffect"],
+                            callee.name,
+                        )
+                    ) {
+                        // Solid 2.0 split these into `(compute, apply)`. The
+                        // compute phase tracks; the apply phase runs untracked
+                        // and may return a cleanup, so reads there poll rather
+                        // than subscribe. `createEffect` also accepts an effect
+                        // bundle object in place of a plain apply function.
+                        pushTrackedScope(arg0, "function");
+                        if (arg1) {
+                            if (arg1.type === "ObjectExpression") {
+                                for (const property of arg1.properties) {
+                                    if (
+                                        property.type === "Property" &&
+                                        isFunctionNode(property.value)
+                                    ) {
+                                        pushTrackedScope(
+                                            property.value,
+                                            "called-function",
+                                        );
+                                    }
+                                }
+                            } else {
+                                pushTrackedScope(arg1, "called-function");
+                            }
+                        }
+                    } else if (matchImport(["createReaction"], callee.name)) {
+                        // `createReaction(effectFn)` takes the untracked effect
+                        // and returns the tracking function.
+                        pushTrackedScope(arg0, "called-function");
                     } else if (
                         matchImport(
                             ["onSettled", "onCleanup"],
@@ -998,7 +1027,7 @@ export default createRule({
                         // to poll the current value. Consider them called-function tracked
                         // scopes for our purposes.
                         pushTrackedScope(arg0, "called-function");
-                    } else if (matchImport("on", callee.name)) {
+                    } else if (matchImport("__removed_on", callee.name)) {
                         // on accepts a signal or an array of signals as its first argument,
                         // and a tracking function as its second
                         if (arg0) {
