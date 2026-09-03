@@ -9,7 +9,6 @@ Target Solid 2.0. Solid moved its renderers into `@solidjs/*` packages and pulle
 - `no-proxy-apis` detected stores by the `solid-js/store` import path. Stores now live in the core that every file imports, so it matches the store API names instead.
 - Reactivity tracking follows the renames: `batch`/`produce` → `flush`, `onMount` → `onSettled`, `createSelector` → `createProjection`, `mergeProps` → `merge`, `indexArray` → `repeat`, `useTransition` removed.
 - `jsx-no-undef` auto-imports `Loading`/`Errored`/`Repeat`/`Reveal` instead of `Index`.
+- `createEffect` and `createRenderEffect` are split into `(compute, apply)`: the compute phase tracks, the apply phase polls. The `no-destructure` autofix emits `merge`/`omit`.
 
-Known gap: the `no-destructure` autofix still emits `splitProps(mergeProps(...))`. `splitProps(props, ["a"])` became `omit(props, "a")`, which returns the rest object rather than `[picked, rest]` — a change of shape rather than a rename. The report is correct; only the fix produces Solid 1 code.
-
-Projects still on Solid 1.x should pin `0.1.3`.
+Projects still on Solid 1.x can use this release with `"solid/imports": "off"`. That rule is the only active conflict: it reports `import type { JSX } from "solid-js"` and its autofix rewrites the import to `@solidjs/web`, which a Solid 1 project does not have installed. The other rules go quiet on Solid 1 patterns rather than misfiring, and TypeScript already rejects the removed exports (`Suspense`, `Index`, `createResource`, `onMount`, `mergeProps`) with a clearer message than a linter could give.

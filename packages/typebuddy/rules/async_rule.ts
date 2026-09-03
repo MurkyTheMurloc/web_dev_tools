@@ -42,7 +42,7 @@ function getProgram(node: AstNode): AstNode | null {
 }
 
 function isIdentifierNamed(node: unknown, name: string): boolean {
-    return isNode(node) && node.type === "Identifier" && node.name === name;
+    return isNode(node) && node.type === "Identifier" && node["name"] === name;
 }
 
 function isImportDeclaration(node: unknown): node is AstNode {
@@ -56,9 +56,9 @@ function getStringLiteralValue(node: unknown): string | null {
 
     if (
         (node.type === "Literal" || node.type === "StringLiteral") &&
-        typeof node.value === "string"
+        typeof node["value"] === "string"
     ) {
-        return node.value;
+        return node["value"];
     }
 
     return null;
@@ -79,24 +79,24 @@ function hasTypeBuddyHelperImport(program: AstNode, helperName: "err") {
         }
 
         if (
-            getStringLiteralValue(statement.source) !== "@murky-web/typebuddy"
+            getStringLiteralValue(statement["source"]) !== "@murky-web/typebuddy"
         ) {
             return false;
         }
 
-        if (statement.importKind === "type") {
+        if (statement["importKind"] === "type") {
             return false;
         }
 
-        const specifiers = Array.isArray(statement.specifiers)
-            ? statement.specifiers
+        const specifiers = Array.isArray(statement["specifiers"])
+            ? statement["specifiers"]
             : [];
 
         return specifiers.some((specifier) => {
             return (
                 isNode(specifier) &&
                 specifier.type === "ImportSpecifier" &&
-                isIdentifierNamed(specifier.local, helperName)
+                isIdentifierNamed(specifier["local"], helperName)
             );
         });
     });
@@ -136,7 +136,7 @@ function isCallArgumentCallback(node: AstNode): boolean {
         return false;
     }
 
-    return Array.isArray(parent.arguments) && parent.arguments.includes(node);
+    return Array.isArray(parent["arguments"]) && parent["arguments"].includes(node);
 }
 
 const rule = {
@@ -174,7 +174,9 @@ const rule = {
 
         function getIndentation(node: AstNode): string {
             const lines = sourceCode.getText(node).split("\n");
-            const firstLine = lines[0];
+            // `split` always yields at least one element, but
+            // `noUncheckedIndexedAccess` cannot know that.
+            const firstLine = lines[0] ?? "";
             const match = /^\s*/.exec(firstLine);
             return match ? match[0] : "";
         }

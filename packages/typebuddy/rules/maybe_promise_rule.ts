@@ -29,11 +29,11 @@ function isNode(value: unknown): value is AstNode {
 }
 
 function isAsyncFunction(node: AstNode): boolean {
-    return node.async === true;
+    return node["async"] === true;
 }
 
 function hasTypeParameters(value: unknown): value is { params: unknown[] } {
-    return isNode(value) && Array.isArray(value.params);
+    return isNode(value) && Array.isArray(value["params"]);
 }
 
 function isCallArgumentCallback(node: AstNode): boolean {
@@ -46,11 +46,11 @@ function isCallArgumentCallback(node: AstNode): boolean {
         return false;
     }
 
-    return Array.isArray(parent.arguments) && parent.arguments.includes(node);
+    return Array.isArray(parent["arguments"]) && parent["arguments"].includes(node);
 }
 
 function isIdentifierNamed(node: unknown, name: string): boolean {
-    return isNode(node) && node.type === "Identifier" && node.name === name;
+    return isNode(node) && node.type === "Identifier" && node["name"] === name;
 }
 
 function getProgram(node: AstNode): AstNode | null {
@@ -74,27 +74,27 @@ function getStringLiteralValue(node: unknown): string | null {
 
     if (
         (node.type === "Literal" || node.type === "StringLiteral") &&
-        typeof node.value === "string"
+        typeof node["value"] === "string"
     ) {
-        return node.value;
+        return node["value"];
     }
 
     return null;
 }
 
 function getProgramBody(node: AstNode): AstNode[] {
-    if (!Array.isArray(node.body)) {
+    if (!Array.isArray(node["body"])) {
         return [];
     }
 
-    return node.body.filter(isNode);
+    return node["body"].filter(isNode);
 }
 
 function isResultHelperCall(node: unknown, name: "ok" | "err"): boolean {
     return (
         isNode(node) &&
         node.type === "CallExpression" &&
-        isIdentifierNamed(node.callee, name)
+        isIdentifierNamed(node["callee"], name)
     );
 }
 
@@ -102,19 +102,19 @@ function hasIsErrorFlag(node: unknown, expected: boolean): boolean {
     if (
         !isNode(node) ||
         node.type !== "ObjectExpression" ||
-        !Array.isArray(node.properties)
+        !Array.isArray(node["properties"])
     ) {
         return false;
     }
 
-    return node.properties.some((property) => {
+    return node["properties"].some((property) => {
         return (
             isNode(property) &&
             property.type === "Property" &&
-            isIdentifierNamed(property.key, "isError") &&
-            isNode(property.value) &&
-            property.value.type === "Literal" &&
-            property.value.value === expected
+            isIdentifierNamed(property["key"], "isError") &&
+            isNode(property["value"]) &&
+            property["value"].type === "Literal" &&
+            property["value"]["value"] === expected
         );
     });
 }
@@ -126,19 +126,19 @@ function getObjectPropertyValue(
     if (
         !isNode(node) ||
         node.type !== "ObjectExpression" ||
-        !Array.isArray(node.properties)
+        !Array.isArray(node["properties"])
     ) {
         return null;
     }
 
-    for (const property of node.properties) {
+    for (const property of node["properties"]) {
         if (
             isNode(property) &&
             property.type === "Property" &&
-            isIdentifierNamed(property.key, propertyName) &&
-            isNode(property.value)
+            isIdentifierNamed(property["key"], propertyName) &&
+            isNode(property["value"])
         ) {
-            return property.value;
+            return property["value"];
         }
     }
 
@@ -146,11 +146,11 @@ function getObjectPropertyValue(
 }
 
 function isBooleanLiteral(node: unknown, expected: boolean): boolean {
-    return isNode(node) && node.type === "Literal" && node.value === expected;
+    return isNode(node) && node.type === "Literal" && node["value"] === expected;
 }
 
 function isNullLiteral(node: unknown): boolean {
-    return isNode(node) && node.type === "Literal" && node.value === null;
+    return isNode(node) && node.type === "Literal" && node["value"] === null;
 }
 
 function hasTypeBuddyHelperImport(program: AstNode, helperName: "ok" | "err") {
@@ -160,24 +160,24 @@ function hasTypeBuddyHelperImport(program: AstNode, helperName: "ok" | "err") {
         }
 
         if (
-            getStringLiteralValue(statement.source) !== "@murky-web/typebuddy"
+            getStringLiteralValue(statement["source"]) !== "@murky-web/typebuddy"
         ) {
             return false;
         }
 
-        if (statement.importKind === "type") {
+        if (statement["importKind"] === "type") {
             return false;
         }
 
-        const specifiers = Array.isArray(statement.specifiers)
-            ? statement.specifiers
+        const specifiers = Array.isArray(statement["specifiers"])
+            ? statement["specifiers"]
             : [];
 
         return specifiers.some((specifier) => {
             return (
                 isNode(specifier) &&
                 specifier.type === "ImportSpecifier" &&
-                isIdentifierNamed(specifier.local, helperName)
+                isIdentifierNamed(specifier["local"], helperName)
             );
         });
     });
@@ -190,15 +190,15 @@ function getTypeBuddyImportInsertRange(
     const imports = body.filter(isImportDeclaration);
     const anchor = imports.at(-1) ?? body[0] ?? program;
 
-    if (!Array.isArray(anchor.range) || anchor.range.length < 2) {
+    if (!Array.isArray(anchor["range"]) || anchor["range"].length < 2) {
         return null;
     }
 
     if (imports.length > 0) {
-        return [anchor.range[1], anchor.range[1]];
+        return [anchor["range"][1], anchor["range"][1]];
     }
 
-    return [anchor.range[0], anchor.range[0]];
+    return [anchor["range"][0], anchor["range"][0]];
 }
 
 const rule = {
@@ -211,14 +211,14 @@ const rule = {
         }
 
         function getTypeName(node: AstNode): string | null {
-            const typeName = node.typeName;
+            const typeName = node["typeName"];
             if (!isNode(typeName) || typeName.type !== "Identifier")
                 return null;
-            return typeof typeName.name === "string" ? typeName.name : null;
+            return typeof typeName["name"] === "string" ? typeName["name"] : null;
         }
 
         function getTypeArgument(node: AstNode): AstNode | null {
-            const typeArguments = node.typeArguments;
+            const typeArguments = node["typeArguments"];
             if (!hasTypeParameters(typeArguments)) return null;
             const [firstParam] = typeArguments.params;
             if (!isNode(firstParam)) return null;
@@ -262,13 +262,13 @@ const rule = {
         function checkReturnType(node: AstNode) {
             if (!isAsyncFunction(node)) return;
             if (isCallArgumentCallback(node)) return;
-            if (!isNode(node.returnType)) return;
+            if (!isNode(node["returnType"])) return;
 
-            const typeAnnotation = node.returnType.typeAnnotation;
+            const typeAnnotation = node["returnType"]["typeAnnotation"];
             if (!isTypeReference(typeAnnotation)) return;
             if (getTypeName(typeAnnotation) !== "Promise") return;
 
-            const typeName = typeAnnotation.typeName;
+            const typeName = typeAnnotation["typeName"];
             context.report({
                 node: typeName,
                 messageId: "replaceWithMaybePromise",
@@ -285,7 +285,7 @@ const rule = {
         ) {
             if (!isAsync) return;
 
-            const argument = node.argument;
+            const argument = node["argument"];
             if (!isNode(argument)) {
                 if (returnType?.type === "TSVoidKeyword") {
                     context.report({
@@ -308,8 +308,8 @@ const rule = {
 
             if (
                 argument.type === "Identifier" &&
-                (argument.name === "VOID_PROMISE" ||
-                    argument.name === "FAILED_PROMISE")
+                (argument["name"] === "VOID_PROMISE" ||
+                    argument["name"] === "FAILED_PROMISE")
             ) {
                 return;
             }
@@ -389,7 +389,7 @@ const rule = {
                     parent.type === "FunctionExpression" ||
                     parent.type === "ArrowFunctionExpression"
                 ) {
-                    isAsync = parent.async === true;
+                    isAsync = parent["async"] === true;
                     parentFunction = parent;
                     break;
                 }
@@ -400,16 +400,16 @@ const rule = {
             if (isCallArgumentCallback(parentFunction)) return;
 
             let returnType: AstNode | null = null;
-            if (isNode(parentFunction.returnType)) {
-                const typeAnnotation = parentFunction.returnType.typeAnnotation;
+            if (isNode(parentFunction["returnType"])) {
+                const typeAnnotation = parentFunction["returnType"]["typeAnnotation"];
                 if (isTypeReference(typeAnnotation)) {
                     returnType = getPromiseTypeArgument(typeAnnotation);
                 }
             }
 
             const blockBody =
-                isNode(node.block) && Array.isArray(node.block.body)
-                    ? node.block.body
+                isNode(node["block"]) && Array.isArray(node["block"]["body"])
+                    ? node["block"]["body"]
                     : [];
             for (const statement of blockBody) {
                 if (isNode(statement) && statement.type === "ReturnStatement") {
@@ -417,15 +417,15 @@ const rule = {
                 }
             }
 
-            if (!isNode(node.handler) || !isNode(node.handler.body)) return;
-            const catchBody = Array.isArray(node.handler.body.body)
-                ? node.handler.body.body.filter(isNode)
+            if (!isNode(node["handler"]) || !isNode(node["handler"]["body"])) return;
+            const catchBody = Array.isArray(node["handler"]["body"]["body"])
+                ? node["handler"]["body"]["body"].filter(isNode)
                 : [];
 
             for (const statement of catchBody) {
                 if (
                     statement.type === "ReturnStatement" &&
-                    isNode(statement.argument)
+                    isNode(statement["argument"])
                 ) {
                     wrapReturnValue(statement, isAsync, returnType);
                 }
@@ -434,23 +434,23 @@ const rule = {
             const hasCorrectReturn = catchBody.some(
                 (statement) =>
                     statement.type === "ReturnStatement" &&
-                    isNode(statement.argument) &&
-                    ((statement.argument.type === "Identifier" &&
-                        statement.argument.name === "FAILED_PROMISE") ||
-                        isResultHelperCall(statement.argument, "err") ||
-                        hasIsErrorFlag(statement.argument, true)),
+                    isNode(statement["argument"]) &&
+                    ((statement["argument"].type === "Identifier" &&
+                        statement["argument"]["name"] === "FAILED_PROMISE") ||
+                        isResultHelperCall(statement["argument"], "err") ||
+                        hasIsErrorFlag(statement["argument"], true)),
             );
 
             if (!hasCorrectReturn) {
                 context.report({
-                    node: node.handler,
+                    node: node["handler"],
                     messageId: "returnFailedPromise",
                     fix(fixer) {
                         const lastStatement = catchBody.at(-1);
                         if (
                             lastStatement?.type === "ReturnStatement" &&
-                            isNode(lastStatement.argument) &&
-                            lastStatement.argument.type === "ObjectExpression"
+                            isNode(lastStatement["argument"]) &&
+                            lastStatement["argument"].type === "ObjectExpression"
                         ) {
                             return [
                                 ...ensureResultHelperImportFixes(
@@ -465,15 +465,15 @@ const rule = {
                             ];
                         }
 
-                        const handler = node.handler;
+                        const handler = node["handler"];
                         if (!isNode(handler)) {
                             return null;
                         }
 
-                        const bodyRange = handler.body;
+                        const bodyRange = handler["body"];
                         if (
                             !isNode(bodyRange) ||
-                            !Array.isArray(bodyRange.range)
+                            !Array.isArray(bodyRange["range"])
                         ) {
                             return null;
                         }
@@ -486,8 +486,8 @@ const rule = {
                             ),
                             fixer.insertTextBeforeRange(
                                 [
-                                    bodyRange.range[1] - 1,
-                                    bodyRange.range[1] - 1,
+                                    bodyRange["range"][1] - 1,
+                                    bodyRange["range"][1] - 1,
                                 ],
                                 "return err(); ",
                             ),

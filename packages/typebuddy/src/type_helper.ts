@@ -335,7 +335,7 @@ function isInstanceOf<T>(
  * @returns {Array} Keys of object.
  */
 function getKeys<T extends Record<string, unknown>>(object: T): (keyof T)[] {
-	return Object.keys(object) as (keyof T)[];
+	return Object.keys(object);
 }
 
 /**
@@ -611,20 +611,20 @@ function parseDomainName(url: string, defaultValue?: string): Optional<string> {
 		urlCandidate = `https://${normalizedValue}`;
 	}
 
-	let hostname = "";
+	// Everything that depends on a parseable URL stays inside the `try`, so
+	// there is no binding that has to be declared before it can be assigned.
 	try {
-		({ hostname } = new URL(urlCandidate));
+		const { hostname } = new URL(urlCandidate);
+		const normalizedHostname = hostname.replace(/^www\d?\./i, "");
+		const [domainName] = normalizedHostname.split(".");
+		if (domainName === undefined || domainName === "") {
+			return defaultValue;
+		}
+
+		return domainName;
 	} catch {
 		return defaultValue;
 	}
-
-	const normalizedHostname = hostname.replace(/^www\d?\./i, "");
-	const [domainName] = normalizedHostname.split(".");
-	if (!domainName) {
-		return defaultValue;
-	}
-
-	return domainName;
 }
 
 export {

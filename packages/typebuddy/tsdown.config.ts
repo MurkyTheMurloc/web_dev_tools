@@ -21,6 +21,10 @@ const config = [
     },
     clean: false,
     dts: false,
+    // tsdown defaults `fixedExtension` to true for platform "node", which emits
+    // .mjs. The package is "type": "module", so .js is already ESM and matches
+    // what the exports map points at.
+    fixedExtension: false,
     format: "esm",
     outDir: "dist",
     platform: "node",

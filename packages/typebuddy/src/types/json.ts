@@ -2,7 +2,7 @@ type UnknownFunction = (...args: readonly unknown[]) => unknown;
 
 type JsonifiedValue<T> = T extends string | number | null | boolean
   ? T
-  : T extends { toJSON(): infer R }
+  : T extends { toJSON: () => infer R }
   ? R
   : T extends undefined | UnknownFunction
   ? never
