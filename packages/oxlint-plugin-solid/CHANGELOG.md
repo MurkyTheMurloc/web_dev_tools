@@ -20,20 +20,3 @@
 
 This file exists so `changesets/action` can open a package changelog when it
 creates the release PR branch.
-
-## 0.1.3
-
-Reconstructed entry. 0.1.1, 0.1.2 and 0.1.3 were published to npm on
-2026-04-08 from a working copy that was never committed, so the repository
-sat at 0.1.0 while the registry was three releases ahead.
-
-`src/rules/prefer_arrow_components.mjs` has been restored from the published
-0.1.3 tarball and the version bumped to match. The recovered source is
-byte-identical to what npm serves. Changes it contains, relative to 0.1.0:
-
-- `prefer-arrow-components` recognises a component by a `JSX.Element` return
-  type annotation, not only by an exported PascalCase name.
-- Destructured props (`ObjectPattern`) are supported where only a plain
-  identifier parameter was handled before.
-- The export status of the declaration is threaded through to fix generation.
-
