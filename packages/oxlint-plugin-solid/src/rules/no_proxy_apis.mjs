@@ -7,6 +7,13 @@ import {
     trace,
 } from "../utils.mjs";
 const createRule = ESLintUtils.RuleCreator.withoutDocs;
+
+// Store APIs that hand back a Proxy. Solid 2.0 exports these from `solid-js`.
+const PROXY_BACKED_STORE_APIS = new Set([
+    "createStore",
+    "createProjection",
+    "createOptimisticStore",
+]);
 export default createRule({
     meta: {
         type: "problem",
@@ -36,11 +43,27 @@ export default createRule({
             ImportDeclaration(node) {
                 handleImportDeclaration(node); // track import aliases
                 const source = node.source.value;
+                // Solid 1.x isolated the Proxy-backed store APIs behind
+                // `solid-js/store`, so the import path alone was the signal.
+                // Solid 2.0 moved them into `solid-js`, which every file
+                // imports, so match the specifier names instead.
                 if (source === "solid-js/store") {
-                    context.report({
-                        node,
-                        messageId: "noStore",
-                    });
+                    context.report({ node, messageId: "noStore" });
+                    return;
+                }
+                if (source !== "solid-js") {
+                    return;
+                }
+                for (const specifier of node.specifiers) {
+                    if (
+                        specifier.type === "ImportSpecifier" &&
+                        PROXY_BACKED_STORE_APIS.has(specifier.imported.name)
+                    ) {
+                        context.report({
+                            node: specifier,
+                            messageId: "noStore",
+                        });
+                    }
                 }
             },
             "JSXSpreadAttribute MemberExpression"(node) {
@@ -51,7 +74,7 @@ export default createRule({
             },
             CallExpression(node) {
                 if (node.callee.type === "Identifier") {
-                    if (matchImport("mergeProps", node.callee.name)) {
+                    if (matchImport(["merge", "mergeProps"], node.callee.name)) {
                         node.arguments
                             .filter((arg) => {
                                 if (arg.type === "SpreadElement") return true;

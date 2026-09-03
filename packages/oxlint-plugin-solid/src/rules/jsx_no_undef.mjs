@@ -9,7 +9,18 @@ import {
 } from "../utils.mjs";
 const createRule = ESLintUtils.RuleCreator.withoutDocs;
 // Currently all of the control flow components are from 'solid-js'.
-const AUTO_COMPONENTS = ["Show", "For", "Index", "Switch", "Match"];
+// Solid 2.0 dropped `Index` (use `<For keyed={false}>`) and renamed the
+// async/error boundaries. All of these are exported from `solid-js`.
+const AUTO_COMPONENTS = [
+    "Show",
+    "For",
+    "Switch",
+    "Match",
+    "Loading",
+    "Errored",
+    "Repeat",
+    "Reveal",
+];
 const SOURCE_MODULE = "solid-js";
 export default createRule({
     meta: {

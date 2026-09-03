@@ -21,6 +21,11 @@ import {
 } from "../utils.mjs";
 const { getFunctionHeadLocation } = ASTUtils;
 const createRule = ESLintUtils.RuleCreator.withoutDocs;
+
+// Solid 2.0 removed `createResource`, `createMutable`, `indexArray` and
+// `<Index>`. Their branches below are kept structurally but matched against
+// `__removed_*` names so they can never fire; delete them once no Solid 1
+// code is linted with this plugin any more.
 class ScopeStackItem {
     /** the node for the current scope, or program if global scope */
     node;
@@ -624,7 +629,7 @@ export default createRule({
             ) {
                 if (
                     node.callee.type === "Identifier" &&
-                    matchImport(["batch", "produce"], node.callee.name)
+                    matchImport(["flush"], node.callee.name)
                 ) {
                     // These Solid APIs take callbacks that run in the current scope
                     scopeStack.syncCallbacks.add(node.arguments[0]);
@@ -673,7 +678,7 @@ export default createRule({
                         }
                     }
                 } else if (
-                    matchImport(["mapArray", "indexArray"], node.callee.name)
+                    matchImport(["mapArray", "repeat"], node.callee.name)
                 ) {
                     const arg1 = node.arguments[1];
                     if (isFunctionNode(arg1)) {
@@ -696,7 +701,7 @@ export default createRule({
             ) {
                 const { callee } = init;
                 if (
-                    matchImport(["createSignal", "useTransition"], callee.name)
+                    matchImport(["createSignal"], callee.name)
                 ) {
                     const signal = id && getNthDestructuredVar(id, 0, context);
                     if (signal) {
@@ -705,7 +710,7 @@ export default createRule({
                         warnShouldDestructure(id ?? init, "first");
                     }
                 } else if (
-                    matchImport(["createMemo", "createSelector"], callee.name)
+                    matchImport(["createMemo", "createProjection"], callee.name)
                 ) {
                     const memo = id && getReturnedVar(id, context);
                     // memos act like signals
@@ -722,7 +727,7 @@ export default createRule({
                     } else {
                         warnShouldDestructure(id ?? init, "first");
                     }
-                } else if (matchImport("mergeProps", callee.name)) {
+                } else if (matchImport("merge", callee.name)) {
                     const merged = id && getReturnedVar(id, context);
                     if (merged) {
                         scopeStack.pushProps(merged, currentScope().node);
@@ -754,7 +759,7 @@ export default createRule({
                             scopeStack.pushProps(vars, currentScope().node);
                         }
                     }
-                } else if (matchImport("createResource", callee.name)) {
+                } else if (matchImport("__removed_createResource", callee.name)) {
                     // createResource return value has reactive .loading and .error
                     const resourceReturn =
                         id && getNthDestructuredVar(id, 0, context);
@@ -764,7 +769,7 @@ export default createRule({
                             currentScope().node,
                         );
                     }
-                } else if (matchImport("createMutable", callee.name)) {
+                } else if (matchImport("__removed_createMutable", callee.name)) {
                     const mutable = id && getReturnedVar(id, context);
                     if (mutable) {
                         scopeStack.pushProps(mutable, currentScope().node);
@@ -784,7 +789,7 @@ export default createRule({
                             scopeStack.pushSignal(indexSignal);
                         }
                     }
-                } else if (matchImport("indexArray", callee.name)) {
+                } else if (matchImport("__removed_indexArray", callee.name)) {
                     const arg1 = init.arguments[1];
                     if (
                         isFunctionNode(arg1) &&
@@ -958,25 +963,25 @@ export default createRule({
                                 "children",
                                 "createEffect",
                                 "createRenderEffect",
-                                "createDeferred",
-                                "createComputed",
-                                "createSelector",
+                                "createReaction",
+                                "createTrackedEffect",
+                                "createProjection",
                                 "untrack",
                                 "mapArray",
-                                "indexArray",
-                                "observable",
+                                "isPending",
+                                "latest",
+                                "resolve",
                             ],
                             callee.name,
                         ) ||
-                        (matchImport("createResource", callee.name) &&
-                            node.arguments.length >= 2)
+                        false /* Solid 2.0 removed createResource */
                     ) {
                         // createEffect, createMemo, etc. fn arg, and createResource optional
                         // `source` first argument may be a signal
                         pushTrackedScope(arg0, "function");
                     } else if (
                         matchImport(
-                            ["onMount", "onCleanup", "onError"],
+                            ["onSettled", "onCleanup"],
                             callee.name,
                         ) ||
                         [
@@ -1259,7 +1264,7 @@ export default createRule({
                                 );
                             }
                         } else if (
-                            matchImport("Index", tagName) &&
+                            matchImport("__removed_Index", tagName) &&
                             node.params.length >= 1 &&
                             node.params[0].type === "Identifier"
                         ) {

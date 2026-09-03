@@ -27,6 +27,9 @@ function hasJsxElementReturnType(node) {
     ) return true;
     // JSX.Element via plain identifier (rare but possible)
     if (rt.type === "TSTypeReference" && rt.typeName?.name === "JSXElement") return true;
+    // Solid 2.0: `Element` from solid-js is the renderer-neutral return type,
+    // and `JSX` now lives in the renderer package.
+    if (rt.type === "TSTypeReference" && rt.typeName?.name === "Element") return true;
     return false;
 }
 

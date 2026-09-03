@@ -17,7 +17,7 @@
         "solid/no-react-specific-props": "error",
         "solid/no-unknown-namespaces": "error",
         "solid/prefer-arrow-components": "error",
-        "solid/prefer-classlist": "error",
+        "solid/prefer-class-object": "error",
         "solid/prefer-for": "error",
         "solid/prefer-show": "error",
         "solid/reactivity": "error",

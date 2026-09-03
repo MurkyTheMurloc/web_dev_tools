@@ -13,7 +13,7 @@ import noReactDepsRule from "./rules/no_react_deps.mjs";
 import { noReactSpecificPropsRule } from "./rules/no_react_specific_props.mjs";
 import noUnknownNamespacesRule from "./rules/no_unknown_namespaces.mjs";
 import { preferArrowComponentsRule } from "./rules/prefer_arrow_components.mjs";
-import preferClasslistRule from "./rules/prefer_classlist.mjs";
+import preferClassObjectRule from "./rules/prefer_class_object.mjs";
 import preferForRule from "./rules/prefer_for.mjs";
 import preferShowRule from "./rules/prefer_show.mjs";
 import reactivityRule from "./rules/reactivity.mjs";
@@ -42,7 +42,7 @@ const extendedPlugin = {
         "no-react-specific-props": noReactSpecificPropsRule,
         "no-unknown-namespaces": noUnknownNamespacesRule,
         "prefer-arrow-components": preferArrowComponentsRule,
-        "prefer-classlist": preferClasslistRule,
+        "prefer-class-object": preferClassObjectRule,
         "prefer-for": preferForRule,
         "prefer-show": preferShowRule,
         reactivity: reactivityRule,

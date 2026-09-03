@@ -3,120 +3,107 @@ import { ESLintUtils } from "@typescript-eslint/utils";
 import { getSourceCode } from "../compat.mjs";
 import { appendImports, insertImports, removeSpecifier } from "../utils.mjs";
 const createRule = ESLintUtils.RuleCreator.withoutDocs;
-// Set up map of imports to module
+// Solid 2.0 moved the renderers into `@solidjs/*` packages and pulled the store
+// APIs into the core. Symbols that are legitimately exported from more than one
+// package (the control-flow components, `ComponentProps`) are deliberately left
+// out of these maps: there is no single correct source to point at.
 const primitiveMap = new Map();
 for (const primitive of [
-    "createSignal",
+    "action",
+    "affects",
+    "children",
+    "createContext",
     "createEffect",
     "createMemo",
-    "createResource",
-    "onMount",
-    "onCleanup",
-    "onError",
-    "untrack",
-    "batch",
-    "on",
-    "createRoot",
-    "getOwner",
-    "runWithOwner",
-    "mergeProps",
-    "splitProps",
-    "useTransition",
-    "observable",
-    "from",
-    "mapArray",
-    "indexArray",
-    "createContext",
-    "useContext",
-    "children",
-    "lazy",
-    "createUniqueId",
-    "createDeferred",
-    "createRenderEffect",
-    "createComputed",
+    "createOptimistic",
+    "createOptimisticStore",
+    "createProjection",
     "createReaction",
-    "createSelector",
+    "createRenderEffect",
+    "createRoot",
+    "createSignal",
+    "createStore",
+    "createUniqueId",
+    "deep",
     "DEV",
-    "For",
-    "Show",
-    "Switch",
-    "Match",
-    "Index",
-    "ErrorBoundary",
-    "Suspense",
-    "SuspenseList",
+    "flush",
+    "getObserver",
+    "getOwner",
+    "isEqual",
+    "isPending",
+    "latest",
+    "lazy",
+    "mapArray",
+    "merge",
+    "omit",
+    "onCleanup",
+    "onSettled",
+    "reconcile",
+    "refresh",
+    "resolve",
+    "runWithOwner",
+    "snapshot",
+    "storePath",
+    "untrack",
+    "until",
+    "useContext",
 ]) {
     primitiveMap.set(primitive, "solid-js");
 }
 for (const primitive of [
-    "Portal",
-    "render",
-    "hydrate",
-    "renderToString",
-    "renderToStream",
-    "isServer",
-    "renderToStringAsync",
-    "generateHydrationScript",
-    "HydrationScript",
+    "clientOnly",
+    "delegateEvents",
+    "dynamic",
     "Dynamic",
+    "generateHydrationScript",
+    "getRequestEvent",
+    "httpHeader",
+    "httpStatus",
+    "hydrate",
+    "HydrationScript",
+    "isServer",
+    "Portal",
+    "redirect",
+    "reload",
+    "render",
+    "renderToStream",
+    "renderToString",
 ]) {
-    primitiveMap.set(primitive, "solid-js/web");
-}
-for (const primitive of [
-    "createStore",
-    "produce",
-    "reconcile",
-    "unwrap",
-    "createMutable",
-    "modifyMutable",
-]) {
-    primitiveMap.set(primitive, "solid-js/store");
+    primitiveMap.set(primitive, "@solidjs/web");
 }
 // Set up map of type imports to module
 const typeMap = new Map();
 for (const type of [
-    "Signal",
     "Accessor",
-    "Setter",
-    "Resource",
-    "ResourceActions",
-    "ResourceOptions",
-    "ResourceReturn",
-    "ResourceFetcher",
-    "InitializedResourceReturn",
+    "ChildrenReturn",
     "Component",
-    "VoidProps",
-    "VoidComponent",
-    "ParentProps",
-    "ParentComponent",
-    "FlowProps",
-    "FlowComponent",
-    "ValidComponent",
-    "ComponentProps",
-    "Ref",
-    "MergeProps",
-    "SplitPrips",
     "Context",
-    "JSX",
-    "ResolvedChildren",
+    "Element",
+    "FlowComponent",
+    "FlowProps",
     "MatchProps",
+    "ParentComponent",
+    "ParentProps",
+    "Ref",
+    "ResolvedChildren",
+    "Signal",
+    "ValidComponent",
+    "VoidComponent",
+    "VoidProps",
 ]) {
     typeMap.set(type, "solid-js");
 }
-for (const type of [/* "JSX", */ "MountableElement"]) {
-    typeMap.set(type, "solid-js/web");
+for (const type of ["ClassValue", "IntrinsicElement", "JSX", "RequestEvent"]) {
+    typeMap.set(type, "@solidjs/web");
 }
-for (const type of ["StoreNode", "Store", "SetStoreFunction"]) {
-    typeMap.set(type, "solid-js/store");
-}
-const sourceRegex = /^solid-js(?:\/web|\/store)?$/;
+const sourceRegex = /^(?:solid-js|@solidjs\/(?:web|h|html|universal))$/;
 const isSource = (source) => sourceRegex.test(source);
 export default createRule({
     meta: {
         type: "suggestion",
         docs: {
             description:
-                'Enforce consistent imports from "solid-js", "solid-js/web", and "solid-js/store".',
+                'Enforce consistent imports from "solid-js" and the `@solidjs/*` renderer packages.',
             url: "https://github.com/solidjs-community/eslint-plugin-solid/blob/main/packages/eslint-plugin-solid/docs/imports.md",
         },
         fixable: "code",

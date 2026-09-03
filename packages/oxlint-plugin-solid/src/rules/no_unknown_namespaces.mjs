@@ -2,16 +2,28 @@ import { ESLintUtils } from "@typescript-eslint/utils";
 
 import { isDOMElementName } from "../utils.mjs";
 const createRule = ESLintUtils.RuleCreator.withoutDocs;
-const knownNamespaces = ["on", "oncapture", "use", "prop", "attr", "bool"];
-const styleNamespaces = ["style", "class"];
-const otherNamespaces = ["xmlns", "xlink"];
+// Solid 2.0 removed every Solid-specific JSX namespace. What is left are the
+// XML namespaces the DOM itself defines.
+const xmlNamespaces = ["xmlns", "xlink"];
+// Removed namespace -> what to write instead.
+const replacements = {
+    attr: "the standard attribute",
+    bool: "the standard attribute (booleans are presence/absence)",
+    class: "the `class` prop with an object or array value",
+    on: "a camel-case event prop such as `onClick`, or a ref callback with `addEventListener` when listener options are needed",
+    oncapture:
+        "a camel-case event prop, or a ref callback with `addEventListener` when capture is needed",
+    prop: "the standard property",
+    style: "the `style` prop with an object value",
+    use: "a ref callback or directive factory, composing with a ref array",
+};
 export default createRule({
     meta: {
         type: "problem",
         docs: {
             description:
-                "Enforce using only Solid-specific namespaced attribute names (i.e. `'on:'` in `<div on:click={...} />`).",
-            url: "https://github.com/solidjs-community/eslint-plugin-solid/blob/main/packages/eslint-plugin-solid/docs/no-unknown-namespaces.md",
+                "Disallow Solid's removed JSX attribute namespaces. Solid 2.0 dropped `on:`, `oncapture:`, `use:`, `prop:`, `attr:`, `bool:`, `class:` and `style:`.",
+            url: "https://docs.solidjs.com/",
         },
         hasSuggestions: true,
         schema: [
@@ -34,10 +46,9 @@ export default createRule({
             },
         ],
         messages: {
-            unknown: `'{{namespace}}:' is not one of Solid's special prefixes for JSX attributes (${knownNamespaces
-                .map((n) => `'${n}:'`)
-                .join(", ")}).`,
-            style: "Using the '{{namespace}}:' special prefix is potentially confusing, prefer the '{{namespace}}' prop instead.",
+            removed: "'{{namespace}}:' was removed in Solid 2.0. Use {{replacement}} instead.",
+            unknown:
+                "'{{namespace}}:' is not a namespace Solid understands. Solid 2.0 has no special JSX prefixes.",
             component: "Namespaced props have no effect on components.",
             "component-suggest":
                 "Replace {{namespace}}:{{name}} with {{name}}.",
@@ -74,26 +85,25 @@ export default createRule({
                 }
                 const namespace = node.namespace?.name;
                 if (
-                    !(
-                        knownNamespaces.includes(namespace) ||
-                        otherNamespaces.includes(namespace) ||
-                        explicitlyAllowedNamespaces?.includes(namespace)
-                    )
+                    xmlNamespaces.includes(namespace) ||
+                    explicitlyAllowedNamespaces?.includes(namespace)
                 ) {
-                    if (styleNamespaces.includes(namespace)) {
-                        context.report({
-                            node,
-                            messageId: "style",
-                            data: { namespace },
-                        });
-                    } else {
-                        context.report({
-                            node,
-                            messageId: "unknown",
-                            data: { namespace },
-                        });
-                    }
+                    return;
                 }
+                const replacement = replacements[namespace];
+                if (replacement) {
+                    context.report({
+                        node,
+                        messageId: "removed",
+                        data: { namespace, replacement },
+                    });
+                    return;
+                }
+                context.report({
+                    node,
+                    messageId: "unknown",
+                    data: { namespace },
+                });
             },
         };
     },

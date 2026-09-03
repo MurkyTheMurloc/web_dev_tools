@@ -17,7 +17,7 @@ export default createRule({
             preferFor:
                 "Use Solid's `<For />` component for efficiently rendering lists. Array#map causes DOM elements to be recreated.",
             preferForOrIndex:
-                "Use Solid's `<For />` component or `<Index />` component for rendering lists. Array#map causes DOM elements to be recreated.",
+                "Use Solid's `<For />` component for rendering lists (`keyed={false}` for the index-based form). Array#map causes DOM elements to be recreated.",
         },
     },
     defaultOptions: [],

@@ -14,7 +14,7 @@ const expectedRuleIds = Object.freeze([
     "no-react-specific-props",
     "no-unknown-namespaces",
     "prefer-arrow-components",
-    "prefer-classlist",
+    "prefer-class-object",
     "prefer-for",
     "prefer-show",
     "reactivity",
@@ -43,11 +43,9 @@ const ruleCases = Object.freeze([
         ruleId: "event-handlers",
     }),
     Object.freeze({
-        code: `import { createEffect } from "solid-js/web";
+        code: `import { render } from "solid-js";
 
-createEffect(() => {
-    return true;
-});
+render(() => <div />, document.body);
 `,
         ruleId: "imports",
     }),
@@ -152,7 +150,7 @@ export const View = () => {
     return <div class={cn({ red: true })}>Hello</div>;
 };
 `,
-        ruleId: "prefer-classlist",
+        ruleId: "prefer-class-object",
     }),
     Object.freeze({
         code: `export const View = (props) => {
@@ -210,7 +208,7 @@ const preferArrowFixCases = Object.freeze([
     Object.freeze({
         expectedFragment: "export const Leaf: Component<Props> = (props) => {",
         name: "uses Component for components without children",
-        source: `import type { JSX } from "solid-js";
+        source: `import type { JSX } from "@solidjs/web";
 
 type Props = {
     readonly name: string;
@@ -225,7 +223,7 @@ export function Leaf(props: Props): JSX.Element {
         expectedFragment:
             "export const Panel: ParentComponent<Props> = (props) => {",
         name: "uses ParentComponent for components with children",
-        source: `import type { JSX } from "solid-js";
+        source: `import type { JSX } from "@solidjs/web";
 
 type Props = {
     readonly title: string;

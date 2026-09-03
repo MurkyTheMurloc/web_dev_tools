@@ -104,6 +104,13 @@ export default createRule({
             } else {
                 yield fixer.replaceText(props, origProps);
             }
+            // KNOWN GAP (Solid 2.0): the fix below still emits
+            // `splitProps(mergeProps(...))`. `mergeProps` is now `merge`, and
+            // `splitProps(props, ["a"])` became `omit(props, "a")` — which
+            // returns the rest object instead of `[picked, rest]`. That is a
+            // change of shape, not a rename, so the generated code needs
+            // rewriting rather than renaming. The report is still correct;
+            // only the autofix produces Solid 1 code.
             const sourceCode = getSourceCode(context);
             const defaultsObjectString = () =>
                 propertyInfo

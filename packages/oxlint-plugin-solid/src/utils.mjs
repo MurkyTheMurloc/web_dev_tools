@@ -158,7 +158,10 @@ export function getCommentAfter(node, sourceCode) {
     });
 }
 
-export function trackImports(fromModule = /^solid-js(?:\/?|\b)/) {
+// Solid 2.0 split the runtime across packages: `solid-js` keeps the core and
+// the store APIs, while `@solidjs/web`, `@solidjs/h`, `@solidjs/html` and
+// `@solidjs/universal` own the renderers. Match both layouts.
+export function trackImports(fromModule = /^(?:solid-js|@solidjs\/[a-z-]+)(?:\/|$)/) {
     const importMap = new Map();
 
     function handleImportDeclaration(node) {

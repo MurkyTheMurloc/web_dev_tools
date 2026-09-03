@@ -114,7 +114,7 @@ export default createRule({
         ],
         messages: {
             "detected-attr":
-                'The {{name}} prop is named as an event handler (starts with "on"), but Solid knows its value ({{staticValue}}) is a string or number, so it will be treated as an attribute. If this is intentional, name this prop attr:{{name}}.',
+                'The {{name}} prop is named as an event handler (starts with "on"), but Solid knows its value ({{staticValue}}) is a string or number, so it will be treated as an attribute. If this is intentional, use the plain attribute name instead of an on-prefixed one.',
             naming: "The {{name}} prop is ambiguous. If it is an event handler, change it to {{handlerName}}. If it is an attribute, change it to {{attrName}}.",
             capitalization:
                 "The {{name}} prop should be renamed to {{fixedName}} for readability.",
