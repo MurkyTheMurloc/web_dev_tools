@@ -7,9 +7,12 @@
     "moduleDetection": "force",
     "types": [],
     "allowImportingTsExtensions": true,
-    // Inert without .tsx files, so it can live in the shared base.
+    // Inert without .tsx files, so it can live in the shared base. Solid 2.0
+    // moved JSX ownership out of `solid-js` into the renderer packages, and
+    // server-side rendering of Solid components uses the same renderer as the
+    // client -- so this belongs in the base rather than the client leaf.
     "jsx": "preserve",
-    "jsxImportSource": "solid-js",
+    "jsxImportSource": "@solidjs/web",
     "strict": true,
     "exactOptionalPropertyTypes": true,
     "noUncheckedIndexedAccess": true,
