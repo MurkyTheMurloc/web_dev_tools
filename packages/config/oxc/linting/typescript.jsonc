@@ -17,6 +17,7 @@
         "dot-notation": "error",
         "explicit-function-return-type": "error",
         "explicit-module-boundary-types": "error",
+        "method-signature-style": "error",
         "no-array-delete": "error",
         "no-base-to-string": "error",
         "no-confusing-non-null-assertion": "error",
