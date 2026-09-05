@@ -69,6 +69,7 @@
         "format": "oxfmt -c ../config/oxc/.oxfmtrc.jsonc src oxlint smoke tsdown.config.ts",
         "format:check": "oxfmt -c ../config/oxc/.oxfmtrc.jsonc --check src oxlint smoke tsdown.config.ts",
         "smoke:oxlint": "bun ./smoke/oxlint/run-smoke.ts",
+        "smoke:entries": "bun run build && bun ./smoke/entries/run.ts",
         "test": "vitest run",
         "typecheck": "tsc --project ./tsconfig.json --noEmit"
     },
