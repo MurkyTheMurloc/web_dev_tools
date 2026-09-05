@@ -3,6 +3,7 @@ const configPath = new URL("./.oxlintrc.jsonc", smokeDir);
 const violationsPath = new URL("./violations.ts", smokeDir);
 const asyncViolationsPath = new URL("./async-violations.ts", smokeDir);
 const frameworkCallbackPath = new URL("./framework-callback.ts", smokeDir);
+const deliberateThrowPath = new URL("./deliberate-throw.ts", smokeDir);
 
 const expectedRuleIds = [
     "typebuddy(prefer-optional)",
@@ -13,7 +14,7 @@ const expectedRuleIds = [
 ] as const;
 
 const result =
-    await Bun.$`oxlint -c ${configPath.pathname} ${violationsPath.pathname} ${asyncViolationsPath.pathname} ${frameworkCallbackPath.pathname}`
+    await Bun.$`oxlint -c ${configPath.pathname} ${violationsPath.pathname} ${asyncViolationsPath.pathname} ${frameworkCallbackPath.pathname} ${deliberateThrowPath.pathname}`
         .nothrow()
         .quiet();
 const output = `${result.stdout.toString()}${result.stderr.toString()}`;
@@ -49,6 +50,14 @@ if (detectedRuleHits !== expectedRuleIds.length) {
 if (output.includes(frameworkCallbackPath.pathname)) {
     console.error(
         "Expected framework callback smoke file to be ignored by async typebuddy rules.",
+    );
+    console.error(output);
+    process.exit(1);
+}
+
+if (output.includes(deliberateThrowPath.pathname)) {
+    console.error(
+        "Expected a function that throws to be ignored by async typebuddy rules: a deliberate throw is not a result waiting to be wrapped.",
     );
     console.error(output);
     process.exit(1);

@@ -1,3 +1,5 @@
+import { throwsDeliberately } from "./deliberate_throw.js";
+
 type AstNode = {
     type: string;
     body?: AstNode | AstNode[];
@@ -215,6 +217,9 @@ ${indent}}
 
             const body = Array.isArray(bodyNode.body) ? bodyNode.body : [];
             if (hasTryCatch(body)) return;
+            // A function that throws has already decided its failure is not a
+            // value. Wrapping it in try/catch would swallow that decision.
+            if (throwsDeliberately(bodyNode)) return;
 
             context.report({
                 node,

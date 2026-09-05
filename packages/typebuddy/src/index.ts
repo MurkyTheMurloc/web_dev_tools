@@ -10,6 +10,7 @@ import type {} from "../globals.js";
 export * from "./type_helper.js";
 
 export type {
+  AsyncResult,
   Failed,
   JsonifiedObject,
   JsonifiedValue,
@@ -20,6 +21,7 @@ export type {
   ResolveMaybe,
   ResolveNullable,
   ResolveOptional,
+  Result,
   Stringified,
   Success,
 } from "./types/index.js";
