@@ -1,3 +1,5 @@
+import { throwsDeliberately } from "./deliberate_throw.js";
+
 type AstNode = {
     type: string;
     parent?: AstNode;
@@ -262,6 +264,9 @@ const rule = {
         function checkReturnType(node: AstNode) {
             if (!isAsyncFunction(node)) return;
             if (isCallArgumentCallback(node)) return;
+            // Same exemption as `require-try-catch`: a deliberate throw is not a
+            // result waiting to be wrapped.
+            if (throwsDeliberately(node["body"])) return;
             if (!isNode(node["returnType"])) return;
 
             const typeAnnotation = node["returnType"]["typeAnnotation"];
@@ -398,6 +403,7 @@ const rule = {
 
             if (!isAsync || !parentFunction) return;
             if (isCallArgumentCallback(parentFunction)) return;
+            if (throwsDeliberately(parentFunction["body"])) return;
 
             let returnType: AstNode | null = null;
             if (isNode(parentFunction["returnType"])) {
