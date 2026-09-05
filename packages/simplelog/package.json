@@ -74,6 +74,7 @@
     },
     "devDependencies": {
         "@murky-web/config": "workspace:*",
+        "@opentelemetry/api": "^1.9.0",
         "@types/node": "^25.5.0",
         "hono": "^4.12.8"
     },
