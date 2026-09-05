@@ -1,5 +1,3 @@
-import { trace } from "@opentelemetry/api";
-
 const ANSI_RESET_COLOR = 0;
 const ANSI_GREEN = 32;
 const ANSI_YELLOW = 33;
@@ -537,6 +535,39 @@ function createPlainLogParts(
     };
 }
 
+/**
+ * Reads the active span, when something has registered a reader.
+ *
+ * `@opentelemetry/api` used to be imported at the top of this module for one
+ * call site. That made it unremovable for every consumer: the package registers
+ * itself on `globalThis`, so a bundler must treat importing it as a side effect
+ * and keep it even with `"sideEffects": false` and the option switched off. It
+ * cost ~7 kB in browser bundles that can never have an active span.
+ *
+ * The reader is injected instead. `@murky-web/simplelog/otel` provides one;
+ * nothing else in the package references OpenTelemetry, so it only ships where
+ * it is asked for.
+ */
+type SpanContextReader = () => OpenTelemetryContext;
+
+/**
+ * Stands in until `/otel` registers a real one. Identity doubles as the
+ * "nothing registered" check, which keeps the module free of a nullable.
+ *
+ * @returns {OpenTelemetryContext} Empty ids, the same value a disabled option
+ *   produces.
+ */
+const NO_SPAN_CONTEXT_READER: SpanContextReader = () => {
+    return EMPTY_OPEN_TELEMETRY_CONTEXT;
+};
+
+let spanContextReader: SpanContextReader = NO_SPAN_CONTEXT_READER;
+let missingReaderWarned = false;
+
+function setSpanContextReader(reader?: SpanContextReader): void {
+    spanContextReader = reader ?? NO_SPAN_CONTEXT_READER;
+}
+
 function resolveOpenTelemetryContext(
     includeOpenTelemetryContext: boolean,
 ): OpenTelemetryContext {
@@ -544,18 +575,20 @@ function resolveOpenTelemetryContext(
         return EMPTY_OPEN_TELEMETRY_CONTEXT;
     }
 
-    const activeSpan = trace.getActiveSpan();
-
-    if (typeof activeSpan === "undefined") {
+    if (spanContextReader === NO_SPAN_CONTEXT_READER) {
+        // Asking for span context without a reader used to work implicitly. Say so
+        // once rather than silently logging empty ids forever.
+        if (!missingReaderWarned) {
+            missingReaderWarned = true;
+            globalThis.console.warn(
+                "[simplelog] includeOpenTelemetryContext is on but no reader is registered. " +
+                    'Call enableOpenTelemetryContext() from "@murky-web/simplelog/otel" once at startup.',
+            );
+        }
         return EMPTY_OPEN_TELEMETRY_CONTEXT;
     }
 
-    const spanContext = activeSpan.spanContext();
-
-    return {
-        spanId: spanContext.spanId,
-        traceId: spanContext.traceId,
-    };
+    return spanContextReader();
 }
 
 function combineLogPayload(
@@ -833,8 +866,10 @@ class LoggerBase {
     }
 }
 
-export { LoggerBase, createLoggerConsole };
+export { LoggerBase, createLoggerConsole, setSpanContextReader };
 export type {
+    OpenTelemetryContext,
+    SpanContextReader,
     LogLevel,
     LoggerConsole,
     LoggerConstructor,

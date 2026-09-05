@@ -47,6 +47,10 @@
             "import": "./dist/logger.js",
             "types": "./dist/logger.d.ts"
         },
+        "./otel": {
+            "import": "./dist/otel.js",
+            "types": "./dist/otel.d.ts"
+        },
         "./web": {
             "import": "./dist/web_logger.js",
             "types": "./dist/web_logger.d.ts"
@@ -68,15 +72,18 @@
         "test": "vitest run",
         "typecheck": "tsc --project ./tsconfig.json --noEmit"
     },
-    "dependencies": {
-        "@opentelemetry/api": "^1.9.0"
-    },
     "devDependencies": {
         "@murky-web/config": "workspace:*",
         "@types/node": "^25.5.0",
         "hono": "^4.12.8"
     },
     "peerDependencies": {
+        "@opentelemetry/api": "^1.9.0",
         "hono": "^4.12.8"
+    },
+    "peerDependenciesMeta": {
+        "@opentelemetry/api": {
+            "optional": true
+        }
     }
 }
