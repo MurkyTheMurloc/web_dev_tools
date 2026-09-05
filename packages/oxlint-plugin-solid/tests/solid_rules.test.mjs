@@ -2,6 +2,11 @@ import { afterAll, beforeAll, describe, expect, test } from "bun:test";
 
 import { createLintHarness } from "./helpers.mjs";
 import {
+    READ_AFTER_GAP_MESSAGE,
+    reactivityAsyncReportingCases,
+    reactivityAsyncSilentCases,
+} from "./reactivity_async_cases.mjs";
+import {
     expectedRuleIds,
     jsxUsesVarsCase,
     noDestructureFixCases,
@@ -55,6 +60,24 @@ function registerRuleDiagnosticsTests() {
     });
 }
 
+function registerReactivityAsyncTests() {
+    reactivityAsyncReportingCases.forEach((asyncCase) => {
+        test(`reactivity: ${asyncCase.name}`, async () => {
+            const result = await harness.lint(asyncCase.code);
+
+            expect(result.output).toContain(READ_AFTER_GAP_MESSAGE);
+        });
+    });
+
+    reactivityAsyncSilentCases.forEach((asyncCase) => {
+        test(`reactivity: ${asyncCase.name}`, async () => {
+            const result = await harness.lint(asyncCase.code);
+
+            expect(result.output).not.toContain("solid(reactivity)");
+        });
+    });
+}
+
 describe("oxlint-plugin-solid", () => {
     beforeAll(async () => {
         harness = await createLintHarness();
@@ -81,6 +104,7 @@ describe("oxlint-plugin-solid", () => {
 
     registerRuleDiagnosticsTests();
     registerPreferArrowDiagnosticTests();
+    registerReactivityAsyncTests();
 
     test("tracks JSX component usage so no-unused-vars stays quiet", async () => {
         const result = await harness.lint(jsxUsesVarsCase.code);

@@ -215,7 +215,7 @@ export default createRule({
             shouldAssign:
                 "For proper analysis, a variable should be used to capture the result of this function call.",
             noAsyncTrackedScope:
-                "This tracked scope should not be async. Solid's reactivity only tracks synchronously.",
+                "The reactive variable '{{name}}' is read after an await, so it registers no dependency and this computation will not re-run when it changes. Read every reactive input before the first async gap.",
         },
     },
     defaultOptions: [
@@ -391,6 +391,65 @@ export default createRule({
             }
         };
         /** Performs all analysis and reporting. */
+        const asyncGapCache = new Map();
+        const ASYNC_GAP_TYPES = new Set(["AwaitExpression", "YieldExpression"]);
+        /**
+         * Where a function first suspends, or null if it never does.
+         *
+         * `yield` counts alongside `await`: an async generator driven by `action`
+         * suspends there in exactly the same way, and a read afterwards is just as
+         * detached. Nested functions are skipped — their gaps are their own, and a
+         * callback defined after an await still runs with its own tracking.
+         */
+        const firstAsyncGapStart = (node) => {
+            if (!isFunctionNode(node) || node.async !== true) {
+                return null;
+            }
+            if (asyncGapCache.has(node)) {
+                return asyncGapCache.get(node);
+            }
+
+            let earliest = null;
+            const pending = [node.body];
+            while (pending.length > 0) {
+                const current = pending.pop();
+                if (!current || typeof current !== "object") {
+                    continue;
+                }
+                if (Array.isArray(current)) {
+                    pending.push(...current);
+                    continue;
+                }
+                if (typeof current.type !== "string") {
+                    continue;
+                }
+                if (ASYNC_GAP_TYPES.has(current.type)) {
+                    const start = Array.isArray(current.range)
+                        ? current.range[0]
+                        : null;
+                    if (start !== null && (earliest === null || start < earliest)) {
+                        earliest = start;
+                    }
+                    // An await nested inside this one cannot start earlier.
+                    continue;
+                }
+                for (const [key, value] of Object.entries(current)) {
+                    if (key === "parent") {
+                        continue;
+                    }
+                    if (
+                        value &&
+                        typeof value === "object" &&
+                        !(typeof value.type === "string" && isFunctionNode(value))
+                    ) {
+                        pending.push(value);
+                    }
+                }
+            }
+
+            asyncGapCache.set(node, earliest);
+            return earliest;
+        };
         const onFunctionExit = (currentScopeNode) => {
             // If this function is a component, add its props as a reactive variable
             if (isFunctionNode(currentScopeNode)) {
@@ -416,12 +475,32 @@ export default createRule({
             ) {
                 return;
             }
+            // Solid 2.0 supports async computations — `createMemo(async () => …)` is
+            // the documented shape. What stays synchronous is dependency *tracking*:
+            // reads before the first await register, reads after it do not. So the
+            // hazard is not the `async` keyword, it is a reactive read on the far side
+            // of an async gap, which silently creates no dependency edge and leaves the
+            // computation unable to re-run. Solid's development build raises this at
+            // runtime; catching it here also covers production, where that check is
+            // compiled out.
+            const asyncGapStart = firstAsyncGapStart(currentScopeNode);
             // Iterate through all usages of (derived) signals in the current scope
             for (const {
                 reference,
                 declarationScope,
             } of scopeStack.consumeSignalReferencesInScope()) {
                 const identifier = reference.identifier;
+                if (
+                    asyncGapStart !== null &&
+                    Array.isArray(identifier.range) &&
+                    identifier.range[0] > asyncGapStart
+                ) {
+                    context.report({
+                        node: identifier,
+                        messageId: "noAsyncTrackedScope",
+                        data: { name: identifier.name },
+                    });
+                }
                 if (reference.isWrite()) {
                     // don't allow reassigning signals
                     context.report({
@@ -810,19 +889,6 @@ export default createRule({
         const checkForTrackedScopes = (node) => {
             const pushTrackedScope = (node, expect) => {
                 currentScope().trackedScopes.push({ node, expect });
-                if (
-                    expect !== "called-function" &&
-                    isFunctionNode(node) &&
-                    node.async
-                ) {
-                    // From the docs: "[Solid's] approach only tracks synchronously. If you
-                    // have a setTimeout or use an async function in your Effect the code
-                    // that executes async after the fact won't be tracked."
-                    context.report({
-                        node,
-                        messageId: "noAsyncTrackedScope",
-                    });
-                }
             };
             // given some expression, mark any functions within it as tracking scopes, and do not traverse
             // those functions
