@@ -12,6 +12,36 @@
       "import": "./dist/index.js",
       "default": "./dist/index.js"
     },
+    "./guards": {
+      "types": "./src/guards.ts",
+      "import": "./dist/guards.js",
+      "default": "./dist/guards.js"
+    },
+    "./result": {
+      "types": "./src/result.ts",
+      "import": "./dist/result.js",
+      "default": "./dist/result.js"
+    },
+    "./parse": {
+      "types": "./src/parse.ts",
+      "import": "./dist/parse.js",
+      "default": "./dist/parse.js"
+    },
+    "./empty": {
+      "types": "./src/empty.ts",
+      "import": "./dist/empty.js",
+      "default": "./dist/empty.js"
+    },
+    "./ids": {
+      "types": "./src/ids.ts",
+      "import": "./dist/ids.js",
+      "default": "./dist/ids.js"
+    },
+    "./collections": {
+      "types": "./src/collections.ts",
+      "import": "./dist/collections.js",
+      "default": "./dist/collections.js"
+    },
     "./globals": {
       "types": "./globals.ts",
       "import": "./dist/globals.js",
@@ -41,19 +71,18 @@
     "smoke:globals": "bun run build && tsc --project ./smoke/globals/tsconfig.json --noEmit",
     "smoke:oxlint": "bun run build && bun ./smoke/oxlint/run-smoke.ts",
     "smoke:oxlint:fix": "bun run build && bun ./smoke/oxlint/run-fix-smoke.ts",
+    "smoke:subpath": "bun run build && bun ./smoke/subpath/run.ts",
     "smoke:treeshake": "bun run build && bun ./smoke/treeshake/run.ts",
     "typecheck": "tsc --project ./tsconfig.json --noEmit && tsc --project ./tsconfig.vitest.json --noEmit"
   },
   "files": [
+    "biome",
     "dist",
     "globals.ts",
     "jsr.json",
-    "src/index.ts",
-    "src/type_helper.ts",
-    "src/types",
     "oxlint/index.ts",
-    "biome",
-    "rules"
+    "rules",
+    "src"
   ],
   "repository": {
     "type": "git",
