@@ -4,7 +4,7 @@
  * type-guard module along with it.
  */
 
-import type { Failed, Success } from "./types/maybe_promise.js";
+import type { Failed, Result, Success } from "./types/maybe_promise.js";
 
 /**
  * Checks if the provided result is a `Success` type.
@@ -18,14 +18,14 @@ import type { Failed, Success } from "./types/maybe_promise.js";
  *     ```
  *
  * @template T The type of the value contained in the `Success` type.
- * @param {Readonly<Success<T> | Failed>} result The result to check, which can
+ * @param {Readonly<Result<T>>} result The result to check, which can
  *   be either a `Success<T>` or `Failed`.
  * @returns {boolean} `true` if the result is a `Success<T>`, `false` if it is a
  *   `Failed`. This function acts as a type guard, narrowing the type of
  *   `result` to `Success<T>` when the condition is met.
  */
 function isSuccess<T>(
-    result: Readonly<Success<T> | Failed>,
+    result: Readonly<Result<T>>,
 ): result is Success<T> {
     return !result.isError;
 }
