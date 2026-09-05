@@ -3,6 +3,10 @@ import type { Span } from "@opentelemetry/api";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { LoggerBase } from "../src/logger_factory";
+import {
+    disableOpenTelemetryContext,
+    enableOpenTelemetryContext,
+} from "../src/otel";
 import type {
     LoggerOptions,
     LoggerParent,
@@ -67,6 +71,9 @@ describe("LoggerBase", () => {
     beforeEach(() => {
         vi.restoreAllMocks();
         vi.useRealTimers();
+        // The reader is module state; leaving one registered would make the
+        // "no reader" case pass for the wrong reason.
+        disableOpenTelemetryContext();
     });
 
     it("suppresses messages below the configured threshold", () => {
@@ -201,6 +208,9 @@ describe("LoggerBase", () => {
         });
         const activeSpan = createTestSpan();
         vi.spyOn(trace, "getActiveSpan").mockReturnValue(activeSpan);
+        // The option alone no longer reaches OpenTelemetry: the factory holds an
+        // injected reader, and `/otel` is what supplies one.
+        enableOpenTelemetryContext();
 
         logger.info("correlated");
 
@@ -210,6 +220,24 @@ describe("LoggerBase", () => {
         expect(fileCalls).toHaveLength(1);
         expect(fileCalls[0]?.content).toContain("trace_id=");
         expect(fileCalls[0]?.content).toContain("span_id=");
+    });
+
+    it("logs empty context and warns once when no reader is registered", () => {
+        const warn = vi.spyOn(console, "warn").mockImplementation(() => undefined);
+        const { consoleCalls, runtime } = createTestRuntime();
+        const logger = new TestLogger(runtime, "otel-unwired", undefined, {
+            includeOpenTelemetryContext: true,
+        });
+        vi.spyOn(trace, "getActiveSpan").mockReturnValue(createTestSpan());
+
+        logger.info("correlated");
+
+        // Silently logging empty ids would look like working span correlation.
+        expect(`${consoleCalls[0]?.args[0] ?? ""}`).not.toContain("trace_id=");
+        expect(warn).toHaveBeenCalledTimes(1);
+        expect(`${warn.mock.calls[0]?.[0] ?? ""}`).toContain(
+            "@murky-web/simplelog/otel",
+        );
     });
 
     it("skips OpenTelemetry context when disabled", () => {

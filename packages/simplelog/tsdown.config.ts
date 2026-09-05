@@ -5,6 +5,7 @@ export default defineConfig([
     entry: {
       bun_logger: "./src/bun_logger.ts",
       logger: "./src/logger.ts",
+      otel: "./src/otel.ts",
     },
     dts: true,
     // tsdown defaults `fixedExtension` to true for platform "node", which emits
