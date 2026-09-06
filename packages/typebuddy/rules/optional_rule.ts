@@ -17,8 +17,12 @@ const rule = {
         const undefinedType = node.types.find(
           (typeNode) => typeNode.type === "TSUndefinedKeyword",
         );
+        // `null | undefined` has no non-nullish member to name, and rewriting
+        // it to `Optional<null>` only restated it with more syntax.
         const otherType = node.types.find(
-          (typeNode) => typeNode.type !== "TSUndefinedKeyword",
+          (typeNode) =>
+            typeNode.type !== "TSUndefinedKeyword" &&
+            typeNode.type !== "TSNullKeyword",
         );
 
         if (undefinedType && otherType) {

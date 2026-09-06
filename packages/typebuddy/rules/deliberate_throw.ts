@@ -1,17 +1,4 @@
-type AstNode = {
-  type: string;
-  [key: string]: unknown;
-};
-
-const FUNCTION_TYPES = new Set([
-  "ArrowFunctionExpression",
-  "FunctionDeclaration",
-  "FunctionExpression",
-]);
-
-function isNode(value: unknown): value is AstNode {
-  return typeof value === "object" && value !== null && "type" in value;
-}
+import { walkOwnSubtree } from "./own_subtree.js";
 
 /**
  * Whether a function body throws on purpose.
@@ -34,40 +21,15 @@ function isNode(value: unknown): value is AstNode {
  * @returns {boolean} True when the body throws outside any nested function.
  */
 function throwsDeliberately(body: unknown): boolean {
-  if (!isNode(body)) {
-    return false;
-  }
+  let found = false;
 
-  const pending: AstNode[] = [body];
-  while (pending.length > 0) {
-    // `pop` on a non-empty array always yields a node; the length check above is
-    // the loop condition, but `noUncheckedIndexedAccess` cannot see that.
-    const current = pending.pop();
-    if (current === undefined) {
-      break;
+  walkOwnSubtree(body, (node) => {
+    if (node.type === "ThrowStatement") {
+      found = true;
     }
+  });
 
-    if (current.type === "ThrowStatement") {
-      return true;
-    }
-
-    for (const [key, value] of Object.entries(current)) {
-      // `parent` points back up the tree; following it would never terminate.
-      if (key === "parent") {
-        continue;
-      }
-
-      const candidates = Array.isArray(value) ? value : [value];
-      for (const candidate of candidates) {
-        if (!isNode(candidate) || FUNCTION_TYPES.has(candidate.type)) {
-          continue;
-        }
-        pending.push(candidate);
-      }
-    }
-  }
-
-  return false;
+  return found;
 }
 
 export { throwsDeliberately };
