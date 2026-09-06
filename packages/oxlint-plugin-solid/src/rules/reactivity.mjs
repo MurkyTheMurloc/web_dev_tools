@@ -203,7 +203,7 @@ export default createRule({
             noWrite:
                 "The reactive variable '{{name}}' should not be reassigned or altered directly.",
             untrackedReactive:
-                "The reactive variable '{{name}}' should be used within JSX, a tracked scope (like createEffect), or inside an event handler function, or else changes will be ignored.",
+                "The reactive variable '{{name}}' should be used within JSX, a tracked scope (like createEffect), or inside an event handler function, or else changes will be ignored. To keep it reactive, derive it rather than copy it: a plain function, `createMemo`, or `createSignal(() => ...)` / `createStore(() => ...)` for a local override that a new source value should replace.",
             expectedFunctionGotExpression:
                 "The reactive variable '{{name}}' should be wrapped in a function for reactivity. This includes event handler bindings on native elements, which are not reactive like other JSX props.",
             badSignal:

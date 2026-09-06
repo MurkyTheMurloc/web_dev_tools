@@ -11,7 +11,15 @@ und laufen ohne `eslint-plugin-solid` als Zielprojekt-Dependency.
 Aktuell sind enthalten:
 
 - die komplette von `eslint-plugin-solid` exportierte Regelmenge
-- die zusaetzliche Projektregel `solid/prefer-arrow-components`
+- die zusaetzlichen Projektregeln `solid/prefer-arrow-components`,
+  `solid/no-setter-in-effect` (meldet Effects, die nur in ein Signal oder einen
+  Store schreiben, statt den Wert abzuleiten -- und Effects, die etwas awaiten
+  und das Ergebnis zurueckschreiben, statt es aus einer Derivation zu liefern)
+  `solid/no-untracked-effect-read` (meldet reaktive Reads in der
+  apply-Phase eines zweiphasigen `createEffect`, die dort nicht tracken) und
+  `solid/no-owned-primitives-in-ref` (meldet `createEffect`/`onCleanup` und
+  Verwandte in einem Ref-Callback -- der laeuft ohne Owner, nichts raeumt sie
+  je wieder ab)
 - ein Test-Harness, der die exportierte Rule-Surface und echte Diagnostik
   gegen Temp-Projekte prueft
 

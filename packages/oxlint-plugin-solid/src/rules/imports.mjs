@@ -14,12 +14,19 @@ for (const primitive of [
     "children",
     "createContext",
     "createEffect",
+    // The primitive forms of `Loading`, `Errored` and `Reveal`. Only custom
+    // boundary components and renderer integrations reach for them, which is
+    // why they were missing here — and why a wrong-module import of one went
+    // unreported while every neighbouring primitive was checked.
+    "createErrorBoundary",
+    "createLoadingBoundary",
     "createMemo",
     "createOptimistic",
     "createOptimisticStore",
     "createProjection",
     "createReaction",
     "createRenderEffect",
+    "createRevealOrder",
     "createRoot",
     "createSignal",
     "createStore",
