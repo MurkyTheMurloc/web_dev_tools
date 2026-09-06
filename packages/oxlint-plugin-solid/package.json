@@ -34,7 +34,7 @@
         "style-to-object": "^1.0.8"
     },
     "devDependencies": {
-        "solid-js": "^1.9.11"
+        "solid-js": "^1.9.15"
     },
     "publishConfig": {
         "access": "public",

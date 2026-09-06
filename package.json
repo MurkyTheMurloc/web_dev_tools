@@ -40,6 +40,6 @@
         "oxlint-tsgolint": "^7.0.2001",
         "tsdown": "0.22.14",
         "typescript": "^7.0.2",
-        "vitest": "3.2.4"
+        "vitest": "3.2.7"
     }
 }
