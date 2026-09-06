@@ -5,8 +5,7 @@ const FIXTURE_FILE_PATH = "src/rule_case.tsx";
 const OXLINT_CONFIG_PATH = "./.oxlintrc.jsonc";
 const TEMP_DIRECTORY_PATTERN = "/tmp/oxlint-plugin-solid-XXXXXX";
 const PACKAGE_RUNTIME_DEPENDENCIES = [
-    "@typescript-eslint",
-    "eslint",
+    "@eslint-community",
     "estraverse",
     "is-html",
     "kebab-case",

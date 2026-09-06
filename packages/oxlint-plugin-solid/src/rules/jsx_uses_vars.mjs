@@ -1,10 +1,6 @@
-import { ESLintUtils } from "@typescript-eslint/utils";
-
 import { markVariableAsUsed } from "../compat.mjs";
 
-const createRule = ESLintUtils.RuleCreator.withoutDocs;
-
-export const jsxUsesVarsRule = createRule({
+export const jsxUsesVarsRule = {
     meta: {
         docs: {
             description:
@@ -52,4 +48,4 @@ export const jsxUsesVarsRule = createRule({
             },
         };
     },
-});
+};

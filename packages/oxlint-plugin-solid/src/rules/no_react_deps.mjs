@@ -1,8 +1,5 @@
-import { ESLintUtils } from "@typescript-eslint/utils";
-
 import { isFunctionNode, trace, trackImports } from "../utils.mjs";
-const createRule = ESLintUtils.RuleCreator.withoutDocs;
-export default createRule({
+export default {
     meta: {
         type: "problem",
         docs: {
@@ -14,7 +11,7 @@ export default createRule({
         schema: [],
         messages: {
             noUselessDep:
-                "In Solid, `{{name}}` doesn't accept a dependency array because it automatically tracks its dependencies. If you really need to override the list of dependencies, use `on`.",
+                "In Solid, `{{name}}` doesn't accept a dependency array because it automatically tracks its dependencies. To narrow what is tracked, read only those values in the compute phase.",
         },
     },
     defaultOptions: [],
@@ -62,4 +59,4 @@ export default createRule({
             },
         };
     },
-});
+};

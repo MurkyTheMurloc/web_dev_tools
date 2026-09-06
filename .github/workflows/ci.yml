@@ -4,7 +4,7 @@ on:
   pull_request:
   push:
     branches:
-      - master
+      - main
   workflow_dispatch:
 
 jobs:
@@ -43,3 +43,24 @@ jobs:
 
       - name: Smoke treeshaking
         run: bun --cwd packages/typebuddy run smoke:treeshake
+
+      - name: Smoke subpaths
+        run: bun --cwd packages/typebuddy run smoke:subpath
+
+  oxlint-plugin-solid:
+    name: Oxlint plugin solid
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version-file: "package.json"
+
+      - name: Install dependencies
+        run: bun install --frozen-lockfile
+
+      - name: Test oxlint-plugin-solid
+        run: bun --cwd packages/oxlint-plugin-solid run test

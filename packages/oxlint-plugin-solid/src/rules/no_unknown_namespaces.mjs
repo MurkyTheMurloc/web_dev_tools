@@ -1,7 +1,4 @@
-import { ESLintUtils } from "@typescript-eslint/utils";
-
 import { isDOMElementName } from "../utils.mjs";
-const createRule = ESLintUtils.RuleCreator.withoutDocs;
 // Solid 2.0 removed every Solid-specific JSX namespace. What is left are the
 // XML namespaces the DOM itself defines.
 const xmlNamespaces = ["xmlns", "xlink"];
@@ -17,7 +14,7 @@ const replacements = {
     style: "the `style` prop with an object value",
     use: "a ref callback or directive factory, composing with a ref array",
 };
-export default createRule({
+export default {
     meta: {
         type: "problem",
         docs: {
@@ -107,4 +104,4 @@ export default createRule({
             },
         };
     },
-});
+};

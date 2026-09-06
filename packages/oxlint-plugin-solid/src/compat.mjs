@@ -1,4 +1,4 @@
-import { ASTUtils } from "@typescript-eslint/utils";
+import { findVariable as utilsFindVariable } from "@eslint-community/eslint-utils";
 
 export function getSourceCode(context) {
     if (typeof context.getSourceCode === "function") {
@@ -23,7 +23,7 @@ export function getScope(context, node) {
 }
 
 export function findVariable(context, node) {
-    return ASTUtils.findVariable(getScope(context, node), node);
+    return utilsFindVariable(getScope(context, node), node);
 }
 
 export function markVariableAsUsed(context, name, node) {

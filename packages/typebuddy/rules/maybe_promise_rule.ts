@@ -1,4 +1,6 @@
 import { throwsDeliberately } from "./deliberate_throw.js";
+import { getTypeBuddyImportInsertion } from "./typebuddy_import.js";
+import { walkOwnSubtree } from "./own_subtree.js";
 
 type AstNode = {
     type: string;
@@ -11,7 +13,7 @@ type RuleContext = {
     report(descriptor: {
         node: unknown;
         messageId: string;
-        fix(fixer: {
+        fix?(fixer: {
             replaceText(node: unknown, text: string): unknown;
             insertTextBeforeRange(
                 range: [number, number],
@@ -48,48 +50,34 @@ function isCallArgumentCallback(node: AstNode): boolean {
         return false;
     }
 
-    return Array.isArray(parent["arguments"]) && parent["arguments"].includes(node);
+    return (
+        Array.isArray(parent["arguments"]) && parent["arguments"].includes(node)
+    );
+}
+
+/**
+ * Return-type names whose type argument is the value an async function settles
+ * on. `AsyncResult` is the preferred spelling of `MaybePromise`, so a function
+ * annotated with it has to be read the same way — otherwise the rule goes blind
+ * on exactly the code the package tells people to write.
+ */
+const AWAITED_TYPE_NAMES = new Set(["AsyncResult", "MaybePromise", "Promise"]);
+
+function isAmbient(node: AstNode): boolean {
+    let current: AstNode | undefined = node;
+
+    while (current) {
+        if (current["declare"] === true) {
+            return true;
+        }
+        current = current.parent;
+    }
+
+    return false;
 }
 
 function isIdentifierNamed(node: unknown, name: string): boolean {
     return isNode(node) && node.type === "Identifier" && node["name"] === name;
-}
-
-function getProgram(node: AstNode): AstNode | null {
-    let current: AstNode | undefined = node;
-
-    while (current?.parent) {
-        current = current.parent;
-    }
-
-    return current?.type === "Program" ? current : null;
-}
-
-function isImportDeclaration(node: unknown): node is AstNode {
-    return isNode(node) && node.type === "ImportDeclaration";
-}
-
-function getStringLiteralValue(node: unknown): string | null {
-    if (!isNode(node)) {
-        return null;
-    }
-
-    if (
-        (node.type === "Literal" || node.type === "StringLiteral") &&
-        typeof node["value"] === "string"
-    ) {
-        return node["value"];
-    }
-
-    return null;
-}
-
-function getProgramBody(node: AstNode): AstNode[] {
-    if (!Array.isArray(node["body"])) {
-        return [];
-    }
-
-    return node["body"].filter(isNode);
 }
 
 function isResultHelperCall(node: unknown, name: "ok" | "err"): boolean {
@@ -148,59 +136,13 @@ function getObjectPropertyValue(
 }
 
 function isBooleanLiteral(node: unknown, expected: boolean): boolean {
-    return isNode(node) && node.type === "Literal" && node["value"] === expected;
+    return (
+        isNode(node) && node.type === "Literal" && node["value"] === expected
+    );
 }
 
 function isNullLiteral(node: unknown): boolean {
     return isNode(node) && node.type === "Literal" && node["value"] === null;
-}
-
-function hasTypeBuddyHelperImport(program: AstNode, helperName: "ok" | "err") {
-    return getProgramBody(program).some((statement) => {
-        if (!isImportDeclaration(statement)) {
-            return false;
-        }
-
-        if (
-            getStringLiteralValue(statement["source"]) !== "@murky-web/typebuddy"
-        ) {
-            return false;
-        }
-
-        if (statement["importKind"] === "type") {
-            return false;
-        }
-
-        const specifiers = Array.isArray(statement["specifiers"])
-            ? statement["specifiers"]
-            : [];
-
-        return specifiers.some((specifier) => {
-            return (
-                isNode(specifier) &&
-                specifier.type === "ImportSpecifier" &&
-                isIdentifierNamed(specifier["local"], helperName)
-            );
-        });
-    });
-}
-
-function getTypeBuddyImportInsertRange(
-    program: AstNode,
-): [number, number] | null {
-    const body = getProgramBody(program);
-    const imports = body.filter(isImportDeclaration);
-    const anchor = imports.at(-1) ?? body[0] ?? program;
-
-    if (!Array.isArray(anchor["range"]) || anchor["range"].length < 2) {
-        return null;
-    }
-
-    if (imports.length > 0) {
-        return [anchor["range"][1], anchor["range"][1]];
-    }
-
-    return [anchor["range"][0], anchor["range"][0]];
 }
 
 const rule = {
@@ -216,7 +158,9 @@ const rule = {
             const typeName = node["typeName"];
             if (!isNode(typeName) || typeName.type !== "Identifier")
                 return null;
-            return typeof typeName["name"] === "string" ? typeName["name"] : null;
+            return typeof typeName["name"] === "string"
+                ? typeName["name"]
+                : null;
         }
 
         function getTypeArgument(node: AstNode): AstNode | null {
@@ -227,8 +171,23 @@ const rule = {
             return firstParam;
         }
 
-        function getPromiseTypeArgument(node: AstNode): AstNode | null {
-            if (getTypeName(node) !== "Promise") return null;
+        /**
+         * The awaited type behind an async function's return annotation.
+         *
+         * Every spelling counts. Matching only `Promise` meant the rule read the
+         * return type of code it had not migrated yet and went blind the moment
+         * `MaybePromise` was there — so a bare `return;` in a
+         * `MaybePromise<void>` function never became `return ok();`, while the
+         * identical `Promise<void>` function was fixed. It only ever worked
+         * because the rename and this lookup happen in the same pass, off the
+         * same AST.
+         */
+        function getAwaitedTypeArgument(node: AstNode): AstNode | null {
+            const typeName = getTypeName(node);
+            if (typeName === null || !AWAITED_TYPE_NAMES.has(typeName)) {
+                return null;
+            }
+
             return getTypeArgument(node);
         }
 
@@ -241,32 +200,19 @@ const rule = {
                 return [];
             }
 
-            const program = getProgram(node);
-            if (!program || hasTypeBuddyHelperImport(program, helperName)) {
-                return [];
-            }
-
-            const insertRange = getTypeBuddyImportInsertRange(program);
-            if (!insertRange) {
+            const insertion = getTypeBuddyImportInsertion(node, helperName);
+            if (!insertion) {
                 return [];
             }
 
             scheduledHelperImports.add(helperName);
 
-            const hasImports = insertRange[0] !== 0;
-            const importText = hasImports
-                ? `\nimport { ${helperName} } from "@murky-web/typebuddy";`
-                : `import { ${helperName} } from "@murky-web/typebuddy";\n`;
-
-            return [fixer.insertTextBeforeRange(insertRange, importText)];
+            return [
+                fixer.insertTextBeforeRange(insertion.range, insertion.text),
+            ];
         }
 
-        function checkReturnType(node: AstNode) {
-            if (!isAsyncFunction(node)) return;
-            if (isCallArgumentCallback(node)) return;
-            // Same exemption as `require-try-catch`: a deliberate throw is not a
-            // result waiting to be wrapped.
-            if (throwsDeliberately(node["body"])) return;
+        function reportPromiseReturnType(node: AstNode) {
             if (!isNode(node["returnType"])) return;
 
             const typeAnnotation = node["returnType"]["typeAnnotation"];
@@ -281,6 +227,33 @@ const rule = {
                     return fixer.replaceText(typeName, "MaybePromise");
                 },
             });
+        }
+
+        function checkReturnType(node: AstNode) {
+            if (!isAsyncFunction(node)) return;
+            if (isCallArgumentCallback(node)) return;
+            // Same exemption as `require-try-catch`: a deliberate throw is not a
+            // result waiting to be wrapped.
+            if (throwsDeliberately(node["body"])) return;
+
+            reportPromiseReturnType(node);
+        }
+
+        /**
+         * A type-level signature — an interface method, a function type, an
+         * overload — can never carry `async`, so routing it through
+         * `checkReturnType` meant these three visitors never fired at all.
+         * `Promise<T>` in a signature is the same contract the rule rewrites
+         * everywhere else, so it gets reported here without the async gate.
+         *
+         * Ambient declarations are the exception: `declare` describes code the
+         * project does not own, and rewriting a third-party framework's
+         * callback shape to `MaybePromise` would be a lie about that API.
+         */
+        function checkSignatureReturnType(node: AstNode) {
+            if (isAmbient(node)) return;
+
+            reportPromiseReturnType(node);
         }
 
         function wrapReturnValue(
@@ -383,6 +356,95 @@ const rule = {
             }
         }
 
+        function collectOwnReturns(root: unknown): AstNode[] {
+            const returns: AstNode[] = [];
+
+            walkOwnSubtree(root, (candidate) => {
+                if (candidate.type === "TryStatement") {
+                    return false;
+                }
+
+                if (candidate.type === "ReturnStatement") {
+                    returns.push(candidate);
+                }
+
+                return true;
+            });
+
+            return returns;
+        }
+
+        function isSettledFailure(argument: unknown): boolean {
+            return (
+                (isNode(argument) &&
+                    argument.type === "Identifier" &&
+                    argument["name"] === "FAILED_PROMISE") ||
+                isResultHelperCall(argument, "err")
+            );
+        }
+
+        /**
+         * Push a single `return` inside a catch block towards `err()`.
+         *
+         * Only the lossless rewrites carry a fix. Replacing
+         * `return ok("defaults")` with `return err()` would silently drop the
+         * author's fallback, and the old behaviour — appending `return err()`
+         * after it — produced unreachable code and a report that could never be
+         * satisfied. Where the fallback matters, moving it into the try block is
+         * a decision the author has to make, so the rule reports and stops.
+         */
+        function reportCatchReturn(tryNode: AstNode, statement: AstNode) {
+            const argument = statement["argument"];
+
+            if (isSettledFailure(argument)) return;
+
+            // `return;` — adding the result is pure addition, nothing is lost.
+            if (!isNode(argument)) {
+                context.report({
+                    node: statement,
+                    messageId: "returnFailedPromise",
+                    fix(fixer) {
+                        return [
+                            ...ensureResultHelperImportFixes(
+                                tryNode,
+                                fixer,
+                                "err",
+                            ),
+                            fixer.replaceText(statement, "return err()"),
+                        ];
+                    },
+                });
+                return;
+            }
+
+            if (hasIsErrorFlag(argument, true)) {
+                // `{ isError: true, value: null }` says the right thing the
+                // long way round; `err()` is the same value.
+                if (isNullLiteral(getObjectPropertyValue(argument, "value"))) {
+                    context.report({
+                        node: argument,
+                        messageId: "preferErrResult",
+                        fix(fixer) {
+                            return [
+                                ...ensureResultHelperImportFixes(
+                                    tryNode,
+                                    fixer,
+                                    "err",
+                                ),
+                                fixer.replaceText(argument, "err()"),
+                            ];
+                        },
+                    });
+                }
+                return;
+            }
+
+            context.report({
+                node: statement,
+                messageId: "returnFailedPromise",
+            });
+        }
+
         function processTryCatch(node: AstNode) {
             let parent = node.parent;
             let isAsync = false;
@@ -407,109 +469,89 @@ const rule = {
 
             let returnType: AstNode | null = null;
             if (isNode(parentFunction["returnType"])) {
-                const typeAnnotation = parentFunction["returnType"]["typeAnnotation"];
+                const typeAnnotation =
+                    parentFunction["returnType"]["typeAnnotation"];
                 if (isTypeReference(typeAnnotation)) {
-                    returnType = getPromiseTypeArgument(typeAnnotation);
+                    returnType = getAwaitedTypeArgument(typeAnnotation);
                 }
             }
 
-            const blockBody =
-                isNode(node["block"]) && Array.isArray(node["block"]["body"])
-                    ? node["block"]["body"]
-                    : [];
-            for (const statement of blockBody) {
-                if (isNode(statement) && statement.type === "ReturnStatement") {
-                    wrapReturnValue(statement, isAsync, returnType);
+            // Every return the try block owns, not just the ones sitting
+            // directly in it. `try { if (flag) return "early"; return "late"; }`
+            // used to have only `"late"` wrapped, because the walk never looked
+            // inside the `if`.
+            //
+            // A nested `try` is left alone: the visitor fires for it separately,
+            // and its own catch branch has to stay the failure path rather than
+            // be read as another try-block return.
+            for (const statement of collectOwnReturns(node["block"])) {
+                wrapReturnValue(statement, isAsync, returnType);
+            }
+
+            const handler = node["handler"];
+            if (!isNode(handler) || !isNode(handler["body"])) return;
+
+            // The catch branch is the failure path, and it settles on `err()`
+            // — nothing else. A default belongs in the try block, where the
+            // absence is read as a value instead of being recovered from a
+            // throw. So a catch return is never offered `ok(...)`; feeding both
+            // suggestions to the same statement used to produce two reports
+            // with opposite fixes.
+            const catchReturns = collectOwnReturns(handler["body"]);
+
+            for (const statement of catchReturns) {
+                reportCatchReturn(node, statement);
+            }
+
+            // A nested try/catch inside this catch settles the branch on its
+            // own, so its returns count here even though `collectOwnReturns`
+            // hands them to the inner `processTryCatch`. Appending another
+            // `return err()` after them would be unreachable.
+            let settlesItself = false;
+            walkOwnSubtree(handler["body"], (candidate) => {
+                if (candidate.type === "ReturnStatement") {
+                    settlesItself = true;
                 }
-            }
+            });
 
-            if (!isNode(node["handler"]) || !isNode(node["handler"]["body"])) return;
-            const catchBody = Array.isArray(node["handler"]["body"]["body"])
-                ? node["handler"]["body"]["body"].filter(isNode)
-                : [];
+            if (settlesItself) return;
 
-            for (const statement of catchBody) {
-                if (
-                    statement.type === "ReturnStatement" &&
-                    isNode(statement["argument"])
-                ) {
-                    wrapReturnValue(statement, isAsync, returnType);
-                }
-            }
+            context.report({
+                node: handler,
+                messageId: "returnFailedPromise",
+                fix(fixer) {
+                    const handlerBody = handler["body"];
+                    if (
+                        !isNode(handlerBody) ||
+                        !Array.isArray(handlerBody["range"])
+                    ) {
+                        return null;
+                    }
 
-            const hasCorrectReturn = catchBody.some(
-                (statement) =>
-                    statement.type === "ReturnStatement" &&
-                    isNode(statement["argument"]) &&
-                    ((statement["argument"].type === "Identifier" &&
-                        statement["argument"]["name"] === "FAILED_PROMISE") ||
-                        isResultHelperCall(statement["argument"], "err") ||
-                        hasIsErrorFlag(statement["argument"], true)),
-            );
-
-            if (!hasCorrectReturn) {
-                context.report({
-                    node: node["handler"],
-                    messageId: "returnFailedPromise",
-                    fix(fixer) {
-                        const lastStatement = catchBody.at(-1);
-                        if (
-                            lastStatement?.type === "ReturnStatement" &&
-                            isNode(lastStatement["argument"]) &&
-                            lastStatement["argument"].type === "ObjectExpression"
-                        ) {
-                            return [
-                                ...ensureResultHelperImportFixes(
-                                    node,
-                                    fixer,
-                                    "err",
-                                ),
-                                fixer.replaceText(
-                                    lastStatement,
-                                    "return err()",
-                                ),
-                            ];
-                        }
-
-                        const handler = node["handler"];
-                        if (!isNode(handler)) {
-                            return null;
-                        }
-
-                        const bodyRange = handler["body"];
-                        if (
-                            !isNode(bodyRange) ||
-                            !Array.isArray(bodyRange["range"])
-                        ) {
-                            return null;
-                        }
-
-                        return [
-                            ...ensureResultHelperImportFixes(
-                                node,
-                                fixer,
-                                "err",
-                            ),
-                            fixer.insertTextBeforeRange(
-                                [
-                                    bodyRange["range"][1] - 1,
-                                    bodyRange["range"][1] - 1,
-                                ],
-                                "return err(); ",
-                            ),
-                        ];
-                    },
-                });
-            }
+                    return [
+                        ...ensureResultHelperImportFixes(node, fixer, "err"),
+                        fixer.insertTextBeforeRange(
+                            [
+                                handlerBody["range"][1] - 1,
+                                handlerBody["range"][1] - 1,
+                            ],
+                            // The newline matters: `catch { log() }` would
+                            // otherwise become `catch { log() return err(); }`,
+                            // which does not parse.
+                            "\nreturn err();\n",
+                        ),
+                    ];
+                },
+            });
         }
 
         return {
             FunctionDeclaration: checkReturnType,
             FunctionExpression: checkReturnType,
             ArrowFunctionExpression: checkReturnType,
-            TSDeclareFunction: checkReturnType,
-            TSFunctionType: checkReturnType,
-            TSMethodSignature: checkReturnType,
+            TSDeclareFunction: checkSignatureReturnType,
+            TSFunctionType: checkSignatureReturnType,
+            TSMethodSignature: checkSignatureReturnType,
             TryStatement: processTryCatch,
         };
     },

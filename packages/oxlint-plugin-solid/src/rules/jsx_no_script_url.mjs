@@ -1,14 +1,12 @@
-import { ASTUtils, ESLintUtils } from "@typescript-eslint/utils";
+import { getStaticValue } from "@eslint-community/eslint-utils";
 
 import { getScope } from "../compat.mjs";
 
-const createRule = ESLintUtils.RuleCreator.withoutDocs;
-const { getStaticValue } = ASTUtils;
 const JAVASCRIPT_PROTOCOL_PATTERN =
     "^[\\\\u0000-\\\\u001F ]*j[\\\\r\\\\n\\\\t]*a[\\\\r\\\\n\\\\t]*v[\\\\r\\\\n\\\\t]*a[\\\\r\\\\n\\\\t]*s[\\\\r\\\\n\\\\t]*c[\\\\r\\\\n\\\\t]*r[\\\\r\\\\n\\\\t]*i[\\\\r\\\\n\\\\t]*p[\\\\r\\\\n\\\\t]*t[\\\\r\\\\n\\\\t]*:";
 const JAVASCRIPT_PROTOCOL_REGEX = new RegExp(JAVASCRIPT_PROTOCOL_PATTERN, "i");
 
-export const jsxNoScriptUrlRule = createRule({
+export const jsxNoScriptUrlRule = {
     meta: {
         docs: {
             description: "Disallow javascript: URLs.",
@@ -51,4 +49,4 @@ export const jsxNoScriptUrlRule = createRule({
             },
         };
     },
-});
+};

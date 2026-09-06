@@ -2,7 +2,7 @@
  * File overview here, scroll to bottom.
  * @link https://github.com/solidjs-community/eslint-plugin-solid/blob/main/docs/reactivity.md
  */
-import { ESLintUtils, ASTUtils } from "@typescript-eslint/utils";
+import { getFunctionHeadLocation } from "@eslint-community/eslint-utils";
 import { traverse } from "estraverse";
 
 import { findVariable, getSourceCode } from "../compat.mjs";
@@ -19,9 +19,6 @@ import {
     isJSXElementOrFragment,
     trace,
 } from "../utils.mjs";
-const { getFunctionHeadLocation } = ASTUtils;
-const createRule = ESLintUtils.RuleCreator.withoutDocs;
-
 // Solid 2.0 removed `createResource`, `createMutable`, `indexArray` and
 // `<Index>`. Their branches below are kept structurally but matched against
 // `__removed_*` names so they can never fire; delete them once no Solid 1
@@ -174,7 +171,7 @@ const getReturnedVar = (id, context) => {
     }
     return null;
 };
-export default createRule({
+export default {
     meta: {
         type: "problem",
         docs: {
@@ -203,7 +200,7 @@ export default createRule({
             noWrite:
                 "The reactive variable '{{name}}' should not be reassigned or altered directly.",
             untrackedReactive:
-                "The reactive variable '{{name}}' should be used within JSX, a tracked scope (like createEffect), or inside an event handler function, or else changes will be ignored.",
+                "The reactive variable '{{name}}' should be used within JSX, a tracked scope (like createEffect), or inside an event handler function, or else changes will be ignored. To keep it reactive, derive it rather than copy it: a plain function, `createMemo`, or `createSignal(() => ...)` / `createStore(() => ...)` for a local override that a new source value should replace.",
             expectedFunctionGotExpression:
                 "The reactive variable '{{name}}' should be wrapped in a function for reactivity. This includes event handler bindings on native elements, which are not reactive like other JSX props.",
             badSignal:
@@ -223,7 +220,12 @@ export default createRule({
             customReactiveFunctions: [],
         },
     ],
-    create(context, [options]) {
+    create(context) {
+        // `RuleCreator` used to merge `defaultOptions` into `context.options`
+        // and hand the result to a second `create` parameter. Without that
+        // wrapper the parameter is undefined, so the default is applied here.
+        const options = context.options[0] ?? { customReactiveFunctions: [] };
+
         const warnShouldDestructure = (node, nth) =>
             context.report({
                 node,
@@ -1397,4 +1399,4 @@ export default createRule({
             },
         };
     },
-});
+};

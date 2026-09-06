@@ -9,10 +9,13 @@ const expectedRuleIds = Object.freeze([
     "no-array-handlers",
     "no-destructure",
     "no-innerhtml",
+    "no-owned-primitives-in-ref",
     "no-proxy-apis",
     "no-react-deps",
     "no-react-specific-props",
+    "no-setter-in-effect",
     "no-unknown-namespaces",
+    "no-untracked-effect-read",
     "prefer-arrow-components",
     "prefer-class-object",
     "prefer-for",
@@ -124,6 +127,52 @@ createEffect(() => {
         ruleId: "no-react-specific-props",
     }),
     Object.freeze({
+        code: `import { createEffect, createSignal } from "solid-js";
+
+const [firstName] = createSignal("Ada");
+const [, setFullName] = createSignal("");
+
+createEffect(
+    () => firstName(),
+    (first) => {
+        setFullName(first + " Lovelace");
+    },
+);
+`,
+        ruleId: "no-setter-in-effect",
+    }),
+    Object.freeze({
+        code: `import { createEffect, createSignal } from "solid-js";
+
+const [query] = createSignal("");
+const [, setResults] = createSignal([]);
+
+createEffect(
+    () => query(),
+    async (value) => {
+        const found = await fetch(value).then((response) => response.json());
+        setResults(found);
+    },
+);
+`,
+        ruleId: "no-setter-in-effect",
+    }),
+    Object.freeze({
+        code: `import { createEffect, createSignal } from "solid-js";
+
+const [roomId] = createSignal("lobby");
+const [theme] = createSignal("dark");
+
+createEffect(
+    () => roomId(),
+    (id) => {
+        connect(id, theme());
+    },
+);
+`,
+        ruleId: "no-untracked-effect-read",
+    }),
+    Object.freeze({
         code: `export const View = () => {
     return <div foo:bar={null}>Hello</div>;
 };
@@ -140,6 +189,51 @@ export function View(props: Props): JSX.Element {
 }
 `,
         ruleId: "prefer-arrow-components",
+    }),
+    Object.freeze({
+        code: `export const View = (props) => {
+    return <div classList={{ active: props.on }}>Hello</div>;
+};
+`,
+        ruleId: "prefer-class-object",
+    }),
+    Object.freeze({
+        code: `import {
+    createErrorBoundary,
+    createLoadingBoundary,
+    createRevealOrder,
+} from "@solidjs/web";
+
+export const boundaries = [
+    createErrorBoundary,
+    createLoadingBoundary,
+    createRevealOrder,
+];
+`,
+        ruleId: "imports",
+    }),
+    Object.freeze({
+        code: `import { createEffect, createSignal, onCleanup } from "solid-js";
+
+export const View = () => {
+    const [width] = createSignal(0);
+
+    return (
+        <div
+            ref={(element) => {
+                createEffect(
+                    () => width(),
+                    (value) => element.setAttribute("data-width", value),
+                );
+                onCleanup(() => element.remove());
+            }}
+        >
+            Hello
+        </div>
+    );
+};
+`,
+        ruleId: "no-owned-primitives-in-ref",
     }),
     Object.freeze({
         code: `const cn = (classes) => {

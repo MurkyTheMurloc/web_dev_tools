@@ -1,8 +1,5 @@
-import { ESLintUtils } from "@typescript-eslint/utils";
-
 import { jsxGetAllProps } from "../utils.mjs";
-const createRule = ESLintUtils.RuleCreator.withoutDocs;
-export default createRule({
+export default {
     meta: {
         type: "problem",
         docs: {
@@ -26,7 +23,7 @@ export default createRule({
         messages: {
             noDuplicateProps: "Duplicate props are not allowed.",
             noDuplicateClass:
-                "Duplicate `class` props are not allowed; while it might seem to work, it can break unexpectedly. Use `classList` instead.",
+                "Duplicate `class` props are not allowed; while it might seem to work, it can break unexpectedly. Pass one `class` with the object or array form instead.",
             noDuplicateChildren:
                 "Using {{used}} at the same time is not allowed.",
         },
@@ -84,4 +81,4 @@ export default createRule({
             },
         };
     },
-});
+};

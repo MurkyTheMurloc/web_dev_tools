@@ -1,4 +1,5 @@
 import { throwsDeliberately } from "./deliberate_throw.js";
+import { getTypeBuddyImportInsertion } from "./typebuddy_import.js";
 
 type AstNode = {
     type: string;
@@ -29,99 +30,6 @@ type RuleFixer = {
     insertTextBeforeRange(range: [number, number], text: string): unknown;
 };
 
-function isNode(value: unknown): value is AstNode {
-    return typeof value === "object" && value !== null && "type" in value;
-}
-
-function getProgram(node: AstNode): AstNode | null {
-    let current: AstNode | undefined = node;
-
-    while (current?.parent) {
-        current = current.parent;
-    }
-
-    return current?.type === "Program" ? current : null;
-}
-
-function isIdentifierNamed(node: unknown, name: string): boolean {
-    return isNode(node) && node.type === "Identifier" && node["name"] === name;
-}
-
-function isImportDeclaration(node: unknown): node is AstNode {
-    return isNode(node) && node.type === "ImportDeclaration";
-}
-
-function getStringLiteralValue(node: unknown): string | null {
-    if (!isNode(node)) {
-        return null;
-    }
-
-    if (
-        (node.type === "Literal" || node.type === "StringLiteral") &&
-        typeof node["value"] === "string"
-    ) {
-        return node["value"];
-    }
-
-    return null;
-}
-
-function getProgramBody(node: AstNode): AstNode[] {
-    if (!Array.isArray(node.body)) {
-        return [];
-    }
-
-    return node.body.filter(isNode);
-}
-
-function hasTypeBuddyHelperImport(program: AstNode, helperName: "err") {
-    return getProgramBody(program).some((statement) => {
-        if (!isImportDeclaration(statement)) {
-            return false;
-        }
-
-        if (
-            getStringLiteralValue(statement["source"]) !== "@murky-web/typebuddy"
-        ) {
-            return false;
-        }
-
-        if (statement["importKind"] === "type") {
-            return false;
-        }
-
-        const specifiers = Array.isArray(statement["specifiers"])
-            ? statement["specifiers"]
-            : [];
-
-        return specifiers.some((specifier) => {
-            return (
-                isNode(specifier) &&
-                specifier.type === "ImportSpecifier" &&
-                isIdentifierNamed(specifier["local"], helperName)
-            );
-        });
-    });
-}
-
-function getTypeBuddyImportInsertRange(
-    program: AstNode,
-): [number, number] | null {
-    const body = getProgramBody(program);
-    const imports = body.filter(isImportDeclaration);
-    const anchor = imports.at(-1) ?? body[0] ?? program;
-
-    if (!Array.isArray(anchor.range) || anchor.range.length < 2) {
-        return null;
-    }
-
-    if (imports.length > 0) {
-        return [anchor.range[1], anchor.range[1]];
-    }
-
-    return [anchor.range[0], anchor.range[0]];
-}
-
 function hasTryCatch(nodes: AstNode[]): boolean {
     return nodes.some((node) => {
         return node.type === "TryStatement";
@@ -138,7 +46,9 @@ function isCallArgumentCallback(node: AstNode): boolean {
         return false;
     }
 
-    return Array.isArray(parent["arguments"]) && parent["arguments"].includes(node);
+    return (
+        Array.isArray(parent["arguments"]) && parent["arguments"].includes(node)
+    );
 }
 
 const rule = {
@@ -154,81 +64,143 @@ const rule = {
                 return [];
             }
 
-            const program = getProgram(node);
-            if (!program || hasTypeBuddyHelperImport(program, "err")) {
-                return [];
-            }
-
-            const insertRange = getTypeBuddyImportInsertRange(program);
-            if (!insertRange) {
+            const insertion = getTypeBuddyImportInsertion(node, "err");
+            if (!insertion) {
                 return [];
             }
 
             scheduledErrImport = true;
 
-            const hasImports = insertRange[0] !== 0;
-            const importText = hasImports
-                ? '\nimport { err } from "@murky-web/typebuddy";'
-                : 'import { err } from "@murky-web/typebuddy";\n';
-
-            return [fixer.insertTextBeforeRange(insertRange, importText)];
+            return [
+                fixer.insertTextBeforeRange(insertion.range, insertion.text),
+            ];
         }
 
-        function getIndentation(node: AstNode): string {
-            const lines = sourceCode.getText(node).split("\n");
-            // `split` always yields at least one element, but
-            // `noUncheckedIndexedAccess` cannot know that.
-            const firstLine = lines[0] ?? "";
-            const match = /^\s*/.exec(firstLine);
-            return match ? match[0] : "";
+        // Two zero-width insertions leave the body's own text untouched, byte
+        // for byte. Rebuilding it statement by statement used to strip leading
+        // whitespace on every line — including lines inside template literals,
+        // which silently changed string values.
+        function wrapBlockFixes(
+            bodyNode: AstNode,
+            fixer: RuleFixer,
+        ): unknown[] | null {
+            const range = bodyNode.range;
+            if (!Array.isArray(range) || range.length < 2) {
+                return null;
+            }
+
+            return [
+                fixer.insertTextBeforeRange(
+                    [range[0] + 1, range[0] + 1],
+                    "\ntry {",
+                ),
+                fixer.insertTextBeforeRange(
+                    [range[1] - 1, range[1] - 1],
+                    "} catch {\nreturn err();\n}\n",
+                ),
+            ];
         }
 
-        function wrapInTryCatch(node: AstNode): string {
-            const body = Array.isArray(node.body) ? node.body : [];
-            const indent = getIndentation(node);
-            const innerIndent = `${indent}  `;
-            const bodyText = body
-                .map((statement) => {
-                    const text = sourceCode.getText(statement);
-                    return `${innerIndent}${text.replaceAll(/^\s*/gm, "")}`;
-                })
-                .join("\n");
+        /**
+         * Wrap an expression-bodied arrow's value in a block with try/catch.
+         *
+         * The body node's range stops inside any wrapping parentheses, so
+         * replacing it in `async () => ({ a: 1 })` would leave the parentheses
+         * around a block and produce `({ try { ... } })`. Walking left over
+         * those parentheses first, then inserting on either side, keeps the
+         * expression itself untouched — parentheses and all.
+         */
+        function wrapExpressionBodyFixes(
+            node: AstNode,
+            bodyNode: AstNode,
+            fixer: RuleFixer,
+        ): unknown[] | null {
+            const arrowRange = node.range;
+            const bodyRange = bodyNode.range;
+            if (
+                !Array.isArray(arrowRange) ||
+                arrowRange.length < 2 ||
+                !Array.isArray(bodyRange) ||
+                bodyRange.length < 2
+            ) {
+                return null;
+            }
 
-            return `{
-${indent}try {
-${bodyText}
-${indent}} catch {
-${innerIndent}return err();
-${indent}}
-}`;
+            let prefix = sourceCode
+                .getText(node)
+                .slice(0, bodyRange[0] - arrowRange[0]);
+            while (prefix.trimEnd().endsWith("(")) {
+                prefix = prefix.trimEnd().slice(0, -1);
+            }
+
+            const start = arrowRange[0] + prefix.length;
+            // The arrow's own end already sits past any closing parenthesis.
+            const end = arrowRange[1];
+            if (start >= end) {
+                return null;
+            }
+
+            return [
+                fixer.insertTextBeforeRange(
+                    [start, start],
+                    "{\ntry {\nreturn ",
+                ),
+                fixer.insertTextBeforeRange(
+                    [end, end],
+                    ";\n} catch {\nreturn err();\n}\n}",
+                ),
+            ];
         }
 
         function checkFunction(node: AstNode) {
             if (node.async !== true) return;
             if (isCallArgumentCallback(node)) return;
             const bodyNode = node.body;
-            if (
-                !bodyNode ||
-                Array.isArray(bodyNode) ||
-                bodyNode.type !== "BlockStatement"
-            ) {
+            if (!bodyNode || Array.isArray(bodyNode)) return;
+
+            // A function that throws has already decided its failure is not a
+            // value. Wrapping it in try/catch would swallow that decision.
+            if (throwsDeliberately(bodyNode)) return;
+
+            // An expression-bodied arrow (`async () => fetch(url)`) returns the
+            // one value the try/catch exists to guard, so it needs a block
+            // before it can get one.
+            if (bodyNode.type !== "BlockStatement") {
+                context.report({
+                    node,
+                    messageId: "missingTryCatch",
+                    fix(fixer) {
+                        const wrapFixes = wrapExpressionBodyFixes(
+                            node,
+                            bodyNode,
+                            fixer,
+                        );
+                        if (!wrapFixes) {
+                            return null;
+                        }
+
+                        return [
+                            ...ensureErrImportFixes(node, fixer),
+                            ...wrapFixes,
+                        ];
+                    },
+                });
                 return;
             }
 
             const body = Array.isArray(bodyNode.body) ? bodyNode.body : [];
             if (hasTryCatch(body)) return;
-            // A function that throws has already decided its failure is not a
-            // value. Wrapping it in try/catch would swallow that decision.
-            if (throwsDeliberately(bodyNode)) return;
 
             context.report({
                 node,
                 messageId: "missingTryCatch",
                 fix(fixer) {
-                    return [
-                        ...ensureErrImportFixes(node, fixer),
-                        fixer.replaceText(bodyNode, wrapInTryCatch(bodyNode)),
-                    ];
+                    const wrapFixes = wrapBlockFixes(bodyNode, fixer);
+                    if (!wrapFixes) {
+                        return null;
+                    }
+
+                    return [...ensureErrImportFixes(node, fixer), ...wrapFixes];
                 },
             });
         }

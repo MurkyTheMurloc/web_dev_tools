@@ -1,8 +1,5 @@
-import { ESLintUtils } from "@typescript-eslint/utils";
-
 import { getSourceCode } from "../compat.mjs";
 import { isDOMElementName } from "../utils.mjs";
-const createRule = ESLintUtils.RuleCreator.withoutDocs;
 function isComponent(node) {
     return (
         (node.name.type === "JSXIdentifier" &&
@@ -31,7 +28,7 @@ function childrenIsMultilineSpaces(node) {
  * This rule is adapted from eslint-plugin-react's self-closing-comp rule under the MIT license,
  * with some enhancements. Thank you for your work!
  */
-export default createRule({
+export default {
     meta: {
         type: "layout",
         docs: {
@@ -150,4 +147,4 @@ export default createRule({
             },
         };
     },
-});
+};
