@@ -1,8 +1,6 @@
-import { ESLintUtils, ASTUtils } from "@typescript-eslint/utils";
+import { getStringIfConstant } from "@eslint-community/eslint-utils";
 
 import { getSourceCode } from "../compat.mjs";
-const createRule = ESLintUtils.RuleCreator.withoutDocs;
-const { getStringIfConstant } = ASTUtils;
 const getName = (node) => {
     switch (node.type) {
         case "Literal":
@@ -32,7 +30,7 @@ const getPropertyInfo = (prop) => {
         return null;
     }
 };
-export default createRule({
+export default {
     meta: {
         type: "problem",
         docs: {
@@ -212,4 +210,4 @@ export default createRule({
             },
         };
     },
-});
+};

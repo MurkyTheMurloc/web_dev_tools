@@ -8,6 +8,13 @@ projektspezifische Regeln wie `solid/prefer-arrow-components`.
 Die Regelmodule unter `src/rules/` sind aus dem Upstream-Quellstand abgeleitet
 und laufen ohne `eslint-plugin-solid` als Zielprojekt-Dependency.
 
+Das Paket zieht auch ESLint selbst nicht mehr nach. Die Regeln sind schlichte
+Objekte, wie Oxlint sie erwartet -- der `createRule`-Wrapper aus
+`@typescript-eslint/utils` war nur eine TypeScript-Typhilfe und ist entfallen.
+Geblieben sind fuenf AST-Helfer, die jetzt direkt aus
+`@eslint-community/eslint-utils` kommen, statt die komplette
+TypeScript-ESLint-Toolchain in den Baum jedes Konsumenten zu ziehen.
+
 Aktuell sind enthalten:
 
 - die komplette von `eslint-plugin-solid` exportierte Regelmenge

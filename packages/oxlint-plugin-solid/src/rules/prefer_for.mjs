@@ -1,9 +1,7 @@
-import { ESLintUtils, ASTUtils } from "@typescript-eslint/utils";
+import { getPropertyName } from "@eslint-community/eslint-utils";
 
 import { isFunctionNode, isJSXElementOrFragment } from "../utils.mjs";
-const createRule = ESLintUtils.RuleCreator.withoutDocs;
-const { getPropertyName } = ASTUtils;
-export default createRule({
+export default {
     meta: {
         type: "problem",
         docs: {
@@ -89,4 +87,4 @@ export default createRule({
             },
         };
     },
-});
+};

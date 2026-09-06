@@ -1,10 +1,7 @@
-import { ESLintUtils } from "@typescript-eslint/utils";
-
 import { getSourceCode } from "../compat.mjs";
 import { isJSXElementOrFragment } from "../utils.mjs";
-const createRule = ESLintUtils.RuleCreator.withoutDocs;
 const EXPENSIVE_TYPES = ["JSXElement", "JSXFragment", "Identifier"];
-export default createRule({
+export default {
     meta: {
         type: "problem",
         docs: {
@@ -89,4 +86,4 @@ export default createRule({
             },
         };
     },
-});
+};

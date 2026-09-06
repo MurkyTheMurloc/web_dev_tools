@@ -1,9 +1,7 @@
-import { ESLintUtils, ASTUtils } from "@typescript-eslint/utils";
+import { getStaticValue } from "@eslint-community/eslint-utils";
 
 import { getScope, getSourceCode } from "../compat.mjs";
 import { isDOMElementName } from "../utils.mjs";
-const createRule = ESLintUtils.RuleCreator.withoutDocs;
-const { getStaticValue } = ASTUtils;
 const COMMON_EVENTS = [
     "onAnimationEnd",
     "onAnimationIteration",
@@ -82,7 +80,7 @@ const isNonstandardEventName = (lowercaseEventName) =>
     Boolean(NONSTANDARD_EVENTS_MAP[lowercaseEventName]);
 const getStandardEventHandlerName = (lowercaseEventName) =>
     NONSTANDARD_EVENTS_MAP[lowercaseEventName];
-export default createRule({
+export default {
     meta: {
         type: "problem",
         docs: {
@@ -295,4 +293,4 @@ export default createRule({
             },
         };
     },
-});
+};

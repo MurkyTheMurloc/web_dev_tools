@@ -1,14 +1,11 @@
-import { ESLintUtils } from "@typescript-eslint/utils";
-
 import { isDOMElementName, jsxGetProp, jsxHasProp } from "../utils.mjs";
 
-const createRule = ESLintUtils.RuleCreator.withoutDocs;
 const REACT_SPECIFIC_PROPS = [
     { from: "className", to: "class" },
     { from: "htmlFor", to: "for" },
 ];
 
-export const noReactSpecificPropsRule = createRule({
+export const noReactSpecificPropsRule = {
     meta: {
         docs: {
             description:
@@ -68,4 +65,4 @@ export const noReactSpecificPropsRule = createRule({
             },
         };
     },
-});
+};

@@ -2,7 +2,7 @@
  * File overview here, scroll to bottom.
  * @link https://github.com/solidjs-community/eslint-plugin-solid/blob/main/docs/reactivity.md
  */
-import { ESLintUtils, ASTUtils } from "@typescript-eslint/utils";
+import { getFunctionHeadLocation } from "@eslint-community/eslint-utils";
 import { traverse } from "estraverse";
 
 import { findVariable, getSourceCode } from "../compat.mjs";
@@ -19,9 +19,6 @@ import {
     isJSXElementOrFragment,
     trace,
 } from "../utils.mjs";
-const { getFunctionHeadLocation } = ASTUtils;
-const createRule = ESLintUtils.RuleCreator.withoutDocs;
-
 // Solid 2.0 removed `createResource`, `createMutable`, `indexArray` and
 // `<Index>`. Their branches below are kept structurally but matched against
 // `__removed_*` names so they can never fire; delete them once no Solid 1
@@ -174,7 +171,7 @@ const getReturnedVar = (id, context) => {
     }
     return null;
 };
-export default createRule({
+export default {
     meta: {
         type: "problem",
         docs: {
@@ -223,7 +220,12 @@ export default createRule({
             customReactiveFunctions: [],
         },
     ],
-    create(context, [options]) {
+    create(context) {
+        // `RuleCreator` used to merge `defaultOptions` into `context.options`
+        // and hand the result to a second `create` parameter. Without that
+        // wrapper the parameter is undefined, so the default is applied here.
+        const options = context.options[0] ?? { customReactiveFunctions: [] };
+
         const warnShouldDestructure = (node, nth) =>
             context.report({
                 node,
@@ -1397,4 +1399,4 @@ export default createRule({
             },
         };
     },
-});
+};

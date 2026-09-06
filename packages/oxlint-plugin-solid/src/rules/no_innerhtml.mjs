@@ -1,10 +1,8 @@
-import { ESLintUtils, ASTUtils } from "@typescript-eslint/utils";
+import { getStringIfConstant } from "@eslint-community/eslint-utils";
 import isHtml from "is-html";
 
 import { jsxPropName } from "../utils.mjs";
-const createRule = ESLintUtils.RuleCreator.withoutDocs;
-const { getStringIfConstant } = ASTUtils;
-export default createRule({
+export default {
     meta: {
         type: "problem",
         docs: {
@@ -142,4 +140,4 @@ export default createRule({
             },
         };
     },
-});
+};

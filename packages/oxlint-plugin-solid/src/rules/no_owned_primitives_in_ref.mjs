@@ -1,8 +1,4 @@
-import { ESLintUtils } from "@typescript-eslint/utils";
-
 import { isFunctionNode, jsxPropName, trackImports } from "../utils.mjs";
-
-const createRule = ESLintUtils.RuleCreator.withoutDocs;
 
 /**
  * Primitives that attach to the current owner.
@@ -71,7 +67,7 @@ function walkOwnBody(node, visit) {
     }
 }
 
-export default createRule({
+export default {
     meta: {
         type: "problem",
         docs: {
@@ -123,4 +119,4 @@ export default createRule({
             },
         };
     },
-});
+};

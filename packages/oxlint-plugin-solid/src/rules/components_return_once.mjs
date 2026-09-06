@@ -1,8 +1,5 @@
-import { ESLintUtils } from "@typescript-eslint/utils";
-
 import { getSourceCode } from "../compat.mjs";
 import { getFunctionName } from "../utils.mjs";
-const createRule = ESLintUtils.RuleCreator.withoutDocs;
 const isNothing = (node) => {
     if (!node) {
         return true;
@@ -17,7 +14,7 @@ const isNothing = (node) => {
     }
 };
 const getLineLength = (loc) => loc.end.line - loc.start.line + 1;
-export default createRule({
+export default {
     meta: {
         type: "problem",
         docs: {
@@ -199,4 +196,4 @@ export default createRule({
             },
         };
     },
-});
+};

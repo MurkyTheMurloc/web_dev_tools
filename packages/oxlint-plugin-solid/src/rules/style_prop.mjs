@@ -1,15 +1,13 @@
-import { ESLintUtils, ASTUtils } from "@typescript-eslint/utils";
+import { getPropertyName, getStaticValue } from "@eslint-community/eslint-utils";
 import kebabCase from "kebab-case";
 import { all as allCssProperties } from "known-css-properties";
 import parse from "style-to-object";
 
 import { getScope } from "../compat.mjs";
 import { jsxPropName } from "../utils.mjs";
-const createRule = ESLintUtils.RuleCreator.withoutDocs;
-const { getPropertyName, getStaticValue } = ASTUtils;
 const lengthPercentageRegex =
     /\b(?:width|height|margin|padding|border-width|font-size)\b/i;
-export default createRule({
+export default {
     meta: {
         type: "problem",
         docs: {
@@ -152,4 +150,4 @@ export default createRule({
             },
         };
     },
-});
+};

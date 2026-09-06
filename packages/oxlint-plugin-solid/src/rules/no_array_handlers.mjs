@@ -1,10 +1,6 @@
-import { ESLintUtils } from "@typescript-eslint/utils";
-
 import { isDOMElementName, trace } from "../utils.mjs";
 
-const createRule = ESLintUtils.RuleCreator.withoutDocs;
-
-export const noArrayHandlersRule = createRule({
+export const noArrayHandlersRule = {
     meta: {
         docs: {
             description: "Disallow usage of type-unsafe event handlers.",
@@ -50,4 +46,4 @@ export const noArrayHandlersRule = createRule({
             },
         };
     },
-});
+};

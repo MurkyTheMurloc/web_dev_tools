@@ -1,5 +1,3 @@
-import { ESLintUtils } from "@typescript-eslint/utils";
-
 import { getScope, getSourceCode } from "../compat.mjs";
 import {
     isDOMElementName,
@@ -7,7 +5,6 @@ import {
     appendImports,
     insertImports,
 } from "../utils.mjs";
-const createRule = ESLintUtils.RuleCreator.withoutDocs;
 // Currently all of the control flow components are from 'solid-js'.
 // Solid 2.0 dropped `Index` (use `<For keyed={false}>`) and renamed the
 // async/error boundaries. All of these are exported from `solid-js`.
@@ -22,7 +19,7 @@ const AUTO_COMPONENTS = [
     "Reveal",
 ];
 const SOURCE_MODULE = "solid-js";
-export default createRule({
+export default {
     meta: {
         type: "problem",
         docs: {
@@ -225,4 +222,4 @@ export default createRule({
             },
         };
     },
-});
+};

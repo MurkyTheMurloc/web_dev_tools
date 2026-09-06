@@ -1,8 +1,5 @@
-import { ESLintUtils } from "@typescript-eslint/utils";
-
 import { isFunctionNode, trackImports } from "../utils.mjs";
 
-const createRule = ESLintUtils.RuleCreator.withoutDocs;
 const SETTER_INDEX = 1;
 
 /** `const [value, setValue] = createSignal(...)` -> "setValue". */
@@ -84,7 +81,7 @@ function onlyWritesSignals(phase, setterNames) {
     );
 }
 
-export default createRule({
+export default {
     meta: {
         type: "problem",
         docs: {
@@ -168,4 +165,4 @@ export default createRule({
             },
         };
     },
-});
+};

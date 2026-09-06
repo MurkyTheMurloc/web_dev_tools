@@ -1,8 +1,5 @@
-import { ESLintUtils } from "@typescript-eslint/utils";
-
 import { isFunctionNode, isPropsByName, trackImports } from "../utils.mjs";
 
-const createRule = ESLintUtils.RuleCreator.withoutDocs;
 const GETTER_INDEX = 0;
 
 /** `const [value, setValue] = createSignal(...)` -> "value". */
@@ -78,7 +75,7 @@ function walkPhase(node, visit) {
     }
 }
 
-export default createRule({
+export default {
     meta: {
         type: "problem",
         docs: {
@@ -175,4 +172,4 @@ export default createRule({
             },
         };
     },
-});
+};

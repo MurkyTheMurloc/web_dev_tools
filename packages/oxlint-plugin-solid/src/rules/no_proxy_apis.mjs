@@ -1,20 +1,16 @@
-import { ESLintUtils } from "@typescript-eslint/utils";
-
 import {
     isFunctionNode,
     trackImports,
     isPropsByName,
     trace,
 } from "../utils.mjs";
-const createRule = ESLintUtils.RuleCreator.withoutDocs;
-
 // Store APIs that hand back a Proxy. Solid 2.0 exports these from `solid-js`.
 const PROXY_BACKED_STORE_APIS = new Set([
     "createStore",
     "createProjection",
     "createOptimisticStore",
 ]);
-export default createRule({
+export default {
     meta: {
         type: "problem",
         docs: {
@@ -116,4 +112,4 @@ export default createRule({
             },
         };
     },
-});
+};

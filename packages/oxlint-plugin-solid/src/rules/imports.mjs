@@ -1,8 +1,5 @@
-import { ESLintUtils } from "@typescript-eslint/utils";
-
 import { getSourceCode } from "../compat.mjs";
 import { appendImports, insertImports, removeSpecifier } from "../utils.mjs";
-const createRule = ESLintUtils.RuleCreator.withoutDocs;
 // Solid 2.0 moved the renderers into `@solidjs/*` packages and pulled the store
 // APIs into the core. Symbols that are legitimately exported from more than one
 // package (the control-flow components, `ComponentProps`) are deliberately left
@@ -105,7 +102,7 @@ for (const type of ["ClassValue", "IntrinsicElement", "JSX", "RequestEvent"]) {
 }
 const sourceRegex = /^(?:solid-js|@solidjs\/(?:web|h|html|universal))$/;
 const isSource = (source) => sourceRegex.test(source);
-export default createRule({
+export default {
     meta: {
         type: "suggestion",
         docs: {
@@ -196,4 +193,4 @@ export default createRule({
             },
         };
     },
-});
+};

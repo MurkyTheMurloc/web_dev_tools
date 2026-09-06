@@ -1,9 +1,6 @@
-import { ESLintUtils } from "@typescript-eslint/utils";
-
 import { jsxPropName } from "../utils.mjs";
-const createRule = ESLintUtils.RuleCreator.withoutDocs;
 const DEFAULT_CLASSNAMES = ["cn", "clsx", "classnames"];
-export default createRule({
+export default {
     meta: {
         type: "problem",
         docs: {
@@ -98,4 +95,4 @@ export default createRule({
             },
         };
     },
-});
+};
