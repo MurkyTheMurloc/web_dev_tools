@@ -17,6 +17,12 @@ import { mtimeOf, NODE_MODULES, TTL } from "./fs"
 import { definingExportOf } from "./modules"
 import { isSfc, parseSource, sfcNameOf } from "./parser"
 import { templateTags, type TemplateTag } from "./sfc-template"
+import {
+  mergedPropsOf,
+  omittedPropsOf,
+  solidHelpersOf,
+  type SolidHelpers,
+} from "./solid"
 
 export { walk }
 
@@ -101,9 +107,15 @@ function componentFunction(bindings: Map<string, any>, name: string) {
     : null
 }
 
+// The prop a JSX component receives its classes in: className, and in a
+// Solid file `class` as well.
+function classProp(key: unknown, solid: boolean) {
+  return key === "className" || (solid && key === "class")
+}
+
 // The destructured binding, or the whole props object. Once className is
 // destructured out, `{...rest}` no longer carries it.
-function classNameBindings(fn: any) {
+function classNameBindings(fn: any, solid: SolidHelpers | null) {
   const names = new Set<string>()
   const propsNames = new Set<string>()
   const param = fn.params?.[0]
@@ -113,7 +125,7 @@ function classNameBindings(fn: any) {
     for (const prop of pattern.properties) {
       if (prop.type !== "Property") continue
       const key = prop.key?.name ?? prop.key?.value
-      if (key !== "className") continue
+      if (!classProp(key, solid !== null)) continue
       const value =
         prop.value?.type === "AssignmentPattern" ? prop.value.left : prop.value
       if (value?.type === "Identifier") names.add(value.name)
@@ -131,13 +143,51 @@ function classNameBindings(fn: any) {
   } else if (pattern.type === "Identifier") {
     propsNames.add(pattern.name)
   }
+  if (solid && propsNames.size) solidDerivedProps(fn.body, solid, propsNames)
   return { names, propsNames }
+}
+
+// Solid derives props objects instead of destructuring: `merge(defaults,
+// props)` and `omit(props, "variant")` still carry the received class.
+// Followed to a fixed point, so a merge of an omit counts too.
+function solidDerivedProps(
+  body: any,
+  solid: SolidHelpers,
+  propsNames: Set<string>
+) {
+  const declarators: any[] = []
+  walk(body, (node) => {
+    if (
+      node.type === "VariableDeclarator" &&
+      node.id?.type === "Identifier" &&
+      node.init
+    ) {
+      declarators.push(node)
+    }
+  })
+  const isProps = (node: any) =>
+    node?.type === "Identifier" && propsNames.has(node.name)
+  let grew = true
+  while (grew) {
+    grew = false
+    for (const declarator of declarators) {
+      if (propsNames.has(declarator.id.name)) continue
+      if (
+        mergedPropsOf(declarator.init, solid, isProps) ||
+        omittedPropsOf(declarator.init, solid, isProps)
+      ) {
+        propsNames.add(declarator.id.name)
+        grew = true
+      }
+    }
+  }
 }
 
 function forwardsClassName(
   expr: any,
   names: Set<string>,
-  propsNames: Set<string>
+  propsNames: Set<string>,
+  solid = false
 ) {
   let found = false
   walk(expr, (node) => {
@@ -147,7 +197,7 @@ function forwardsClassName(
       node.type === "MemberExpression" &&
       node.object?.type === "Identifier" &&
       propsNames.has(node.object.name) &&
-      node.property?.name === "className"
+      classProp(node.property?.name, solid)
     )
       found = true
     if (
@@ -305,7 +355,8 @@ function build(
       return { wrappers, complete }
     }
     // A file with neither is not a wrapper and is not worth parsing.
-    if (!sfc && !source.includes("className") && !source.includes("...")) {
+    // `class` covers className and Solid's class prop.
+    if (!sfc && !source.includes("class") && !source.includes("...")) {
       return { wrappers, complete }
     }
     try {
@@ -336,6 +387,8 @@ function build(
     }
   }
   const index = componentsFor(file)
+  const helpers = sfc ? null : solidHelpersOf(ast)
+  const solid = helpers?.solid ? helpers : null
   const { bindings, candidates } = indexLocalBindings(ast)
   const localVisiting = new Set<string>()
 
@@ -405,17 +458,22 @@ function build(
     let target: WrapperTarget | null = null
     const fn = componentFunction(bindings, name)
     if (fn) {
-      const { names, propsNames } = classNameBindings(fn)
+      const { names, propsNames } = classNameBindings(fn, solid)
       if (names.size || propsNames.size) {
         walk(fn.body, (node) => {
           if (target || node.type !== "JSXOpeningElement") return
           const forwards = node.attributes?.some(
             (attr: any) =>
               (attr.type === "JSXAttribute" &&
-                attr.name?.name === "className" &&
-                forwardsClassName(attr.value, names, propsNames)) ||
+                classProp(attr.name?.name, solid !== null) &&
+                forwardsClassName(
+                  attr.value,
+                  names,
+                  propsNames,
+                  solid !== null
+                )) ||
               (attr.type === "JSXSpreadAttribute" &&
-                forwardsClassName(attr, names, propsNames))
+                forwardsClassName(attr, names, propsNames, solid !== null))
           )
           if (forwards) target = targetOf(node)
         })

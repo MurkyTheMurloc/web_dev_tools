@@ -12,6 +12,7 @@ import {
 import { componentsFor } from "../project/components"
 import { NODE_MODULES } from "../project/fs"
 import { definingExportOf, type ExportBinding } from "../project/modules"
+import { mergedPropsOf, omittedPropsOf, solidHelpersOf } from "../project/solid"
 import { wrapperTargetOf, type WrapperTarget } from "../project/wrappers"
 import { fileOf } from "../rules/messages"
 import { withSettings } from "../rules/settings"
@@ -502,14 +503,29 @@ function isPropsCall(node: any): boolean {
   return call.callee.name === "$props" || call.callee.name === "defineProps"
 }
 
+type Parameter = {
+  variable: any
+  key: string
+  fallback: any
+  objectDefault: any
+  received: boolean
+  // A Solid component's props: read-only, `class` is the className prop.
+  solid: boolean
+  // The sources a Solid `merge` puts before the props, in order.
+  defaults: any[]
+}
+
 // A props parameter or a property destructured from it. A nested data
 // property is not the component's received prop.
-function parameterOf(node: any, context: any) {
+function parameterOf(node: any, context: any, depth = 0): Parameter | null {
   const variable = variableOf(node, context)
   const def = variable?.defs?.[0]
   if (!def) return null
   const received = def.type === "Variable" && isPropsCall(def.node?.init)
-  if (def.type !== "Parameter" && !received) return null
+  const solid = solidHelpersOf(context.sourceCode?.ast).solid
+  if (def.type !== "Parameter" && !received) {
+    return solid ? derivedPropsOf(variable, def, context, depth) : null
+  }
   let binding = def.name
   let fallback: any = null
   if (binding.parent?.type === "AssignmentPattern") {
@@ -539,18 +555,59 @@ function parameterOf(node: any, context: any) {
     fallback: key === "*" ? null : fallback,
     objectDefault,
     received,
+    solid: solid && def.type === "Parameter",
+    defaults: [],
   }
 }
 
-// An SFC spells the prop `class`, and it is the same prop.
+// Solid derives props instead of destructuring them: `const merged =
+// merge(defaults, props)` and `const rest = omit(props, "variant")` are
+// the props still, with the class unless a later source or the omitted
+// keys take it.
+function derivedPropsOf(
+  variable: any,
+  def: any,
+  context: any,
+  depth: number
+): Parameter | null {
+  if (depth > 4 || def.type !== "Variable" || def.name !== def.node?.id) {
+    return null
+  }
+  const helpers = solidHelpersOf(context.sourceCode?.ast)
+  const propsOf = (node: any) => {
+    if (node?.type !== "Identifier") return null
+    const parameter = parameterOf(node, context, depth + 1)
+    return parameter?.solid && parameter.key === "*" ? parameter : null
+  }
+  const isProps = (node: any) => propsOf(node) !== null
+  const init = def.node.init
+  const merged = mergedPropsOf(init, helpers, isProps)
+  const source = propsOf(
+    merged ? merged.props : omittedPropsOf(init, helpers, isProps)
+  )
+  if (!source) return null
+  return {
+    variable,
+    key: "*",
+    fallback: null,
+    objectDefault: null,
+    received: false,
+    solid: true,
+    defaults: [...(merged?.defaults ?? []), ...source.defaults],
+  }
+}
+
+// An SFC spells the prop `class`, and it is the same prop. So does Solid.
 function namesProp(
-  parameter: { received: boolean },
+  parameter: { received: boolean; solid: boolean },
   key: string | null | undefined,
   name: string
 ) {
   return (
     key === name ||
-    (parameter.received && name === "className" && key === "class")
+    ((parameter.received || parameter.solid) &&
+      name === "className" &&
+      key === "class")
   )
 }
 
@@ -570,10 +627,11 @@ function forwardedPropOf(node: any, context: any, name: string) {
   if (key !== name && !(name === "className" && key === "class")) return null
   const parameter = parameterOf(object, context)
   // Props from a call are read-only: handing them on changes nothing.
+  // So are Solid's, which `merge` and `omit` take without copying.
   return parameter?.key === "*" &&
     namesProp(parameter, key, name) &&
     !isWritten(parameter.variable) &&
-    (parameter.received || !isEscaped(parameter.variable))
+    (parameter.received || parameter.solid || !isEscaped(parameter.variable))
     ? parameter
     : null
 }
@@ -611,6 +669,25 @@ export function forwardedValuesOf(
       } else if (found.value) {
         alternatives.push({ value: found.value })
       }
+    }
+    // A Solid `merge` default the props may leave in place.
+    const prop =
+      node?.type === "MemberExpression"
+        ? node.computed
+          ? staticKey(node.property)
+          : node.property?.name
+        : parameter.key
+    for (const source of parameter.defaults) {
+      const defaultsPath = new Set(path).add(parameter.variable)
+      const object =
+        typeof prop === "string"
+          ? resolveObject(source, context, defaultsPath)
+          : null
+      const found = object
+        ? resolveProperty(object, prop, context, defaultsPath)
+        : { value: undefined, uncertain: true }
+      if (found.uncertain) alternatives.push({ unresolved: source })
+      else if (found.value) alternatives.push({ value: found.value })
     }
   }
   return { variable: parameter.variable, alternatives }
