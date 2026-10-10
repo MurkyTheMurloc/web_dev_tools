@@ -486,7 +486,8 @@ After making changes, run `npm run lint` and fix all errors.
 Each framework has its own page with the full setup and what is read:
 [React](https://github.com/shadcn-ui/lint/blob/main/docs/react.md),
 [Vue](https://github.com/shadcn-ui/lint/blob/main/docs/vue.md),
-[Svelte](https://github.com/shadcn-ui/lint/blob/main/docs/svelte.md).
+[Svelte](https://github.com/shadcn-ui/lint/blob/main/docs/svelte.md),
+[Solid](https://github.com/shadcn-ui/lint/blob/main/docs/solid.md).
 
 ## Rules
 
