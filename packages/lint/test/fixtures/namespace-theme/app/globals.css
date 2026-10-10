@@ -1,0 +1,56 @@
+@import "tailwindcss";
+
+/* Namespaces that share a prefix with a color utility: text-stat-label is
+   a font-size, shadow-card-glow a box-shadow, bg-stripes a background
+   image. None of them is a color. */
+@theme inline {
+  --color-primary: oklch(0.205 0 0);
+  --text-stat-label: 13px;
+  --shadow-card-glow: 0 0 24px oklch(0.205 0 0);
+  --drop-shadow-lift: 0 4px 8px oklch(0.205 0 0);
+  --background-image-stripes: linear-gradient(45deg, #000 50%, #fff 50%);
+}
+
+@utility text-callout {
+  font-size: 15px;
+  line-height: 1.4;
+}
+
+/* A plain selector is not vocabulary: the color behind it is raw. */
+.text-legacy {
+  color: #f00;
+}
+
+/* Animations the project declares: a theme value, and the @utility shape
+   tw-animate-css uses for animate-in. */
+@theme inline {
+  --animate-shimmer: shimmer 2s linear infinite;
+}
+
+@utility animate-in {
+  animation: enter 150ms ease;
+}
+
+@utility animate-duration-* {
+  animation-duration: calc(--value(integer) * 1ms);
+}
+
+/* Scales cn reads from the theme, the way `cn build` registers them:
+   rounded-card is a radius, p-gutter a spacing step, and so on. */
+@theme inline {
+  --radius-card: 12px;
+  --spacing-gutter: 1.5rem;
+  --tracking-display: -0.02em;
+  --leading-display: 1.1;
+  --breakpoint-wide: 96rem;
+  --container-prose: 65ch;
+  --ease-snappy: cubic-bezier(0.2, 0, 0, 1);
+  --blur-glass: 12px;
+  --perspective-stage: 1200px;
+  --aspect-poster: 2 / 3;
+}
+
+/* A :root variable is not a theme scale: rounded-panel is not a class. */
+:root {
+  --radius-panel: 8px;
+}
