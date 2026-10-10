@@ -96,4 +96,8 @@ export const jsxReader: TemplateReader = {
     return null
   },
   renderedElementOf,
+  // In JSX only `class` itself, never className or a classNames map:
+  // Solid 2.0 takes clsx's object and array forms there, and React has
+  // no `class` prop that an object could mean anything else on.
+  classObjects: true,
 }
