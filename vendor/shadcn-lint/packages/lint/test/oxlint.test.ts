@@ -148,6 +148,23 @@ describe.skipIf(!buildUsable)("oxlint", { timeout: RUN_TIMEOUT }, () => {
     expect(out).toContain("Dynamically built className on <Button>")
   }, 15_000)
 
+  test("Solid 2.0: class object keys, arrays and props.class wrappers", () => {
+    const out = oxlint(
+      path.join(FIXTURES, "solid-project"),
+      "src/routes/oxlint.tsx",
+      ALL_RULES
+    )
+    expect(out).toMatch(
+      /"bg-red-500" is not allowed on <Button>: <Button> owns its color/
+    )
+    expect(out).toMatch(
+      /"rounded-full" is not allowed on <SaveButton>: <SaveButton> forwards className to <Button>, which owns its shape/
+    )
+    expect(out).toMatch(/"text-\[13px\]" hardcodes an off-token value/)
+    // The conditions are values, not classes nobody can read.
+    expect(out).not.toContain("Dynamically built className")
+  })
+
   test("a contract message and the settings note reach the message", () => {
     const out = oxlint(
       path.join(FIXTURES, "project"),

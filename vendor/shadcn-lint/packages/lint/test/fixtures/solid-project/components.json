@@ -1,0 +1,13 @@
+{
+  "tailwind": {
+    "css": "src/app.css",
+    "baseColor": "neutral"
+  },
+  "aliases": {
+    "components": "~/components",
+    "utils": "~/lib/utils",
+    "ui": "~/components/ui",
+    "lib": "~/lib"
+  },
+  "tsx": true
+}
