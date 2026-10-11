@@ -26,7 +26,6 @@ const config = [
     clean: false,
     dts: false,
     entry: {
-      biome: "./biome/index.ts",
       oxlint: "./oxlint/index.ts",
     },
     // tsdown defaults `fixedExtension` to true for platform "node", which emits

@@ -8,7 +8,6 @@
     "src/**/*.ts",
     "rules/**/*.ts",
     "oxlint/**/*.ts",
-    "biome/**/*.ts",
     "tests/**/*.ts",
     "smoke/**/*.ts",
     "tsdown.config.ts",
