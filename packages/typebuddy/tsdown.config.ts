@@ -4,7 +4,6 @@ const config = [
   {
     entry: {
       index: "./src/index.ts",
-      globals: "./globals.ts",
       // One entry per published subpath. Without them tsdown emits a single
       // graph reachable from `index`, so `exports["./guards"]` would point at
       // a file that was never built.

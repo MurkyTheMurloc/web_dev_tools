@@ -6,7 +6,7 @@
     "rootDir": "."
   },
   "include": [
-    "globals.ts",
+    "globals.d.ts",
     "src/**/*.ts",
     "rules/**/*.ts",
     "oxlint/**/*.ts",

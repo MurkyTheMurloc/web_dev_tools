@@ -93,6 +93,19 @@ modules.
 
 If you want the `typebuddy` utility types globally, opt in once in your project:
 
+```jsonc
+// tsconfig.json
+{
+  "compilerOptions": {
+    "types": ["@murky-web/typebuddy/globals"]
+  }
+}
+```
+
+`types` is replaced, not merged, when a tsconfig `extends` another one, so a
+config that sets its own `types` has to list the entry again. A side-effect
+import in any `.d.ts` file the program includes works as well:
+
 ```typescript
 import type {} from "@murky-web/typebuddy/globals";
 ```

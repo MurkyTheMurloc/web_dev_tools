@@ -43,9 +43,7 @@
       "default": "./dist/collections.js"
     },
     "./globals": {
-      "types": "./globals.ts",
-      "import": "./dist/globals.js",
-      "default": "./dist/globals.js"
+      "types": "./globals.d.ts"
     },
     "./oxlint": {
       "types": "./oxlint/index.ts",
@@ -68,7 +66,7 @@
     "lint:fix": "oxlint -c ./.oxlintrc.jsonc --tsconfig ./tsconfig.lint.json --type-aware --fix src biome tsdown.config.ts vitest.config.ts",
     "format": "oxfmt -c ../config/oxc/.oxfmtrc.jsonc src rules biome tests tsdown.config.ts vitest.config.ts",
     "format:check": "oxfmt -c ../config/oxc/.oxfmtrc.jsonc --check src rules biome tests tsdown.config.ts vitest.config.ts",
-    "smoke:globals": "bun run build && tsc --project ./smoke/globals/tsconfig.json --noEmit",
+    "smoke:globals": "bun run build && tsc --project ./smoke/globals/tsconfig.json --noEmit && mkdir -p ./smoke/globals/node_modules/@murky-web && ln -sfn ../../../.. ./smoke/globals/node_modules/@murky-web/typebuddy && tsc --project ./smoke/globals/tsconfig.types.json --noEmit",
     "smoke:oxlint": "bun run build && bun ./smoke/oxlint/run-smoke.ts",
     "smoke:oxlint:fix": "bun run build && bun ./smoke/oxlint/run-fix-smoke.ts",
     "smoke:subpath": "bun run build && bun ./smoke/subpath/run.ts",
@@ -78,7 +76,7 @@
   "files": [
     "biome",
     "dist",
-    "globals.ts",
+    "globals.d.ts",
     "jsr.json",
     "oxlint/index.ts",
     "rules",
