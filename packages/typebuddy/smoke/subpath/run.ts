@@ -10,9 +10,14 @@ import path from "node:path";
 const packageRoot = path.resolve(import.meta.dir, "../..");
 const pkg = JSON.parse(
     readFileSync(path.join(packageRoot, "package.json"), "utf8"),
-) as { exports: Record<string, string | { import?: string }> };
+) as { exports: Record<string, string | { import?: string; types?: string }> };
 
-const subpaths = Object.entries(pkg.exports).filter(([key]) => key !== "./package.json");
+// `./globals` is declarations only: no runtime file to emit or check.
+const subpaths = Object.entries(pkg.exports).filter(
+    ([key, target]) =>
+        key !== "./package.json" &&
+        !(typeof target !== "string" && target.import === undefined && target.types?.endsWith(".d.ts")),
+);
 
 for (const [key, target] of subpaths) {
     const file = typeof target === "string" ? target : target.import;

@@ -21,7 +21,7 @@
     "exclude": [
       "tests/**",
       "smoke/**",
-      "globals.ts",
+      "globals.d.ts",
       "dist/**",
       "node_modules/**"
     ]
