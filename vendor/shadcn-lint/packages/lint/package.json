@@ -1,7 +1,7 @@
 {
-  "name": "@shadcn/lint",
+  "name": "@murky-web/shadcn-lint",
   "version": "0.2.1",
-  "description": "A programmable agent-first linter for Tailwind design systems.",
+  "description": "Fork of @shadcn/lint with Solid 2.0 support: an agent-first linter for Tailwind design systems.",
   "license": "MIT",
   "author": {
     "name": "shadcn",
@@ -9,16 +9,17 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/shadcn-ui/lint.git",
-    "directory": "packages/lint"
+    "url": "git+https://github.com/MurkyTheMurloc/web_dev_tools.git",
+    "directory": "vendor/shadcn-lint/packages/lint"
   },
-  "homepage": "https://github.com/shadcn-ui/lint#readme",
+  "homepage": "https://github.com/MurkyTheMurloc/web_dev_tools/tree/main/vendor/shadcn-lint#readme",
   "bugs": {
-    "url": "https://github.com/shadcn-ui/lint/issues"
+    "url": "https://github.com/MurkyTheMurloc/web_dev_tools/issues"
   },
   "type": "module",
   "publishConfig": {
-    "access": "public"
+    "access": "public",
+    "provenance": true
   },
   "sideEffects": [
     "./dist/tailwind-worker.js"
@@ -49,7 +50,9 @@
     "tailwind",
     "tailwindcss",
     "design-system",
-    "cn"
+    "cn",
+    "solid",
+    "solidjs"
   ],
   "dependencies": {
     "@eslint/core": "^0.17.0",
@@ -68,11 +71,13 @@
     }
   },
   "devDependencies": {
+    "@ianvs/prettier-plugin-sort-imports": "^4.7.1",
     "@tailwindcss/node": "^4.3.3",
     "@types/node": "^24.3.0",
     "@typescript-eslint/parser": "^8.40.0",
     "eslint": "^9.33.0",
     "oxlint": "^1.80.0",
+    "prettier": "^3.6.2",
     "svelte": "^5.57.1",
     "svelte-eslint-parser": "^1.8.1",
     "tailwind-merge": "^3.6.0",

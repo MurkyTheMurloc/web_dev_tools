@@ -16,7 +16,7 @@ import { rulesFor, UI_RULES } from "./policy.mjs"
 const { plugin } = await import(
   process.env.SHADCN_LINT_PLUGIN
     ? pathToFileURL(path.resolve(process.env.SHADCN_LINT_PLUGIN)).href
-    : "@shadcn/lint"
+    : "@murky-web/shadcn-lint"
 )
 
 // The documented configuration, from lib/policy.mjs.

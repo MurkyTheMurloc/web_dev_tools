@@ -1,5 +1,12 @@
 # @shadcn/lint
 
+> **Fork:** published as `@murky-web/shadcn-lint`, with Solid 2.0 support
+> (`class` objects and arrays, `props.class`, `merge` and `omit`; see
+> [docs/solid.md](./docs/solid.md)). Upstream is
+> [shadcn-ui/lint](https://github.com/shadcn-ui/lint); install with
+> `bun add -D @murky-web/shadcn-lint` and use that name wherever this README
+> says `@shadcn/lint`.
+
 **Write design system rules that agents can verify.**
 
 <img src="./docs/assets/cover.png" width="2000" height="832" alt="A lint diagnostic explains why padding is not allowed on Button and suggests using an existing size." />
