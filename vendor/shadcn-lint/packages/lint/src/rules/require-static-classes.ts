@@ -9,7 +9,7 @@ import { withSettings } from "./settings"
 
 const MESSAGES = {
   dynamicClasses:
-    "Dynamically built className on <{{component}}> cannot be checked. Use static class strings.",
+    "Dynamically built class on <{{component}}> cannot be checked. Use static class strings.",
 }
 
 export const requireStaticClasses = {
@@ -17,7 +17,7 @@ export const requireStaticClasses = {
     type: "problem" as const,
     docs: {
       description:
-        "Require statically analyzable className values on design-system components.",
+        "Require statically analyzable class values on design-system components.",
       url: "https://github.com/shadcn-ui/lint/blob/main/docs/rules/require-static-classes.md",
     },
     schema: [

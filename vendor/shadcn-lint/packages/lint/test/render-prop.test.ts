@@ -35,7 +35,7 @@ describe("render prop", () => {
           errors: [
             {
               message:
-                /^"bg-primary" is not allowed on <DialogTrigger>: <DialogTrigger> forwards className to <Button>, which owns its color\. Use a variant: default, outline, secondary, ghost, destructive, link\. Add a new variant in .*button\.tsx /,
+                /^"bg-primary" is not allowed on <DialogTrigger>: <DialogTrigger> forwards class to <Button>, which owns its color\. Use a variant: default, outline, secondary, ghost, destructive, link\. Add a new variant in .*button\.tsx /,
             },
           ],
         },

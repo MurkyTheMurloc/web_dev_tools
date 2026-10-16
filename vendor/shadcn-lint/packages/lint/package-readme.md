@@ -90,8 +90,8 @@ export function SaveButton(props: ComponentProps<typeof Button>): JSX.Element {
 which owns its color.
 ```
 
-The Solid reading applies to files that import from `solid-js` or `@solidjs/*` (a
-type import is enough). Messages in those files say `class`.
+The Solid reading of `props.class`, `merge` and `omit` applies to files that import
+from `solid-js` or `@solidjs/*` (a type import is enough). Messages always say `class`.
 
 ## Contracts and messages
 

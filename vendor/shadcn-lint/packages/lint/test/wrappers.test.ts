@@ -310,7 +310,7 @@ describe("wrappers", () => {
           errors: [
             {
               message:
-                /<SaveButton> forwards className to <Button>.*Add a new variant in test\/fixtures\/project\/components\/ui\/button\.tsx/,
+                /<SaveButton> forwards class to <Button>.*Add a new variant in test\/fixtures\/project\/components\/ui\/button\.tsx/,
             },
           ],
         },

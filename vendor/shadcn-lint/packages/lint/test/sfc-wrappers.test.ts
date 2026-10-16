@@ -72,7 +72,7 @@ describe("single-file component wrappers", () => {
         SVELTE_PAGE
       )
     ).toEqual([
-      `shadcn/no-restyle: "rounded-none" is not allowed on <SaveButton>: <SaveButton> forwards className to <Button>, which owns its shape`,
+      `shadcn/no-restyle: "rounded-none" is not allowed on <SaveButton>: <SaveButton> forwards class to <Button>, which owns its shape`,
     ])
   })
 
@@ -83,8 +83,8 @@ describe("single-file component wrappers", () => {
         VUE_PAGE
       )
     ).toEqual([
-      `shadcn/no-restyle: "rounded-none" is not allowed on <SaveButton>: <SaveButton> forwards className to <Button>, which owns its shape`,
-      `shadcn/no-restyle: "p-4" is not allowed on <IconButton>: <IconButton> forwards className to <Button>, which owns its spacing`,
+      `shadcn/no-restyle: "rounded-none" is not allowed on <SaveButton>: <SaveButton> forwards class to <Button>, which owns its shape`,
+      `shadcn/no-restyle: "p-4" is not allowed on <IconButton>: <IconButton> forwards class to <Button>, which owns its spacing`,
     ])
   })
 })

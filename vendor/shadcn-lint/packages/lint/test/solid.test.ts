@@ -247,24 +247,19 @@ describe("outside Solid", () => {
         (m) => `${m.ruleId}: ${m.message.split(".")[0]}`
       )
     ).toEqual([
-      "shadcn/require-static-classes: Dynamically built className on <Button> cannot be checked",
+      "shadcn/require-static-classes: Dynamically built class on <Button> cannot be checked",
     ])
   })
 })
 
 describe("Solid 2.0 wording", () => {
-  it("says class in a Solid file and className in a React file", () => {
-    const markup = "<Button className={`bg-${tone()}`} />"
+  it("built-in messages say class, in Solid and plain TSX files alike", () => {
+    const markup = "<Button class={`bg-${tone()}`} />"
     const solid = lintTsx(
       `${header}export const Page = () => (${markup})\n`,
       SOLID_PAGE
     ).map((m) => m.message)
     expect(solid.join("\n")).toContain("Dynamically built class on <Button>")
-    expect(solid.join("\n")).not.toContain("className on")
-    const react = lintTsx(
-      `import { Button } from "@/components/ui/button"\nconst tone = () => "p-2"\nexport const Page = () => (${markup})\n`,
-      REACT_PAGE
-    ).map((m) => m.message)
-    expect(react.join("\n")).toContain("Dynamically built className on <Button>")
+    expect(solid.join("\n")).not.toContain("className")
   })
 })

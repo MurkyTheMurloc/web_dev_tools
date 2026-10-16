@@ -88,7 +88,7 @@ describe("Vue templates", () => {
     expect(
       found(`<Card v-for="base in items" :key="base" :class="base" />`, body)
     ).toEqual([
-      "shadcn/require-static-classes: Dynamically built className on <Card> cannot be checked",
+      "shadcn/require-static-classes: Dynamically built class on <Card> cannot be checked",
     ])
     expect(
       found(
@@ -96,7 +96,7 @@ describe("Vue templates", () => {
         body
       )
     ).toEqual([
-      "shadcn/require-static-classes: Dynamically built className on <Card> cannot be checked",
+      "shadcn/require-static-classes: Dynamically built class on <Card> cannot be checked",
     ])
   })
 
@@ -127,7 +127,7 @@ describe("Vue templates", () => {
 
   it("reports a class it cannot read on a component", () => {
     expect(found('<Card :class="`p-${tone}`" />')).toEqual([
-      "shadcn/require-static-classes: Dynamically built className on <Card> cannot be checked",
+      "shadcn/require-static-classes: Dynamically built class on <Card> cannot be checked",
     ])
   })
 

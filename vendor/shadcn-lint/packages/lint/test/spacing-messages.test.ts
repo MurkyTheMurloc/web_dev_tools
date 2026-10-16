@@ -209,7 +209,7 @@ describe("spacing messages", () => {
           errors: [
             {
               message:
-                /^"py-1" is not allowed on <SaveButton>: <SaveButton> forwards className to <Button>, which owns its spacing\. Use a size \(default, .*\), or margin here or gap on the parent for space around it\. Add a size in .*button\.tsx/,
+                /^"py-1" is not allowed on <SaveButton>: <SaveButton> forwards class to <Button>, which owns its spacing\. Use a size \(default, .*\), or margin here or gap on the parent for space around it\. Add a size in .*button\.tsx/,
             },
           ],
         },

@@ -67,7 +67,7 @@ describe("Svelte templates", () => {
     ])
     // A glued interpolation is not a class anyone wrote.
     expect(found(`<Card.Root class="p-{tone}">x</Card.Root>`)).toEqual([
-      "shadcn/require-static-classes: Dynamically built className on <Card> cannot be checked",
+      "shadcn/require-static-classes: Dynamically built class on <Card> cannot be checked",
     ])
   })
 
@@ -163,7 +163,7 @@ describe("Svelte templates", () => {
       body
     )
     expect(long).toEqual([
-      "shadcn/require-static-classes: Dynamically built className on <Button> cannot be checked",
+      "shadcn/require-static-classes: Dynamically built class on <Button> cannot be checked",
     ])
     expect(
       found(`<Button {theme} class={theme.className}>x</Button>`, body)

@@ -133,7 +133,7 @@ describe.skipIf(!buildUsable)("oxlint", { timeout: RUN_TIMEOUT }, () => {
     )
     // Through a wrapper.
     expect(out).toMatch(
-      /"rounded-full" is not allowed on <SaveButton>: <SaveButton> forwards className to <Button>, which owns its shape/
+      /"rounded-full" is not allowed on <SaveButton>: <SaveButton> forwards class to <Button>, which owns its shape/
     )
     // A component with a file but no variants.
     expect(out).toMatch(
@@ -145,7 +145,7 @@ describe.skipIf(!buildUsable)("oxlint", { timeout: RUN_TIMEOUT }, () => {
     )
     expect(out).toContain('fill="#ff00aa" hardcodes a color')
     expect(out).toContain('"flex-cols" is not a class')
-    expect(out).toContain("Dynamically built className on <Button>")
+    expect(out).toContain("Dynamically built class on <Button>")
   }, 15_000)
 
   test("Solid 2.0: class object keys, arrays and props.class wrappers", () => {

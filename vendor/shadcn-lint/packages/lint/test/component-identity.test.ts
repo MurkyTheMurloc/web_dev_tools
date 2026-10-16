@@ -117,6 +117,6 @@ describe("default wrapper names", () => {
       `import Save from "@/components/default-wrapper"\nexport const A = () => <Save className="bg-red-500">Go</Save>`,
       { "shadcn/no-restyle": "error" }
     )
-    expect(message.message).toContain("<Save> forwards className to <Button>")
+    expect(message.message).toContain("<Save> forwards class to <Button>")
   })
 })

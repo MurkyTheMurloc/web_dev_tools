@@ -33,7 +33,7 @@ const messageSchema = {
 const NOT_ALLOWED = '"{{className}}" is not allowed on <{{component}}>:'
 const OWNS = "<{{component}}> owns its {{category}}."
 const OWNS_VIA_WRAPPER =
-  "<{{wrapper}}> forwards className to <{{component}}>, which owns its {{category}}."
+  "<{{wrapper}}> forwards class to <{{component}}>, which owns its {{category}}."
 const NEW_VARIANT_GUARD =
   "only if the design explicitly calls for a treatment none of these provides."
 const SPACING_SIZES =

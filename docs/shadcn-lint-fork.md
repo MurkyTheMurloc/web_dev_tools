@@ -26,5 +26,5 @@ conflict on the next pull. Our changes:
 | `README.md` | fork note at the top |
 | Solid 2.0 support (SID-384) | `src/` and `test/` changes for `class` objects, `props.class`, `merge`, `omit`; `docs/solid.md` |
 | `packages/lint/package-readme.md` | **new file, ours.** The README npm shows: Solid setup and examples. `prepack.mjs` uses it instead of upstream's root README. |
-| `src/rules/messages.ts` | built-in messages say `class` instead of `className` in Solid files (`inFrameworkTerms`) |
+| `src/rules/no-restyle.ts`, `src/rules/require-static-classes.ts`, tests | messages say `class` instead of `className` (Solid only; upstream tests changed to match) |
 | `packages/lint/package-lock.json` | **new file, ours.** Upstream keeps `pnpm-lock.yaml` and `packageManager: pnpm` in `vendor/shadcn-lint`; changesets detects the package manager from the nearest lock file and would call `pnpm publish`, which CI does not have. This near-empty npm lock file makes it pick npm, without touching upstream files. Do not delete it. |
