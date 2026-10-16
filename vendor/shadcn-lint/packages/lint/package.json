@@ -1,6 +1,6 @@
 {
   "name": "@murky-web/shadcn-lint",
-  "version": "0.2.1",
+  "version": "0.3.0",
   "description": "Fork of @shadcn/lint with Solid 2.0 support: an agent-first linter for Tailwind design systems.",
   "license": "MIT",
   "author": {
