@@ -15,7 +15,6 @@ Start with [Get started](../README.md#get-started) to set up ESLint or Oxlint.
 - [Adding linting to an existing project](./adoption.md): start with warnings and add rules as you go.
 - [How it works](./how-it-works.md): how the linter reads your components and theme, and what it can check.
 - [Troubleshooting](./troubleshooting.md): stale results, missing components, and theme warnings.
-- [Evals](./evals.md): how we measure the linter, results, and reproduction steps.
 
 ## Rules
 
@@ -32,4 +31,3 @@ See [shared options](./rules.md) for allowances, contracts, messages, and class 
 
 - [Settings](../README.md#settings): component imports, helpers, and monorepos.
 - [API reference](./api.md): plugin exports and the experimental project API.
-- [Contributing](../CONTRIBUTING.md): workspace setup, tests, and benchmarks.

@@ -4,7 +4,6 @@ dist/
 *.tsbuildinfo
 .registry/
 
-packages/evals/results/
 
 packages/lint/README.md
 packages/lint/LICENSE
