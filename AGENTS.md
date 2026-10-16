@@ -20,9 +20,8 @@ workflow with npm trusted publishing).
 - Bun only: `bun install`, `bun run <script>`, tests with `bun run test` (vitest), never `bun test`.
 - TypeScript 7 (`tsc`), builds with `tsdown`.
 - Lint and format with oxlint and oxfmt from `config/oxc`. Each package has its own `lint`
-  with its own `.oxlintrc.jsonc` extending the shared one; the root `bun run lint` runs the
-  shared config over all packages except the lint plugins and the smoke fixtures that are
-  wrong on purpose.
+  with its own `.oxlintrc.jsonc` extending the shared one; the root `bun run lint` runs every
+  package's `lint`. The lint plugins have no `lint` script; their tests are the check.
 - `config/`, every `.oxlintrc*`, `.oxfmtrc*` and `tsconfig*` are the user's: never edit them
   to make a check pass. Fix the code.
 
