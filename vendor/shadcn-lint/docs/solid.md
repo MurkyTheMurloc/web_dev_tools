@@ -64,5 +64,5 @@ is written.
   name. Solid 1.x `mergeProps` and `splitProps` are not followed.
 - Destructured props (`({ class: cls }) => ...`) are followed like
   React's, though Solid warns about them.
-- Messages still say "className", the name the rules use for the
-  received class prop in every framework.
+- Messages in Solid files say `class`, everywhere else `className`. Custom
+  messages are used as written.

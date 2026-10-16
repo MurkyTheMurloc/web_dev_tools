@@ -2,6 +2,7 @@ import * as path from "node:path"
 
 import { editDistance } from "../grammar/similar"
 import { memoize } from "../project/fs"
+import { solidHelpersOf } from "../project/solid"
 import { warnOnce } from "../project/warn"
 
 const LISTED = 12
@@ -168,14 +169,28 @@ export function reporter(
       typeof override === "string" && override.trim() !== ""
         ? override.trim()
         : ruleMessage
-    if (!text && !note) {
+    const builtIn = messages[descriptor.messageId] ?? ""
+    const framed = inFrameworkTerms(context, builtIn)
+    if (!text && !note && framed === builtIn) {
       context.report(descriptor)
       return
     }
     const data = withUniversalSlots(descriptor.data ?? {})
     const { messageId, ...rest } = descriptor
-    const base = interpolate(text || (messages[messageId] ?? ""), data)
+    const base = interpolate(text || framed, data)
     const parts = [base, note].filter((p) => p !== "")
     context.report({ ...rest, message: parts.join(" ") })
   }
+}
+
+// Built-in messages name the received class prop `className`. Solid files
+// (any import from Solid, see project/solid.ts) receive it as `class`, so
+// say that there. Placeholders such as {{className}} stay as they are;
+// custom messages are the user's words and are left alone.
+const CLASS_NAME_WORD = /(?<!\{\{\s*)\bclassName\b(?!\s*\}\})/g
+
+function inFrameworkTerms(context: any, template: string) {
+  if (!template.includes("className")) return template
+  if (!solidHelpersOf(context.sourceCode?.ast).solid) return template
+  return template.replace(CLASS_NAME_WORD, "class")
 }

@@ -96,7 +96,7 @@ describe("Solid 2.0 class sites", () => {
 
   it("reports an unreadable class object key on a component", () => {
     expect(found(`<Button class={{ [tone()]: active() }} />`)).toEqual([
-      "shadcn/require-static-classes: Dynamically built className on <Button> cannot be checked",
+      "shadcn/require-static-classes: Dynamically built class on <Button> cannot be checked",
     ])
   })
 
@@ -165,12 +165,12 @@ describe("Solid 2.0 wrappers", () => {
     expect(
       found(`<SaveButton class="bg-primary">Go</SaveButton>`, wrappers)
     ).toEqual([
-      `shadcn/no-restyle: "bg-primary" is not allowed on <SaveButton>: <SaveButton> forwards className to <Button>, which owns its color`,
+      `shadcn/no-restyle: "bg-primary" is not allowed on <SaveButton>: <SaveButton> forwards class to <Button>, which owns its color`,
     ])
     expect(
       found(`<ArrayButton class={{ "rounded-full": active() }} />`, wrappers)
     ).toEqual([
-      `shadcn/no-restyle: "rounded-full" is not allowed on <ArrayButton>: <ArrayButton> forwards className to <Button>, which owns its shape`,
+      `shadcn/no-restyle: "rounded-full" is not allowed on <ArrayButton>: <ArrayButton> forwards class to <Button>, which owns its shape`,
     ])
     expect(found(`<WideButton class="mt-4" />`, wrappers)).toEqual([])
     expect(found(`<Section class="bg-muted rounded-xl" />`, wrappers)).toEqual(
@@ -192,7 +192,7 @@ describe("Solid 2.0 wrappers", () => {
       )
     ).toEqual([
       `shadcn/no-restyle: "bg-primary" is not allowed on <Button>: <Button> owns its color`,
-      "shadcn/require-static-classes: Dynamically built className on <Button> cannot be checked",
+      "shadcn/require-static-classes: Dynamically built class on <Button> cannot be checked",
     ])
   })
 
@@ -215,7 +215,7 @@ describe("Solid 2.0 wrappers", () => {
         (m) => `${m.ruleId}: ${m.message.split(".")[0]}`
       )
     ).toEqual([
-      `shadcn/no-restyle: "bg-primary" is not allowed on <LocalButton>: <LocalButton> forwards className to <Button>, which owns its color`,
+      `shadcn/no-restyle: "bg-primary" is not allowed on <LocalButton>: <LocalButton> forwards class to <Button>, which owns its color`,
     ])
   })
 })
@@ -249,5 +249,22 @@ describe("outside Solid", () => {
     ).toEqual([
       "shadcn/require-static-classes: Dynamically built className on <Button> cannot be checked",
     ])
+  })
+})
+
+describe("Solid 2.0 wording", () => {
+  it("says class in a Solid file and className in a React file", () => {
+    const markup = "<Button className={`bg-${tone()}`} />"
+    const solid = lintTsx(
+      `${header}export const Page = () => (${markup})\n`,
+      SOLID_PAGE
+    ).map((m) => m.message)
+    expect(solid.join("\n")).toContain("Dynamically built class on <Button>")
+    expect(solid.join("\n")).not.toContain("className on")
+    const react = lintTsx(
+      `import { Button } from "@/components/ui/button"\nconst tone = () => "p-2"\nexport const Page = () => (${markup})\n`,
+      REACT_PAGE
+    ).map((m) => m.message)
+    expect(react.join("\n")).toContain("Dynamically built className on <Button>")
   })
 })

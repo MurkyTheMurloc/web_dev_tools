@@ -158,11 +158,11 @@ describe.skipIf(!buildUsable)("oxlint", { timeout: RUN_TIMEOUT }, () => {
       /"bg-red-500" is not allowed on <Button>: <Button> owns its color/
     )
     expect(out).toMatch(
-      /"rounded-full" is not allowed on <SaveButton>: <SaveButton> forwards className to <Button>, which owns its shape/
+      /"rounded-full" is not allowed on <SaveButton>: <SaveButton> forwards class to <Button>, which owns its shape/
     )
     expect(out).toMatch(/"text-\[13px\]" hardcodes an off-token value/)
     // The conditions are values, not classes nobody can read.
-    expect(out).not.toContain("Dynamically built className")
+    expect(out).not.toContain("Dynamically built class")
   })
 
   test("a contract message and the settings note reach the message", () => {
