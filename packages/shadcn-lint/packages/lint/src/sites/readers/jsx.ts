@@ -36,47 +36,6 @@ export function jsxElementNameOf(name: any) {
   }
 }
 
-// The name a spread of the function's own props would carry: `props` in
-// `(props) => ...`, `rest` in `({ className, ...rest }) => ...`.
-function propsSpreadNameOf(fn: any) {
-  const param = fn.params?.[0]
-  if (param?.type === "Identifier") return param.name
-  if (param?.type === "ObjectPattern") {
-    const rest = param.properties.find((p: any) => p.type === "RestElement")
-    if (rest?.argument?.type === "Identifier") return rest.argument.name
-  }
-  return null
-}
-
-// Base UI renders another element in a component's place through
-// `render`, and the className goes with it: `<DialogTrigger
-// render={<Button />} className="bg-primary" />` is a Button. Returns
-// the element the classes reach, or undefined when the element itself
-// wears them: no render prop, a value that cannot be read, or a function
-// that renders without spreading its props, the way a list renders an
-// item. The element's own contract is the nearest judge then.
-function renderedElementOf(element: any) {
-  const attribute = (element.openingElement?.attributes ?? []).find(
-    (candidate: any) =>
-      candidate.type === "JSXAttribute" && candidate.name?.name === "render"
-  )
-  const expression = attribute?.value?.expression
-  if (expression?.type === "JSXElement") return expression
-  if (expression?.type !== "ArrowFunctionExpression") return undefined
-  // `render={(props) => <Button {...props} />}` hands the classes to the
-  // same component the element form does, through the spread.
-  const body = expression.body
-  const spread = propsSpreadNameOf(expression)
-  if (body?.type !== "JSXElement" || !spread) return undefined
-  const forwards = (body.openingElement.attributes ?? []).some(
-    (candidate: any) =>
-      candidate.type === "JSXSpreadAttribute" &&
-      candidate.argument?.type === "Identifier" &&
-      candidate.argument.name === spread
-  )
-  return forwards ? body : undefined
-}
-
 export const jsxReader: TemplateReader = {
   attributes: ["JSXAttribute"],
   spreads: ["JSXSpreadAttribute"],
@@ -95,9 +54,4 @@ export const jsxReader: TemplateReader = {
     }
     return null
   },
-  renderedElementOf,
-  // In JSX only `class` itself, never className or a classNames map:
-  // Solid 2.0 takes clsx's object and array forms there, and React has
-  // no `class` prop that an object could mean anything else on.
-  classObjects: true,
 }

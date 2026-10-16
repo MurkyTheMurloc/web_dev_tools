@@ -19,21 +19,21 @@ describe.skipIf(!oracleAvailable())("a font size from @config", () => {
         {
           filename: PAGE,
           options: [{ allow: ["layout", "typography"] }],
-          code: `${button}\nexport const A = () => <Button className="text-body md:text-body/6 font-semibold" />`,
+          code: `${button}\nexport const A = () => <Button class="text-body md:text-body/6 font-semibold" />`,
         },
       ],
       invalid: [
         {
           filename: PAGE,
           options: [{ allow: ["layout"] }],
-          code: `${button}\nexport const A = () => <Button className="text-body" />`,
+          code: `${button}\nexport const A = () => <Button class="text-body" />`,
           errors: [{ message: /owns its typography/ }],
         },
         // A color from the same config is still a color.
         {
           filename: PAGE,
           options: [{ allow: ["layout", "typography"] }],
-          code: `${button}\nexport const A = () => <Button className="text-brand" />`,
+          code: `${button}\nexport const A = () => <Button class="text-brand" />`,
           errors: [{ message: /owns its color/ }],
         },
       ],
@@ -45,7 +45,7 @@ describe.skipIf(!oracleAvailable())("a font size from @config", () => {
       valid: [
         {
           filename: PAGE,
-          code: `export const A = () => <p className="text-body" />`,
+          code: `export const A = () => <p class="text-body" />`,
         },
       ],
       invalid: [],

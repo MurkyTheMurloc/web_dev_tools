@@ -23,7 +23,8 @@ import {
   themeFileFor,
 } from "../project/theme"
 import { classSiteVisitors } from "../sites/collect"
-import { readerFor, staticStringOf, type Visitors } from "../sites/readers"
+import { staticStringOf, type Visitors } from "../sites/readers"
+import { jsxReader } from "../sites/readers/jsx"
 import { unknownClasses } from "../tailwind/client"
 import { compileVocabularyPolicy, configErrorVisitors } from "./contracts"
 import { classSuggestions } from "./fixes"
@@ -141,17 +142,17 @@ function verdictMemo(theme: object, key: string) {
 
 const MESSAGES = {
   paletteClass:
-    '"{{className}}" uses the raw Tailwind palette. Use a theme token, or define one for this color.',
+    '"{{class}}" uses the raw Tailwind palette. Use a theme token, or define one for this color.',
   paletteClassNear:
-    '"{{className}}" uses the raw Tailwind palette. Nearest theme tokens: {{suggestions}}. Use one of those, or declare --color-<name> in {{file}} for a new color.',
+    '"{{class}}" uses the raw Tailwind palette. Nearest theme tokens: {{suggestions}}. Use one of those, or declare --color-<name> in {{file}} for a new color.',
   paletteClassFar:
-    '"{{className}}" uses the raw Tailwind palette and no declared theme color is close to it. Use one of: {{tokens}}, or declare --color-<name> in {{file}} for a new color.',
+    '"{{class}}" uses the raw Tailwind palette and no declared theme color is close to it. Use one of: {{tokens}}, or declare --color-<name> in {{file}} for a new color.',
   paletteClassListed:
-    '"{{className}}" uses the raw Tailwind palette. Use one of the theme colors: {{tokens}}, or declare --color-<name> in {{file}} for a new color.',
+    '"{{class}}" uses the raw Tailwind palette. Use one of the theme colors: {{tokens}}, or declare --color-<name> in {{file}} for a new color.',
   undeclaredToken:
-    '"{{className}}" is not a declared theme color. Use one of: {{tokens}}. To add a color, declare --color-<name> in {{file}} first.',
+    '"{{class}}" is not a declared theme color. Use one of: {{tokens}}. To add a color, declare --color-<name> in {{file}} first.',
   undeclaredTokenTypo:
-    '"{{className}}" is not a declared theme color. Did you mean "{{suggestion}}"? Declared colors: {{tokens}}.',
+    '"{{class}}" is not a declared theme color. Did you mean "{{suggestion}}"? Declared colors: {{tokens}}.',
   rawColorAttribute:
     '{{attribute}}="{{value}}" hardcodes a color. Use currentColor with a text color class, or var(--color-<token>).',
   rawColorAttributeNear:
@@ -241,18 +242,18 @@ export const noRawColors = {
     const paletteVerdict = (token: string): Verdict => {
       const { declared, file } = themeFor()
       if (!declared)
-        return { messageId: "paletteClass", data: { className: token } }
+        return { messageId: "paletteClass", data: { class: token } }
       if (!suggestionColors()?.size) {
         return {
           messageId: "paletteClassListed",
-          data: { className: token, tokens: tokenList(), file },
+          data: { class: token, tokens: tokenList(), file },
         }
       }
       const suggestions = nearest(token)
       return {
         messageId: suggestions.length ? "paletteClassNear" : "paletteClassFar",
         data: {
-          className: token,
+          class: token,
           suggestions: suggestions.join(", "),
           tokens: tokenList(),
           file,
@@ -294,13 +295,13 @@ export const noRawColors = {
         )
         return {
           messageId: "undeclaredTokenTypo",
-          data: { className: token, suggestion, tokens: tokenList(), file },
+          data: { class: token, suggestion, tokens: tokenList(), file },
           replacements: [suggestion],
         }
       }
       return {
         messageId: "undeclaredToken",
-        data: { className: token, tokens: tokenList(), file },
+        data: { class: token, tokens: tokenList(), file },
       }
     }
 
@@ -370,7 +371,7 @@ export const noRawColors = {
     })
 
     // On a component, color="red" is an enum prop.
-    const reader = readerFor(context)
+    const reader = jsxReader
     const colorAttribute = (node: any) => {
       const name = reader.attributeName(node)
       if (!COLOR_ATTRIBUTES.has(name)) return

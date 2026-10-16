@@ -18,14 +18,12 @@ import { fileOf } from "../rules/messages"
 import { withSettings } from "../rules/settings"
 import {
   addVisitor,
-  attributeNameIn,
   attributeOfContainer,
   isContainer,
-  readerFor,
   type ElementName,
   type Visitors,
 } from "./readers"
-import { jsxElementNameOf } from "./readers/jsx"
+import { jsxElementNameOf, jsxReader } from "./readers/jsx"
 
 export { attributeNameOf, jsxRootOf } from "./readers/jsx"
 
@@ -38,7 +36,7 @@ export type ClassSite = {
   contextualStrings: ClassString[]
   // A referenced helper call owns its vocabulary check at its own site.
   vocabularyStrings: ClassString[]
-  // What the collector could not read. A received className prop is
+  // What the collector could not read. A received class prop is
   // accepted; an unreadable authored default is not.
   unresolved: any[]
   component: string | null
@@ -69,7 +67,7 @@ export const DEFAULT_MERGE_FUNCTIONS = [
 // Object arguments carry classes as values (cva), not keys (clsx).
 export const DEFAULT_VARIANT_FUNCTIONS = ["cva", "tv"]
 
-const CLASS_ATTRIBUTE = /^(class:list|[^:]*class(name)?s?)$/i
+const CLASS_ATTRIBUTE = /^(class:list|[^:]*class(es)?)$/i
 
 export function isClassAttribute(name: string) {
   return CLASS_ATTRIBUTE.test(name)
@@ -77,7 +75,7 @@ export function isClassAttribute(name: string) {
 
 export type TrackerOptions = {
   componentImports?: string[]
-  // Left alone even when the name matches: a raw Radix primitive
+  // Left alone even when the name matches: a raw Kobalte primitive
   // imported next to its shadcn wrapper.
   ignoreImports?: string[]
 }
@@ -154,11 +152,7 @@ export function createComponentTracker(
   // name, so a broken alias degrades rather than going silent.
   const resolveName = (element: ElementName | null): ResolvedElement | null => {
     if (!element) return null
-    // Vue writes an imported CardTitle as `<card-title>` too.
-    const root =
-      element.alias && !imports.has(element.root) && imports.has(element.alias)
-        ? element.alias
-        : element.root
+    const root = element.root
     if (!root || skipped.has(root)) return null
     const property = element.property
     const imported = imports.get(root)
@@ -248,7 +242,7 @@ function findVariable(scope: any, name: string) {
 function variableOf(node: any, context: any) {
   const scope = context.sourceCode?.getScope?.(node)
   const variable = scope ? findVariable(scope, node.name) : null
-  return variable ?? readerFor(context).variableOf?.(node, context) ?? null
+  return variable ?? null
 }
 
 function referenceExpression(node: any) {
@@ -359,8 +353,8 @@ function isEscaped(variable: any, context?: any) {
       const attribute = attributeOfContainer(parent)
       if (
         attribute &&
-        (attributeNameIn(attribute) === "style" ||
-          isClassAttribute(attributeNameIn(attribute)))
+        (jsxReader.attributeName(attribute) === "style" ||
+          isClassAttribute(jsxReader.attributeName(attribute)))
       )
         return false
       // A helper reads its arguments and never keeps them, directly or
@@ -492,25 +486,11 @@ export function resolveIdentifier(node: any, context: any, path: Set<any>) {
   return { init, variable, steps }
 }
 
-// A single-file component receives its props from a call, not a
-// parameter: Svelte's `$props()`, Vue's `defineProps()`.
-function isPropsCall(node: any): boolean {
-  const call = unwrapTs(node)
-  if (call?.type !== "CallExpression" || call.callee?.type !== "Identifier") {
-    return false
-  }
-  if (call.callee.name === "withDefaults") return isPropsCall(call.arguments[0])
-  return call.callee.name === "$props" || call.callee.name === "defineProps"
-}
-
 type Parameter = {
   variable: any
   key: string
   fallback: any
   objectDefault: any
-  received: boolean
-  // A Solid component's props: read-only, `class` is the className prop.
-  solid: boolean
   // The sources a Solid `merge` puts before the props, in order.
   defaults: any[]
 }
@@ -521,10 +501,8 @@ function parameterOf(node: any, context: any, depth = 0): Parameter | null {
   const variable = variableOf(node, context)
   const def = variable?.defs?.[0]
   if (!def) return null
-  const received = def.type === "Variable" && isPropsCall(def.node?.init)
-  const solid = solidHelpersOf(context.sourceCode?.ast).solid
-  if (def.type !== "Parameter" && !received) {
-    return solid ? derivedPropsOf(variable, def, context, depth) : null
+  if (def.type !== "Parameter") {
+    return derivedPropsOf(variable, def, context, depth)
   }
   let binding = def.name
   let fallback: any = null
@@ -542,11 +520,7 @@ function parameterOf(node: any, context: any, depth = 0): Parameter | null {
   }
   const parameter =
     pattern.parent?.type === "AssignmentPattern" ? pattern.parent : pattern
-  if (
-    received ? parameter !== def.node.id : !def.node.params?.includes(parameter)
-  ) {
-    return null
-  }
+  if (!def.node.params?.includes(parameter)) return null
   const objectDefault =
     parameter.type === "AssignmentPattern" ? parameter : null
   return {
@@ -554,8 +528,6 @@ function parameterOf(node: any, context: any, depth = 0): Parameter | null {
     key,
     fallback: key === "*" ? null : fallback,
     objectDefault,
-    received,
-    solid: solid && def.type === "Parameter",
     defaults: [],
   }
 }
@@ -577,7 +549,7 @@ function derivedPropsOf(
   const propsOf = (node: any) => {
     if (node?.type !== "Identifier") return null
     const parameter = parameterOf(node, context, depth + 1)
-    return parameter?.solid && parameter.key === "*" ? parameter : null
+    return parameter?.key === "*" ? parameter : null
   }
   const isProps = (node: any) => propsOf(node) !== null
   const init = def.node.init
@@ -591,32 +563,14 @@ function derivedPropsOf(
     key: "*",
     fallback: null,
     objectDefault: null,
-    received: false,
-    solid: true,
     defaults: [...(merged?.defaults ?? []), ...source.defaults],
   }
-}
-
-// An SFC spells the prop `class`, and it is the same prop. So does Solid.
-function namesProp(
-  parameter: { received: boolean; solid: boolean },
-  key: string | null | undefined,
-  name: string
-) {
-  return (
-    key === name ||
-    ((parameter.received || parameter.solid) &&
-      name === "className" &&
-      key === "class")
-  )
 }
 
 function forwardedPropOf(node: any, context: any, name: string) {
   if (node?.type === "Identifier") {
     const parameter = parameterOf(node, context)
-    return parameter &&
-      namesProp(parameter, parameter.key, name) &&
-      !isWritten(parameter.variable)
+    return parameter && parameter.key === name && !isWritten(parameter.variable)
       ? parameter
       : null
   }
@@ -624,14 +578,11 @@ function forwardedPropOf(node: any, context: any, name: string) {
   const key = node.computed ? staticKey(node.property) : node.property?.name
   const object = unwrapTs(node.object)
   if (object?.type !== "Identifier") return null
-  if (key !== name && !(name === "className" && key === "class")) return null
+  if (key !== name) return null
   const parameter = parameterOf(object, context)
-  // Props from a call are read-only: handing them on changes nothing.
-  // So are Solid's, which `merge` and `omit` take without copying.
-  return parameter?.key === "*" &&
-    namesProp(parameter, key, name) &&
-    !isWritten(parameter.variable) &&
-    (parameter.received || parameter.solid || !isEscaped(parameter.variable))
+  // Solid's props are read-only: handing them on changes nothing, and
+  // `merge` and `omit` take them without copying.
+  return parameter?.key === "*" && !isWritten(parameter.variable)
     ? parameter
     : null
 }
@@ -899,7 +850,7 @@ export function collectClassStrings(
   const visit = (node: any, valuesMode: boolean) => {
     if (!node) return
     const forwarded = resolve
-      ? forwardedValuesOf(node, context, "className", path)
+      ? forwardedValuesOf(node, context, "class", path)
       : null
     if (forwarded) {
       // The incoming prop stays opaque; a default is authored here.
@@ -914,8 +865,6 @@ export function collectClassStrings(
     }
     switch (node.type) {
       case "Literal":
-      case "SvelteLiteral":
-      case "VLiteral":
         if (typeof node.value === "string") push(node.value, node)
         return
       case "TemplateLiteral":
@@ -1015,8 +964,6 @@ export function collectClassStrings(
         return
       }
       case "JSXExpressionContainer":
-      case "SvelteMustacheTag":
-      case "VExpressionContainer":
         visit(node.expression, valuesMode)
         return
       case "TSAsExpression":
@@ -1081,7 +1028,7 @@ function keyNodeOf(object: any, entry: { key: string; value: any }) {
   return object
 }
 
-// Classes directly, or the values of a classNames object's properties.
+// Classes directly, or the values of a slot map's properties.
 export function collectFromValue(
   value: any,
   context: any,
@@ -1219,7 +1166,7 @@ export function classSiteVisitors(
   const shared = sharedFor(context, options)
   if (!shared.hasSites && !options.scanAllStrings) return NO_VISITORS
   const tracker = (shared.tracker ??= createComponentTracker(context, options))
-  const reader = readerFor(context)
+  const reader = jsxReader
   const { helpers, collectOptions, consumedCalls, sites } = shared
   const reportedStrings = new WeakSet<any>()
   // A literal several sites reach is one vocabulary check, owned by the
@@ -1241,29 +1188,8 @@ export function classSiteVisitors(
     )
   }
 
-  // A render prop replaces the element, and the className lands on what
-  // it renders, so that is the component wearing the classes. A plain
-  // element rendered in its place still wears the component's own
-  // classes, so the component itself judges them: `<Button
-  // render={<a />} className="p-4" />` is a Button, and so is the `<a>`
-  // when the classes are written on it instead.
-  const resolvedOf = (element: any) => {
-    if (!element) return null
-    const rendered = reader.renderedElementOf?.(element)
-    const resolved = rendered && tracker.resolveName(reader.nameOf(rendered))
-    if (resolved) {
-      return {
-        ...resolved,
-        wrapper: resolved.wrapper ?? reader.nameOf(element)?.text ?? "",
-      }
-    }
-    const own = tracker.resolveName(reader.nameOf(element))
-    if (own) return own
-    const owner = reader.parentElementOf(element)
-    return owner && reader.renderedElementOf?.(owner) === element
-      ? tracker.resolveName(reader.nameOf(owner))
-      : null
-  }
+  const resolvedOf = (element: any) =>
+    element ? tracker.resolveName(reader.nameOf(element)) : null
 
   const enclosingOf = (
     element: any,
@@ -1303,9 +1229,9 @@ export function classSiteVisitors(
     resolved: ResolvedElement | null,
     element: any = null
   ): ClassSite => {
-    // Markup's own `class` takes an object the way clsx does, keys as
-    // classes. Anywhere else an object is a classNames map.
-    const keyed = reader.classObjects === true && attribute === "class"
+    // The `class` attribute takes an object the way clsx does, keys as
+    // classes. Any other class prop with an object is a slot map.
+    const keyed = attribute === "class"
     const classes =
       value && !keyed
         ? collectFromValue(value, context, collectOptions)
@@ -1388,26 +1314,6 @@ export function classSiteVisitors(
     addVisitor(visitors, type, (node: any) => {
       if (!reader.spreadArgument(node)) return
       for (const site of spreadSites(node)) emit(site)
-    })
-  }
-  for (const [type, read] of Object.entries(reader.extraSites ?? {})) {
-    addVisitor(visitors, type, (node: any) => {
-      let list = sites.get(node)
-      if (!list) {
-        const extra = read(node)
-        list = []
-        if (extra) {
-          const element = reader.elementOf(extra.anchor)
-          list.push({
-            ...siteFor(node, null, "class", resolvedOf(element), element),
-            contextualStrings: extra.names,
-            vocabularyStrings: extra.names,
-            unresolved: [],
-          })
-        }
-        sites.set(node, list)
-      }
-      for (const site of list) emit(site)
     })
   }
 

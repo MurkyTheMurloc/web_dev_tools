@@ -1,6 +1,7 @@
+import { omit } from "solid-js"
 import { cva, type VariantProps } from "class-variance-authority"
 import { cn } from "cn"
-import type { ComponentProps } from "react"
+import type { ComponentProps } from "@solidjs/web"
 
 export const buttonVariants = cva("inline-flex rounded-md", {
   variants: {
@@ -13,16 +14,12 @@ export const buttonVariants = cva("inline-flex rounded-md", {
   defaultVariants: { variant: "primary", size: "md" },
 })
 
-export function Button({
-  className,
-  variant,
-  size,
-  ...props
-}: ComponentProps<"button"> & VariantProps<typeof buttonVariants>) {
+export function Button(props: ComponentProps<"button"> & VariantProps<typeof buttonVariants>) {
+  const rest = omit(props, "class", "variant", "size")
   return (
     <button
-      className={cn(buttonVariants({ variant, size }), className)}
-      {...props}
+      class={cn(buttonVariants({ variant: props.variant, size: props.size }), props.class)}
+      {...rest}
     />
   )
 }

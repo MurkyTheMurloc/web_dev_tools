@@ -22,14 +22,14 @@ describe("layout keyword", () => {
       valid: [
         {
           filename: PAGE,
-          code: `${card}\nexport const A = () => <CardContent className="mt-4 w-full hidden">Hi</CardContent>`,
+          code: `${card}\nexport const A = () => <CardContent class="mt-4 w-full hidden">Hi</CardContent>`,
           options,
         },
       ],
       invalid: [
         {
           filename: PAGE,
-          code: `${card}\nexport const A = () => <CardContent className="px-2">Hi</CardContent>`,
+          code: `${card}\nexport const A = () => <CardContent class="px-2">Hi</CardContent>`,
           options,
           errors: [{ messageId: "spacingClassNoSizes" }],
         },
@@ -37,7 +37,7 @@ describe("layout keyword", () => {
         // the contract does not name has no allow list at all.
         {
           filename: PAGE,
-          code: `${card}\nexport const A = () => <CardTitle className="mt-4">Hi</CardTitle>`,
+          code: `${card}\nexport const A = () => <CardTitle class="mt-4">Hi</CardTitle>`,
           options,
           errors: [{ messageId: "layoutClassClosed" }],
         },
@@ -52,14 +52,14 @@ describe("allow with contract normalization", () => {
       valid: [
         {
           filename: PAGE,
-          code: `export const A = () => <div className="bg-amber-100 hover:bg-amber-100 bg-amber-100/50 dark:bg-amber-200" />`,
+          code: `export const A = () => <div class="bg-amber-100 hover:bg-amber-100 bg-amber-100/50 dark:bg-amber-200" />`,
           options: [{ allow: ["bg-amber-1*", "bg-amber-200"] }],
         },
       ],
       invalid: [
         {
           filename: PAGE,
-          code: `export const A = () => <div className="bg-amber-300" />`,
+          code: `export const A = () => <div class="bg-amber-300" />`,
           options: [{ allow: ["bg-amber-100"] }],
           errors: [{ messageId: "paletteClassFar" }],
         },
@@ -72,7 +72,7 @@ describe("allow with contract normalization", () => {
       valid: [
         {
           filename: PAGE,
-          code: `export const A = () => <div className="md:p-[13px] p-[13px]/50" />`,
+          code: `export const A = () => <div class="md:p-[13px] p-[13px]/50" />`,
           options: [{ allow: ["p-[13px]"] }],
         },
       ],
@@ -169,23 +169,23 @@ describe("geometry is an arbitrary value too", () => {
       valid: [
         {
           filename: PAGE,
-          code: `${button}\nexport const A = () => <Button className="w-[320px]">Go</Button>`,
+          code: `${button}\nexport const A = () => <Button class="w-[320px]">Go</Button>`,
           options: [{ allow: ["layout"] }],
         },
       ],
       invalid: [
         {
           filename: PAGE,
-          code: `${button}\nexport const A = () => <Button className="w-[320px]">Go</Button>`,
+          code: `${button}\nexport const A = () => <Button class="w-[320px]">Go</Button>`,
           errors: [
             {
               messageId: "arbitraryValueWithScale",
-              data: { className: "w-[320px]", replacement: "w-80" },
+              data: { class: "w-[320px]", replacement: "w-80" },
               suggestions: [
                 {
                   messageId: "useScale",
                   data: { replacement: "w-80" },
-                  output: `${button}\nexport const A = () => <Button className="w-80">Go</Button>`,
+                  output: `${button}\nexport const A = () => <Button class="w-80">Go</Button>`,
                 },
               ],
             },
@@ -204,7 +204,7 @@ describe("legacy gradient direction utilities", () => {
       valid: [
         {
           filename: PAGE,
-          code: `export const A = () => <div className="bg-gradient-to-b from-primary to-transparent" />`,
+          code: `export const A = () => <div class="bg-gradient-to-b from-primary to-transparent" />`,
         },
       ],
       invalid: [],

@@ -1,12 +1,15 @@
+import { omit } from "solid-js"
 import { cn } from "cn"
-import type { ComponentProps } from "react"
+import type { ComponentProps } from "@solidjs/web"
 
-function Card({ className, ...props }: ComponentProps<"div">) {
-  return <div className={cn("rounded-lg border border-line", className)} {...props} />
+function Card(props: ComponentProps<"div">) {
+  const rest = omit(props, "class")
+  return <div class={cn("rounded-lg border border-line", props.class)} {...rest} />
 }
 
-function CardBody({ className, ...props }: ComponentProps<"div">) {
-  return <div className={cn("p-5", className)} {...props} />
+function CardBody(props: ComponentProps<"div">) {
+  const rest = omit(props, "class")
+  return <div class={cn("p-5", props.class)} {...rest} />
 }
 
 export { Card, CardBody }

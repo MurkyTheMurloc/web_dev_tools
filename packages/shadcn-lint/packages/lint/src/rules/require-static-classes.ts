@@ -1,6 +1,6 @@
 // require-static-classes: what the collector cannot read is invisible to
 // every other rule, so it is a violation of its own. A forwarded
-// className prop is the one sanctioned opaque value.
+// class prop is the one sanctioned opaque value.
 
 import { classSiteVisitors } from "../sites/collect"
 import { reporter } from "./messages"

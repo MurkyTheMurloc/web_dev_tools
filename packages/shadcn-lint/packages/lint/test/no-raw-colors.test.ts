@@ -31,45 +31,45 @@ describe("no-raw-colors", () => {
       valid: [
         {
           filename: PAGE,
-          code: `export const A = () => <div className="bg-primary text-muted-foreground border-border ring-ring/50" />`,
+          code: `export const A = () => <div class="bg-primary text-muted-foreground border-border ring-ring/50" />`,
         },
         // Bracket and variable opacity modifiers are modifiers too.
         {
           filename: PAGE,
-          code: `export const A = () => <div className="bg-primary/[0.5] hover:bg-primary/(--o) text-muted-foreground/[0.7]" />`,
+          code: `export const A = () => <div class="bg-primary/[0.5] hover:bg-primary/(--o) text-muted-foreground/[0.7]" />`,
         },
         {
           filename: PAGE,
-          code: `export const A = () => <div className="bg-transparent text-white border-black text-current" />`,
+          code: `export const A = () => <div class="bg-transparent text-white border-black text-current" />`,
         },
         // Non-color utilities that share a prefix.
         {
           filename: PAGE,
-          code: `export const A = () => <div className="text-sm ring-2 border-2 shadow-lg bg-cover bg-none" />`,
+          code: `export const A = () => <div class="text-sm ring-2 border-2 shadow-lg bg-cover bg-none" />`,
         },
         // none is an SVG paint, not a color token.
         {
           filename: PAGE,
-          code: `export const A = () => <svg className="fill-none stroke-none hover:fill-none" />`,
+          code: `export const A = () => <svg class="fill-none stroke-none hover:fill-none" />`,
         },
         {
           filename: PAGE,
-          code: `export const A = () => <div className="border-none outline-none shadow-none drop-shadow-none" />`,
+          code: `export const A = () => <div class="border-none outline-none shadow-none drop-shadow-none" />`,
         },
         // Arbitrary values and variable references are other rules' business.
         {
           filename: PAGE,
-          code: `export const A = () => <div className="bg-[#333] bg-(--brand)" />`,
+          code: `export const A = () => <div class="bg-[#333] bg-(--brand)" />`,
         },
         {
           filename: PAGE,
-          code: `export const A = () => <div className="bg-amber-100" />`,
+          code: `export const A = () => <div class="bg-amber-100" />`,
           options: [{ allow: ["bg-amber-100"] }],
         },
         // Outside a project only the palette check applies.
         {
           filename: OUTSIDE,
-          code: `export const A = () => <div className="bg-brand text-whatever" />`,
+          code: `export const A = () => <div class="bg-brand text-whatever" />`,
         },
       ],
       invalid: [
@@ -89,19 +89,19 @@ describe("no-raw-colors", () => {
         // branches of one conditional, is reported once.
         {
           filename: PAGE,
-          code: `const c = "bg-pink-500"\nexport const A = () => <><div className={c} /><div className={c} /></>`,
+          code: `const c = "bg-pink-500"\nexport const A = () => <><div class={c} /><div class={c} /></>`,
           errors: [{ messageId: "paletteClassFar" }],
         },
         {
           filename: PAGE,
-          code: `const c = "bg-pink-500"\nexport const A = ({ on }: { on: boolean }) => <div className={on ? c : c} />`,
+          code: `const c = "bg-pink-500"\nexport const A = ({ on }: { on: boolean }) => <div class={on ? c : c} />`,
           errors: [{ messageId: "paletteClassFar" }],
         },
         // The newer palette families and the shadow, ring-offset, and
         // mask stop utilities are palette classes too.
         {
           filename: OUTSIDE,
-          code: `export const A = () => <div className="bg-olive-500 border-t-red-500 text-shadow-red-500 ring-offset-red-500 mask-linear-from-red-500" />`,
+          code: `export const A = () => <div class="bg-olive-500 border-t-red-500 text-shadow-red-500 ring-offset-red-500 mask-linear-from-red-500" />`,
           errors: [
             { messageId: "paletteClass" },
             { messageId: "paletteClass" },
@@ -113,7 +113,7 @@ describe("no-raw-colors", () => {
         // A palette color keeps its verdict under a bracket opacity.
         {
           filename: PAGE,
-          code: `export const A = () => <div className="bg-pink-500/[0.5] hover:bg-pink-500/(--o)" />`,
+          code: `export const A = () => <div class="bg-pink-500/[0.5] hover:bg-pink-500/(--o)" />`,
           errors: [
             { messageId: "paletteClassFar" },
             { messageId: "paletteClassFar" },
@@ -121,7 +121,7 @@ describe("no-raw-colors", () => {
         },
         {
           filename: PAGE,
-          code: `export const A = () => <div className="bg-pink-500 text-zinc-400" />`,
+          code: `export const A = () => <div class="bg-pink-500 text-zinc-400" />`,
           errors: [
             { messageId: "paletteClassFar" },
             {
@@ -130,7 +130,7 @@ describe("no-raw-colors", () => {
                 {
                   messageId: "useToken",
                   data: { replacement: "text-ring" },
-                  output: `export const A = () => <div className="bg-pink-500 text-ring" />`,
+                  output: `export const A = () => <div class="bg-pink-500 text-ring" />`,
                 },
               ],
             },
@@ -138,7 +138,7 @@ describe("no-raw-colors", () => {
         },
         {
           filename: PAGE,
-          code: `export const A = () => <div className="hover:bg-emerald-600/90 dark:text-sky-300" />`,
+          code: `export const A = () => <div class="hover:bg-emerald-600/90 dark:text-sky-300" />`,
           errors: [
             { messageId: "paletteClassFar" },
             { messageId: "paletteClassFar" },
@@ -146,19 +146,19 @@ describe("no-raw-colors", () => {
         },
         {
           filename: PAGE,
-          code: `${cn}\nexport const A = () => <p className={cn("from-orange-400")} />`,
+          code: `${cn}\nexport const A = () => <p class={cn("from-orange-400")} />`,
           errors: [{ messageId: "paletteClassFar" }],
         },
         // Outside any project there is no theme to compare with.
         {
           filename: OUTSIDE,
-          code: `export const A = () => <div className="bg-pink-500" />`,
+          code: `export const A = () => <div class="bg-pink-500" />`,
           errors: [{ messageId: "paletteClass" }],
         },
         // Undeclared token, inside a project whose theme is readable.
         {
           filename: PAGE,
-          code: `export const A = () => <div className="bg-brand" />`,
+          code: `export const A = () => <div class="bg-brand" />`,
           errors: [{ messageId: "undeclaredToken" }],
         },
         // Class strings outside JSX are scanned too.
@@ -179,10 +179,10 @@ describe("no-raw-colors", () => {
             },
           ],
         },
-        // classNames object props.
+        // classes object props.
         {
           filename: PAGE,
-          code: `${button}\nexport const A = () => <Button classNames={{ day: "bg-pink-500" }}>Go</Button>`,
+          code: `${button}\nexport const A = () => <Button classes={{ day: "bg-pink-500" }}>Go</Button>`,
           errors: [{ messageId: "paletteClassFar" }],
         },
       ],
@@ -200,12 +200,12 @@ describe("no-raw-colors names the nearest token", () => {
         // -foreground tokens. Each candidate is an editor suggestion.
         {
           filename: PAGE,
-          code: `export const A = () => <div className="bg-zinc-100 text-zinc-500 border-zinc-200 hover:bg-zinc-900/50 text-red-500" />`,
+          code: `export const A = () => <div class="bg-zinc-100 text-zinc-500 border-zinc-200 hover:bg-zinc-900/50 text-red-500" />`,
           errors: [
             {
               messageId: "paletteClassNear",
               data: {
-                className: "bg-zinc-100",
+                class: "bg-zinc-100",
                 suggestions: "bg-muted, bg-background",
                 tokens:
                   "accent, background, border, card, destructive, foreground, input, muted, popover, primary, ring, secondary (+6 more)",
@@ -215,19 +215,19 @@ describe("no-raw-colors names the nearest token", () => {
                 {
                   messageId: "useToken",
                   data: { replacement: "bg-muted" },
-                  output: `export const A = () => <div className="bg-muted text-zinc-500 border-zinc-200 hover:bg-zinc-900/50 text-red-500" />`,
+                  output: `export const A = () => <div class="bg-muted text-zinc-500 border-zinc-200 hover:bg-zinc-900/50 text-red-500" />`,
                 },
                 {
                   messageId: "useToken",
                   data: { replacement: "bg-background" },
-                  output: `export const A = () => <div className="bg-background text-zinc-500 border-zinc-200 hover:bg-zinc-900/50 text-red-500" />`,
+                  output: `export const A = () => <div class="bg-background text-zinc-500 border-zinc-200 hover:bg-zinc-900/50 text-red-500" />`,
                 },
               ],
             },
             {
               messageId: "paletteClassNear",
               data: {
-                className: "text-zinc-500",
+                class: "text-zinc-500",
                 suggestions: "text-muted-foreground",
                 tokens:
                   "accent, background, border, card, destructive, foreground, input, muted, popover, primary, ring, secondary (+6 more)",
@@ -237,14 +237,14 @@ describe("no-raw-colors names the nearest token", () => {
                 {
                   messageId: "useToken",
                   data: { replacement: "text-muted-foreground" },
-                  output: `export const A = () => <div className="bg-zinc-100 text-muted-foreground border-zinc-200 hover:bg-zinc-900/50 text-red-500" />`,
+                  output: `export const A = () => <div class="bg-zinc-100 text-muted-foreground border-zinc-200 hover:bg-zinc-900/50 text-red-500" />`,
                 },
               ],
             },
             {
               messageId: "paletteClassNear",
               data: {
-                className: "border-zinc-200",
+                class: "border-zinc-200",
                 suggestions: "border-border, border-muted",
                 tokens:
                   "accent, background, border, card, destructive, foreground, input, muted, popover, primary, ring, secondary (+6 more)",
@@ -254,12 +254,12 @@ describe("no-raw-colors names the nearest token", () => {
                 {
                   messageId: "useToken",
                   data: { replacement: "border-border" },
-                  output: `export const A = () => <div className="bg-zinc-100 text-zinc-500 border-border hover:bg-zinc-900/50 text-red-500" />`,
+                  output: `export const A = () => <div class="bg-zinc-100 text-zinc-500 border-border hover:bg-zinc-900/50 text-red-500" />`,
                 },
                 {
                   messageId: "useToken",
                   data: { replacement: "border-muted" },
-                  output: `export const A = () => <div className="bg-zinc-100 text-zinc-500 border-muted hover:bg-zinc-900/50 text-red-500" />`,
+                  output: `export const A = () => <div class="bg-zinc-100 text-zinc-500 border-muted hover:bg-zinc-900/50 text-red-500" />`,
                 },
               ],
             },
@@ -268,7 +268,7 @@ describe("no-raw-colors names the nearest token", () => {
             {
               messageId: "paletteClassNear",
               data: {
-                className: "hover:bg-zinc-900/50",
+                class: "hover:bg-zinc-900/50",
                 suggestions: "hover:bg-primary/50",
                 tokens:
                   "accent, background, border, card, destructive, foreground, input, muted, popover, primary, ring, secondary (+6 more)",
@@ -278,14 +278,14 @@ describe("no-raw-colors names the nearest token", () => {
                 {
                   messageId: "useToken",
                   data: { replacement: "hover:bg-primary/50" },
-                  output: `export const A = () => <div className="bg-zinc-100 text-zinc-500 border-zinc-200 hover:bg-primary/50 text-red-500" />`,
+                  output: `export const A = () => <div class="bg-zinc-100 text-zinc-500 border-zinc-200 hover:bg-primary/50 text-red-500" />`,
                 },
               ],
             },
             {
               messageId: "paletteClassNear",
               data: {
-                className: "text-red-500",
+                class: "text-red-500",
                 suggestions: "text-destructive",
                 tokens:
                   "accent, background, border, card, destructive, foreground, input, muted, popover, primary, ring, secondary (+6 more)",
@@ -295,7 +295,7 @@ describe("no-raw-colors names the nearest token", () => {
                 {
                   messageId: "useToken",
                   data: { replacement: "text-destructive" },
-                  output: `export const A = () => <div className="bg-zinc-100 text-zinc-500 border-zinc-200 hover:bg-zinc-900/50 text-destructive" />`,
+                  output: `export const A = () => <div class="bg-zinc-100 text-zinc-500 border-zinc-200 hover:bg-zinc-900/50 text-destructive" />`,
                 },
               ],
             },
@@ -304,12 +304,12 @@ describe("no-raw-colors names the nearest token", () => {
         // A misspelled token gets its spelling.
         {
           filename: PAGE,
-          code: `export const A = () => <div className="bg-primry text-mutedforeground/80 bg-brand" />`,
+          code: `export const A = () => <div class="bg-primry text-mutedforeground/80 bg-brand" />`,
           errors: [
             {
               messageId: "undeclaredTokenTypo",
               data: {
-                className: "bg-primry",
+                class: "bg-primry",
                 suggestion: "bg-primary",
                 tokens:
                   "accent, background, border, card, destructive, foreground, input, muted, popover, primary, ring, secondary (+6 more)",
@@ -318,14 +318,14 @@ describe("no-raw-colors names the nearest token", () => {
                 {
                   messageId: "useToken",
                   data: { replacement: "bg-primary" },
-                  output: `export const A = () => <div className="bg-primary text-mutedforeground/80 bg-brand" />`,
+                  output: `export const A = () => <div class="bg-primary text-mutedforeground/80 bg-brand" />`,
                 },
               ],
             },
             {
               messageId: "undeclaredTokenTypo",
               data: {
-                className: "text-mutedforeground/80",
+                class: "text-mutedforeground/80",
                 suggestion: "text-muted-foreground/80",
                 tokens:
                   "accent, background, border, card, destructive, foreground, input, muted, popover, primary, ring, secondary (+6 more)",
@@ -334,7 +334,7 @@ describe("no-raw-colors names the nearest token", () => {
                 {
                   messageId: "useToken",
                   data: { replacement: "text-muted-foreground/80" },
-                  output: `export const A = () => <div className="bg-primry text-muted-foreground/80 bg-brand" />`,
+                  output: `export const A = () => <div class="bg-primry text-muted-foreground/80 bg-brand" />`,
                 },
               ],
             },
@@ -372,12 +372,12 @@ describe("no-raw-colors sees the same shapes", () => {
       invalid: [
         {
           filename: PAGE,
-          code: `export const A = () => <div {...{ className: "bg-pink-500" }} />`,
+          code: `export const A = () => <div {...{ class: "bg-pink-500" }} />`,
           errors: [{ messageId: "paletteClassFar" }],
         },
         {
           filename: PAGE,
-          code: `const c = "bg-pink-500"\nexport const A = () => <div className={c || "flex"} />`,
+          code: `const c = "bg-pink-500"\nexport const A = () => <div class={c || "flex"} />`,
           errors: [{ messageId: "paletteClassFar" }],
         },
       ],
@@ -391,7 +391,7 @@ describe("no-raw-colors edges", () => {
       valid: [
         {
           filename: PAGE,
-          code: `export const A = () => <div className="text-shadow-primary inset-ring-border" />`,
+          code: `export const A = () => <div class="text-shadow-primary inset-ring-border" />`,
         },
         {
           filename: PAGE,

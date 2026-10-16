@@ -23,13 +23,13 @@ describe("ordinary prop shapes reach the rules", () => {
         {
           filename: PAGE,
           options,
-          code: `${button}\nconst props = { className: "mt-4 w-full" }\nexport const A = () => <Button {...props} />`,
+          code: `${button}\nconst props = { class: "mt-4 w-full" }\nexport const A = () => <Button {...props} />`,
         },
         // Both branches read the same resolved variable.
         {
           filename: PAGE,
           options,
-          code: `${button}\nconst base = "mt-4"\nexport const A = ({ on }: { on: boolean }) => <Button className={on ? base : base}>Go</Button>`,
+          code: `${button}\nconst base = "mt-4"\nexport const A = ({ on }: { on: boolean }) => <Button class={on ? base : base}>Go</Button>`,
         },
       ],
       invalid: [
@@ -37,48 +37,48 @@ describe("ordinary prop shapes reach the rules", () => {
         {
           filename: PAGE,
           options,
-          code: `${button}\nexport const A = () => <Button {...{ className: "bg-red-500 mt-4" }} />`,
+          code: `${button}\nexport const A = () => <Button {...{ class: "bg-red-500 mt-4" }} />`,
           errors: [appearance()],
         },
         // A same-file object spread.
         {
           filename: PAGE,
           options,
-          code: `${button}\nconst props = { className: "rounded-full" }\nexport const A = () => <Button {...props} />`,
+          code: `${button}\nconst props = { class: "rounded-full" }\nexport const A = () => <Button {...props} />`,
           errors: [appearance()],
         },
         // Both sides of || and ?? render.
         {
           filename: PAGE,
           options,
-          code: `${button}\nconst classes = "bg-red-500"\nexport const A = () => <Button className={classes || "w-full"}>Go</Button>`,
+          code: `${button}\nconst classes = "bg-red-500"\nexport const A = () => <Button class={classes || "w-full"}>Go</Button>`,
           errors: [appearance()],
         },
         {
           filename: PAGE,
           options,
-          code: `${button}\nconst classes = "bg-red-500"\nexport const A = () => <Button className={classes ?? "w-full"}>Go</Button>`,
+          code: `${button}\nconst classes = "bg-red-500"\nexport const A = () => <Button class={classes ?? "w-full"}>Go</Button>`,
           errors: [appearance()],
         },
         // Identifier keys of a clsx object are classes.
         {
           filename: PAGE,
           options,
-          code: `${button}\n${cn}\nexport const A = () => <Button className={cn({ rounded: true, italic: true, flex: true })}>Go</Button>`,
+          code: `${button}\n${cn}\nexport const A = () => <Button class={cn({ rounded: true, italic: true, flex: true })}>Go</Button>`,
           errors: [appearance(), appearance()],
         },
-        // theme.className through a same-file object.
+        // theme.class through a same-file object.
         {
           filename: PAGE,
           options,
-          code: `${button}\nconst theme = { className: "bg-red-500" }\nexport const A = () => <Button className={theme.className}>Go</Button>`,
+          code: `${button}\nconst theme = { class: "bg-red-500" }\nexport const A = () => <Button class={theme.class}>Go</Button>`,
           errors: [appearance()],
         },
-        // A classNames object behind a variable is read by its values.
+        // A classes object behind a variable is read by its values.
         {
           filename: PAGE,
           options,
-          code: `${button}\nconst classes = { root: "bg-red-500" }\nexport const A = () => <Button classNames={classes}>Go</Button>`,
+          code: `${button}\nconst classes = { root: "bg-red-500" }\nexport const A = () => <Button classes={classes}>Go</Button>`,
           errors: [appearance()],
         },
       ],
@@ -91,7 +91,7 @@ describe("ordinary prop shapes reach the rules", () => {
       invalid: [
         {
           filename: PAGE,
-          code: `${button}\nexport const A = ({ n }: { n: number }) => <Button className={\`mt-\${n} w-full\`}>Go</Button>`,
+          code: `${button}\nexport const A = ({ n }: { n: number }) => <Button class={\`mt-\${n} w-full\`}>Go</Button>`,
           errors: [{ messageId: "dynamicClasses" }],
         },
       ],
@@ -104,7 +104,7 @@ describe("ordinary prop shapes reach the rules", () => {
         valid: [
           {
             filename: PAGE,
-            code: `export const A = ({ n }: { n: number }) => <div className={\`mt-\${n} w-full\`} />`,
+            code: `export const A = ({ n }: { n: number }) => <div class={\`mt-\${n} w-full\`} />`,
           },
         ],
         invalid: [],
@@ -112,23 +112,23 @@ describe("ordinary prop shapes reach the rules", () => {
     )
   })
 
-  test("a forwarded className is recognized by its binding", () => {
+  test("a forwarded class prop is recognized by its binding", () => {
     tester.run("require-static-classes", requireStaticClasses as any, {
       valid: [
         {
           filename: PAGE,
-          code: `${button}\nexport function Save({ className: cls }: { className?: string }) { return <Button className={cls}>Save</Button> }`,
+          code: `${button}\nexport function Save({ class: cls }: { class?: string }) { return <Button class={cls}>Save</Button> }`,
         },
         {
           filename: PAGE,
-          code: `${button}\nexport function Save(props: { className?: string }) { return <Button className={props.className}>Save</Button> }`,
+          code: `${button}\nexport function Save(props: { class?: string }) { return <Button class={props.class}>Save</Button> }`,
         },
       ],
       invalid: [
-        // Another prop is not the forwarded className.
+        // Another prop is not the forwarded class prop.
         {
           filename: PAGE,
-          code: `${button}\nexport function Save({ tone }: { tone: string }) { return <Button className={tone}>Save</Button> }`,
+          code: `${button}\nexport function Save({ tone }: { tone: string }) { return <Button class={tone}>Save</Button> }`,
           errors: [{ messageId: "dynamicClasses" }],
         },
       ],

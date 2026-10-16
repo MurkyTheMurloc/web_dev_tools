@@ -23,13 +23,13 @@ describe("no-raw-colors", () => {
       valid: [
         {
           filename: PAGE,
-          code: `export const A = () => <div className="bg-amber-100" />`,
+          code: `export const A = () => <div class="bg-amber-100" />`,
           options: [{ allow: ["*-amber-*"], deny: ["bg-amber-500"] }],
         },
         // A contract for Badge: an accent the page may not use elsewhere.
         {
           filename: PAGE,
-          code: `${button}\nexport const A = () => <Button className="bg-amber-500">Go</Button>`,
+          code: `${button}\nexport const A = () => <Button class="bg-amber-500">Go</Button>`,
           options: [
             { contracts: [{ pattern: "^Button$", allow: ["*-amber-500"] }] },
           ],
@@ -39,14 +39,14 @@ describe("no-raw-colors", () => {
         // Subtracted by deny.
         {
           filename: PAGE,
-          code: `export const A = () => <div className="bg-amber-500" />`,
+          code: `export const A = () => <div class="bg-amber-500" />`,
           options: [{ allow: ["*-amber-*"], deny: ["bg-amber-500"] }],
           errors: [{ messageId: "paletteClassFar" }],
         },
         // A raw element is judged by the top-level policy, not the contract.
         {
           filename: PAGE,
-          code: `export const A = () => <div className="bg-amber-500" />`,
+          code: `export const A = () => <div class="bg-amber-500" />`,
           options: [
             { contracts: [{ pattern: "^Button$", allow: ["*-amber-500"] }] },
           ],
@@ -56,7 +56,7 @@ describe("no-raw-colors", () => {
         // {{component}} names the component the class sits on.
         {
           filename: PAGE,
-          code: `${button}\nexport const A = () => <Button className="bg-pink-500">Go</Button>`,
+          code: `${button}\nexport const A = () => <Button class="bg-pink-500">Go</Button>`,
           options: [
             {
               contracts: [
@@ -64,7 +64,7 @@ describe("no-raw-colors", () => {
                   pattern: "^Button$",
                   allow: ["*-amber-500"],
                   message:
-                    "A <{{component}}> takes amber or a token, not {{className}}.",
+                    "A <{{component}}> takes amber or a token, not {{class}}.",
                 },
               ],
             },
@@ -76,7 +76,7 @@ describe("no-raw-colors", () => {
         // deny alone is a denylist: everything else passes.
         {
           filename: PAGE,
-          code: `export const A = () => <div className="bg-amber-500 bg-pink-500" />`,
+          code: `export const A = () => <div class="bg-amber-500 bg-pink-500" />`,
           options: [{ deny: ["bg-amber-500"] }],
           errors: [{ messageId: "paletteClassFar" }],
         },
@@ -91,25 +91,25 @@ describe("no-arbitrary-values", () => {
       valid: [
         {
           filename: PAGE,
-          code: `export const A = () => <div className="w-[320px] p-[13px]" />`,
+          code: `export const A = () => <div class="w-[320px] p-[13px]" />`,
           options: [{ allow: ["*"], deny: ["text-*"] }],
         },
         {
           filename: PAGE,
-          code: `${button}\nexport const A = () => <Button className="w-[320px]">Go</Button>`,
+          code: `${button}\nexport const A = () => <Button class="w-[320px]">Go</Button>`,
           options: [{ contracts: [{ pattern: "^Button$", allow: ["w-*"] }] }],
         },
       ],
       invalid: [
         {
           filename: PAGE,
-          code: `export const A = () => <div className="text-[13px]" />`,
+          code: `export const A = () => <div class="text-[13px]" />`,
           options: [{ allow: ["*"], deny: ["text-*"] }],
           errors: [{ messageId: "arbitraryValueNearScale" }],
         },
         {
           filename: PAGE,
-          code: `export const A = () => <div className="w-[320px]" />`,
+          code: `export const A = () => <div class="w-[320px]" />`,
           options: [{ contracts: [{ pattern: "^Button$", allow: ["w-*"] }] }],
           errors: [
             {
@@ -118,7 +118,7 @@ describe("no-arbitrary-values", () => {
                 {
                   messageId: "useScale",
                   data: { replacement: "w-80" },
-                  output: `export const A = () => <div className="w-80" />`,
+                  output: `export const A = () => <div class="w-80" />`,
                 },
               ],
             },
@@ -136,11 +136,11 @@ describe("no-arbitrary-values messages", () => {
       invalid: [
         {
           filename: PAGE,
-          code: `${button}\nexport const A = () => <Button className="p-[13px]">Go</Button>`,
+          code: `${button}\nexport const A = () => <Button class="p-[13px]">Go</Button>`,
           options: [
             {
               message:
-                "{{className}} on <{{component}}>: use {{suggestions|the scale}}; tokens live in {{file}}.",
+                "{{class}} on <{{component}}>: use {{suggestions|the scale}}; tokens live in {{file}}.",
             },
           ],
           errors: [
@@ -151,7 +151,7 @@ describe("no-arbitrary-values messages", () => {
                 {
                   messageId: "useScale",
                   data: { replacement: "p-3.25" },
-                  output: `${button}\nexport const A = () => <Button className="p-3.25">Go</Button>`,
+                  output: `${button}\nexport const A = () => <Button class="p-3.25">Go</Button>`,
                 },
               ],
             },
@@ -160,27 +160,27 @@ describe("no-arbitrary-values messages", () => {
         // An important marker keeps its scale replacement, in place.
         {
           filename: PAGE,
-          code: `export const A = () => <div className="!p-[13px] p-[13px]!" />`,
+          code: `export const A = () => <div class="!p-[13px] p-[13px]!" />`,
           errors: [
             {
               messageId: "arbitraryValueWithScale",
-              data: { className: "!p-[13px]", replacement: "!p-3.25" },
+              data: { class: "!p-[13px]", replacement: "!p-3.25" },
               suggestions: [
                 {
                   messageId: "useScale",
                   data: { replacement: "!p-3.25" },
-                  output: `export const A = () => <div className="!p-3.25 p-[13px]!" />`,
+                  output: `export const A = () => <div class="!p-3.25 p-[13px]!" />`,
                 },
               ],
             },
             {
               messageId: "arbitraryValueWithScale",
-              data: { className: "p-[13px]!", replacement: "p-3.25!" },
+              data: { class: "p-[13px]!", replacement: "p-3.25!" },
               suggestions: [
                 {
                   messageId: "useScale",
                   data: { replacement: "p-3.25!" },
-                  output: `export const A = () => <div className="!p-[13px] p-3.25!" />`,
+                  output: `export const A = () => <div class="!p-[13px] p-3.25!" />`,
                 },
               ],
             },
@@ -197,7 +197,7 @@ describe("no-unknown-classes", () => {
       valid: [
         {
           filename: PAGE,
-          code: `${button}\nexport const A = () => <Button className="prose prose-sm">Go</Button>`,
+          code: `${button}\nexport const A = () => <Button class="prose prose-sm">Go</Button>`,
           options: [
             {
               contracts: [{ pattern: "^Button$", allow: ["prose", "prose-*"] }],
@@ -206,20 +206,20 @@ describe("no-unknown-classes", () => {
         },
         {
           filename: PAGE,
-          code: `export const A = () => <div className="prose-sm" />`,
+          code: `export const A = () => <div class="prose-sm" />`,
           options: [{ allow: ["prose-*"], deny: ["prose-xl"] }],
         },
       ],
       invalid: [
         {
           filename: PAGE,
-          code: `export const A = () => <div className="prose-xl" />`,
+          code: `export const A = () => <div class="prose-xl" />`,
           options: [{ allow: ["prose-*"], deny: ["prose-xl"] }],
           errors: [{ messageId: "unknownClass" }],
         },
         {
           filename: PAGE,
-          code: `export const A = () => <div className="prose" />`,
+          code: `export const A = () => <div class="prose" />`,
           options: [{ contracts: [{ pattern: "^Button$", allow: ["prose"] }] }],
           errors: [{ messageId: "unknownClass" }],
         },
@@ -292,7 +292,7 @@ describe("policies across rules", () => {
     const run = (rules: Record<string, unknown>) =>
       linter
         .verify(
-          `${button}\nexport const A = () => <Button className="w-[320px]">Go</Button>`,
+          `${button}\nexport const A = () => <Button class="w-[320px]">Go</Button>`,
           [
             {
               files: ["**/*.tsx"],
@@ -352,7 +352,7 @@ describe("no-inline-styles names", () => {
         },
         // An unreadable style object gets the component's words.
         {
-          code: `export const A = ({ s }: { s: React.CSSProperties }) => <Motion style={s} />`,
+          code: `export const A = ({ s }: { s: JSX.CSSProperties }) => <Motion style={s} />`,
           options: [
             {
               contracts: [
@@ -376,14 +376,14 @@ describe("no-unknown-classes and layout", () => {
       valid: [
         {
           filename: PAGE,
-          code: `export const A = () => <div className="mt-4 flex" />`,
+          code: `export const A = () => <div class="mt-4 flex" />`,
           options: [{ allow: ["layout"] }],
         },
       ],
       invalid: [
         {
           filename: PAGE,
-          code: `export const A = () => <div className="flex-cols" />`,
+          code: `export const A = () => <div class="flex-cols" />`,
           options: [{ allow: ["layout"] }],
           errors: [
             {
@@ -392,7 +392,7 @@ describe("no-unknown-classes and layout", () => {
                 {
                   messageId: "useSuggestion",
                   data: { suggestion: "flex-col" },
-                  output: `export const A = () => <div className="flex-col" />`,
+                  output: `export const A = () => <div class="flex-col" />`,
                 },
               ],
             },

@@ -9,7 +9,7 @@ const listed = new WeakMap<Set<string>, string>()
 const PLACEHOLDER = /\{\{\s*([^{}|]+?)\s*(?:\|([^{}]*))?\}\}/g
 // The slots every finding offers, whatever the rule.
 const UNIVERSAL_KEYS = [
-  "className",
+  "class",
   "property",
   "component",
   "suggestions",
@@ -143,8 +143,8 @@ function withUniversalSlots(data: Record<string, unknown>) {
   }
   return {
     ...data,
-    className:
-      first("className") ||
+    class:
+      first("class") ||
       (data.attribute ? `${data.attribute}="${data.value ?? ""}"` : ""),
     property: first("property"),
     component: first("component"),

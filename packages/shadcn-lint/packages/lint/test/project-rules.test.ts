@@ -22,7 +22,7 @@ const ds = [{ componentImports: ["(^|/|#)ds(/|$)"] }]
 const buttonError = (file: string) => ({
   messageId: "appearanceClassWithVariants",
   data: {
-    className: "bg-highlight",
+    class: "bg-highlight",
     component: "Button",
     category: "color",
     variants: "primary, secondary",
@@ -38,38 +38,38 @@ describe("variants resolve through imports without components.json", () => {
       invalid: [
         {
           filename: NO_JSON_PAGE,
-          code: `import { Button } from "@/ds"\nexport const A = () => <Button className="bg-highlight">Go</Button>`,
+          code: `import { Button } from "@/ds"\nexport const A = () => <Button class="bg-highlight">Go</Button>`,
           options: ds,
           errors: [buttonError(file)],
         },
         {
           filename: NO_JSON_PAGE,
-          code: `import { Button } from "../ds/button"\nexport const A = () => <Button className="bg-highlight">Go</Button>`,
+          code: `import { Button } from "../ds/button"\nexport const A = () => <Button class="bg-highlight">Go</Button>`,
           options: ds,
           errors: [buttonError(file)],
         },
         {
           filename: NO_JSON_PAGE,
-          code: `import * as DS from "@/ds"\nexport const A = () => <DS.Button className="bg-highlight">Go</DS.Button>`,
+          code: `import * as DS from "@/ds"\nexport const A = () => <DS.Button class="bg-highlight">Go</DS.Button>`,
           options: ds,
           errors: [buttonError(file)],
         },
         {
           filename: NO_JSON_PAGE,
-          code: `import { Button } from "#ds"\nexport const A = () => <Button className="bg-highlight">Go</Button>`,
+          code: `import { Button } from "#ds"\nexport const A = () => <Button class="bg-highlight">Go</Button>`,
           options: ds,
           errors: [buttonError(file)],
         },
         // A component with a file but no variant axis names the file.
         {
           filename: NO_JSON_PAGE,
-          code: `import { CardBody } from "@/ds"\nexport const A = () => <CardBody className="text-xs">Hi</CardBody>`,
+          code: `import { CardBody } from "@/ds"\nexport const A = () => <CardBody class="text-xs">Hi</CardBody>`,
           options: ds,
           errors: [
             {
               messageId: "appearanceClassNoVariants",
               data: {
-                className: "text-xs",
+                class: "text-xs",
                 component: "CardBody",
                 category: "typography",
                 variants: "",
@@ -81,7 +81,7 @@ describe("variants resolve through imports without components.json", () => {
         // An import that resolves nowhere keeps the generic message.
         {
           filename: NO_JSON_PAGE,
-          code: `import { Button } from "@acme/ui"\nexport const A = () => <Button className="bg-highlight">Go</Button>`,
+          code: `import { Button } from "@acme/ui"\nexport const A = () => <Button class="bg-highlight">Go</Button>`,
           options: [{ componentImports: ["^@acme/ui"] }],
           errors: [{ messageId: "appearanceClass" }],
         },
@@ -97,13 +97,13 @@ describe("package.json imports aliases", () => {
       invalid: [
         {
           filename: IMPORTS_APP,
-          code: `import { Button } from "#components/ui/button"\nexport const A = () => <Button className="bg-primary p-4">Go</Button>`,
+          code: `import { Button } from "#components/ui/button"\nexport const A = () => <Button class="bg-primary p-4">Go</Button>`,
           options: [{ allow: ["layout"] }],
           errors: [
             {
               messageId: "appearanceClassWithVariants",
               data: {
-                className: "bg-primary",
+                class: "bg-primary",
                 component: "Button",
                 category: "color",
                 variants: "default, outline",
@@ -123,7 +123,7 @@ describe("monorepo aliases", () => {
     const error = {
       messageId: "appearanceClassWithVariants",
       data: {
-        className: "bg-red-500",
+        class: "bg-red-500",
         component: "Button",
         category: "color",
         variants: "default, brand",
@@ -135,12 +135,12 @@ describe("monorepo aliases", () => {
       invalid: [
         {
           filename: WEB_PAGE,
-          code: `import { Button } from "@workspace/ui/components/button"\nexport const A = () => <Button className="bg-red-500">Go</Button>`,
+          code: `import { Button } from "@workspace/ui/components/button"\nexport const A = () => <Button class="bg-red-500">Go</Button>`,
           errors: [error],
         },
         {
           filename: ADMIN_PAGE,
-          code: `import { Button } from "@workspace/ui/components/button"\nexport const A = () => <Button className="bg-red-500">Go</Button>`,
+          code: `import { Button } from "@workspace/ui/components/button"\nexport const A = () => <Button class="bg-red-500">Go</Button>`,
           errors: [error],
         },
       ],
@@ -154,18 +154,18 @@ describe("no-raw-colors names the theme file", () => {
       valid: [
         {
           filename: NO_JSON_PAGE,
-          code: `export const A = () => <div className="bg-accent text-ink-muted" />`,
+          code: `export const A = () => <div class="bg-accent text-ink-muted" />`,
         },
       ],
       invalid: [
         {
           filename: NO_JSON_PAGE,
-          code: `export const A = () => <div className="bg-highlight" />`,
+          code: `export const A = () => <div class="bg-highlight" />`,
           errors: [
             {
               messageId: "undeclaredToken",
               data: {
-                className: "bg-highlight",
+                class: "bg-highlight",
                 tokens: "accent, accent-ink, ink, ink-muted, line, paper",
                 file: "test/fixtures/no-json/src/styles.css",
               },
@@ -174,12 +174,12 @@ describe("no-raw-colors names the theme file", () => {
         },
         {
           filename: WEB_PAGE,
-          code: `export const A = () => <div className="bg-highlight" />`,
+          code: `export const A = () => <div class="bg-highlight" />`,
           errors: [
             {
               messageId: "undeclaredToken",
               data: {
-                className: "bg-highlight",
+                class: "bg-highlight",
                 tokens:
                   "background, brand, foreground, primary, primary-foreground",
                 file: "test/fixtures/monorepo/apps/web/app/globals.css",
@@ -194,7 +194,7 @@ describe("no-raw-colors names the theme file", () => {
 
 describe("ignoreImports", () => {
   test("a same-named third-party component is left alone when its source is ignored", () => {
-    const code = `import { Button } from "@mui/material"\nexport const A = () => <Button className="bg-red-500">Go</Button>`
+    const code = `import { Button } from "@mui/material"\nexport const A = () => <Button class="bg-red-500">Go</Button>`
     tester.run("no-restyle", boundary, {
       valid: [
         {
@@ -220,18 +220,18 @@ describe("helpers", () => {
       valid: [
         {
           filename: PAGE,
-          code: `${button}\nimport { cx } from "class-variance-authority"\nexport const A = () => <Button className={cx("w-full")}>Go</Button>`,
+          code: `${button}\nimport { cx } from "class-variance-authority"\nexport const A = () => <Button class={cx("w-full")}>Go</Button>`,
         },
         {
           filename: PAGE,
-          code: `${button}\nimport { merge } from "./merge"\nimport { cn } from "@/lib/utils"\nexport const A = () => <Button className={merge(cn("w-full"))}>Go</Button>`,
+          code: `${button}\nimport { merge } from "./merge"\nimport { cn } from "@/lib/utils"\nexport const A = () => <Button class={merge(cn("w-full"))}>Go</Button>`,
           options: [{ mergeFunctions: ["merge"] }],
         },
       ],
       invalid: [
         {
           filename: PAGE,
-          code: `${button}\nimport { merge } from "./merge"\nexport const A = () => <Button className={merge("w-full")}>Go</Button>`,
+          code: `${button}\nimport { merge } from "./merge"\nexport const A = () => <Button class={merge("w-full")}>Go</Button>`,
           errors: [{ messageId: "dynamicClasses" }],
         },
       ],
@@ -249,23 +249,23 @@ describe("helpers", () => {
       valid: [
         {
           filename: PAGE,
-          code: `${imports}\nexport const A = () => <Button className={Option.none()}>Go</Button>`,
+          code: `${imports}\nexport const A = () => <Button class={Option.none()}>Go</Button>`,
           options: option,
         },
         {
           filename: PAGE,
-          code: `${imports}\nexport const A = () => <Button className={Option.some("w-full")}>Go</Button>`,
+          code: `${imports}\nexport const A = () => <Button class={Option.some("w-full")}>Go</Button>`,
           options: option,
         },
         {
           filename: PAGE,
-          code: `${imports}\nexport const A = () => <Button className={Option.fromNullishOr("w-full")}>Go</Button>`,
+          code: `${imports}\nexport const A = () => <Button class={Option.fromNullishOr("w-full")}>Go</Button>`,
           options: option,
         },
         // The path is exact and may be deeper than one dot.
         {
           filename: PAGE,
-          code: `${button}\ndeclare const ui: any\nexport const A = () => <Button className={ui.h.Class("w-full")}>Go</Button>`,
+          code: `${button}\ndeclare const ui: any\nexport const A = () => <Button class={ui.h.Class("w-full")}>Go</Button>`,
           options: [{ mergeFunctions: ["ui.h.Class"] }],
         },
       ],
@@ -273,26 +273,26 @@ describe("helpers", () => {
         // What the call is handed must still be static.
         {
           filename: PAGE,
-          code: `${imports}\ndeclare const load: () => string\nexport const A = () => <Button className={Option.some(load())}>Go</Button>`,
+          code: `${imports}\ndeclare const load: () => string\nexport const A = () => <Button class={Option.some(load())}>Go</Button>`,
           options: option,
           errors: [{ messageId: "dynamicClasses" }],
         },
         // Unlisted members, computed members and other objects stay dynamic.
         {
           filename: PAGE,
-          code: `${imports}\nexport const A = () => <Button className={Option.getOrElse("w-full")}>Go</Button>`,
+          code: `${imports}\nexport const A = () => <Button class={Option.getOrElse("w-full")}>Go</Button>`,
           options: option,
           errors: [{ messageId: "dynamicClasses" }],
         },
         {
           filename: PAGE,
-          code: `${imports}\nexport const A = () => <Button className={Option["some"]("w-full")}>Go</Button>`,
+          code: `${imports}\nexport const A = () => <Button class={Option["some"]("w-full")}>Go</Button>`,
           options: option,
           errors: [{ messageId: "dynamicClasses" }],
         },
         {
           filename: PAGE,
-          code: `${button}\ndeclare const Maybe: any\nexport const A = () => <Button className={Maybe.some("w-full")}>Go</Button>`,
+          code: `${button}\ndeclare const Maybe: any\nexport const A = () => <Button class={Maybe.some("w-full")}>Go</Button>`,
           options: option,
           errors: [{ messageId: "dynamicClasses" }],
         },
@@ -312,7 +312,7 @@ describe("helpers", () => {
         },
         {
           filename: PAGE,
-          code: `${button}\nimport * as Option from "effect/Option"\nexport const A = () => <Button className={Option.some("bg-red-500")}>Go</Button>`,
+          code: `${button}\nimport * as Option from "effect/Option"\nexport const A = () => <Button class={Option.some("bg-red-500")}>Go</Button>`,
           options: [{ mergeFunctions: ["Option.some"] }],
           errors: 1,
         },

@@ -28,7 +28,7 @@ const linter = new Linter()
 
 function lint(token: string) {
   return linter.verify(
-    `import { Input } from "@acme/ui"\nexport const A = <Input className={${JSON.stringify(token)}} />`,
+    `import { Input } from "@acme/ui"\nexport const A = <Input class={${JSON.stringify(token)}} />`,
     [
       {
         files: ["**/*.tsx"],

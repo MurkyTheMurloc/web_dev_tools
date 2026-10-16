@@ -17,7 +17,7 @@ const unknown = (code: string, className: string, suggestion: string | null) =>
     ? {
         messageId: "unknownClassSuggest",
         data: {
-          className,
+          class: className,
           suggestion,
           file: "test/fixtures/project/app/globals.css",
         },
@@ -32,7 +32,7 @@ const unknown = (code: string, className: string, suggestion: string | null) =>
     : {
         messageId: "unknownClass",
         data: {
-          className,
+          class: className,
           suggestion: "",
           file: "test/fixtures/project/app/globals.css",
         },
@@ -48,27 +48,27 @@ describe("no-unknown-classes", () => {
 
   test("rule", () => {
     resetOracleMemo()
-    const typos = `${button}\nexport const A = () => <Button className="bg-primry flex-cols itms-center">Go</Button>`
-    const variants = `export const A = () => <div className="hover:roundedd md:grd" />`
+    const typos = `${button}\nexport const A = () => <Button class="bg-primry flex-cols itms-center">Go</Button>`
+    const variants = `export const A = () => <div class="hover:roundedd md:grd" />`
     tester.run("no-unknown-classes", noUnknownClasses as any, {
       valid: [
         {
           filename: PAGE,
-          code: `export const A = () => <div className="flex items-center gap-2 bg-primary text-sm hover:bg-primary/90 md:grid-cols-3 -mt-2 !p-0 sr-only" />`,
+          code: `export const A = () => <div class="flex items-center gap-2 bg-primary text-sm hover:bg-primary/90 md:grid-cols-3 -mt-2 !p-0 sr-only" />`,
         },
         // Markers, arbitrary properties, arbitrary variants.
         {
           filename: PAGE,
-          code: `export const A = () => <div className="group peer group/card dark [mask-type:luminance] [&_svg]:size-4 data-[state=open]:flex" />`,
+          code: `export const A = () => <div class="group peer group/card dark [mask-type:luminance] [&_svg]:size-4 data-[state=open]:flex" />`,
         },
         // Declared in the project's CSS.
         {
           filename: PAGE,
-          code: `export const A = () => <div className="tap-target tab-4 legacy-card" />`,
+          code: `export const A = () => <div class="tap-target tab-4 legacy-card" />`,
         },
         {
           filename: PAGE,
-          code: `export const A = () => <div className="toaster" />`,
+          code: `export const A = () => <div class="toaster" />`,
           options: [{ allow: ["toaster"] }],
         },
       ],
@@ -97,13 +97,13 @@ describe("no-unknown-classes", () => {
   })
 
   test.skipIf(!oracle)("with Tailwind: invented variants and values", () => {
-    const code = `export const A = () => <div className="hovr:flex tablet:flex rounded-huge" />`
+    const code = `export const A = () => <div class="hovr:flex tablet:flex rounded-huge" />`
     tester.run("no-unknown-classes", noUnknownClasses as any, {
       valid: [
         // Everything Tailwind generates, however new.
         {
           filename: PAGE,
-          code: `export const A = () => <div className="**:data-[slot=card]:shadow-xs @xl/main:grid-cols-2 not-disabled:hover:bg-accent starting:opacity-0 wrap-anywhere field-sizing-content" />`,
+          code: `export const A = () => <div class="**:data-[slot=card]:shadow-xs @xl/main:grid-cols-2 not-disabled:hover:bg-accent starting:opacity-0 wrap-anywhere field-sizing-content" />`,
         },
       ],
       invalid: [
@@ -117,7 +117,7 @@ describe("no-unknown-classes", () => {
             {
               messageId: "unknownVariant",
               data: {
-                className: "tablet:flex",
+                class: "tablet:flex",
                 file: "test/fixtures/project/app/globals.css",
               },
             },
@@ -142,18 +142,18 @@ describe.skipIf(!oracle)("a broken theme is unavailable on its own", () => {
         // build it, so the grammar answers here, without a suggestion.
         {
           filename: brokenPage,
-          code: `export const A = () => <div className="flex-cols" />`,
+          code: `export const A = () => <div class="flex-cols" />`,
           errors: [{ messageId: "unknownClass" }],
         },
         // The other project is untouched by that failure.
         {
           filename: PAGE,
-          code: `export const A = () => <div className="flex-cols" />`,
+          code: `export const A = () => <div class="flex-cols" />`,
           errors: [
             {
               messageId: "unknownClassSuggest",
               data: {
-                className: "flex-cols",
+                class: "flex-cols",
                 suggestion: "flex-col",
                 file: "test/fixtures/project/app/globals.css",
               },
@@ -161,7 +161,7 @@ describe.skipIf(!oracle)("a broken theme is unavailable on its own", () => {
                 {
                   messageId: "useSuggestion",
                   data: { suggestion: "flex-col" },
-                  output: `export const A = () => <div className="flex-col" />`,
+                  output: `export const A = () => <div class="flex-col" />`,
                 },
               ],
             },
@@ -179,12 +179,12 @@ describe.skipIf(!oracle)("a theme file that does not import Tailwind", () => {
   const page = path.join(FIXTURES, "partial-theme/src/page.tsx")
   test("stock classes are known, and the partial is still where a token belongs", () => {
     resetOracleMemo()
-    const code = `export const A = () => <div className="flex-cols" />`
+    const code = `export const A = () => <div class="flex-cols" />`
     tester.run("no-unknown-classes", noUnknownClasses as any, {
       valid: [
         {
           filename: page,
-          code: `export const A = () => <div className="flex p-4 text-sm bg-brand" />`,
+          code: `export const A = () => <div class="flex p-4 text-sm bg-brand" />`,
         },
       ],
       invalid: [
@@ -195,7 +195,7 @@ describe.skipIf(!oracle)("a theme file that does not import Tailwind", () => {
             {
               messageId: "unknownClassSuggest",
               data: {
-                className: "flex-cols",
+                class: "flex-cols",
                 suggestion: "flex-col",
                 file: "test/fixtures/partial-theme/src/theme.css",
               },
@@ -218,7 +218,7 @@ describe.skipIf(!oracleAvailable())("prefixed variant typos", () => {
   const page = path.join(FIXTURES, "prefixed/app/page.tsx")
   test("the prefix is kept when the bare utility is checked", () => {
     resetOracleMemo()
-    const code = `export const A = () => <div className="tw:hovr:bg-primary tw:bogus:text-primary tw:hovr:flex tw:bg-primary" />`
+    const code = `export const A = () => <div class="tw:hovr:bg-primary tw:bogus:text-primary tw:hovr:flex tw:bg-primary" />`
     tester.run("no-unknown-classes", noUnknownClasses as any, {
       valid: [],
       invalid: [
@@ -229,7 +229,7 @@ describe.skipIf(!oracleAvailable())("prefixed variant typos", () => {
             {
               messageId: "unknownClassSuggest",
               data: {
-                className: "tw:hovr:bg-primary",
+                class: "tw:hovr:bg-primary",
                 suggestion: "tw:hover:bg-primary",
                 file: "test/fixtures/prefixed/app/globals.css",
               },
@@ -248,7 +248,7 @@ describe.skipIf(!oracleAvailable())("prefixed variant typos", () => {
             {
               messageId: "unknownClassSuggest",
               data: {
-                className: "tw:hovr:flex",
+                class: "tw:hovr:flex",
                 suggestion: "tw:hover:flex",
                 file: "test/fixtures/prefixed/app/globals.css",
               },
@@ -269,13 +269,13 @@ describe.skipIf(!oracleAvailable())("prefixed variant typos", () => {
   // Under prefix(tw), text-muted is no more a Tailwind class than flex.
   test("an unprefixed color class is unknown, not an undeclared color", () => {
     resetOracleMemo()
-    const code = `export const A = () => <div className="tw:text-primary text-muted text-red-500 flex" />`
+    const code = `export const A = () => <div class="tw:text-primary text-muted text-red-500 flex" />`
     tester.run("no-raw-colors", noRawColors as any, {
       valid: [{ filename: page, code }],
       invalid: [
         {
           filename: page,
-          code: `export const A = () => <div className="tw:text-nope" />`,
+          code: `export const A = () => <div class="tw:text-nope" />`,
           errors: [{ messageId: "undeclaredToken" }],
         },
       ],
@@ -290,21 +290,21 @@ describe.skipIf(!oracleAvailable())("prefixed variant typos", () => {
             {
               messageId: "unknownClass",
               data: {
-                className: "text-muted",
+                class: "text-muted",
                 file: "test/fixtures/prefixed/app/globals.css",
               },
             },
             {
               messageId: "unknownClass",
               data: {
-                className: "text-red-500",
+                class: "text-red-500",
                 file: "test/fixtures/prefixed/app/globals.css",
               },
             },
             {
               messageId: "unknownClass",
               data: {
-                className: "flex",
+                class: "flex",
                 file: "test/fixtures/prefixed/app/globals.css",
               },
             },

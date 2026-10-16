@@ -39,13 +39,13 @@ describe("theme resets apply in cascade order", () => {
       invalid: [
         {
           filename: reset,
-          code: `export const A = () => <div className="p-[12px] rounded-[4px]" />`,
+          code: `export const A = () => <div class="p-[12px] rounded-[4px]" />`,
           errors: [
             { messageId: "arbitraryValue" },
             {
               messageId: "arbitraryValueNearScale",
               data: {
-                className: "rounded-[4px]",
+                class: "rounded-[4px]",
                 suggestions: "rounded-fresh (16px)",
               },
             },
@@ -73,18 +73,18 @@ describe("a plain Vite project has a theme too", () => {
         valid: [
           {
             filename: app,
-            code: `export default function App() { return <p className="text-2xl font-bold p-2 foo">Hello</p> }`,
+            code: `export default function App() { return <p class="text-2xl font-bold p-2 foo">Hello</p> }`,
           },
         ],
         invalid: [
           {
             filename: app,
-            code: `export default function App() { return <p className="bar">Hello</p> }`,
+            code: `export default function App() { return <p class="bar">Hello</p> }`,
             errors: [
               {
                 messageId: "unknownClass",
                 data: {
-                  className: "bar",
+                  class: "bar",
                   suggestion: "",
                   file: "test/fixtures/vite-plain/src/index.css",
                 },

@@ -13,7 +13,7 @@ describe("class:list", () => {
   test("is a class attribute", () => {
     expect(isClassAttribute("class:list")).toBe(true)
     expect(isClassAttribute("class")).toBe(true)
-    expect(isClassAttribute("wrapperClassName")).toBe(true)
+    expect(isClassAttribute("wrapperClass")).toBe(true)
     expect(isClassAttribute("client:load")).toBe(false)
     expect(isClassAttribute("xlink:class")).toBe(false)
     expect(
@@ -51,7 +51,7 @@ describe("class:list", () => {
           errors: [
             {
               messageId: "arbitraryValueWithScale",
-              data: { className: "p-[14px]", replacement: "p-3.5" },
+              data: { class: "p-[14px]", replacement: "p-3.5" },
               suggestions: [
                 {
                   messageId: "useScale",
@@ -68,7 +68,7 @@ describe("class:list", () => {
           errors: [
             {
               messageId: "arbitraryValueWithScale",
-              data: { className: "p-[15px]", replacement: "p-3.75" },
+              data: { class: "p-[15px]", replacement: "p-3.75" },
               suggestions: [
                 {
                   messageId: "useScale",

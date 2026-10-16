@@ -76,7 +76,7 @@ const policy = {
       pattern: "^Avatar$",
       allow: ["size-*"],
       message:
-        'An <{{component}}> takes a size (size-8, size-10) and nothing else; "{{className}}" is not a size.',
+        'An <{{component}}> takes a size (size-8, size-10) and nothing else; "{{class}}" is not a size.',
     },
     {
       pattern: "^Badge$",
@@ -85,7 +85,7 @@ const policy = {
       message: {
         layout: NO_MARGINS,
         default:
-          'A <{{component}}> is one of its variants: {{variants}}. "{{className}}" is not a variant.',
+          'A <{{component}}> is one of its variants: {{variants}}. "{{class}}" is not a variant.',
       },
     },
     { pattern: "^Skeleton$", allow: ["layout", "rounded"], deny: MARGINS },
@@ -95,7 +95,7 @@ const policy = {
       deny: [...MARGINS, "w-*", "min-w-*", "max-w-*", "size-*"],
       message: {
         layout:
-          "\"{{className}}\" is not a <{{component}}>'s to set: it sizes to its label, and space around it is the container's. Put w-full on the form row and use gap between controls.",
+          "\"{{class}}\" is not a <{{component}}>'s to set: it sizes to its label, and space around it is the container's. Put w-full on the form row and use gap between controls.",
         spacing: "Padding on a <{{component}}> is its size: {{sizes}}.",
         color:
           "Button color is a variant: {{variants}}. A new treatment is a new variant in {{file}}, not a class.",
@@ -108,39 +108,39 @@ const BUTTON_LAYOUT = (className: string) =>
   `"${className}" is not a <Button>'s to set: it sizes to its label, and space around it is the container's. Put w-full on the form row and use gap between controls.`
 
 const cases: [string, string | null][] = [
-  ['<Button className="mt-4">', BUTTON_LAYOUT("mt-4")],
-  ['<Button className="mbs-4">', BUTTON_LAYOUT("mbs-4")],
-  ['<Button className="w-full">', BUTTON_LAYOUT("w-full")],
-  ['<Button className="size-10">', BUTTON_LAYOUT("size-10")],
+  ['<Button class="mt-4">', BUTTON_LAYOUT("mt-4")],
+  ['<Button class="mbs-4">', BUTTON_LAYOUT("mbs-4")],
+  ['<Button class="w-full">', BUTTON_LAYOUT("w-full")],
+  ['<Button class="size-10">', BUTTON_LAYOUT("size-10")],
   [
-    '<Button className="p-6">',
+    '<Button class="p-6">',
     "Padding on a <Button> is its size: default, xs, sm, lg, icon, icon-xs, icon-sm, icon-lg.",
   ],
   [
-    '<Button className="bg-red-500">',
+    '<Button class="bg-red-500">',
     "Button color is a variant: default, outline, secondary, ghost, destructive, link. A new treatment is a new variant in components/ui/button.tsx, not a class.",
   ],
-  ['<Button className="col-span-2 self-end">', null],
-  ['<CardTitle className="text-xs font-medium tracking-tight">', null],
+  ['<Button class="col-span-2 self-end">', null],
+  ['<CardTitle class="text-xs font-medium tracking-tight">', null],
   [
-    '<CardTitle className="text-red-500">',
+    '<CardTitle class="text-red-500">',
     "Text color on <CardTitle> is a token through a variant, not a class.",
   ],
   // A contract that restates the margin rule reports it in the same words.
   [
-    '<CardTitle className="mt-4">',
+    '<CardTitle class="mt-4">',
     "No margins on <CardTitle>. Space between components is the container's: use gap, or a Stack.",
   ],
-  ['<CardContent className="px-2 pt-0">', null],
+  ['<CardContent class="px-2 pt-0">', null],
   [
-    '<Card className="shadow-lg">',
+    '<Card class="shadow-lg">',
     "Appearance on <Card> comes from its variants: none yet. Add one in components/ui/card.tsx if the design calls for it.",
   ],
   // A component no contract names takes the top-level policy, which has
   // no words of its own.
-  ['<Field className="w-full">', null],
+  ['<Field class="w-full">', null],
   [
-    '<Field className="mt-4">',
+    '<Field class="mt-4">',
     `"mt-4" is not allowed on <Field>: its contract denies ${MARGINS.join(" ")}.`,
   ],
 ]

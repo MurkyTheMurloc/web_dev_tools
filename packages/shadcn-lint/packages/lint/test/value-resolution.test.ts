@@ -62,7 +62,7 @@ function expectReports(
 describe("shared value resolution preserves rule policy", () => {
   test("both destructured fallbacks and default-object values are authored alternatives", () => {
     const code =
-      'function View({ className: classes = "bg-red-500", style: inline = { color: "red" } } = { className: "rounded-full", style: { padding: 4 } }) { return <Button className={classes} style={inline} /> }'
+      'function View({ class: classes = "bg-red-500", style: inline = { color: "red" } } = { class: "rounded-full", style: { padding: 4 } }) { return <Button class={classes} style={inline} /> }'
     expectReports(code, [
       {
         rule: "no-restyle",
@@ -86,8 +86,8 @@ describe("shared value resolution preserves rule policy", () => {
 
   test("unknown default objects retain each rule's reporting node after local fallbacks", () => {
     const parameter =
-      '{ className: classes = "bg-red-500", style: inline = { color: "red" } } = build()'
-    const code = `function View(${parameter}) { return <Button className={classes} style={inline} /> }`
+      '{ class: classes = "bg-red-500", style: inline = { color: "red" } } = build()'
+    const code = `function View(${parameter}) { return <Button class={classes} style={inline} /> }`
     expectReports(code, [
       {
         rule: "no-restyle",
@@ -116,14 +116,14 @@ describe("shared value resolution preserves rule policy", () => {
 
   test("a readable default object with missing properties has no authored value", () => {
     expectReports(
-      "function View(props = {}) { return <Button className={props.className} style={props.style} /> }",
+      "function View(props = {}) { return <Button class={props.class} style={props.style} /> }",
       []
     )
   })
 
   test("empty member keys stay unreadable for classes and readable for styles", () => {
     const code =
-      'const classes = { "": "bg-red-500" }; const styles = { "": { color: "red" } }; <Button className={classes[""]} style={styles[""]} />'
+      'const classes = { "": "bg-red-500" }; const styles = { "": { color: "red" } }; <Button class={classes[""]} style={styles[""]} />'
     expectReports(code, [
       {
         rule: "require-static-classes",
@@ -136,12 +136,12 @@ describe("shared value resolution preserves rule policy", () => {
 
   test("unknown member overwrites retain the member expression as the report site", () => {
     const code =
-      'const theme = { className: "w-full", style: { "--gap": "4px" }, ...opaque }; <Button className={theme.className} style={theme.style} />'
+      'const theme = { class: "w-full", style: { "--gap": "4px" }, ...opaque }; <Button class={theme.class} style={theme.style} />'
     expectReports(code, [
       {
         rule: "require-static-classes",
         messageId: "dynamicClasses",
-        at: "theme.className",
+        at: "theme.class",
       },
       {
         rule: "no-inline-styles",
@@ -153,7 +153,7 @@ describe("shared value resolution preserves rule policy", () => {
 
   test("computed keys and wrapped member receivers retain the final value's node", () => {
     const code =
-      'const theme = { ...{ className: "bg-red-500", style: { color: "red" } } }; <Button className={(theme as object)[`className`]} style={(theme satisfies object)["style"]} />'
+      'const theme = { ...{ class: "bg-red-500", style: { color: "red" } } }; <Button class={(theme as object)[`class`]} style={(theme satisfies object)["style"]} />'
     expectReports(code, [
       {
         rule: "no-restyle",
@@ -174,7 +174,7 @@ describe("shared value resolution preserves rule policy", () => {
     // The attribute that reads it through a cast judges the boundary
     // and does not report the palette class a second time.
     const code =
-      'const theme = { className: cn("bg-red-500") }; <Button className={(theme as object).className} />'
+      'const theme = { class: cn("bg-red-500") }; <Button class={(theme as object).class} />'
     expectReports(code, [
       {
         rule: "no-restyle",
@@ -191,7 +191,7 @@ describe("shared value resolution preserves rule policy", () => {
 
   test("forwarded defaults revisited on the active path retain rule-specific treatment", () => {
     const code =
-      "function View({ className = className, style = style }) { return <Button className={className} style={style} /> }"
+      "function View({ class: className = className, style = style }) { return <Button class={className} style={style} /> }"
     expectReports(code, [
       {
         rule: "no-inline-styles",

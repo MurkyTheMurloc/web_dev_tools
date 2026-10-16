@@ -3,5 +3,5 @@
 import { Button } from "@/ds"
 
 export function OxlintCheck() {
-  return <Button className="bg-highlight">Go</Button>
+  return <Button class="bg-highlight">Go</Button>
 }

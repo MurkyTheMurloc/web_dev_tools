@@ -35,7 +35,7 @@ describe("spacing messages", () => {
         {
           filename: PAGE,
           options: [layout],
-          code: `${button}\nexport const A = () => <Button className="p-4 mt-4">Go</Button>`,
+          code: `${button}\nexport const A = () => <Button class="p-4 mt-4">Go</Button>`,
           errors: [
             {
               message:
@@ -46,7 +46,7 @@ describe("spacing messages", () => {
         {
           filename: PAGE,
           options: [layout],
-          code: `${button}\nexport const A = () => <Button className="gap-2">Go</Button>`,
+          code: `${button}\nexport const A = () => <Button class="gap-2">Go</Button>`,
           errors: [{ messageId: "spacingClassWithSizes" }],
         },
       ],
@@ -61,7 +61,7 @@ describe("spacing messages", () => {
         {
           filename: PAGE,
           options: [layout],
-          code: `${card}\nexport const A = () => <CardTitle className="pb-2">Hi</CardTitle>`,
+          code: `${card}\nexport const A = () => <CardTitle class="pb-2">Hi</CardTitle>`,
           errors: [
             {
               message:
@@ -73,7 +73,7 @@ describe("spacing messages", () => {
         {
           filename: PAGE,
           options: [layout],
-          code: `${field}\nexport const A = () => <FieldLabel className="px-2">Hi</FieldLabel>`,
+          code: `${field}\nexport const A = () => <FieldLabel class="px-2">Hi</FieldLabel>`,
           errors: [
             {
               message:
@@ -92,7 +92,7 @@ describe("spacing messages", () => {
         // A closed contract: no margin here, only the parent.
         {
           filename: PAGE,
-          code: `${button}\nexport const A = () => <Button className="p-4">Go</Button>`,
+          code: `${button}\nexport const A = () => <Button class="p-4">Go</Button>`,
           errors: [
             { message: /, or gap on the parent for space around it\. Add/ },
           ],
@@ -109,7 +109,7 @@ describe("spacing messages", () => {
         {
           filename: PAGE,
           options,
-          code: `${cardHeader}\nexport const A = () => <CardHeader><CardTitle className="pb-2">Hi</CardTitle></CardHeader>`,
+          code: `${cardHeader}\nexport const A = () => <CardHeader><CardTitle class="pb-2">Hi</CardTitle></CardHeader>`,
           errors: [
             {
               message: new RegExp(
@@ -123,7 +123,7 @@ describe("spacing messages", () => {
         {
           filename: PAGE,
           options,
-          code: `${button}\n${card}\nexport const A = () => <CardContent><div><Button className="p-4">Go</Button></div></CardContent>`,
+          code: `${button}\n${card}\nexport const A = () => <CardContent><div><Button class="p-4">Go</Button></div></CardContent>`,
           errors: [
             {
               message: new RegExp(
@@ -136,7 +136,7 @@ describe("spacing messages", () => {
         {
           filename: PAGE,
           options,
-          code: `${button}\n${card}\nexport const A = ({ on }: { on: boolean }) => <CardContent>{on && <><Button className="p-4">Go</Button></>}</CardContent>`,
+          code: `${button}\n${card}\nexport const A = ({ on }: { on: boolean }) => <CardContent>{on && <><Button class="p-4">Go</Button></>}</CardContent>`,
           errors: [
             {
               message: new RegExp(
@@ -149,7 +149,7 @@ describe("spacing messages", () => {
         {
           filename: PAGE,
           options,
-          code: `${field}\nexport const A = () => <Field><FieldLabel className="px-2">Hi</FieldLabel></Field>`,
+          code: `${field}\nexport const A = () => <Field><FieldLabel class="px-2">Hi</FieldLabel></Field>`,
           // Field is the direct parent and rejects spacing, so the finding
           // does not send the class there.
           errors: [
@@ -164,7 +164,7 @@ describe("spacing messages", () => {
         {
           filename: PAGE,
           options,
-          code: `${button}\nimport { Panel } from "@/components/panel"\nexport const A = () => <Panel><Button className="p-4">Go</Button></Panel>`,
+          code: `${button}\nimport { Panel } from "@/components/panel"\nexport const A = () => <Panel><Button class="p-4">Go</Button></Panel>`,
           errors: [
             {
               message: new RegExp(
@@ -185,7 +185,7 @@ describe("spacing messages", () => {
               ],
             },
           ],
-          code: `${cardHeader}\nexport const A = () => <CardHeader><CardTitle className="pb-2">Hi</CardTitle></CardHeader>`,
+          code: `${cardHeader}\nexport const A = () => <CardHeader><CardTitle class="pb-2">Hi</CardTitle></CardHeader>`,
           errors: [
             {
               message: new RegExp(
@@ -205,7 +205,7 @@ describe("spacing messages", () => {
         {
           filename: PAGE,
           options: [layout],
-          code: `${saveButton}\nexport const A = () => <SaveButton className="py-1">Go</SaveButton>`,
+          code: `${saveButton}\nexport const A = () => <SaveButton class="py-1">Go</SaveButton>`,
           errors: [
             {
               message:
@@ -231,7 +231,7 @@ describe("spacing messages", () => {
               ],
             },
           ],
-          code: `${button}\nexport const A = () => <Button className="p-4 m-2">Go</Button>`,
+          code: `${button}\nexport const A = () => <Button class="p-4 m-2">Go</Button>`,
           errors: [
             {
               message: /, or gap on the parent for space around it\. Add/,
@@ -257,7 +257,7 @@ describe("spacing messages", () => {
               contracts: [{ pattern: "^(Row|Stack|Box)$", allow: ["spacing"] }],
             },
           ],
-          code: `${button}\nexport const A = () => <Button className="p-4">Go</Button>`,
+          code: `${button}\nexport const A = () => <Button class="p-4">Go</Button>`,
           errors: [
             {
               message:
@@ -274,7 +274,7 @@ describe("spacing messages", () => {
               contracts: [{ pattern: "^Fie.d$", allow: ["spacing"] }],
             },
           ],
-          code: `${button}\nexport const A = () => <Button className="p-4">Go</Button>`,
+          code: `${button}\nexport const A = () => <Button class="p-4">Go</Button>`,
           errors: [
             {
               message:
@@ -294,7 +294,7 @@ describe("spacing messages", () => {
               ],
             },
           ],
-          code: `${button}\nexport const A = () => <Button className="p-4">Go</Button>`,
+          code: `${button}\nexport const A = () => <Button class="p-4">Go</Button>`,
           errors: [
             {
               message:
@@ -311,7 +311,7 @@ describe("spacing messages", () => {
               contracts: [{ pattern: "^(Row|Stack)$", allow: ["color"] }],
             },
           ],
-          code: `${button}\nexport const A = () => <Button className="p-4">Go</Button>`,
+          code: `${button}\nexport const A = () => <Button class="p-4">Go</Button>`,
           errors: [
             {
               message:
@@ -325,7 +325,7 @@ describe("spacing messages", () => {
           options: [
             { ...layout, contracts: [{ pattern: "Card", allow: ["spacing"] }] },
           ],
-          code: `${button}\nexport const A = () => <Button className="p-4">Go</Button>`,
+          code: `${button}\nexport const A = () => <Button class="p-4">Go</Button>`,
           errors: [
             {
               message:
@@ -338,7 +338,7 @@ describe("spacing messages", () => {
         {
           filename: PAGE,
           options,
-          code: `${card}\nexport const A = () => <CardTitle className="p-4">Hi</CardTitle>`,
+          code: `${card}\nexport const A = () => <CardTitle class="p-4">Hi</CardTitle>`,
           errors: [
             {
               message: new RegExp(
@@ -369,7 +369,7 @@ describe("spacing messages", () => {
               ],
             },
           ],
-          code: `${button}\nexport const A = () => <Button className="p-4">Go</Button>`,
+          code: `${button}\nexport const A = () => <Button class="p-4">Go</Button>`,
           errors: [
             {
               message:
@@ -388,7 +388,7 @@ describe("spacing messages", () => {
         {
           filename: PAGE,
           options: [{ ...layout, componentImports: ["^@acme/kit"] }],
-          code: `import { Chip } from "@acme/kit"\nexport const A = () => <Chip className="px-3">Hi</Chip>`,
+          code: `import { Chip } from "@acme/kit"\nexport const A = () => <Chip class="px-3">Hi</Chip>`,
           errors: [
             {
               message:
@@ -406,7 +406,7 @@ describe("spacing messages", () => {
       invalid: [
         {
           filename: PAGE,
-          code: `${button}\nexport const A = () => <Button className="bg-red-500">Go</Button>`,
+          code: `${button}\nexport const A = () => <Button class="bg-red-500">Go</Button>`,
           errors: [{ messageId: "appearanceClassWithVariants" }],
         },
       ],

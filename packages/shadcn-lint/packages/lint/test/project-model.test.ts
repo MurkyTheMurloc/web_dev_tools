@@ -369,7 +369,7 @@ describe("components.json with a bare ui alias", () => {
       expect(componentsFor(page).files.get("Button")).toBe(button)
       const messages = lint(
         page,
-        'import { Button } from "../button"\nexport const Page = () => <Button className="rounded-full" />'
+        'import { Button } from "../button"\nexport const Page = () => <Button class="rounded-full" />'
       )
       expect(messages.map((m) => m.ruleId)).toEqual(["shadcn/no-restyle"])
       expect(warnings).toEqual([])

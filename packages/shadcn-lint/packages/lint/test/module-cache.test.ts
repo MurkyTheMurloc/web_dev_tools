@@ -244,23 +244,3 @@ test("a star-export closure computed from a stale mtime memo is dropped too", ()
   vi.setSystemTime(Date.now() + 950)
   expect([...exportsOf(index).keys()]).toEqual(["IconButton", "Button"])
 })
-
-test("a default export wrapped in memo or forwardRef is the component inside", () => {
-  const page = path.join(root, "page.tsx")
-  const button = write(
-    "button.tsx",
-    'import { memo } from "react"\nfunction Button() { return null }\nexport default memo(Button)'
-  )
-  expect(definingExportOf("./button", "default", page)).toEqual({
-    file: button,
-    name: "Button",
-  })
-  const input = write(
-    "input.tsx",
-    'import * as React from "react"\nexport default React.forwardRef(function Input() { return null })'
-  )
-  expect(definingExportOf("./input", "default", page)).toEqual({
-    file: input,
-    name: "Input",
-  })
-})

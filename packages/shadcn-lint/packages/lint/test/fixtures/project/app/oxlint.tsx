@@ -7,10 +7,10 @@ import { Card } from "@/components/ui/card"
 export function OxlintCheck({ cls }: { cls: string }) {
   return (
     <>
-      <Button className="bg-red-500 text-[13px]">Go</Button>
-      <Button className={cls}>Go</Button>
-      <SaveButton className="rounded-full">Save</SaveButton>
-      <Card className="bg-highlight flex-cols">Hi</Card>
+      <Button class="bg-red-500 text-[13px]">Go</Button>
+      <Button class={cls}>Go</Button>
+      <SaveButton class="rounded-full">Save</SaveButton>
+      <Card class="bg-highlight flex-cols">Hi</Card>
       <svg>
         <path fill="#ff00aa" />
       </svg>

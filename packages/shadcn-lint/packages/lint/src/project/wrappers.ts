@@ -1,4 +1,4 @@
-// Components outside the ui directory that forward className to a
+// Components outside the ui directory that forward class to a
 // design-system component: styling <SaveButton> styles the Button inside
 // it, so the wrapper inherits its target's contract and variants. The one
 // cross-file fact the boundary needs — a contract that follows the value,
@@ -15,8 +15,7 @@ import {
 import { componentsFor } from "./components"
 import { mtimeOf, NODE_MODULES, TTL } from "./fs"
 import { definingExportOf } from "./modules"
-import { isSfc, parseSource, sfcNameOf } from "./parser"
-import { templateTags, type TemplateTag } from "./sfc-template"
+import { parseSource } from "./parser"
 import {
   mergedPropsOf,
   omittedPropsOf,
@@ -91,12 +90,11 @@ function indexLocalBindings(ast: any) {
 }
 
 // The function a component name refers to, however it was declared,
-// re-bound, or wrapped. "default" names the default export.
+// or re-bound. "default" names the default export.
 function componentFunction(bindings: Map<string, any>, name: string) {
   let fn = bindings.get(name)
   for (let hop = 0; hop < 6 && fn; hop++) {
-    if (fn.type === "CallExpression" && fn.arguments?.[0]) fn = fn.arguments[0]
-    else if (fn.type === "Identifier" && bindings.has(fn.name))
+    if (fn.type === "Identifier" && bindings.has(fn.name))
       fn = bindings.get(fn.name)
     else break
   }
@@ -107,15 +105,14 @@ function componentFunction(bindings: Map<string, any>, name: string) {
     : null
 }
 
-// The prop a JSX component receives its classes in: className, and in a
-// Solid file `class` as well.
-function classProp(key: unknown, solid: boolean) {
-  return key === "className" || (solid && key === "class")
+// The prop a component receives its classes in.
+function classProp(key: unknown) {
+  return key === "class"
 }
 
-// The destructured binding, or the whole props object. Once className is
+// The destructured binding, or the whole props object. Once class is
 // destructured out, `{...rest}` no longer carries it.
-function classNameBindings(fn: any, solid: SolidHelpers | null) {
+function classBindings(fn: any, solid: SolidHelpers) {
   const names = new Set<string>()
   const propsNames = new Set<string>()
   const param = fn.params?.[0]
@@ -125,7 +122,7 @@ function classNameBindings(fn: any, solid: SolidHelpers | null) {
     for (const prop of pattern.properties) {
       if (prop.type !== "Property") continue
       const key = prop.key?.name ?? prop.key?.value
-      if (!classProp(key, solid !== null)) continue
+      if (!classProp(key)) continue
       const value =
         prop.value?.type === "AssignmentPattern" ? prop.value.left : prop.value
       if (value?.type === "Identifier") names.add(value.name)
@@ -143,7 +140,7 @@ function classNameBindings(fn: any, solid: SolidHelpers | null) {
   } else if (pattern.type === "Identifier") {
     propsNames.add(pattern.name)
   }
-  if (solid && propsNames.size) solidDerivedProps(fn.body, solid, propsNames)
+  if (propsNames.size) solidDerivedProps(fn.body, solid, propsNames)
   return { names, propsNames }
 }
 
@@ -183,11 +180,10 @@ function solidDerivedProps(
   }
 }
 
-function forwardsClassName(
+function forwardsClass(
   expr: any,
   names: Set<string>,
-  propsNames: Set<string>,
-  solid = false
+  propsNames: Set<string>
 ) {
   let found = false
   walk(expr, (node) => {
@@ -197,7 +193,7 @@ function forwardsClassName(
       node.type === "MemberExpression" &&
       node.object?.type === "Identifier" &&
       propsNames.has(node.object.name) &&
-      classProp(node.property?.name, solid)
+      classProp(node.property?.name)
     )
       found = true
     if (
@@ -208,114 +204,6 @@ function forwardsClassName(
       found = true
   })
   return found
-}
-
-// A single-file component receives its props from a call in its script:
-// `let { class: className, ...rest } = $props()` in Svelte, `const props
-// = defineProps()` in Vue. Same split as `classNameBindings`.
-function sfcClassBindings(ast: any, vue: boolean) {
-  const names = new Set<string>()
-  const propsNames = new Set<string>(vue ? ["$props", "$attrs"] : [])
-  // Vue hands `class` to a lone root element unless a prop claims it.
-  let declaresClass = false
-  const isPropsCall = (node: any): boolean => {
-    while (node?.type?.startsWith("TS") && node.expression) {
-      node = node.expression
-    }
-    if (node?.type !== "CallExpression" || node.callee?.type !== "Identifier") {
-      return false
-    }
-    if (node.callee.name === "withDefaults") {
-      return isPropsCall(node.arguments[0])
-    }
-    return node.callee.name === "$props" || node.callee.name === "defineProps"
-  }
-  walk(ast, (node) => {
-    if (node.type === "CallExpression" && isPropsCall(node)) {
-      walk(node, (inner) => {
-        const key = inner.key?.name ?? inner.key?.value
-        if (
-          (inner.type === "TSPropertySignature" || inner.type === "Property") &&
-          key === "class"
-        ) {
-          declaresClass = true
-        }
-      })
-    }
-    if (node.type !== "VariableDeclarator" || !isPropsCall(node.init)) return
-    if (node.id.type === "Identifier") {
-      propsNames.add(node.id.name)
-      return
-    }
-    if (node.id.type !== "ObjectPattern") return
-    const rests: string[] = []
-    for (const prop of node.id.properties) {
-      if (prop.type === "RestElement" && prop.argument?.type === "Identifier") {
-        rests.push(prop.argument.name)
-      }
-      if (prop.type !== "Property") continue
-      if ((prop.key?.name ?? prop.key?.value) !== "class") continue
-      const value =
-        prop.value?.type === "AssignmentPattern" ? prop.value.left : prop.value
-      if (value?.type === "Identifier") names.add(value.name)
-    }
-    // Once class is destructured out, the rest no longer carries it.
-    if (!names.size) for (const rest of rests) propsNames.add(rest)
-  })
-  return { names, propsNames, declaresClass }
-}
-
-const escapeName = (name: string) => name.replace(/[$]/g, "\\$&")
-
-// Whether the received class reaches this tag: named in its class value,
-// or carried by a spread of the props it arrived in.
-function tagForwardsClass(
-  tag: TemplateTag,
-  names: Set<string>,
-  propsNames: Set<string>
-) {
-  const mentions = (value: string) =>
-    [...names].some((name) =>
-      new RegExp(`(?<![\\w$.])${escapeName(name)}(?![\\w$])`).test(value)
-    ) ||
-    [...propsNames].some((name) =>
-      new RegExp(`(?<![\\w$.])${escapeName(name)}\\.class(?![\\w$])`).test(
-        value
-      )
-    )
-  return tag.attributes.some(({ name, value }) => {
-    if (name === "class" || name === ":class" || name === "v-bind:class") {
-      return mentions(value)
-    }
-    const spread =
-      name === ""
-        ? value.match(/^\{\s*\.\.\.\s*([\w$]+)\s*\}$/)?.[1]
-        : name === "v-bind"
-          ? value.replace(/^["']|["']$/g, "").trim()
-          : undefined
-    return spread !== undefined && propsNames.has(spread)
-  })
-}
-
-// The tags of an SFC the received class lands on, in source order.
-function sfcForwardingTags(source: string, file: string, ast: any) {
-  const vue = /\.vue$/i.test(file)
-  const { names, propsNames, declaresClass } = sfcClassBindings(ast, vue)
-  const tags = templateTags(source, file)
-  const forwarding = tags.filter((tag) =>
-    tagForwardsClass(tag, names, propsNames)
-  )
-  const roots = tags.filter((tag) => tag.depth === 0)
-  if (
-    vue &&
-    !declaresClass &&
-    roots.length === 1 &&
-    !/inheritAttrs\s*:\s*false/.test(source) &&
-    !forwarding.includes(roots[0])
-  ) {
-    forwarding.unshift(roots[0])
-  }
-  return forwarding
 }
 
 function jsxElementName(node: any) {
@@ -343,20 +231,16 @@ function build(
   const wrappers: FileWrappers = new Map()
   let complete = true
   deps.add(file)
-  const sfc = isSfc(file)
-  // A linter's AST of an SFC is the framework's own; the scripts are
-  // read from disk the way every other component file is.
-  let ast: any = sfc ? undefined : parsedAst
-  let source = ""
+  let ast: any = parsedAst
   if (!ast) {
+    let source: string
     try {
       source = fs.readFileSync(file, "utf-8")
     } catch {
       return { wrappers, complete }
     }
     // A file with neither is not a wrapper and is not worth parsing.
-    // `class` covers className and Solid's class prop.
-    if (!sfc && !source.includes("class") && !source.includes("...")) {
+    if (!source.includes("class") && !source.includes("...")) {
       return { wrappers, complete }
     }
     try {
@@ -387,8 +271,7 @@ function build(
     }
   }
   const index = componentsFor(file)
-  const helpers = sfc ? null : solidHelpersOf(ast)
-  const solid = helpers?.solid ? helpers : null
+  const solid = solidHelpersOf(ast)
   const { bindings, candidates } = indexLocalBindings(ast)
   const localVisiting = new Set<string>()
 
@@ -458,22 +341,17 @@ function build(
     let target: WrapperTarget | null = null
     const fn = componentFunction(bindings, name)
     if (fn) {
-      const { names, propsNames } = classNameBindings(fn, solid)
+      const { names, propsNames } = classBindings(fn, solid)
       if (names.size || propsNames.size) {
         walk(fn.body, (node) => {
           if (target || node.type !== "JSXOpeningElement") return
           const forwards = node.attributes?.some(
             (attr: any) =>
               (attr.type === "JSXAttribute" &&
-                classProp(attr.name?.name, solid !== null) &&
-                forwardsClassName(
-                  attr.value,
-                  names,
-                  propsNames,
-                  solid !== null
-                )) ||
+                classProp(attr.name?.name) &&
+                forwardsClass(attr.value, names, propsNames)) ||
               (attr.type === "JSXSpreadAttribute" &&
-                forwardsClassName(attr, names, propsNames, solid !== null))
+                forwardsClass(attr, names, propsNames))
           )
           if (forwards) target = targetOf(node)
         })
@@ -486,21 +364,6 @@ function build(
 
   for (const name of candidates) {
     if (name === "default" || /^[A-Z]/.test(name)) resolveDeclared(name)
-  }
-  if (sfc) {
-    // The file is the component: the first forwarding tag that is a
-    // design-system component is what it wraps.
-    let target: WrapperTarget | null = null
-    for (const tag of sfcForwardingTags(source, file, ast)) {
-      const [root, ...rest] = tag.name.split(".")
-      const pascal = root.includes("-") ? sfcNameOf(root) : root
-      target = targetOfName({
-        root: imports.has(root) ? root : pascal,
-        property: rest.length ? rest.join(".") : null,
-      })
-      if (target) break
-    }
-    wrappers.set(sfcNameOf(file), target)
   }
   return { wrappers, complete }
 }

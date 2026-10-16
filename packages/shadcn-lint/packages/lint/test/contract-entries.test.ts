@@ -119,7 +119,7 @@ describe("a broken contract in the rule", () => {
       invalid: [PAGE, PAGE.replace("page.tsx", "other.tsx")].map(
         (filename) => ({
           filename,
-          code: `${button}\nexport const A = () => <Button className="bg-red-500">Go</Button>`,
+          code: `${button}\nexport const A = () => <Button class="bg-red-500">Go</Button>`,
           options: [{ contracts: [{ pattern: "[" }] }],
           errors: [
             {
@@ -141,7 +141,7 @@ describe("a broken contract in the rule", () => {
         {
           filename: PAGE,
           // Would be a finding under a working contract; not reported here.
-          code: `${button}\nexport const A = () => <Button className="bg-red-500">Go</Button>`,
+          code: `${button}\nexport const A = () => <Button class="bg-red-500">Go</Button>`,
           options: [{ contracts: [{ pattern: ".*", deny: ["layouts"] }] }],
           errors: [
             {
@@ -176,14 +176,14 @@ describe("a plugin's one-word class", () => {
       valid: [
         {
           filename: PAGE,
-          code: `${button}\nexport const A = () => <Button className="prose">Go</Button>`,
+          code: `${button}\nexport const A = () => <Button class="prose">Go</Button>`,
           options: [{ contracts: [{ pattern: "^Button$", allow: ["prose"] }] }],
         },
       ],
       invalid: [
         {
           filename: PAGE,
-          code: `${button}\nexport const A = () => <Button className="btn">Go</Button>`,
+          code: `${button}\nexport const A = () => <Button class="btn">Go</Button>`,
           options: [{ contracts: [{ pattern: "^Button$", allow: ["prose"] }] }],
           errors: [{ message: /"btn"/ }],
         },

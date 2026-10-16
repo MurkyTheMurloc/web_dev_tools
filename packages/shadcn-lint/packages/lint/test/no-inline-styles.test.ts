@@ -9,14 +9,14 @@ describe("no-inline-styles", () => {
   test("rule", () => {
     tester.run("no-inline-styles", noInlineStyles as any, {
       valid: [
-        { code: `export const A = () => <div className="p-4" />` },
+        { code: `export const A = () => <div class="p-4" />` },
         {
           code: `export const A = ({ w }: { w: string }) => <div style={{ "--sidebar-width": w }} />`,
         },
         { code: `export const A = () => <div style={{ "--gap": "8px" }} />` },
         // A forwarded style prop, with or without the cast.
         {
-          code: `export const A = ({ style }: { style?: React.CSSProperties }) => <div style={{ "--w": 4, ...style } as React.CSSProperties} />`,
+          code: `export const A = ({ style }: { style?: JSX.CSSProperties }) => <div style={{ "--w": 4, ...style } as JSX.CSSProperties} />`,
         },
         // A custom property fed from a token, one hop away.
         {
@@ -27,7 +27,7 @@ describe("no-inline-styles", () => {
         // A contract's own words reach a style the collector cannot
         // read, the same as they reach a property finding.
         {
-          code: `declare function defaults(): { style?: React.CSSProperties }\nexport const A = ({ style }: { style?: React.CSSProperties } = defaults()) => <Box style={style} />`,
+          code: `declare function defaults(): { style?: JSX.CSSProperties }\nexport const A = ({ style }: { style?: JSX.CSSProperties } = defaults()) => <Box style={style} />`,
           options: [
             {
               contracts: [
@@ -42,7 +42,7 @@ describe("no-inline-styles", () => {
         },
         // CSS text in a <style> element is outside the system.
         {
-          code: `export const A = () => <><style>{".glow { box-shadow: 0 0 40px rgba(59,130,246,.3) }"}</style><div className="glow" /></>`,
+          code: `export const A = () => <><style>{".glow { box-shadow: 0 0 40px rgba(59,130,246,.3) }"}</style><div class="glow" /></>`,
           errors: [{ messageId: "styleElement" }],
         },
         // A raw color laundered through a variable into a custom property.
@@ -64,7 +64,7 @@ describe("no-inline-styles", () => {
           errors: [{ messageId: "inlineStyle" }],
         },
         {
-          code: `export const A = () => <div style={{ "--x": "#ff00aa" }} className="bg-(--x)" />`,
+          code: `export const A = () => <div style={{ "--x": "#ff00aa" }} class="bg-(--x)" />`,
           errors: [{ messageId: "customPropColor" }],
         },
         {
@@ -72,7 +72,7 @@ describe("no-inline-styles", () => {
           errors: [{ messageId: "customPropColor" }],
         },
         {
-          code: `export const A = ({ s }: { s: React.CSSProperties }) => <div style={s} />`,
+          code: `export const A = ({ s }: { s: JSX.CSSProperties }) => <div style={s} />`,
           errors: [{ messageId: "dynamicStyle" }],
         },
         {
@@ -120,7 +120,7 @@ describe("no-inline-styles resolves local style objects", () => {
     tester.run("no-inline-styles", noInlineStyles as any, {
       valid: [
         {
-          code: `export const A = ({ style }: { style?: React.CSSProperties }) => <div style={style} />`,
+          code: `export const A = ({ style }: { style?: JSX.CSSProperties }) => <div style={style} />`,
         },
         {
           code: `const style = { "--gap": "8px" }\nexport const A = () => <div style={style} />`,
@@ -202,7 +202,7 @@ describe("allow", () => {
         },
         // A class is not a property name. The mistake is reported on line 1.
         {
-          code: `export const A = () => <div className="p-4" />`,
+          code: `export const A = () => <div class="p-4" />`,
           options: [{ allow: ["bg-red-500"] }],
           errors: [
             { message: /entry "bg-red-500" is not a CSS property name/ },

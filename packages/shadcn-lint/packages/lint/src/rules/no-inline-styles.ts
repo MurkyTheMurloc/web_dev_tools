@@ -13,13 +13,8 @@ import {
   resolveObject,
   resolveProperty,
 } from "../sites/collect"
-import {
-  addVisitor,
-  isContainer,
-  isMarkupLiteral,
-  readerFor,
-  type Visitors,
-} from "../sites/readers"
+import { addVisitor, isContainer, type Visitors } from "../sites/readers"
+import { jsxReader } from "../sites/readers/jsx"
 import {
   allowListOf,
   configErrorVisitors,
@@ -86,7 +81,7 @@ function hasRawColor(value: string) {
   return leaves.some((leaf) => leaf && parseColor(leaf) !== null)
 }
 
-// Unwraps `as React.CSSProperties`, `satisfies`, and `!`.
+// Unwraps `as JSX.CSSProperties`, `satisfies`, and `!`.
 function unwrap(node: any) {
   while (
     node &&
@@ -256,10 +251,7 @@ function splitDeclarations(css: string) {
 // A style written as CSS text: a string, or a template whose holes are
 // kept as holes so no color is read across one.
 function cssTextOf(node: any) {
-  if (
-    (node?.type === "Literal" || isMarkupLiteral(node)) &&
-    typeof node.value === "string"
-  ) {
+  if (node?.type === "Literal" && typeof node.value === "string") {
     return node.value as string
   }
   if (node?.type === "TemplateLiteral") {
@@ -312,7 +304,7 @@ export const noInlineStyles = {
     }
     // The tag as written (Text, motion.div, UI.Button). A lowercase
     // identifier is intrinsic and takes the top-level policy.
-    const reader = readerFor(context)
+    const reader = jsxReader
     const elementName = (attribute: any) => {
       const name = reader.nameOf(reader.elementOf(attribute))
       return name?.component ? name.text : ""
@@ -391,10 +383,8 @@ export const noInlineStyles = {
       ) {
         return
       }
-      if (reader.staticStyles) {
-        const css = cssTextOf(expr)
-        if (css !== null) return judgeDeclarations(css, reportAt, component)
-      }
+      const css = cssTextOf(expr)
+      if (css !== null) return judgeDeclarations(css, reportAt, component)
       // Each branch is a style value of its own. The left of && is the
       // condition, not a value; both sides of || and ?? are values.
       if (expr.type === "ConditionalExpression") {
@@ -469,26 +459,10 @@ export const noInlineStyles = {
             new Set(),
             elementName(node)
           )
-        } else if (reader.staticStyles && value) {
+        } else if (value) {
           check(value, value, new Set(), elementName(node))
         }
       })
-    }
-    for (const [type, read] of Object.entries(reader.styleProperties ?? {})) {
-      visitors[type] = (node: any) => {
-        const style = read(node)
-        if (!style) return
-        const value = isContainer(style.value)
-          ? style.value.expression
-          : style.value
-        const text = cssTextOf(value)
-        judge(
-          style.property,
-          text === null ? value : node,
-          elementName(node),
-          text ?? undefined
-        )
-      }
     }
     // {...{ style }} and {...props}: the style property is judged like
     // the attribute.

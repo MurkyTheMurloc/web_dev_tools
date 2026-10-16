@@ -7,7 +7,6 @@ import * as path from "node:path"
 import { projectFor, uiDirectory } from "./components-json"
 import { isFile, mtimeOf, realpath, TTL } from "./fs"
 import { exportsOf } from "./modules"
-import { isSfc } from "./parser"
 
 export type ComponentIndex = {
   dir: string | null
@@ -34,25 +33,7 @@ const cache = new Map<
   }
 >()
 
-const BARRELS = ["index.tsx", "index.ts", "index.jsx"]
-
-const SOURCE_RE = /\.(tsx|jsx|ts|js|svelte|vue)$/
-
-// A directory of single-file components may keep its barrel in plain
-// JavaScript; elsewhere `index.js` was never read and still is not.
-export function barrelOf(dir: string) {
-  for (const index of BARRELS) {
-    const candidate = path.join(dir, index)
-    if (isFile(candidate)) return candidate
-  }
-  const candidate = path.join(dir, "index.js")
-  if (!isFile(candidate)) return null
-  try {
-    return fs.readdirSync(dir).some(isSfc) ? candidate : null
-  } catch {
-    return null
-  }
-}
+const SOURCE_RE = /\.(tsx|jsx|ts|js)$/
 
 function componentFiles(dir: string) {
   const files: string[] = []
@@ -67,7 +48,9 @@ function componentFiles(dir: string) {
     if (entry.isFile() && SOURCE_RE.test(entry.name)) {
       files.push(full)
     } else if (entry.isDirectory()) {
-      const barrel = barrelOf(full)
+      const barrel = ["index.tsx", "index.ts", "index.jsx"]
+        .map((index) => path.join(full, index))
+        .find(isFile)
       if (barrel) files.push(barrel)
     }
   }
@@ -95,7 +78,7 @@ function buildIndex(dir: string) {
   const deps = new Set<string>(entries)
   for (const file of entries) {
     for (const [name, binding] of exportsOf(file, new Set(), deps)) {
-      // `export default memo(Button)` is still a Button by name.
+      // `export default Button` is still a Button by name.
       const component = name === "default" ? binding.name : name
       if (/^[A-Z]/.test(component) && !files.has(component)) {
         files.set(component, binding.file)

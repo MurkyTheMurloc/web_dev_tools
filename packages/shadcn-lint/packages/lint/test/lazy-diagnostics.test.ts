@@ -48,7 +48,7 @@ beforeEach(() => vi.clearAllMocks())
 describe("diagnostic work stays off the clean path", () => {
   test("accepted component classes do not read variants", () => {
     expect(
-      lint(`${button}; const A = <Button className="w-full mt-4" />`, {
+      lint(`${button}; const A = <Button class="w-full mt-4" />`, {
         "shadcn/no-restyle": ["error", { allow: ["layout"] }],
       })
     ).toEqual([])
@@ -57,11 +57,11 @@ describe("diagnostic work stays off the clean path", () => {
 
   test("the first violation loads variants once, including custom messages", () => {
     const messages = lint(
-      `${button}; const A = <Button className="w-full bg-red-500 rounded-full" />`,
+      `${button}; const A = <Button class="w-full bg-red-500 rounded-full" />`,
       {
         "shadcn/no-restyle": [
           "error",
-          { allow: ["layout"], message: "{{className}}: {{variants}}" },
+          { allow: ["layout"], message: "{{class}}: {{variants}}" },
         ],
       }
     )
@@ -77,7 +77,7 @@ describe("diagnostic work stays off the clean path", () => {
 
   test("allowed arbitrary values do not read the spacing unit", () => {
     expect(
-      lint('const A = <div className="w-[13px] p-4" />', {
+      lint('const A = <div class="w-[13px] p-4" />', {
         "shadcn/no-arbitrary-values": ["error", { allow: ["layout"] }],
       })
     ).toEqual([])
@@ -85,7 +85,7 @@ describe("diagnostic work stays off the clean path", () => {
   })
 
   test("spacing suggestions share the unit and preserve exact fixes", () => {
-    const messages = lint('const A = <div className="p-[12px] m-[16px]" />', {
+    const messages = lint('const A = <div class="p-[12px] m-[16px]" />', {
       "shadcn/no-arbitrary-values": "error",
     })
     expect(
@@ -96,7 +96,7 @@ describe("diagnostic work stays off the clean path", () => {
 
   test("declared colors do not resolve suggestion values", () => {
     expect(
-      lint('const A = <div className="bg-primary w-full text-foreground" />', {
+      lint('const A = <div class="bg-primary w-full text-foreground" />', {
         "shadcn/no-raw-colors": "error",
       })
     ).toEqual([])

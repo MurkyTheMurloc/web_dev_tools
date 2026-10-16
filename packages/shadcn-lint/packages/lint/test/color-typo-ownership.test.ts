@@ -38,7 +38,7 @@ function diagnostics(code: string, rules: Linter.RulesRecord) {
 }
 
 describe.skipIf(!oracle)("a typo the grammar files under a color", () => {
-  const code = `export const A = () => <div className="text-smal bg-primry bg-brand" />`
+  const code = `export const A = () => <div class="text-smal bg-primry bg-brand" />`
 
   test("no-unknown-classes alone reports it with the spelling", () => {
     resetOracleMemo()
@@ -51,7 +51,7 @@ describe.skipIf(!oracle)("a typo the grammar files under a color", () => {
           errors: [
             {
               messageId: "unknownClassSuggest",
-              data: { className: "text-smal", suggestion: "text-sm" },
+              data: { class: "text-smal", suggestion: "text-sm" },
               suggestions: [
                 {
                   messageId: "useSuggestion",
@@ -71,7 +71,7 @@ describe.skipIf(!oracle)("a typo the grammar files under a color", () => {
       valid: [
         {
           filename: PAGE,
-          code: `export const A = () => <div className="text-smal" />`,
+          code: `export const A = () => <div class="text-smal" />`,
         },
       ],
       invalid: [

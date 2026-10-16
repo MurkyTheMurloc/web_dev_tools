@@ -30,57 +30,57 @@ describe("no-arbitrary-values", () => {
       valid: [
         {
           filename: PAGE,
-          code: `export const A = () => <div className="p-4 rounded-lg border border-border text-sm bg-card" />`,
+          code: `export const A = () => <div class="p-4 rounded-lg border border-border text-sm bg-card" />`,
         },
         {
           filename: PAGE,
-          code: `export const A = () => <div className="data-[state=open]:flex [&_svg]:size-4" />`,
+          code: `export const A = () => <div class="data-[state=open]:flex [&_svg]:size-4" />`,
         },
         // Geometry is contextual, so a project opens layout and keeps
         // the rule on appearance.
         {
           filename: PAGE,
-          code: `export const A = () => <div className="w-[calc(100%-2rem)] max-h-[250px] mt-[13px]" />`,
+          code: `export const A = () => <div class="w-[calc(100%-2rem)] max-h-[250px] mt-[13px]" />`,
           options: [{ allow: ["layout"] }],
         },
         {
           filename: PAGE,
-          code: `export const A = () => <div className="w-[320px]" />`,
+          code: `export const A = () => <div class="w-[320px]" />`,
           options: [{ allow: ["w-[320px]"] }],
         },
       ],
       invalid: [
         {
           filename: PAGE,
-          code: `export const A = () => <div className="p-[13px] rounded-[10px] border-[#E4E4E7] text-[13px]" />`,
+          code: `export const A = () => <div class="p-[13px] rounded-[10px] border-[#E4E4E7] text-[13px]" />`,
           errors: [
             {
               messageId: "arbitraryValueWithScale",
-              data: { className: "p-[13px]", replacement: "p-3.25" },
+              data: { class: "p-[13px]", replacement: "p-3.25" },
               suggestions: [
                 {
                   messageId: "useScale",
                   data: { replacement: "p-3.25" },
-                  output: `export const A = () => <div className="p-3.25 rounded-[10px] border-[#E4E4E7] text-[13px]" />`,
+                  output: `export const A = () => <div class="p-3.25 rounded-[10px] border-[#E4E4E7] text-[13px]" />`,
                 },
               ],
             },
             // The fixture theme sets --radius-lg to var(--radius), 10px.
             {
               messageId: "arbitraryValueWithScale",
-              data: { className: "rounded-[10px]", replacement: "rounded-lg" },
+              data: { class: "rounded-[10px]", replacement: "rounded-lg" },
               suggestions: [
                 {
                   messageId: "useScale",
                   data: { replacement: "rounded-lg" },
-                  output: `export const A = () => <div className="p-[13px] rounded-lg border-[#E4E4E7] text-[13px]" />`,
+                  output: `export const A = () => <div class="p-[13px] rounded-lg border-[#E4E4E7] text-[13px]" />`,
                 },
               ],
             },
             {
               messageId: "arbitraryColorNear",
               data: {
-                className: "border-[#E4E4E7]",
+                class: "border-[#E4E4E7]",
                 suggestions: "border-border, border-muted",
                 file: "test/fixtures/project/app/globals.css",
               },
@@ -88,19 +88,19 @@ describe("no-arbitrary-values", () => {
                 {
                   messageId: "useToken",
                   data: { replacement: "border-border" },
-                  output: `export const A = () => <div className="p-[13px] rounded-[10px] border-border text-[13px]" />`,
+                  output: `export const A = () => <div class="p-[13px] rounded-[10px] border-border text-[13px]" />`,
                 },
                 {
                   messageId: "useToken",
                   data: { replacement: "border-muted" },
-                  output: `export const A = () => <div className="p-[13px] rounded-[10px] border-muted text-[13px]" />`,
+                  output: `export const A = () => <div class="p-[13px] rounded-[10px] border-muted text-[13px]" />`,
                 },
               ],
             },
             {
               messageId: "arbitraryValueNearScale",
               data: {
-                className: "text-[13px]",
+                class: "text-[13px]",
                 suggestions: "text-xs (12px), text-sm (14px)",
               },
             },
@@ -108,7 +108,7 @@ describe("no-arbitrary-values", () => {
         },
         {
           filename: PAGE,
-          code: `${button}\nexport const A = () => <Button className="p-[3px]">Go</Button>`,
+          code: `${button}\nexport const A = () => <Button class="p-[3px]">Go</Button>`,
           errors: [
             {
               messageId: "arbitraryValueWithScale",
@@ -116,7 +116,7 @@ describe("no-arbitrary-values", () => {
                 {
                   messageId: "useScale",
                   data: { replacement: "p-0.75" },
-                  output: `${button}\nexport const A = () => <Button className="p-0.75">Go</Button>`,
+                  output: `${button}\nexport const A = () => <Button class="p-0.75">Go</Button>`,
                 },
               ],
             },
@@ -124,12 +124,12 @@ describe("no-arbitrary-values", () => {
         },
         {
           filename: PAGE,
-          code: `${cn}\nexport const A = () => <p className={cn("md:text-[11px]")} />`,
+          code: `${cn}\nexport const A = () => <p class={cn("md:text-[11px]")} />`,
           errors: [
             {
               messageId: "arbitraryValueNearScale",
               data: {
-                className: "md:text-[11px]",
+                class: "md:text-[11px]",
                 suggestions: "md:text-xs (12px), md:text-sm (14px)",
               },
             },
@@ -138,27 +138,27 @@ describe("no-arbitrary-values", () => {
         // A layout value is a value like any other until layout is allowed.
         {
           filename: PAGE,
-          code: `export const A = () => <div className="w-[320px] mt-[13px]" />`,
+          code: `export const A = () => <div class="w-[320px] mt-[13px]" />`,
           errors: [
             {
               messageId: "arbitraryValueWithScale",
-              data: { className: "w-[320px]", replacement: "w-80" },
+              data: { class: "w-[320px]", replacement: "w-80" },
               suggestions: [
                 {
                   messageId: "useScale",
                   data: { replacement: "w-80" },
-                  output: `export const A = () => <div className="w-80 mt-[13px]" />`,
+                  output: `export const A = () => <div class="w-80 mt-[13px]" />`,
                 },
               ],
             },
             {
               messageId: "arbitraryValueWithScale",
-              data: { className: "mt-[13px]", replacement: "mt-3.25" },
+              data: { class: "mt-[13px]", replacement: "mt-3.25" },
               suggestions: [
                 {
                   messageId: "useScale",
                   data: { replacement: "mt-3.25" },
-                  output: `export const A = () => <div className="w-[320px] mt-3.25" />`,
+                  output: `export const A = () => <div class="w-[320px] mt-3.25" />`,
                 },
               ],
             },
@@ -172,12 +172,12 @@ describe("no-arbitrary-values", () => {
         },
         {
           filename: PAGE,
-          code: `const c = "bg-[#ff00aa]"\nexport const A = () => <div className={c} />`,
+          code: `const c = "bg-[#ff00aa]"\nexport const A = () => <div class={c} />`,
           errors: [
             {
               messageId: "arbitraryColorFar",
               data: {
-                className: "bg-[#ff00aa]",
+                class: "bg-[#ff00aa]",
                 suggestions: "",
                 tokens:
                   "accent, background, border, card, destructive, foreground, input, muted, popover, primary, ring, secondary (+6 more)",
@@ -189,27 +189,27 @@ describe("no-arbitrary-values", () => {
         // Outside any project: no theme, no scale beyond the defaults.
         {
           filename: OUTSIDE,
-          code: `export const A = () => <div className="bg-[#ff00aa] rounded-[10px] text-[0.875rem]" />`,
+          code: `export const A = () => <div class="bg-[#ff00aa] rounded-[10px] text-[0.875rem]" />`,
           errors: [
             {
               messageId: "arbitraryValue",
-              data: { className: "bg-[#ff00aa]" },
+              data: { class: "bg-[#ff00aa]" },
             },
             {
               messageId: "arbitraryValueNearScale",
               data: {
-                className: "rounded-[10px]",
+                class: "rounded-[10px]",
                 suggestions: "rounded-lg (8px), rounded-xl (12px)",
               },
             },
             {
               messageId: "arbitraryValueWithScale",
-              data: { className: "text-[0.875rem]", replacement: "text-sm" },
+              data: { class: "text-[0.875rem]", replacement: "text-sm" },
               suggestions: [
                 {
                   messageId: "useScale",
                   data: { replacement: "text-sm" },
-                  output: `export const A = () => <div className="bg-[#ff00aa] rounded-[10px] text-sm" />`,
+                  output: `export const A = () => <div class="bg-[#ff00aa] rounded-[10px] text-sm" />`,
                 },
               ],
             },
@@ -221,7 +221,7 @@ describe("no-arbitrary-values", () => {
 })
 
 test("a two-segment spacing utility gets its scale replacement", () => {
-  const code = `export const A = () => <div className="border-spacing-x-[8px]" />`
+  const code = `export const A = () => <div class="border-spacing-x-[8px]" />`
   createTester().run("no-arbitrary-values", noArbitraryValues as any, {
     valid: [],
     invalid: [
@@ -232,7 +232,7 @@ test("a two-segment spacing utility gets its scale replacement", () => {
           {
             messageId: "arbitraryValueWithScale",
             data: {
-              className: "border-spacing-x-[8px]",
+              class: "border-spacing-x-[8px]",
               replacement: "border-spacing-x-2",
             },
             suggestions: [
@@ -255,7 +255,7 @@ test("a two-segment spacing utility gets its scale replacement", () => {
 // An arbitrary layout property is reported until layout is allowed;
 // docs/rules.md points contracts at this for [margin:1rem].
 test("an arbitrary layout property follows the layout keyword", () => {
-  const code = `export const A = () => <div className="[margin:1rem]" />`
+  const code = `export const A = () => <div class="[margin:1rem]" />`
   createTester().run("no-arbitrary-values", noArbitraryValues as any, {
     valid: [{ filename: PAGE, code, options: [{ allow: ["layout"] }] }],
     invalid: [

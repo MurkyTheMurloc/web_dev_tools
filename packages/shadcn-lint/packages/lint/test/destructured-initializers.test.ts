@@ -18,7 +18,7 @@ const unknown = (code: string, className: string, suggestion: string) =>
     ? {
         messageId: "unknownClassSuggest",
         data: {
-          className,
+          class: className,
           suggestion,
           file: "test/fixtures/project/app/globals.css",
         },
@@ -33,7 +33,7 @@ const unknown = (code: string, className: string, suggestion: string) =>
     : {
         messageId: "unknownClass",
         data: {
-          className,
+          class: className,
           suggestion: "",
           file: "test/fixtures/project/app/globals.css",
         },
@@ -41,12 +41,12 @@ const unknown = (code: string, className: string, suggestion: string) =>
 
 const ARRAY_TYPO = `export function A({ ok }: { ok: boolean }) {
   const [dot, text, cls] = ok ? ["var(--ok)", "Connected", "itms-center"] : ["var(--muted)", "Needs setup", "items-start"]
-  return <span className={cls}>{text}</span>
+  return <span class={cls}>{text}</span>
 }`
 
 const OBJECT_TYPO = `export function A({ ok }: { ok: boolean }) {
   const { Icon, colorCls } = ok ? { Icon: "x", colorCls: "flex" } : { Icon: "y", colorCls: "flx" }
-  return <span className={colorCls} title={Icon} />
+  return <span class={colorCls} title={Icon} />
 }`
 
 describe("destructured initializers", () => {
@@ -60,7 +60,7 @@ describe("destructured initializers", () => {
           code: `export function A({ ok }: { ok: boolean }) {
   const [dot, text, cls] = ok ? ["var(--ok)", "Connected", "items-center"] : ["var(--muted)", "Needs setup", "items-start"]
   const { Icon, colorCls } = ok ? { Icon: "x", colorCls: "flex" } : { Icon: "y", colorCls: "grid" }
-  return <span className={\`flex \${cls} \${colorCls}\`} style={{ background: dot }} title={Icon}>{text}</span>
+  return <span class={\`flex \${cls} \${colorCls}\`} style={{ background: dot }} title={Icon}>{text}</span>
 }`,
         },
         // Through another binding, and a plain literal.
@@ -70,7 +70,7 @@ describe("destructured initializers", () => {
 const [, , cls] = ["a", "b", "grid"]
 export function A() {
   const [label, klass] = pair
-  return <span className={\`\${klass} \${cls}\`}>{label}</span>
+  return <span class={\`\${klass} \${cls}\`}>{label}</span>
 }`,
         },
       ],
@@ -100,7 +100,7 @@ export function A() {
           code: `export function A({ more }: { more: string[] }) {
   const [label, ...rest] = ["p-[13px]", "flex"]
   const [first, second] = [...more, "p-[13px]"]
-  return <span className={\`\${rest[0]} \${second}\`}>{label}</span>
+  return <span class={\`\${rest[0]} \${second}\`}>{label}</span>
 }`,
         },
       ],
@@ -109,19 +109,19 @@ export function A() {
           filename: PAGE,
           code: `export function A({ ok }: { ok: boolean }) {
   const [dot, label, cls] = ok ? ["var(--ok)", "Connected", "p-[13px]"] : ["var(--muted)", "Needs setup", "p-4"]
-  return <span className={cls}>{label}</span>
+  return <span class={cls}>{label}</span>
 }`,
           errors: [
             {
               messageId: "arbitraryValueWithScale",
-              data: { className: "p-[13px]", replacement: "p-3.25" },
+              data: { class: "p-[13px]", replacement: "p-3.25" },
               suggestions: [
                 {
                   messageId: "useScale",
                   data: { replacement: "p-3.25" },
                   output: `export function A({ ok }: { ok: boolean }) {
   const [dot, label, cls] = ok ? ["var(--ok)", "Connected", "p-3.25"] : ["var(--muted)", "Needs setup", "p-4"]
-  return <span className={cls}>{label}</span>
+  return <span class={cls}>{label}</span>
 }`,
                 },
               ],

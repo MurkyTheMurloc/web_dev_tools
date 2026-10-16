@@ -25,7 +25,7 @@ describe("contract messages", () => {
         // A message changes nothing about what passes.
         {
           filename: PAGE,
-          code: `${button}\nexport const A = () => <Button className="mt-4">Go</Button>`,
+          code: `${button}\nexport const A = () => <Button class="mt-4">Go</Button>`,
           options: [
             {
               contracts: [
@@ -43,7 +43,7 @@ describe("contract messages", () => {
       invalid: [
         {
           filename: PAGE,
-          code: `${button}\nexport const A = () => <Button className="w-full">Go</Button>`,
+          code: `${button}\nexport const A = () => <Button class="w-full">Go</Button>`,
           options: [
             {
               contracts: [
@@ -66,7 +66,7 @@ describe("contract messages", () => {
         },
         {
           filename: PAGE,
-          code: `${button}\nexport const A = () => <Button className="text-lg">Go</Button>`,
+          code: `${button}\nexport const A = () => <Button class="text-lg">Go</Button>`,
           options: [
             {
               contracts: [
@@ -74,7 +74,7 @@ describe("contract messages", () => {
                   pattern: "^Button$",
                   allow: ["layout"],
                   message:
-                    'Tone is a variant on <{{component}}>, not "{{className}}" ({{category}}).',
+                    'Tone is a variant on <{{component}}>, not "{{class}}" ({{category}}).',
                 },
               ],
             },
@@ -89,7 +89,7 @@ describe("contract messages", () => {
         // Appearance findings fill the variant list and the file too.
         {
           filename: PAGE,
-          code: `${button}\nexport const A = () => <Button className="bg-red-500">Go</Button>`,
+          code: `${button}\nexport const A = () => <Button class="bg-red-500">Go</Button>`,
           options: [
             {
               contracts: [
@@ -129,7 +129,7 @@ describe("contract messages", () => {
       invalid: [
         {
           filename: PAGE,
-          code: `${button}\nexport const A = () => <Button className="bg-red-500">Go</Button>`,
+          code: `${button}\nexport const A = () => <Button class="bg-red-500">Go</Button>`,
           options: [{ contracts }],
           errors: [
             { message: "Colors are theme tokens; pick a Button variant." },
@@ -137,13 +137,13 @@ describe("contract messages", () => {
         },
         {
           filename: PAGE,
-          code: `${button}\nexport const A = () => <Button className="w-full">Go</Button>`,
+          code: `${button}\nexport const A = () => <Button class="w-full">Go</Button>`,
           options: [{ contracts }],
           errors: [{ message: "Width belongs to the parent." }],
         },
         {
           filename: PAGE,
-          code: `${button}\nexport const A = () => <Button className="text-lg">Go</Button>`,
+          code: `${button}\nexport const A = () => <Button class="text-lg">Go</Button>`,
           options: [{ contracts }],
           errors: [
             { message: "Appearance belongs to the component's variants." },
@@ -159,7 +159,7 @@ describe("contract messages", () => {
       invalid: [
         {
           filename: PAGE,
-          code: `${button}\nexport const A = () => <Button className="text-lg">Go</Button>`,
+          code: `${button}\nexport const A = () => <Button class="text-lg">Go</Button>`,
           options: [
             {
               contracts: [
@@ -197,27 +197,27 @@ describe("contract messages", () => {
         // margins, and its words, stop at the components it still names.
         {
           filename: PAGE,
-          code: `${button}\nexport const A = () => <Button className="mt-4">Go</Button>`,
+          code: `${button}\nexport const A = () => <Button class="mt-4">Go</Button>`,
           options: [{ contracts }],
         },
       ],
       invalid: [
         {
           filename: PAGE,
-          code: `${card}\nexport const A = () => <Card className="mt-4">Go</Card>`,
+          code: `${card}\nexport const A = () => <Card class="mt-4">Go</Card>`,
           options: [{ contracts }],
           errors: [{ message: "No margins on components." }],
         },
         {
           filename: PAGE,
-          code: `${button}\nexport const A = () => <Button className="w-full">Go</Button>`,
+          code: `${button}\nexport const A = () => <Button class="w-full">Go</Button>`,
           options: [{ contracts }],
           errors: [{ message: "Buttons size to their label." }],
         },
         // The top-level policy has no words of its own; the rule speaks.
         {
           filename: PAGE,
-          code: `${button}\nexport const A = () => <Button className="mt-4">Go</Button>`,
+          code: `${button}\nexport const A = () => <Button class="mt-4">Go</Button>`,
           options: [{ allow: ["layout"], deny: ["mt"] }],
           errors: [{ messageId: "deniedClass" }],
         },
@@ -231,7 +231,7 @@ describe("contract messages", () => {
       invalid: [
         {
           filename: PAGE,
-          code: `import { Card } from "@/components/ui/card"\nexport const A = () => <Card className="shadow-lg">Go</Card>`,
+          code: `import { Card } from "@/components/ui/card"\nexport const A = () => <Card class="shadow-lg">Go</Card>`,
           options: [
             {
               contracts: [
@@ -262,7 +262,7 @@ describe("contract messages", () => {
         // fallback.
         {
           filename: PAGE,
-          code: `import { CardTitle } from "@/components/ui/card"\nexport const A = () => <CardTitle className="p-4">Go</CardTitle>`,
+          code: `import { CardTitle } from "@/components/ui/card"\nexport const A = () => <CardTitle class="p-4">Go</CardTitle>`,
           options: [
             {
               contracts: [
@@ -278,7 +278,7 @@ describe("contract messages", () => {
         // A spacing finding with variants lists them.
         {
           filename: PAGE,
-          code: `${button}\nexport const A = () => <Button className="p-4">Go</Button>`,
+          code: `${button}\nexport const A = () => <Button class="p-4">Go</Button>`,
           options: [
             {
               contracts: [
@@ -299,7 +299,7 @@ describe("contract messages", () => {
         // Through a wrapper, the list carries no punctuation of its own.
         {
           filename: PAGE,
-          code: `import { SaveButton } from "@/components/save-button"\nexport const A = () => <SaveButton className="bg-red-500">Go</SaveButton>`,
+          code: `import { SaveButton } from "@/components/save-button"\nexport const A = () => <SaveButton class="bg-red-500">Go</SaveButton>`,
           options: [
             {
               contracts: [
@@ -327,7 +327,7 @@ describe("contract messages", () => {
       invalid: [
         {
           filename: PAGE,
-          code: `${button}\nexport const A = () => <Button className="bg-red-500">Go</Button>`,
+          code: `${button}\nexport const A = () => <Button class="bg-red-500">Go</Button>`,
           options: [
             {
               contracts: [
@@ -349,7 +349,7 @@ describe("contract messages", () => {
         // rule's own text does.
         {
           filename: PAGE,
-          code: `${button}\nexport const A = () => <Button className="bg-red-500">Go</Button>`,
+          code: `${button}\nexport const A = () => <Button class="bg-red-500">Go</Button>`,
           options: [
             {
               contracts: [
@@ -372,17 +372,17 @@ describe("settings.shadcn.note", () => {
   const cases: [string, string, string][] = [
     [
       "no-restyle",
-      `${button}\nexport const A = () => <Button className="bg-red-500">Go</Button>`,
+      `${button}\nexport const A = () => <Button class="bg-red-500">Go</Button>`,
       "is not allowed on <Button>",
     ],
     [
       "no-raw-colors",
-      `export const A = () => <div className="bg-pink-500" />`,
+      `export const A = () => <div class="bg-pink-500" />`,
       "raw Tailwind palette",
     ],
     [
       "no-arbitrary-values",
-      `export const A = () => <div className="p-[13px]" />`,
+      `export const A = () => <div class="p-[13px]" />`,
       "off-token value",
     ],
     [
@@ -392,12 +392,12 @@ describe("settings.shadcn.note", () => {
     ],
     [
       "require-static-classes",
-      `${button}\nexport const A = ({ tone }: { tone: string }) => <Button className={tone}>Go</Button>`,
+      `${button}\nexport const A = ({ tone }: { tone: string }) => <Button class={tone}>Go</Button>`,
       "cannot be checked",
     ],
     [
       "no-unknown-classes",
-      `export const A = () => <div className="flex-cols" />`,
+      `export const A = () => <div class="flex-cols" />`,
       "not a class this project's Tailwind knows",
     ],
   ]
@@ -434,7 +434,7 @@ describe("settings.shadcn.note", () => {
       invalid: [
         {
           filename: PAGE,
-          code: `${button}\nexport const A = () => <Button className="w-full">Go</Button>`,
+          code: `${button}\nexport const A = () => <Button class="w-full">Go</Button>`,
           settings,
           options: [
             {
@@ -468,7 +468,7 @@ describe("settings.shadcn.note", () => {
         invalid: [
           {
             filename: PAGE,
-            code: `export const A = () => <div className="bg-pink-500" />`,
+            code: `export const A = () => <div class="bg-pink-500" />`,
             settings: { shadcn: { note: 42 } },
             errors: [{ messageId: "paletteClassFar" }],
           },

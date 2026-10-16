@@ -98,17 +98,17 @@ describe("class-site diagnostic ownership", () => {
     ["nested standalone helper", `cn(cn("${CLASSES}"))`, 0],
     [
       "nested attribute helper",
-      `<Button className={cn(cn("${CLASSES}"))} />`,
+      `<Button class={cn(cn("${CLASSES}"))} />`,
       3,
     ],
     [
       "helper referenced by two components",
-      `const classes = cn("${CLASSES}"); <><Button className={classes} /><Button className={classes} /></>`,
+      `const classes = cn("${CLASSES}"); <><Button class={classes} /><Button class={classes} /></>`,
       6,
     ],
     [
       "nested helper reached through an object member",
-      `const classes = { root: cn(cn("${CLASSES}")) }; <Button className={classes.root} />`,
+      `const classes = { root: cn(cn("${CLASSES}")) }; <Button class={classes.root} />`,
       3,
     ],
   ])("%s preserves individual and combined output", (_name, code, restyles) => {
@@ -129,7 +129,7 @@ describe("class-site diagnostic ownership", () => {
   })
 
   test("keeps source locations, message text and suggestion replacements", () => {
-    const code = `const classes = cn("${CLASSES}"); <><Button className={classes} /><Button className={classes} /></>`
+    const code = `const classes = cn("${CLASSES}"); <><Button class={classes} /><Button class={classes} /></>`
     expect(diagnostics(code, rulesWith())).toMatchInlineSnapshot(`
       [
         {
@@ -269,7 +269,7 @@ describe("class-site diagnostic ownership", () => {
   })
 
   test("scanAllStrings retains source ownership alongside contextual uses", () => {
-    const code = `const unrelated = "bg-red-500 rounded-[13px]"; const classes = cn("bg-red-500 rounded-[13px]"); <Button className={classes} />`
+    const code = `const unrelated = "bg-red-500 rounded-[13px]"; const classes = cn("bg-red-500 rounded-[13px]"); <Button class={classes} />`
     const messages = expectIndependentRules(code, {
       "shadcn/no-arbitrary-values": ["error", { scanAllStrings: true }],
       "shadcn/no-raw-colors": ["error", { scanAllStrings: true }],
@@ -283,7 +283,7 @@ describe("class-site diagnostic ownership", () => {
   })
 
   test("scanAllStrings reports a bare hoisted literal once", () => {
-    const code = `const classes = "p-[13px]"; <div className={classes} />`
+    const code = `const classes = "p-[13px]"; <div class={classes} />`
     const messages = diagnostics(code, {
       "shadcn/no-arbitrary-values": ["error", { scanAllStrings: true }],
     })
@@ -292,7 +292,7 @@ describe("class-site diagnostic ownership", () => {
   })
 
   test("collector options stay isolated between rules", () => {
-    const code = `const classes = merge("${CLASSES}"); <Button className={classes} />`
+    const code = `const classes = merge("${CLASSES}"); <Button class={classes} />`
     const messages = expectIndependentRules(code, {
       "shadcn/no-arbitrary-values": ["error", { mergeFunctions: ["merge"] }],
       "shadcn/no-raw-colors": "error",
@@ -315,7 +315,7 @@ describe("class-site diagnostic ownership", () => {
   })
 
   test("custom variant functions retain their value interpretation", () => {
-    const code = `const classes = variants({ base: "${CLASSES}", defaultVariants: { size: "unrelated-value" } }); <Button className={classes} />`
+    const code = `const classes = variants({ base: "${CLASSES}", defaultVariants: { size: "unrelated-value" } }); <Button class={classes} />`
     const messages = expectIndependentRules(
       code,
       rulesWith({ variantFunctions: ["variants"] })
@@ -331,12 +331,12 @@ describe("class-site diagnostic ownership", () => {
   })
 
   test.each([
-    "function View({ className }) { return <Button className={className} /> }",
-    'function View({ className = "bg-red-500" }) { return <Button className={className} /> }',
-    "function View({ className = build() }) { return <Button className={className} /> }",
-    "function View(props = build()) { return <Button className={props.className} /> }",
-    'function View({ className }) { className = "bg-red-500"; return <Button className={className} /> }',
-    "function View({ className }) { return <Button className={`prefix-${className}`} /> }",
+    "function View({ class: className }) { return <Button class={className} /> }",
+    'function View({ class: className = "bg-red-500" }) { return <Button class={className} /> }',
+    "function View({ class: className = build() }) { return <Button class={className} /> }",
+    "function View(props = build()) { return <Button class={props.class} /> }",
+    'function View({ class: className }) { className = "bg-red-500"; return <Button class={className} /> }',
+    "function View({ class: className }) { return <Button class={`prefix-${className}`} /> }",
   ])("forwarded and unresolved values preserve combined output: %s", (code) => {
     expectIndependentRules(code, rulesWith())
   })
@@ -344,8 +344,8 @@ describe("class-site diagnostic ownership", () => {
 
 describe("a standalone helper call reaches every rule", () => {
   const cases = [
-    `import { cva } from "class-variance-authority"\nconst styles = cva("bg-red-500 rounded-[13px]")\nexport const Demo = () => <div className={styles()} />`,
-    `${cn}\nconst styles = cn("bg-red-500 rounded-[13px]")\nexport const Demo = () => <div className={styles} />`,
+    `import { cva } from "class-variance-authority"\nconst styles = cva("bg-red-500 rounded-[13px]")\nexport const Demo = () => <div class={styles()} />`,
+    `${cn}\nconst styles = cn("bg-red-500 rounded-[13px]")\nexport const Demo = () => <div class={styles} />`,
   ]
   const orders = [
     { "shadcn/no-raw-colors": "error", "shadcn/no-arbitrary-values": "error" },

@@ -1,7 +1,7 @@
 {
   "name": "@murky-web/shadcn-lint",
   "version": "0.3.0",
-  "description": "Fork of @shadcn/lint with Solid 2.0 support: an agent-first linter for Tailwind design systems.",
+  "description": "Solid 2.0 class linter for Tailwind design systems, for Oxlint. Originally a fork of @shadcn/lint.",
   "license": "MIT",
   "author": {
     "name": "shadcn",
@@ -59,14 +59,10 @@
     "cn": "0.4.0"
   },
   "peerDependencies": {
-    "@typescript-eslint/parser": ">=8.40.0",
-    "eslint": ">=9.30.0"
+    "@typescript-eslint/parser": ">=8.40.0"
   },
   "peerDependenciesMeta": {
     "@typescript-eslint/parser": {
-      "optional": true
-    },
-    "eslint": {
       "optional": true
     }
   },
@@ -78,14 +74,11 @@
     "eslint": "^9.33.0",
     "oxlint": "^1.80.0",
     "prettier": "^3.6.2",
-    "svelte": "^5.57.1",
-    "svelte-eslint-parser": "^1.8.1",
     "tailwind-merge": "^3.6.0",
     "tailwindcss": "^4.3.3",
     "tsdown": "^0.12.0",
     "typescript": "^5.9.2",
-    "vitest": "^3.2.6",
-    "vue-eslint-parser": "^10.4.1"
+    "vitest": "^3.2.6"
   },
   "engines": {
     "node": ">=20.19"

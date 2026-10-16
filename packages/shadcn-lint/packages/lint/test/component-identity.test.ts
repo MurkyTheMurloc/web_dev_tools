@@ -32,45 +32,40 @@ const lint = (code: string, rules: Record<string, unknown>) =>
   )
 
 describe("component identity follows the import", () => {
-  test("renamed re-exports, namespace, memo and default wrappers, .js sources", () => {
+  test("renamed re-exports, namespace and default wrappers, .js sources", () => {
     tester.run("no-restyle", boundary, {
       valid: [
         // A package's Button of the same name is not ours once the
         // import resolves into node_modules.
         {
           filename: PAGE,
-          code: `import { Button } from "other-kit"\nexport const A = () => <Button className="bg-red-500" />`,
+          code: `import { Button } from "other-kit"\nexport const A = () => <Button class="bg-red-500" />`,
         },
       ],
       invalid: [
         {
           filename: PAGE,
-          code: `import { Action } from "@/components/barrel"\nexport const A = () => <Action className="bg-red-500">Go</Action>`,
+          code: `import { Action } from "@/components/barrel"\nexport const A = () => <Action class="bg-red-500">Go</Action>`,
           errors: [appearance()],
         },
         {
           filename: PAGE,
-          code: `import { Save } from "@/components/barrel"\nexport const A = () => <Save className="bg-red-500">Go</Save>`,
+          code: `import { Save } from "@/components/barrel"\nexport const A = () => <Save class="bg-red-500">Go</Save>`,
           errors: [{ messageId: "appearanceClassViaWrapper" }],
         },
         {
           filename: PAGE,
-          code: `import { NamespaceButton } from "@/components/namespace-wrapper"\nexport const A = () => <NamespaceButton className="bg-red-500">Go</NamespaceButton>`,
+          code: `import { NamespaceButton } from "@/components/namespace-wrapper"\nexport const A = () => <NamespaceButton class="bg-red-500">Go</NamespaceButton>`,
           errors: [{ messageId: "appearanceClassViaWrapper" }],
         },
         {
           filename: PAGE,
-          code: `import { MemoButton } from "@/components/memo-wrapper"\nexport const A = () => <MemoButton className="bg-red-500">Go</MemoButton>`,
+          code: `import Save from "@/components/default-wrapper"\nexport const A = () => <Save class="bg-red-500">Go</Save>`,
           errors: [{ messageId: "appearanceClassViaWrapper" }],
         },
         {
           filename: PAGE,
-          code: `import Save from "@/components/default-wrapper"\nexport const A = () => <Save className="bg-red-500">Go</Save>`,
-          errors: [{ messageId: "appearanceClassViaWrapper" }],
-        },
-        {
-          filename: PAGE,
-          code: `import { LegacyChip } from "@/components/ui/legacy-chip"\nexport const A = () => <LegacyChip className="bg-red-500" />`,
+          code: `import { LegacyChip } from "@/components/ui/legacy-chip"\nexport const A = () => <LegacyChip class="bg-red-500" />`,
           errors: [{ messageId: "appearanceClassNoVariants" }],
         },
       ],
@@ -88,12 +83,12 @@ describe("identity through barrels and path casing", () => {
       invalid: [
         {
           filename: PAGE,
-          code: `import { Action } from "@/components/rebound-barrel"\nexport const A = () => <Action className="bg-red-500">Go</Action>`,
+          code: `import { Action } from "@/components/rebound-barrel"\nexport const A = () => <Action class="bg-red-500">Go</Action>`,
           errors: [{ messageId: "appearanceClassWithVariants" }],
         },
         {
           filename: PAGE,
-          code: `import { Save2 } from "@/components/rebound-barrel"\nexport const A = () => <Save2 className="bg-red-500">Go</Save2>`,
+          code: `import { Save2 } from "@/components/rebound-barrel"\nexport const A = () => <Save2 class="bg-red-500">Go</Save2>`,
           errors: [{ messageId: "appearanceClassViaWrapper" }],
         },
       ],
@@ -103,7 +98,7 @@ describe("identity through barrels and path casing", () => {
     "a differently cased import path is the same file",
     () => {
       const messages = lint(
-        `import { Button } from "@/COMPONENTS/UI/BUTTON"\nexport const A = () => <Button className="bg-red-500">Go</Button>`,
+        `import { Button } from "@/COMPONENTS/UI/BUTTON"\nexport const A = () => <Button class="bg-red-500">Go</Button>`,
         { "shadcn/no-restyle": "error" }
       )
       expect(messages.map((m) => m.ruleId)).toEqual(["shadcn/no-restyle"])
@@ -114,7 +109,7 @@ describe("identity through barrels and path casing", () => {
 describe("default wrapper names", () => {
   test("a default-imported wrapper is named by its local name", () => {
     const [message] = lint(
-      `import Save from "@/components/default-wrapper"\nexport const A = () => <Save className="bg-red-500">Go</Save>`,
+      `import Save from "@/components/default-wrapper"\nexport const A = () => <Save class="bg-red-500">Go</Save>`,
       { "shadcn/no-restyle": "error" }
     )
     expect(message.message).toContain("<Save> forwards class to <Button>")

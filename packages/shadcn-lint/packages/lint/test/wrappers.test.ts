@@ -45,14 +45,14 @@ describe("wrapper binding forms", () => {
     import { Button } from "@/components/ui/button"
     import { Card } from "@/components/ui/card"
     export { Wrapped as Public, Named as "Quoted" }
-    function Named({ className }) { return <Button className={className} /> }
+    function Named({ class: className }) { return <Button class={className} /> }
     const Arrow = (props) => <Named {...props} />
     const NestedAlias = Alias
     const Alias = Named
-    const Wrapped = memo(forwardRef(NestedAlias))
+    const Wrapped = NestedAlias
     function Chain(props) { return <Arrow {...props} /> }
     function Plain(props) { return <div {...props} /> }
-    function Fixed({ className, ...rest }) { return <Button {...rest} /> }
+    function Fixed({ class: className, ...rest }) { return <Button {...rest} /> }
     function Multiple(props) { return <><Button {...props} /><Card {...props} /></> }
     const Value = 42
     const Unknown = Missing
@@ -92,10 +92,9 @@ describe("wrapper binding forms", () => {
   })
 
   test.each([
-    "export default function ({ className }) { return <Button className={className} /> }",
+    "export default function ({ class: className }) { return <Button class={className} /> }",
     "export default (props) => <Button {...props} />",
     "function Local(props) { return <Button {...props} /> }; export default Local",
-    "function Local(props) { return <Button {...props} /> }; export default memo(Local)",
     "function Local(props) { return <Button {...props} /> }; export { Local as default }",
   ])("resolves the default export: %s", (declaration) => {
     const ast = parseSource(
@@ -165,12 +164,12 @@ describe("wrapper binding forms", () => {
       invalid: [
         {
           filename: WRAPPERS,
-          code: `${source}\nconst Usage = () => <Wrapped className="rounded-full" />`,
+          code: `${source}\nconst Usage = () => <Wrapped class="rounded-full" />`,
           errors: [
             {
               messageId: "appearanceClassViaWrapper",
               data: {
-                className: "rounded-full",
+                class: "rounded-full",
                 component: "Button",
                 category: "shape",
                 wrapper: "Wrapped",
@@ -197,22 +196,22 @@ describe("no-restyle through wrappers", () => {
         {
           filename: PAGE,
           options: [{ allow: ["layout"] }],
-          code: `${wrappers}\nexport const A = () => <SaveButton className="mt-4 w-full">Go</SaveButton>`,
+          code: `${wrappers}\nexport const A = () => <SaveButton class="mt-4 w-full">Go</SaveButton>`,
         },
         {
           filename: PAGE,
-          code: `${wrappers}\nexport const A = () => <Section className="bg-muted rounded-xl">Hi</Section>`,
+          code: `${wrappers}\nexport const A = () => <Section class="bg-muted rounded-xl">Hi</Section>`,
         },
       ],
       invalid: [
         {
           filename: PAGE,
-          code: `${wrappers}\nexport const A = () => <SaveButton className="bg-red-500">Go</SaveButton>`,
+          code: `${wrappers}\nexport const A = () => <SaveButton class="bg-red-500">Go</SaveButton>`,
           errors: [
             {
               messageId: "appearanceClassViaWrapper",
               data: {
-                className: "bg-red-500",
+                class: "bg-red-500",
                 component: "Button",
                 category: "color",
                 wrapper: "SaveButton",
@@ -228,12 +227,12 @@ describe("no-restyle through wrappers", () => {
         },
         {
           filename: PAGE,
-          code: `${wrappers}\nexport const A = () => <PrimaryAction className="rounded-full" />`,
+          code: `${wrappers}\nexport const A = () => <PrimaryAction class="rounded-full" />`,
           errors: [{ messageId: "appearanceClassViaWrapper" }],
         },
         {
           filename: PAGE,
-          code: `${wrappers}\nexport const A = () => <CancelButton className="text-xs" />`,
+          code: `${wrappers}\nexport const A = () => <CancelButton class="text-xs" />`,
           errors: [{ messageId: "appearanceClassViaWrapper" }],
         },
       ],
@@ -248,18 +247,18 @@ describe("namespace-import wrappers", () => {
         {
           filename: PAGE,
           options: [{ allow: ["layout"] }],
-          code: `import * as W from "@/components/save-button"\nexport const A = () => <W.SaveButton className="mt-4">Go</W.SaveButton>`,
+          code: `import * as W from "@/components/save-button"\nexport const A = () => <W.SaveButton class="mt-4">Go</W.SaveButton>`,
         },
       ],
       invalid: [
         {
           filename: PAGE,
-          code: `import * as W from "@/components/save-button"\nexport const A = () => <W.SaveButton className="bg-red-500">Go</W.SaveButton>`,
+          code: `import * as W from "@/components/save-button"\nexport const A = () => <W.SaveButton class="bg-red-500">Go</W.SaveButton>`,
           errors: [
             {
               messageId: "appearanceClassViaWrapper",
               data: {
-                className: "bg-red-500",
+                class: "bg-red-500",
                 component: "Button",
                 category: "color",
                 wrapper: "W.SaveButton",
@@ -281,7 +280,7 @@ describe("namespace-import wrappers", () => {
 describe("wrappers", () => {
   const file = path.join(PROJECT, "components/save-button.tsx")
 
-  test("a rest spread after destructuring className is not forwarding", () => {
+  test("a rest spread after destructuring class is not forwarding", () => {
     expect(wrapperTargetOf(file, "FixedButton")).toBeNull()
     expect(wrapperTargetOf(file, "SaveButton")?.component).toBe("Button")
   })
@@ -306,7 +305,7 @@ describe("wrappers", () => {
       invalid: [
         {
           filename: PAGE,
-          code: `import { SaveButton } from "@/components/save-button"\nexport const A = () => <SaveButton className="text-xs">Go</SaveButton>`,
+          code: `import { SaveButton } from "@/components/save-button"\nexport const A = () => <SaveButton class="text-xs">Go</SaveButton>`,
           errors: [
             {
               message:

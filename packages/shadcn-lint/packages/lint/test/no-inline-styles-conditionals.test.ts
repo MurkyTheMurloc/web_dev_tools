@@ -23,15 +23,15 @@ describe("no-inline-styles reads conditional style values", () => {
         // Both sides of ?? and || are values: the forwarded prop and a
         // default object.
         {
-          code: `export const A = ({ style }: { style?: React.CSSProperties }) => <div style={style ?? { "--x": "1" }} />`,
+          code: `export const A = ({ style }: { style?: JSX.CSSProperties }) => <div style={style ?? { "--x": "1" }} />`,
         },
         {
-          code: `const base = { "--x": "1" }\nexport const A = ({ style }: { style?: React.CSSProperties }) => <div style={style || base} />`,
+          code: `const base = { "--x": "1" }\nexport const A = ({ style }: { style?: JSX.CSSProperties }) => <div style={style || base} />`,
         },
         { code: `export const A = () => <div style={undefined} />` },
         { code: `export const A = () => <div style={null} />` },
         {
-          code: `export const A = ({ open }: { open: boolean }) => <div style={(open ? { "--x": "1" } : undefined) as React.CSSProperties} />`,
+          code: `export const A = ({ open }: { open: boolean }) => <div style={(open ? { "--x": "1" } : undefined) as JSX.CSSProperties} />`,
         },
       ],
       invalid: [
@@ -51,7 +51,7 @@ describe("no-inline-styles reads conditional style values", () => {
         },
         // A branch that is opaque is still dynamic; the other is not.
         {
-          code: `export const A = ({ open, s }: { open: boolean; s: React.CSSProperties }) => <div style={open ? s : { "--x": "1" }} />`,
+          code: `export const A = ({ open, s }: { open: boolean; s: JSX.CSSProperties }) => <div style={open ? s : { "--x": "1" }} />`,
           errors: [{ messageId: "dynamicStyle" }],
         },
       ],

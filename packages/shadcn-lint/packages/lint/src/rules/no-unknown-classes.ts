@@ -7,7 +7,6 @@ import { categoryOf } from "../grammar/categories"
 import { isMarkerClass, normalizeClass, splitClasses } from "../grammar/classes"
 import { didYouMean } from "../grammar/similar"
 import { projectClassifierFor } from "../project/namespaces"
-import { isSfc, styleClassesOf } from "../project/parser"
 import {
   colorTokensFor,
   knownClassesFor,
@@ -27,11 +26,11 @@ import { withSettings } from "./settings"
 
 const MESSAGES = {
   unknownClass:
-    '"{{className}}" is not a class this project\'s Tailwind knows, so no CSS is generated for it. Fix the spelling, or declare it with @utility in {{file}}.',
+    '"{{class}}" is not a class this project\'s Tailwind knows, so no CSS is generated for it. Fix the spelling, or declare it with @utility in {{file}}.',
   unknownClassSuggest:
-    '"{{className}}" is not a class this project\'s Tailwind knows, so no CSS is generated for it. Did you mean "{{suggestion}}"?',
+    '"{{class}}" is not a class this project\'s Tailwind knows, so no CSS is generated for it. Did you mean "{{suggestion}}"?',
   unknownVariant:
-    '"{{className}}" uses a variant this project\'s Tailwind does not know, so no CSS is generated for it. Use an existing variant, or declare it with @custom-variant in {{file}}.',
+    '"{{class}}" uses a variant this project\'s Tailwind does not know, so no CSS is generated for it. Use an existing variant, or declare it with @custom-variant in {{file}}.',
   useSuggestion: 'Replace with "{{suggestion}}".',
 }
 
@@ -74,11 +73,6 @@ export const noUnknownClasses = {
     }
     const { groupOf } = projectClassifierFor(filename)
     const known = knownClassesFor(filename)
-    // A single-file component's own <style> block declares classes for
-    // its template the way the theme CSS does for everything.
-    const ownClasses = isSfc(filename)
-      ? styleClassesOf(context.sourceCode?.text ?? "")
-      : new Set<string>()
     const themeFile = themeFileFor(filename)
     const file = themeFile ? displayPath(themeFile, context) : "your theme CSS"
     // A theme file that does not import Tailwind knows no base utilities,
@@ -98,7 +92,7 @@ export const noUnknownClasses = {
       if (base.startsWith("[")) return true
       if (isMarkerClass(token)) return true
       const bare = base.replace(/\/[\w.%]+$/, "")
-      return known.classes.has(bare) || ownClasses.has(bare)
+      return known.classes.has(bare)
     }
 
     // Without Tailwind: the cn grammar plus @utility names.
@@ -126,7 +120,7 @@ export const noUnknownClasses = {
               ? "unknownVariant"
               : "unknownClass",
           data: {
-            className: token,
+            class: token,
             component,
             file,
             suggestion: suggestion ?? "",

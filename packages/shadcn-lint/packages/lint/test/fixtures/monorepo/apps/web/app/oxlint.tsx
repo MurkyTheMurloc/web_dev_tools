@@ -3,5 +3,5 @@
 import { Button } from "@workspace/ui/components/button"
 
 export function OxlintCheck() {
-  return <Button className="bg-red-500">Go</Button>
+  return <Button class="bg-red-500">Go</Button>
 }

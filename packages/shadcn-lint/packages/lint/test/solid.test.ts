@@ -8,7 +8,16 @@ import { beforeEach, describe, expect, it } from "vitest"
 import { plugin } from "../src/plugin"
 import { parseSource } from "../src/project/parser"
 import { clearWrapperCache, wrapperTargetOf } from "../src/project/wrappers"
-import { RULES } from "./sfc-helpers"
+
+const POLICY = { allow: ["layout"] }
+
+const RULES = {
+  "shadcn/no-restyle": ["error", POLICY],
+  "shadcn/no-raw-colors": "error",
+  "shadcn/no-arbitrary-values": ["error", POLICY],
+  "shadcn/no-inline-styles": "error",
+  "shadcn/require-static-classes": "error",
+} as const
 
 const FIXTURES = path.resolve(
   path.dirname(fileURLToPath(import.meta.url)),
@@ -21,7 +30,6 @@ const SOLID_WRAPPERS = path.join(
   "src/components/save-button.tsx"
 )
 const SOLID_BUTTON = path.join(SOLID_PROJECT, "src/components/ui/button.tsx")
-const REACT_PAGE = path.join(FIXTURES, "project/app/page.tsx")
 
 // Runs the plugin the way a Solid 2.0 project does: ESLint with the
 // TypeScript parser over .tsx files.
@@ -216,38 +224,6 @@ describe("Solid 2.0 wrappers", () => {
       )
     ).toEqual([
       `shadcn/no-restyle: "bg-primary" is not allowed on <LocalButton>: <LocalButton> forwards class to <Button>, which owns its color`,
-    ])
-  })
-})
-
-describe("outside Solid", () => {
-  const react = `import { Button } from "@/components/ui/button"`
-
-  it("keeps reading a className object as a classNames map", () => {
-    expect(
-      found(
-        `<div className={{ root: "bg-red-500", "text-red-500": true }} />`,
-        `${react}\n`,
-        REACT_PAGE
-      )
-    ).toEqual([
-      `shadcn/no-raw-colors: "bg-red-500" uses the raw Tailwind palette`,
-    ])
-  })
-
-  it("does not take a class prop for a forwarded className without Solid", () => {
-    const ast = parseSource(
-      `${react}\nexport const Local = (props) => <Button class={props.class} />`,
-      SOLID_WRAPPERS
-    )
-    expect(wrapperTargetOf(SOLID_WRAPPERS, "Local", [], ast)).toBeNull()
-    const code = `${react}\nimport { cn } from "@/lib/utils"\nexport const W = (props) => <Button className={cn("mt-2", props.class)} />\n`
-    expect(
-      lintTsx(code, REACT_PAGE).map(
-        (m) => `${m.ruleId}: ${m.message.split(".")[0]}`
-      )
-    ).toEqual([
-      "shadcn/require-static-classes: Dynamically built class on <Button> cannot be checked",
     ])
   })
 })

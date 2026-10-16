@@ -16,12 +16,12 @@ import {
 describe("variants from props", () => {
   test("an inline props type on a function component", () => {
     const source = `
-      function Text({ children, className, variant = "default" }: {
-        children: React.ReactNode
-        className?: string
+      function Text({ children, class: className, variant = "default" }: {
+        children: JSX.Element
+        class?: string
         variant?: "default" | "h1" | "h2" | "h3"
       }) {
-        return <p className={\`text-2xl \${className}\`}>{children}</p>
+        return <p class={\`text-2xl \${className}\`}>{children}</p>
       }
       export { Text }
     `
@@ -34,10 +34,10 @@ describe("variants from props", () => {
     ])
   })
 
-  test("an intersection with React.ComponentProps, on an arrow component", () => {
+  test("an intersection with ComponentProps, on an arrow component", () => {
     const source = `
-      export const Card = ({ className, size = "default", ...props }: React.ComponentProps<"div"> & { size?: "default" | "sm" }) => (
-        <div data-size={size} className={cn("rounded-xl", className)} {...props} />
+      export const Card = ({ class: className, size = "default", ...props }: ComponentProps<"div"> & { size?: "default" | "sm" }) => (
+        <div data-size={size} class={cn("rounded-xl", className)} {...props} />
       )
     `
     expect(extractVariantDefinitions(source)).toEqual([
@@ -67,9 +67,9 @@ describe("variants from props", () => {
       const VARIANTS = { primary: "bg-accent", secondary: "bg-accent-soft" } as const
       type ButtonVariant = keyof typeof VARIANTS
       type ButtonSize = "sm" | "lg"
-      type ButtonProps = { variant?: ButtonVariant; size?: ButtonSize; className?: string }
-      export function Button({ variant = "primary", className }: ButtonProps) {
-        return <button className={cn(VARIANTS[variant], className)} />
+      type ButtonProps = { variant?: ButtonVariant; size?: ButtonSize; class?: string }
+      export function Button({ variant = "primary", class: className }: ButtonProps) {
+        return <button class={cn(VARIANTS[variant], className)} />
       }
     `
     expect(extractVariantDefinitions(source)).toEqual([
@@ -94,7 +94,7 @@ describe("variants from props", () => {
   // as a union: the variants it accepts are the ones every member does.
   test("a props union keeps the variants every member accepts", () => {
     const source = `
-      type Base = { variant?: "primary" | "secondary"; className?: string }
+      type Base = { variant?: "primary" | "secondary"; class?: string }
       type AsLink = Base & Omit<ComponentProps<typeof Link>, keyof Base>
       type AsButton = Base &
         Omit<ComponentProps<"button">, keyof Base> & { href?: undefined }
@@ -148,7 +148,7 @@ describe("variants from props", () => {
     fs.writeFileSync(
       file,
       `export function Card({ size }: { size?: "default" | "sm" }) { return <div /> }
-       export function CardTitle(props: { className?: string }) { return <div /> }`
+       export function CardTitle(props: { class?: string }) { return <div /> }`
     )
     expect(sizeNamesFor(file, "Card")).toEqual(["default", "sm"])
     expect(sizeNamesFor(file, "CardTitle")).toBeNull()
@@ -160,12 +160,12 @@ describe("variants from props", () => {
     const file = path.join(dir, "empty.tsx")
     fs.writeFileSync(
       file,
-      `function Empty({ className, ...props }: React.ComponentProps<"div">) {
-         return <div className={cn("flex", className)} {...props} />
+      `function Empty({ class: className, ...props }: ComponentProps<"div">) {
+         return <div class={cn("flex", className)} {...props} />
        }
        const emptyMediaVariants = cva("flex", { variants: { variant: { default: "", icon: "" } } })
-       function EmptyMedia({ className, variant, ...props }: React.ComponentProps<"div"> & VariantProps<typeof emptyMediaVariants>) {
-         return <div className={cn(emptyMediaVariants({ variant }), className)} {...props} />
+       function EmptyMedia({ class: className, variant, ...props }: ComponentProps<"div"> & VariantProps<typeof emptyMediaVariants>) {
+         return <div class={cn(emptyMediaVariants({ variant }), className)} {...props} />
        }`
     )
     expect(variantNamesFor(file, "Empty")).toBeNull()
@@ -179,15 +179,15 @@ describe("variants from props", () => {
       file,
       `const styles = cva("", { variants: { variant: { solid: "", ghost: "" } } })
        const sizes = cva("", { variants: { size: { sm: "", lg: "" } } })
-       interface TagProps extends VariantProps<typeof sizes> { className?: string }
-       export function Chip({ variant, className }: { variant?: "solid" | "ghost" | string; className?: string }) {
-         return <span className={cn(styles({ variant }), className)} />
+       interface TagProps extends VariantProps<typeof sizes> { class?: string }
+       export function Chip({ variant, class: className }: { variant?: "solid" | "ghost" | string; class?: string }) {
+         return <span class={cn(styles({ variant }), className)} />
        }
-       export const Badge = React.forwardRef<HTMLSpanElement, React.ComponentProps<"span">>(
-         ({ className, ...props }, ref) => <span ref={ref} className={cn(styles(), className)} {...props} />
+       export const Badge = ({ class: className, ...props }: ComponentProps<"span">) => (
+         <span class={cn(styles(), className)} {...props} />
        )
        export function Tag(props: TagProps) { return <span /> }
-       export function Label(props: { className?: string }) { return <span /> }`
+       export function Label(props: { class?: string }) { return <span /> }`
     )
     expect(variantNamesFor(file, "Chip")).toEqual(["solid", "ghost"])
     expect(variantNamesFor(file, "Badge")).toEqual(["solid", "ghost"])

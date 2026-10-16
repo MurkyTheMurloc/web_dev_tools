@@ -1,4 +1,4 @@
-// no-restyle: a component's className carries only what its contract
+// no-restyle: a component's class carries only what its contract
 // allows; appearance comes from its variants. See docs/rules/no-restyle.md.
 
 import { CATEGORIES } from "../grammar/categories"
@@ -30,7 +30,7 @@ const messageSchema = {
 
 // No message tells the reader to change the config: a diagnostic reaches
 // agents, and an agent must never be handed the policy as the fix.
-const NOT_ALLOWED = '"{{className}}" is not allowed on <{{component}}>:'
+const NOT_ALLOWED = '"{{class}}" is not allowed on <{{component}}>:'
 const OWNS = "<{{component}}> owns its {{category}}."
 const OWNS_VIA_WRAPPER =
   "<{{wrapper}}> forwards class to <{{component}}>, which owns its {{category}}."
@@ -46,7 +46,7 @@ const MESSAGES = {
   appearanceClass: `${NOT_ALLOWED} ${OWNS} Use one of its variants. Add a new variant only if the design explicitly calls for a treatment none of them provides.`,
   appearanceClassWithVariants: `${NOT_ALLOWED} ${OWNS} Use a variant: {{variants}}. Add a new variant in {{file}} ${NEW_VARIANT_GUARD}`,
   appearanceClassNoVariants: `${NOT_ALLOWED} ${OWNS} Add a variant in {{file}} only if the design explicitly calls for this treatment.`,
-  appearanceClassViaWrapper: `"{{className}}" is not allowed on <{{wrapper}}>: ${OWNS_VIA_WRAPPER} Use a variant{{variantsSuffix}}. Add a new variant {{where}} ${NEW_VARIANT_GUARD}`,
+  appearanceClassViaWrapper: `"{{class}}" is not allowed on <{{wrapper}}>: ${OWNS_VIA_WRAPPER} Use a variant{{variantsSuffix}}. Add a new variant {{where}} ${NEW_VARIANT_GUARD}`,
   deniedClass: `${NOT_ALLOWED} its contract denies {{entries}}.`,
   layoutClass: `${NOT_ALLOWED} its contract allows {{entries}}. Use one of those, or put layout classes on a parent element.`,
   layoutClassClosed: `${NOT_ALLOWED} its contract allows no classes. Put layout classes on a parent element instead.`,
@@ -58,8 +58,8 @@ const MESSAGES = {
   // the page owns. A component with no size axis is offered layout only.
   spacingClassWithSizes: `${NOT_ALLOWED} ${OWNS} ${SPACING_SIZES} ${SPACING_NEW_SIZE}`,
   spacingClassNoSizes: `${NOT_ALLOWED} ${OWNS} ${SPACING_AROUND}`,
-  spacingClassViaWrapperWithSizes: `"{{className}}" is not allowed on <{{wrapper}}>: ${OWNS_VIA_WRAPPER} ${SPACING_SIZES} ${SPACING_NEW_SIZE}`,
-  spacingClassViaWrapperNoSizes: `"{{className}}" is not allowed on <{{wrapper}}>: ${OWNS_VIA_WRAPPER} ${SPACING_AROUND}`,
+  spacingClassViaWrapperWithSizes: `"{{class}}" is not allowed on <{{wrapper}}>: ${OWNS_VIA_WRAPPER} ${SPACING_SIZES} ${SPACING_NEW_SIZE}`,
+  spacingClassViaWrapperNoSizes: `"{{class}}" is not allowed on <{{wrapper}}>: ${OWNS_VIA_WRAPPER} ${SPACING_AROUND}`,
 }
 
 export const noRestyle = {
@@ -130,7 +130,7 @@ export const noRestyle = {
           // Every finding carries the same slots, whatever the category,
           // so a contract's own words can interpolate any of them.
           const data: Record<string, string> = {
-            className: token,
+            class: token,
             component,
             entries: verdict.entries.join(" "),
             category: verdict.category,

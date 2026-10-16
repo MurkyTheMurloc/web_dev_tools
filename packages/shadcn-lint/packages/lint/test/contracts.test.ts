@@ -308,7 +308,7 @@ test("layout and denied diagnostics name the policy's list", () => {
     valid: [
       {
         filename: PAGE,
-        code: `${button}\nexport const A = () => <Button className="mt-4 w-full">Go</Button>`,
+        code: `${button}\nexport const A = () => <Button class="mt-4 w-full">Go</Button>`,
         options: [layout],
       },
     ],
@@ -316,7 +316,7 @@ test("layout and denied diagnostics name the policy's list", () => {
       // A bare rule reports a layout class and says how to open layout.
       {
         filename: PAGE,
-        code: `${button}\nexport const A = () => <Button className="mt-4">Go</Button>`,
+        code: `${button}\nexport const A = () => <Button class="mt-4">Go</Button>`,
         errors: [
           {
             message:
@@ -326,7 +326,7 @@ test("layout and denied diagnostics name the policy's list", () => {
       },
       {
         filename: PAGE,
-        code: `${button}\nexport const A = () => <Button className="w-full">Go</Button>`,
+        code: `${button}\nexport const A = () => <Button class="w-full">Go</Button>`,
         options: [
           {
             ...layout,
@@ -342,7 +342,7 @@ test("layout and denied diagnostics name the policy's list", () => {
       },
       {
         filename: PAGE,
-        code: `${button}\nexport const A = () => <Button className="w-full">Go</Button>`,
+        code: `${button}\nexport const A = () => <Button class="w-full">Go</Button>`,
         options: [
           {
             ...layout,
@@ -362,7 +362,7 @@ test("layout and denied diagnostics name the policy's list", () => {
       // the author's fallback, not the rule's.
       {
         filename: PAGE,
-        code: `${button}\nexport const A = () => <Button className="w-full">Go</Button>`,
+        code: `${button}\nexport const A = () => <Button class="w-full">Go</Button>`,
         options: [
           {
             ...layout,
@@ -389,8 +389,8 @@ test("the rule's own message speaks for the top-level policy", () => {
       // One string covers every finding the top-level policy decides.
       {
         filename: PAGE,
-        code: `${button}\nexport const A = () => <Button className="mt-4 bg-red-500">Go</Button>`,
-        options: [{ message: "nope cannot use {{className}}" }],
+        code: `${button}\nexport const A = () => <Button class="mt-4 bg-red-500">Go</Button>`,
+        options: [{ message: "nope cannot use {{class}}" }],
         errors: [
           { message: "nope cannot use mt-4" },
           { message: "nope cannot use bg-red-500" },
@@ -400,7 +400,7 @@ test("the rule's own message speaks for the top-level policy", () => {
       // components it names.
       {
         filename: PAGE,
-        code: `${button}\nexport const A = () => <><Button className="p-6">Go</Button><Card className="p-6">Hi</Card></>`,
+        code: `${button}\nexport const A = () => <><Button class="p-6">Go</Button><Card class="p-6">Hi</Card></>`,
         options: [
           {
             allow: ["layout"],
@@ -452,7 +452,7 @@ describe("unclassified names", () => {
       invalid: [
         {
           filename: PAGE,
-          code: `${button}\nexport const A = () => <Button className="flex-cols">Go</Button>`,
+          code: `${button}\nexport const A = () => <Button class="flex-cols">Go</Button>`,
           options: [{ allow: ["layout"] }],
           errors: [
             {

@@ -110,15 +110,15 @@ export function scaleEquivalent(token: string, unitPx: number | null = 4) {
 
 const MESSAGES = {
   arbitraryValue:
-    '"{{className}}" hardcodes an off-token value. Use a theme token or scale value instead.',
+    '"{{class}}" hardcodes an off-token value. Use a theme token or scale value instead.',
   arbitraryValueWithScale:
-    '"{{className}}" hardcodes an off-token value. Use "{{replacement}}" instead (same value, on the scale).',
+    '"{{class}}" hardcodes an off-token value. Use "{{replacement}}" instead (same value, on the scale).',
   arbitraryValueNearScale:
-    '"{{className}}" hardcodes an off-token value. Nearest on the scale: {{suggestions}}.',
+    '"{{class}}" hardcodes an off-token value. Nearest on the scale: {{suggestions}}.',
   arbitraryColorNear:
-    '"{{className}}" hardcodes a color. Nearest theme tokens: {{suggestions}}. Use one of those, or declare --color-<name> in {{file}}.',
+    '"{{class}}" hardcodes a color. Nearest theme tokens: {{suggestions}}. Use one of those, or declare --color-<name> in {{file}}.',
   arbitraryColorFar:
-    '"{{className}}" hardcodes a color and no declared theme color is close to it. Use one of: {{tokens}}, or declare --color-<name> in {{file}}.',
+    '"{{class}}" hardcodes a color and no declared theme color is close to it. Use one of: {{tokens}}, or declare --color-<name> in {{file}}.',
   useScale: 'Replace with "{{replacement}}" (same value, on the scale).',
   useToken: 'Replace with "{{replacement}}".',
 }
@@ -205,7 +205,7 @@ export const noArbitraryValues = {
                     ? "arbitraryColorNear"
                     : "arbitraryColorFar",
                   data: {
-                    className: token,
+                    class: token,
                     component: site.component ?? "",
                     suggestions: suggestions.join(", "),
                     tokens: listTokens(colorTokensFor(filename) ?? new Set()),
@@ -256,7 +256,7 @@ export const noArbitraryValues = {
                   ? "arbitraryValueNearScale"
                   : "arbitraryValue",
               data: {
-                className: token,
+                class: token,
                 component: site.component ?? "",
                 replacement: replacement ?? "",
                 suggestions: near ?? "",

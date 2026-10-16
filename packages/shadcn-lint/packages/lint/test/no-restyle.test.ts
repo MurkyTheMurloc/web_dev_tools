@@ -18,7 +18,7 @@ describe("no-restyle", () => {
         {
           filename: PAGE,
           options: layout,
-          code: `${button}\nexport const A = () => <Button className="mt-4 w-full col-start-2 hidden md:inline-flex">Go</Button>`,
+          code: `${button}\nexport const A = () => <Button class="mt-4 w-full col-start-2 hidden md:inline-flex">Go</Button>`,
         },
         {
           filename: PAGE,
@@ -27,21 +27,21 @@ describe("no-restyle", () => {
         // Plain elements and unknown components are unrestricted.
         {
           filename: PAGE,
-          code: `export const A = () => <div className="bg-red-500 rounded-full" />`,
+          code: `export const A = () => <div class="bg-red-500 rounded-full" />`,
         },
         {
           filename: PAGE,
-          code: `import { Hero } from "./hero"\nexport const A = () => <Hero className="bg-muted" />`,
+          code: `import { Hero } from "./hero"\nexport const A = () => <Hero class="bg-muted" />`,
         },
         {
           filename: PAGE,
           options: layout,
-          code: `${button}\n${cn}\nexport const A = ({ className }: { className?: string }) => <Button className={cn("w-full", className)}>Go</Button>`,
+          code: `${button}\n${cn}\nexport const A = ({ class: className }: { class?: string }) => <Button class={cn("w-full", className)}>Go</Button>`,
         },
         // Outside a project nothing is a design-system component.
         {
           filename: OUTSIDE,
-          code: `${button}\nexport const A = () => <Button className="bg-red-500">Go</Button>`,
+          code: `${button}\nexport const A = () => <Button class="bg-red-500">Go</Button>`,
         },
       ],
       invalid: [
@@ -49,7 +49,7 @@ describe("no-restyle", () => {
         // in its own words rather than through the variant ladder.
         {
           filename: PAGE,
-          code: `${button}\nexport const A = () => <Button className="mt-4 bg-red-500">Go</Button>`,
+          code: `${button}\nexport const A = () => <Button class="mt-4 bg-red-500">Go</Button>`,
           errors: [
             { messageId: "layoutClassClosed" },
             { messageId: "appearanceClassWithVariants" },
@@ -58,7 +58,7 @@ describe("no-restyle", () => {
         {
           filename: PAGE,
           options: layout,
-          code: `${button}\nexport const A = () => <Button className="bg-red-500 rounded-full">Go</Button>`,
+          code: `${button}\nexport const A = () => <Button class="bg-red-500 rounded-full">Go</Button>`,
           errors: [
             { messageId: "appearanceClassWithVariants" },
             { messageId: "appearanceClassWithVariants" },
@@ -68,7 +68,7 @@ describe("no-restyle", () => {
         {
           filename: PAGE,
           options: layout,
-          code: `import { Button } from "@/components/widgets"\nexport const A = () => <Button className="text-xs">Go</Button>`,
+          code: `import { Button } from "@/components/widgets"\nexport const A = () => <Button class="text-xs">Go</Button>`,
           errors: [{ messageId: "appearanceClassWithVariants" }],
         },
         // An arbitrary property that paints or casts a shadow is
@@ -76,7 +76,7 @@ describe("no-restyle", () => {
         {
           filename: PAGE,
           options: layout,
-          code: `${button}\nexport const A = () => <Button className="[margin:1rem] [background:red] [border-top-color:red] [text-shadow:0_0_1px_red] [border:1px_solid_red]">Go</Button>`,
+          code: `${button}\nexport const A = () => <Button class="[margin:1rem] [background:red] [border-top-color:red] [text-shadow:0_0_1px_red] [border:1px_solid_red]">Go</Button>`,
           errors: [
             {
               message:
@@ -99,33 +99,33 @@ describe("no-restyle", () => {
         {
           filename: PAGE,
           options: layout,
-          code: `${button}\n${cn}\nexport const A = () => <Button className={cn("w-full", "shadow-lg")}>Go</Button>`,
+          code: `${button}\n${cn}\nexport const A = () => <Button class={cn("w-full", "shadow-lg")}>Go</Button>`,
           errors: [{ messageId: "appearanceClassWithVariants" }],
         },
         {
           filename: PAGE,
           options: layout,
-          code: `${button}\nexport const A = ({ on }: { on: boolean }) => <Button className={on ? "bg-accent" : "mt-2"}>Go</Button>`,
+          code: `${button}\nexport const A = ({ on }: { on: boolean }) => <Button class={on ? "bg-accent" : "mt-2"}>Go</Button>`,
           errors: [{ messageId: "appearanceClassWithVariants" }],
         },
         {
           filename: PAGE,
           options: layout,
-          code: `${button}\nexport const A = () => <Button className="hover:bg-emerald-500">Go</Button>`,
+          code: `${button}\nexport const A = () => <Button class="hover:bg-emerald-500">Go</Button>`,
           errors: [{ messageId: "appearanceClassWithVariants" }],
         },
         // Closed widgets do not take spacing; the message offers sizes.
         {
           filename: PAGE,
           options: layout,
-          code: `${button}\nexport const A = () => <Button className="p-0">Go</Button>`,
+          code: `${button}\nexport const A = () => <Button class="p-0">Go</Button>`,
           errors: [{ messageId: "spacingClassWithSizes" }],
         },
         // Any class-like prop is a boundary.
         {
           filename: PAGE,
           options: layout,
-          code: `${button}\nexport const A = () => <Button classNames={{ root: "bg-red-500" }}>Go</Button>`,
+          code: `${button}\nexport const A = () => <Button classes={{ root: "bg-red-500" }}>Go</Button>`,
           errors: [{ messageId: "appearanceClassWithVariants" }],
         },
       ],
@@ -138,14 +138,14 @@ describe("no-restyle", () => {
         {
           filename: PAGE,
           options: layout,
-          code: `${button}\nconst layout = "mt-4 w-full"\nexport const A = () => <Button className={layout}>Go</Button>`,
+          code: `${button}\nconst layout = "mt-4 w-full"\nexport const A = () => <Button class={layout}>Go</Button>`,
         },
       ],
       invalid: [
         {
           filename: PAGE,
           options: layout,
-          code: `${button}\nexport const A = ({ active }: { active: boolean }) => { const tone = active ? "bg-primary" : "mt-2"; return <Button className={tone}>Go</Button> }`,
+          code: `${button}\nexport const A = ({ active }: { active: boolean }) => { const tone = active ? "bg-primary" : "mt-2"; return <Button class={tone}>Go</Button> }`,
           errors: [{ messageId: "appearanceClassWithVariants" }],
         },
       ],
@@ -170,14 +170,14 @@ describe("no-restyle", () => {
         {
           filename: PAGE,
           options,
-          code: `${card}\nexport const A = () => <Card className="p-0"><CardContent className="px-2 pt-4 md:px-6">Hi</CardContent></Card>`,
+          code: `${card}\nexport const A = () => <Card class="p-0"><CardContent class="px-2 pt-4 md:px-6">Hi</CardContent></Card>`,
         },
       ],
       invalid: [
         {
           filename: PAGE,
           options,
-          code: `${card}\nexport const A = () => <CardContent className="px-2 rounded-xl text-xs">Hi</CardContent>`,
+          code: `${card}\nexport const A = () => <CardContent class="px-2 rounded-xl text-xs">Hi</CardContent>`,
           errors: [
             { messageId: "appearanceClassNoVariants" },
             { messageId: "appearanceClassNoVariants" },
@@ -187,7 +187,7 @@ describe("no-restyle", () => {
         {
           filename: PAGE,
           options: layout,
-          code: `${card}\nexport const A = () => <CardContent className="px-2">Hi</CardContent>`,
+          code: `${card}\nexport const A = () => <CardContent class="px-2">Hi</CardContent>`,
           errors: [{ messageId: "spacingClassNoSizes" }],
         },
       ],
@@ -200,7 +200,7 @@ describe("no-restyle", () => {
         // Class globs match the base utility at every breakpoint.
         {
           filename: PAGE,
-          code: `${card}\nexport const A = () => <CardTitle className="p-2 md:p-4 hover:!px-3">Hi</CardTitle>`,
+          code: `${card}\nexport const A = () => <CardTitle class="p-2 md:p-4 hover:!px-3">Hi</CardTitle>`,
           options: [
             { contracts: [{ pattern: "^CardTitle$", allow: ["p-*", "px-*"] }] },
           ],
@@ -208,7 +208,7 @@ describe("no-restyle", () => {
         // A cn group id allows every value of that utility.
         {
           filename: PAGE,
-          code: `${button}\nexport const A = () => <Button className="rounded-full">Go</Button>`,
+          code: `${button}\nexport const A = () => <Button class="rounded-full">Go</Button>`,
           options: [
             { contracts: [{ pattern: "^Button$", allow: ["rounded"] }] },
           ],
@@ -217,7 +217,7 @@ describe("no-restyle", () => {
         // names; it does not add to the top-level one.
         {
           filename: PAGE,
-          code: `${button}\nexport const A = () => <Button className="w-full w-[320px]">Go</Button>`,
+          code: `${button}\nexport const A = () => <Button class="w-full w-[320px]">Go</Button>`,
           options: [
             {
               allow: ["layout"],
@@ -228,7 +228,7 @@ describe("no-restyle", () => {
         // Opacity modifiers are ignored when matching.
         {
           filename: PAGE,
-          code: `${button}\nexport const A = () => <Button className="bg-primary/50">Go</Button>`,
+          code: `${button}\nexport const A = () => <Button class="bg-primary/50">Go</Button>`,
           options: [
             { contracts: [{ pattern: "^Button$", allow: ["bg-primary"] }] },
           ],
@@ -236,7 +236,7 @@ describe("no-restyle", () => {
         // The last matching contract is the policy; earlier ones do not merge in.
         {
           filename: PAGE,
-          code: `${button}\nexport const A = () => <Button className="mt-4">Go</Button>`,
+          code: `${button}\nexport const A = () => <Button class="mt-4">Go</Button>`,
           options: [
             {
               contracts: [
@@ -252,7 +252,7 @@ describe("no-restyle", () => {
         // breakpoint and with markers.
         {
           filename: PAGE,
-          code: `${card}\nexport const A = () => <CardContent className="md:p-0 hover:!px-0 p-4">Hi</CardContent>`,
+          code: `${card}\nexport const A = () => <CardContent class="md:p-0 hover:!px-0 p-4">Hi</CardContent>`,
           options: [
             {
               contracts: [
@@ -269,7 +269,7 @@ describe("no-restyle", () => {
         // A pattern with a colon matches only that variant form.
         {
           filename: PAGE,
-          code: `${card}\nexport const A = () => <CardContent className="md:p-0 p-0">Hi</CardContent>`,
+          code: `${card}\nexport const A = () => <CardContent class="md:p-0 p-0">Hi</CardContent>`,
           options: [
             {
               contracts: [
@@ -287,7 +287,7 @@ describe("no-restyle", () => {
         // does not reach a component whose contract leaves it out.
         {
           filename: PAGE,
-          code: `${button}\nexport const A = () => <Button className="mt-4">Go</Button>`,
+          code: `${button}\nexport const A = () => <Button class="mt-4">Go</Button>`,
           options: [
             {
               allow: ["layout"],
@@ -297,14 +297,14 @@ describe("no-restyle", () => {
           errors: [
             {
               messageId: "layoutClass",
-              data: { className: "mt-4", component: "Button", entries: "w-*" },
+              data: { class: "mt-4", component: "Button", entries: "w-*" },
             },
           ],
         },
         // The last matching contract decides; the color one is shadowed.
         {
           filename: PAGE,
-          code: `${button}\nexport const A = () => <Button className="bg-red-500">Go</Button>`,
+          code: `${button}\nexport const A = () => <Button class="bg-red-500">Go</Button>`,
           options: [
             {
               contracts: [
@@ -319,7 +319,7 @@ describe("no-restyle", () => {
         // speaks for its components: mt-4 passes, px-2 gets its words.
         {
           filename: PAGE,
-          code: `${card}\nexport const A = () => <CardContent className="px-2 mt-4">Hi</CardContent>`,
+          code: `${card}\nexport const A = () => <CardContent class="px-2 mt-4">Hi</CardContent>`,
           options: [
             {
               allow: ["layout"],
@@ -327,7 +327,7 @@ describe("no-restyle", () => {
                 {
                   pattern: "^CardContent$",
                   message:
-                    "<CardContent> takes layout from outside, not {{className}}.",
+                    "<CardContent> takes layout from outside, not {{class}}.",
                 },
               ],
             },
@@ -340,7 +340,7 @@ describe("no-restyle", () => {
         // the boundary itself is open: p-[13px] passes here.
         {
           filename: PAGE,
-          code: `${card}\nexport const A = () => <CardTitle className="p-[13px] text-xs">Hi</CardTitle>`,
+          code: `${card}\nexport const A = () => <CardTitle class="p-[13px] text-xs">Hi</CardTitle>`,
           options: [
             { contracts: [{ pattern: "^CardTitle$", allow: ["p-*"] }] },
           ],
@@ -356,7 +356,7 @@ describe("no-restyle", () => {
       invalid: [
         {
           filename: OUTSIDE,
-          code: `import { Button } from "@acme/ui"\nexport const A = () => <Button className="bg-red-500">Go</Button>`,
+          code: `import { Button } from "@acme/ui"\nexport const A = () => <Button class="bg-red-500">Go</Button>`,
           options: [{ componentImports: ["^@acme/ui"] }],
           errors: [{ messageId: "appearanceClass" }],
         },
@@ -371,7 +371,7 @@ describe("contract entries that are both a class and a group", () => {
       valid: [
         {
           filename: PAGE,
-          code: `${card}\nexport const A = () => <CardTitle className="flex flex-1 text-xs">Hi</CardTitle>`,
+          code: `${card}\nexport const A = () => <CardTitle class="flex flex-1 text-xs">Hi</CardTitle>`,
           options: [
             {
               contracts: [
@@ -384,7 +384,7 @@ describe("contract entries that are both a class and a group", () => {
       invalid: [
         {
           filename: PAGE,
-          code: `${button}\nexport const A = () => <Button className="flex flex-1">Go</Button>`,
+          code: `${button}\nexport const A = () => <Button class="flex flex-1">Go</Button>`,
           options: [
             {
               contracts: [

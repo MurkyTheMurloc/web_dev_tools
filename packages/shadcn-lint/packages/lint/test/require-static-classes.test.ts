@@ -12,52 +12,52 @@ describe("require-static-classes", () => {
       valid: [
         {
           filename: PAGE,
-          code: `${button}\nexport const A = () => <Button className="mt-4">Go</Button>`,
+          code: `${button}\nexport const A = () => <Button class="mt-4">Go</Button>`,
         },
         {
           filename: PAGE,
-          code: `${button}\n${cn}\nexport const A = ({ on, className }: { on: boolean; className?: string }) => <Button className={cn("mt-4", on && "w-full", className)}>Go</Button>`,
+          code: `${button}\n${cn}\nexport const A = ({ on, class: className }: { on: boolean; class?: string }) => <Button class={cn("mt-4", on && "w-full", className)}>Go</Button>`,
         },
         {
           filename: PAGE,
-          code: `${button}\n${cn}\nexport const A = ({ on }: { on: boolean }) => <Button className={cn({ "w-full": on })}>Go</Button>`,
+          code: `${button}\n${cn}\nexport const A = ({ on }: { on: boolean }) => <Button class={cn({ "w-full": on })}>Go</Button>`,
         },
         // One hop resolves a same-file constant, so it is static.
         {
           filename: PAGE,
-          code: `${button}\nconst layout = "mt-4"\nexport const A = () => <Button className={layout}>Go</Button>`,
+          code: `${button}\nconst layout = "mt-4"\nexport const A = () => <Button class={layout}>Go</Button>`,
         },
         // Plain elements are out of scope.
         {
           filename: PAGE,
-          code: `export const A = ({ cls }: { cls: string }) => <div className={cls} />`,
+          code: `export const A = ({ cls }: { cls: string }) => <div class={cls} />`,
         },
       ],
       invalid: [
         {
           filename: PAGE,
-          code: `${button}\nexport const A = ({ cls }: { cls: string }) => <Button className={cls}>Go</Button>`,
+          code: `${button}\nexport const A = ({ cls }: { cls: string }) => <Button class={cls}>Go</Button>`,
           errors: [{ messageId: "dynamicClasses" }],
         },
         {
           filename: PAGE,
-          code: `${button}\nexport const A = ({ size }: { size: string }) => <Button className={\`p-\${size}\`}>Go</Button>`,
+          code: `${button}\nexport const A = ({ size }: { size: string }) => <Button class={\`p-\${size}\`}>Go</Button>`,
           errors: [{ messageId: "dynamicClasses" }],
         },
         {
           filename: PAGE,
-          code: `${button}\n${cn}\nexport const A = ({ extra }: { extra: string }) => <Button className={cn("mt-4", extra)}>Go</Button>`,
+          code: `${button}\n${cn}\nexport const A = ({ extra }: { extra: string }) => <Button class={cn("mt-4", extra)}>Go</Button>`,
           errors: [{ messageId: "dynamicClasses" }],
         },
         {
           filename: PAGE,
-          code: `${button}\nexport const A = () => <Button className={makeClasses()}>Go</Button>`,
+          code: `${button}\nexport const A = () => <Button class={makeClasses()}>Go</Button>`,
           errors: [{ messageId: "dynamicClasses" }],
         },
         // A reassigned variable is not resolvable.
         {
           filename: PAGE,
-          code: `${button}\nlet c = "mt-4"\nc = "bg-red-500"\nexport const A = () => <Button className={c}>Go</Button>`,
+          code: `${button}\nlet c = "mt-4"\nc = "bg-red-500"\nexport const A = () => <Button class={c}>Go</Button>`,
           errors: [{ messageId: "dynamicClasses" }],
         },
       ],

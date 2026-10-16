@@ -79,7 +79,7 @@ describe("contract message validation", () => {
 
   test("accepts supported slots, literal text, and ambiguous near matches", () => {
     checkMessage(
-      "{{component}} {{className}} {{category}} {{variants}} {{file}} " +
+      "{{component}} {{class}} {{category}} {{variants}} {{file}} " +
         "{{wrapper}} {{sizes|none}} {{entries|none}} " +
         "{{around}} {{where}} {{variantsSuffix}} " +
         "{{example}} {{nope|x}} {{literal braces}} {{sire}}",

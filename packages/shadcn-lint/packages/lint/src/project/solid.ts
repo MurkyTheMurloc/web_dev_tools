@@ -1,7 +1,6 @@
 // Solid 2.0 spells the received class `class`, never destructures props,
 // and derives them with `merge` and `omit` (`mergeProps` and `splitProps`
-// in 1.x). A file is read that way only when it imports Solid: in React
-// the same spellings mean something else, or nothing.
+// in 1.x).
 
 const sources = /^(?:solid-js(?:\/.*)?|@solidjs\/.+)$/
 
@@ -10,8 +9,6 @@ export function isSolidSource(source: unknown) {
 }
 
 export type SolidHelpers = {
-  // Whether the file imports anything from Solid.
-  solid: boolean
   // Local names of Solid's `merge` and `omit`.
   merge: Set<string>
   omit: Set<string>
@@ -23,14 +20,12 @@ export function solidHelpersOf(program: any): SolidHelpers {
   const cached = program ? byProgram.get(program) : undefined
   if (cached) return cached
   const helpers: SolidHelpers = {
-    solid: false,
     merge: new Set(),
     omit: new Set(),
   }
   for (const statement of program?.body ?? []) {
     if (statement.type !== "ImportDeclaration") continue
     if (!isSolidSource(statement.source?.value)) continue
-    helpers.solid = true
     for (const spec of statement.specifiers ?? []) {
       if (spec.type !== "ImportSpecifier" || !spec.local?.name) continue
       const imported = spec.imported?.name ?? spec.imported?.value
@@ -68,7 +63,7 @@ function keyOf(property: any): string | null {
   return null
 }
 
-const CLASS_KEYS = new Set(["class", "className"])
+const CLASS_KEYS = new Set(["class"])
 
 // An argument after the props in `merge` that cannot set the class: an
 // object literal whose keys are all readable and none of them the class.

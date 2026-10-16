@@ -97,9 +97,9 @@ describe("parser", () => {
     clearWrapperCache()
   })
 
-  test("a file that cannot forward className is not parsed", () => {
+  test("a file that cannot forward class is not parsed", () => {
     const file = path.join(PROJECT, "components/ui/card.tsx")
-    // Card forwards className itself, so this is a control: the answer
+    // Card forwards class itself, so this is a control: the answer
     // does not depend on the parser.
     useParser(null)
     clearWrapperCache()

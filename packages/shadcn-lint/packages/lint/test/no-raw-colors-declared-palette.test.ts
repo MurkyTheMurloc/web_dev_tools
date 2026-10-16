@@ -16,18 +16,18 @@ describe("no-raw-colors with a declared palette name", () => {
       valid: [
         {
           filename: PAGE,
-          code: `export const A = () => <div className="bg-gray-100 hover:text-gray-100/50 border-primary" />`,
+          code: `export const A = () => <div class="bg-gray-100 hover:text-gray-100/50 border-primary" />`,
         },
       ],
       invalid: [
         {
           filename: PAGE,
-          code: `export const A = () => <div className="bg-gray-200" />`,
+          code: `export const A = () => <div class="bg-gray-200" />`,
           errors: [
             {
               messageId: "paletteClassNear",
               data: {
-                className: "bg-gray-200",
+                class: "bg-gray-200",
                 suggestions: "bg-gray-100",
                 tokens: "gray-100, primary",
                 file: "test/fixtures/palette-theme/app/globals.css",
@@ -36,7 +36,7 @@ describe("no-raw-colors with a declared palette name", () => {
                 {
                   messageId: "useToken",
                   data: { replacement: "bg-gray-100" },
-                  output: `export const A = () => <div className="bg-gray-100" />`,
+                  output: `export const A = () => <div class="bg-gray-100" />`,
                 },
               ],
             },

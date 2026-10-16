@@ -17,7 +17,7 @@ describe("renamed utilities", () => {
         {
           filename: PAGE,
           options: layout,
-          code: `${button}\nexport const A = () => <Button className="flex-grow flex-shrink-0">Go</Button>`,
+          code: `${button}\nexport const A = () => <Button class="flex-grow flex-shrink-0">Go</Button>`,
         },
       ],
       invalid: [
@@ -25,7 +25,7 @@ describe("renamed utilities", () => {
         {
           filename: PAGE,
           options: layout,
-          code: `${button}\nexport const A = () => <Button className="overflow-ellipsis">Go</Button>`,
+          code: `${button}\nexport const A = () => <Button class="overflow-ellipsis">Go</Button>`,
           errors: [{ messageId: "appearanceClassWithVariants" }],
         },
       ],
@@ -37,7 +37,7 @@ describe("renamed utilities", () => {
       valid: [
         {
           filename: PAGE,
-          code: `export const A = () => <div className="decoration-clone decoration-slice" />`,
+          code: `export const A = () => <div class="decoration-clone decoration-slice" />`,
         },
       ],
       invalid: [],

@@ -1,3 +1,3 @@
-export function Button({ className }: { className?: string }) {
-  return <button className={className} />
+export function Button({ class: className }: { class?: string }) {
+  return <button class={className} />
 }

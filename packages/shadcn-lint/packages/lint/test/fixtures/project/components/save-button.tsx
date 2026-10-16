@@ -1,38 +1,34 @@
-// A wrapper: forwards className to a design-system component, so from
+import { omit } from "solid-js"
+import type { ComponentProps } from "@solidjs/web"
+// A wrapper: forwards class to a design-system component, so from
 // outside it is that component.
 import { cn } from "@/lib/utils"
 
 import { Button } from "@/components/ui/button"
 
-export function SaveButton({
-  className,
-  ...props
-}: React.ComponentProps<typeof Button>) {
-  return <Button className={cn("w-full", className)} {...props} />
+export function SaveButton(props: ComponentProps<typeof Button>) {
+  const rest = omit(props, "class")
+  return <Button class={cn("w-full", props.class)} {...rest} />
 }
 
-// Not a wrapper: className lands on a plain element.
-export function Section({
-  className,
-  ...props
-}: React.ComponentProps<"section">) {
-  return <section className={cn("mx-auto max-w-4xl", className)} {...props} />
+// Not a wrapper: class lands on a plain element.
+export function Section(props: ComponentProps<"section">) {
+  const rest = omit(props, "class")
+  return <section class={cn("mx-auto max-w-4xl", props.class)} {...rest} />
 }
 
-// A wrapper through props.className.
-export const CancelButton = (props: React.ComponentProps<typeof Button>) => (
-  <Button variant="ghost" className={props.className} />
+// A wrapper through props.class.
+export const CancelButton = (props: ComponentProps<typeof Button>) => (
+  <Button variant="ghost" class={props.class} />
 )
 
 // A wrapper of a wrapper.
-export function PrimaryAction({ className }: { className?: string }) {
-  return <SaveButton className={cn("mt-2", className)} />
+export function PrimaryAction({ class: className }: { class?: string }) {
+  return <SaveButton class={cn("mt-2", className)} />
 }
 
-// Not a wrapper: className is destructured out and never forwarded.
-export function FixedButton({
-  className: _ignored,
-  ...props
-}: React.ComponentProps<typeof Button>) {
-  return <Button {...props} className="w-full" />
+// Not a wrapper: class is destructured out and never forwarded.
+export function FixedButton(props: ComponentProps<typeof Button>) {
+  const rest = omit(props, "class")
+  return <Button {...rest} class="w-full" />
 }

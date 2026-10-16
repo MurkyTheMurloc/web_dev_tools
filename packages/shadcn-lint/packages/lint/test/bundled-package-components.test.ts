@@ -12,8 +12,8 @@ import { createTester, PROJECT } from "./helpers"
 const SCROLLER = path.join(PROJECT, "components/ui/scroller.tsx")
 const SCROLLER_SOURCE = `import { Scroller as ScrollerPrimitive, useScroller } from "minified-kit"
 import { cn } from "@/lib/utils"
-function ScrollerButton({ className }: { className?: string }) {
-  return <ScrollerPrimitive.Button className={cn("bg-background", className)} />
+function ScrollerButton({ class: className }: { class?: string }) {
+  return <ScrollerPrimitive.Button class={cn("bg-background", className)} />
 }
 export { ScrollerButton, useScroller }`
 
@@ -38,7 +38,7 @@ describe("a package reached through a ui file's re-export", () => {
         {
           filename: path.join(PROJECT, "app/scroller-page.tsx"),
           code: `import { ScrollerButton } from "@/components/ui/scroller"
-const a = <ScrollerButton className="bg-background" />`,
+const a = <ScrollerButton class="bg-background" />`,
           options: [{ allow: ["layout"] }],
           errors: [
             {
@@ -60,7 +60,7 @@ describe("a vendor component the ui directory re-exports", () => {
         {
           filename: path.join(PROJECT, "app/vendor-page.tsx"),
           code: `import { VendorChip } from "@/components/ui/vendor-chip"
-const a = <VendorChip className="bg-background" />`,
+const a = <VendorChip class="bg-background" />`,
           options: [{ allow: ["layout"] }],
           errors: [
             {

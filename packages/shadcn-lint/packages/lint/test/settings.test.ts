@@ -51,7 +51,7 @@ function lint(
     .map(({ ruleId, line, message }) => ({ ruleId, line, message }))
 }
 
-const restyle = `import { Button } from "@/ds"\nexport const A = () => <Button className="bg-highlight">Go</Button>`
+const restyle = `import { Button } from "@/ds"\nexport const A = () => <Button class="bg-highlight">Go</Button>`
 const rules = {
   "shadcn/no-restyle": "error",
   "shadcn/require-static-classes": "error",
@@ -70,14 +70,14 @@ describe("settings.shadcn.ui", () => {
     expect(found[0]).toMatchObject({ ruleId: "shadcn/no-restyle", line: 2 })
     expect(found[0].message).toContain("is not allowed on <Button>")
 
-    const dynamic = `import { Button } from "@/ds/button"\nexport const A = ({ c }: { c: string }) => <Button className={c}>Go</Button>`
+    const dynamic = `import { Button } from "@/ds/button"\nexport const A = ({ c }: { c: string }) => <Button class={c}>Go</Button>`
     expect(
       lint(NO_JSON, NO_JSON_PAGE, dynamic, rules, { shadcn: { ui: ["@/ds"] } })
     ).toMatchObject([{ ruleId: "shadcn/require-static-classes", line: 2 }])
   })
 
   test("the prefix is literal, not a regex, and matches whole segments", () => {
-    const other = `import { Button } from "@/dsx"\nexport const A = () => <Button className="bg-highlight">Go</Button>`
+    const other = `import { Button } from "@/dsx"\nexport const A = () => <Button class="bg-highlight">Go</Button>`
     expect(
       lint(NO_JSON, NO_JSON_PAGE, other, rules, { shadcn: { ui: "@/ds" } })
     ).toEqual([])
@@ -118,7 +118,7 @@ describe("settings.shadcn as shared defaults", () => {
     // An object handed to an unknown function is dynamic; handed to a
     // named helper it stays readable. The shared setting names helpers
     // the same way the rule's option does.
-    const code = `import { Button } from "@/components/ui/button"\nimport { merge } from "./merge"\nconst o = { className: "bg-red-500" }\nmerge(o)\nexport const A = () => <Button {...o}>Go</Button>`
+    const code = `import { Button } from "@/components/ui/button"\nimport { merge } from "./merge"\nconst o = { class: "bg-red-500" }\nmerge(o)\nexport const A = () => <Button {...o}>Go</Button>`
     const restyle = {
       "shadcn/no-restyle": ["error", { allow: ["layout"] }],
     }
@@ -151,7 +151,7 @@ describe("settings.shadcn as shared defaults", () => {
   })
 
   test("ignoreImports from settings hides a package", () => {
-    const code = `import { Button } from "@/components/ui/button"\nexport const A = () => <Button className="bg-red-500">Go</Button>`
+    const code = `import { Button } from "@/components/ui/button"\nexport const A = () => <Button class="bg-red-500">Go</Button>`
     expect(
       lint(PROJECT, PAGE, code, { "shadcn/no-restyle": "error" })
     ).toHaveLength(1)
@@ -168,7 +168,7 @@ describe("settings.shadcn as shared defaults", () => {
 })
 
 describe("allow validation", () => {
-  const red = `export const A = () => <div className="bg-blue-500" />`
+  const red = `export const A = () => <div class="bg-blue-500" />`
 
   test('"blue-500" names a color, not a class: a line-1 finding with the fix', () => {
     const found = lint(PROJECT, PAGE, red, {
@@ -186,7 +186,7 @@ describe("allow validation", () => {
     const found = lint(
       PROJECT,
       PAGE,
-      `export const A = () => <div className="p-[13px]" />`,
+      `export const A = () => <div class="p-[13px]" />`,
       {
         "shadcn/no-arbitrary-values": ["error", { allow: ["spacig"] }],
       }
@@ -216,7 +216,7 @@ describe("allow validation", () => {
       lint(
         PROJECT,
         PAGE,
-        `export const A = () => <div className="w-[320px] p-[13px]" />`,
+        `export const A = () => <div class="w-[320px] p-[13px]" />`,
         {
           "shadcn/no-arbitrary-values": ["error", { allow: ["w-[320px]"] }],
         }
@@ -237,7 +237,7 @@ describe("allow validation", () => {
       lint(
         PROJECT,
         PAGE,
-        `export const A = () => <div className="toaster" />`,
+        `export const A = () => <div class="toaster" />`,
         {
           "shadcn/no-unknown-classes": ["error", { allow: ["toaster"] }],
         }

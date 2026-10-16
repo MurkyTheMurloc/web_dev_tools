@@ -40,10 +40,10 @@ const options = [{ allow: ["layout"] }]
 
 describe("forwarded values retain their local alternatives", () => {
   test.each([
-    'function Save({ className = "bg-red-500 rounded-full" }) { return <Button className={className} /> }',
-    'function Save({ className: cls = "bg-red-500 rounded-full" }) { return <Button className={cls} /> }',
-    'function Save(props = { className: "bg-red-500 rounded-full" }) { return <Button className={props.className} /> }',
-    'function Save({ className } = { className: "bg-red-500 rounded-full" }) { return <Button className={className} /> }',
+    'function Save({ class: className = "bg-red-500 rounded-full" }) { return <Button class={className} /> }',
+    'function Save({ class: cls = "bg-red-500 rounded-full" }) { return <Button class={cls} /> }',
+    'function Save(props = { class: "bg-red-500 rounded-full" }) { return <Button class={props.class} /> }',
+    'function Save({ class: className } = { class: "bg-red-500 rounded-full" }) { return <Button class={className} /> }',
   ])("checks parameter defaults: %s", (code) => {
     const messages = lint(code)
     expect(
@@ -58,15 +58,15 @@ describe("forwarded values retain their local alternatives", () => {
   })
 
   test.each([
-    'function Save({ className }) { className ??= "bg-red-500"; return <Button className={className} /> }',
-    'function Save({ className: cls }) { cls = "bg-red-500"; return <Button className={cls} /> }',
-    'function Save(props) { props = { className: "bg-red-500" }; return <Button className={props.className} /> }',
-    'function Save(props) { props.className = "bg-red-500"; return <Button className={props.className} /> }',
-    'function Save(props) { props.className ??= "bg-red-500"; return <Button className={props.className} /> }',
-    'function Save(props) { Object.assign(props, { className: "bg-red-500" }); return <Button className={props.className} /> }',
-    'function Save(props) { Object.assign(props as object, { className: "bg-red-500" }); return <Button className={props.className} /> }',
-    'function Save(props) { ({ className: props.className } = { className: "bg-red-500" }); return <Button className={props.className} /> }',
-    'function Save(props) { [props.className] = ["bg-red-500"]; return <Button className={props.className} /> }',
+    'function Save({ class: className }) { className ??= "bg-red-500"; return <Button class={className} /> }',
+    'function Save({ class: cls }) { cls = "bg-red-500"; return <Button class={cls} /> }',
+    'function Save(props) { props = { class: "bg-red-500" }; return <Button class={props.class} /> }',
+    'function Save(props) { props.class = "bg-red-500"; return <Button class={props.class} /> }',
+    'function Save(props) { props.class ??= "bg-red-500"; return <Button class={props.class} /> }',
+    'function Save(props) { Object.assign(props, { class: "bg-red-500" }); return <Button class={props.class} /> }',
+    'function Save(props) { Object.assign(props as object, { class: "bg-red-500" }); return <Button class={props.class} /> }',
+    'function Save(props) { ({ class: props.class } = { class: "bg-red-500" }); return <Button class={props.class} /> }',
+    'function Save(props) { [props.class] = ["bg-red-500"]; return <Button class={props.class} /> }',
   ])("revokes forwarding after a write: %s", (code) => {
     expect(lint(code).map((m) => m.ruleId)).toContain(
       "shadcn/require-static-classes"
@@ -74,7 +74,7 @@ describe("forwarded values retain their local alternatives", () => {
   })
 
   test.each([
-    "const alias = theme; alias.className = 'bg-red-500'",
+    "const alias = theme; alias.class = 'bg-red-500'",
     "let alias; alias = theme",
     "mutate(theme)",
     "const stored = { theme }",
@@ -82,7 +82,7 @@ describe("forwarded values retain their local alternatives", () => {
     "const expose = () => theme",
     "const alias = theme as object",
   ])("treats an escaped object's member as uncertain: %s", (escape) => {
-    const code = `const theme = { className: "w-full" }; ${escape}; <Button className={theme.className} />`
+    const code = `const theme = { class: "w-full" }; ${escape}; <Button class={theme.class} />`
     expect(lint(code).map((m) => m.ruleId)).toContain(
       "shadcn/require-static-classes"
     )
@@ -93,24 +93,25 @@ describe("forwarded values retain their local alternatives", () => {
     "mutate(props)",
     "const stored = { props }",
     "function expose() { return props }",
-  ])("revokes forwarding when the props object escapes: %s", (escape) => {
-    const code = `function Save(props) { ${escape}; return <Button className={props.className} /> }`
-    expect(lint(code).map((m) => m.ruleId)).toContain(
+  ])("keeps forwarding when the props are handed on: %s", (escape) => {
+    // Solid's props are read-only, so handing them on cannot change them.
+    const code = `function Save(props) { ${escape}; return <Button class={props.class} /> }`
+    expect(lint(code).map((m) => m.ruleId)).not.toContain(
       "shadcn/require-static-classes"
     )
   })
 
   test.each([
-    "function Save({ className }) { return <Button className={className} /> }",
-    "function Save({ className: cls }) { return <Button className={cls} /> }",
-    "function Save(props) { return <Button className={props.className} {...props} /> }",
-    "function Save({ ...props }) { return <Button className={props.className} /> }",
-    "function Save(props) { const { disabled } = props; return <Button className={props.className} disabled={disabled} /> }",
-    'function Save({ className = "w-full" }) { return <Button className={cn("mt-4", className)} /> }',
-    'const theme = { className: "w-full" }; read(theme.className); <Button className={theme.className} {...theme} />',
-    'const theme = { className: "w-full" }; const copy = { ...theme }; <Button className={theme.className} />',
-    'const classes = { root: "w-full" }; <Button classNames={classes} />',
-    'const classes = { "w-full": true }; <Button className={cn(classes)} />',
+    "function Save({ class: className }) { return <Button class={className} /> }",
+    "function Save({ class: cls }) { return <Button class={cls} /> }",
+    "function Save(props) { return <Button class={props.class} {...props} /> }",
+    "function Save({ ...props }) { return <Button class={props.class} /> }",
+    "function Save(props) { const { disabled } = props; return <Button class={props.class} disabled={disabled} /> }",
+    'function Save({ class: className = "w-full" }) { return <Button class={cn("mt-4", className)} /> }',
+    'const theme = { class: "w-full" }; read(theme.class); <Button class={theme.class} {...theme} />',
+    'const theme = { class: "w-full" }; const copy = { ...theme }; <Button class={theme.class} />',
+    'const classes = { root: "w-full" }; <Button classes={classes} />',
+    'const classes = { "w-full": true }; <Button class={cn(classes)} />',
     'const spacing = { "--gap": "4px" }; <div style={spacing} />',
     'import { props } from "./opaque"; <Button {...props} />',
     "function Save(props) { return <Button {...props} /> }",
@@ -121,16 +122,16 @@ describe("forwarded values retain their local alternatives", () => {
   test("a helper call escapes an object for later member reads", () => {
     expect(
       lint(
-        'const classes = { root: "w-full" }; cn(classes); <Button className={classes.root} />'
+        'const classes = { root: "w-full" }; cn(classes); <Button class={classes.root} />'
       ).map((m) => m.ruleId)
     ).toContain("shadcn/require-static-classes")
   })
 
   test.each([
-    'const classes = { root: "w-full" }; const alias = classes; alias.root = "bg-red-500"; <Button classNames={classes} />',
-    'const classes = { "w-full": true }; const alias = classes; alias["bg-red-500"] = true; <Button className={cn(classes)} />',
+    'const classes = { root: "w-full" }; const alias = classes; alias.root = "bg-red-500"; <Button classes={classes} />',
+    'const classes = { "w-full": true }; const alias = classes; alias["bg-red-500"] = true; <Button class={cn(classes)} />',
     'const styles = { "--gap": "4px" }; const alias = styles; alias.color = "red"; <div style={styles} />',
-    'const classes = { root: "w-full" }; mutate(classes); <Button classNames={classes} />',
+    'const classes = { root: "w-full" }; mutate(classes); <Button classes={classes} />',
   ])(
     "does not trust an escaped object at a class or style site: %s",
     (code) => {
@@ -145,8 +146,8 @@ describe("forwarded values retain their local alternatives", () => {
   )
 
   test.each([
-    'const classes = { root: "w-full" }; <><Button classNames={classes} /><Button classNames={classes} /></>',
-    'const classes = { "w-full": true }; <><Button className={cn(classes)} /><Button className={cn(classes)} /></>',
+    'const classes = { root: "w-full" }; <><Button classes={classes} /><Button classes={classes} /></>',
+    'const classes = { "w-full": true }; <><Button class={cn(classes)} /><Button class={cn(classes)} /></>',
     'const styles = { "--gap": "4px" }; <><div style={styles} /><div style={styles} /></>',
   ])(
     "can check the same literal object at multiple styling sites: %s",
@@ -158,7 +159,7 @@ describe("forwarded values retain their local alternatives", () => {
   test("a dynamic default is not an untouched forwarded value", () => {
     expect(
       lint(
-        "function Save({ className = build() }) { return <Button className={className} /> }"
+        "function Save({ class: className = build() }) { return <Button class={className} /> }"
       ).map((m) => m.ruleId)
     ).toContain("shadcn/require-static-classes")
   })
@@ -166,7 +167,7 @@ describe("forwarded values retain their local alternatives", () => {
   test("a forwarded interpolation glued to text is uncertain", () => {
     expect(
       lint(
-        "function Save({ className }) { return <Button className={`prefix-${className}`} /> }"
+        "function Save({ class: className }) { return <Button class={`prefix-${className}`} /> }"
       ).map((m) => m.ruleId)
     ).toContain("shadcn/require-static-classes")
   })
@@ -176,35 +177,35 @@ describe("partly understood values stay unresolved", () => {
   test("require-static-classes sees the unreadable part", () => {
     tester.run("require-static-classes", requireStaticClasses as any, {
       valid: [
-        // Forwarded by provenance: a destructured className parameter.
+        // Forwarded by provenance: a destructured class parameter.
         {
           filename: PAGE,
-          code: `${button}\nexport function Save({ className }: { className?: string }) { return <Button className={className}>Go</Button> }`,
+          code: `${button}\nexport function Save({ class: className }: { class?: string }) { return <Button class={className}>Go</Button> }`,
         },
       ],
       invalid: [
         // A number glued to text is a class the collector cannot read.
         {
           filename: PAGE,
-          code: `${button}\nconst n = 8\nexport const A = () => <Button className={\`p-\${n}\`}>Go</Button>`,
+          code: `${button}\nconst n = 8\nexport const A = () => <Button class={\`p-\${n}\`}>Go</Button>`,
           errors: [{ messageId: "dynamicClasses" }],
         },
         // Spelled className, but not the component's prop.
         {
           filename: PAGE,
-          code: `${button}\nexport const A = () => { let className\n className ??= "bg-red-500"\n return <Button className={className}>Go</Button> }`,
+          code: `${button}\nexport const A = () => { let className\n className ??= "bg-red-500"\n return <Button class={className}>Go</Button> }`,
           errors: [{ messageId: "dynamicClasses" }],
         },
         // An object written to after creation.
         {
           filename: PAGE,
-          code: `${button}\nconst theme = { className: "mt-4" }\ntheme.className = "bg-red-500"\nexport const A = () => <Button className={theme.className}>Go</Button>`,
+          code: `${button}\nconst theme = { class: "mt-4" }\ntheme.class = "bg-red-500"\nexport const A = () => <Button class={theme.class}>Go</Button>`,
           errors: [{ messageId: "dynamicClasses" }],
         },
         // A member of an imported object.
         {
           filename: PAGE,
-          code: `${button}\nimport { theme } from "./theme"\nexport const A = () => <Button className={theme.className}>Go</Button>`,
+          code: `${button}\nimport { theme } from "./theme"\nexport const A = () => <Button class={theme.class}>Go</Button>`,
           errors: [{ messageId: "dynamicClasses" }],
         },
       ],
@@ -218,7 +219,7 @@ describe("partly understood values stay unresolved", () => {
         {
           filename: PAGE,
           options,
-          code: `${button}\nconst base = { className: "mt-4" }\nexport const A = () => <Button {...{ className: "bg-red-500", ...base }} />`,
+          code: `${button}\nconst base = { class: "mt-4" }\nexport const A = () => <Button {...{ class: "bg-red-500", ...base }} />`,
         },
       ],
       invalid: [
@@ -226,34 +227,34 @@ describe("partly understood values stay unresolved", () => {
         {
           filename: PAGE,
           options,
-          code: `${button}\nconst base = { className: "mt-4" }\nexport const A = () => <Button {...{ ...base, className: "bg-red-500" }} />`,
+          code: `${button}\nconst base = { class: "mt-4" }\nexport const A = () => <Button {...{ ...base, class: "bg-red-500" }} />`,
           errors: [{ messageId: "appearanceClassWithVariants" }],
         },
         // Nested spreads and static computed keys.
         {
           filename: PAGE,
           options,
-          code: `${button}\nexport const A = () => <Button {...{ ...{ className: "bg-red-500" } }} />`,
+          code: `${button}\nexport const A = () => <Button {...{ ...{ class: "bg-red-500" } }} />`,
           errors: [{ messageId: "appearanceClassWithVariants" }],
         },
         {
           filename: PAGE,
           options,
-          code: `${button}\nexport const A = () => <Button {...{ ["className"]: "bg-red-500" }} />`,
+          code: `${button}\nexport const A = () => <Button {...{ ["class"]: "bg-red-500" }} />`,
           errors: [{ messageId: "appearanceClassWithVariants" }],
         },
-        // A nested classNames map is read by its values.
+        // A nested classes map is read by its values.
         {
           filename: PAGE,
           options,
-          code: `${button}\nexport const A = () => <Button classNames={{ root: { inner: "bg-red-500" } }}>Go</Button>`,
+          code: `${button}\nexport const A = () => <Button classes={{ root: { inner: "bg-red-500" } }}>Go</Button>`,
           errors: [{ messageId: "appearanceClassWithVariants" }],
         },
         // A same-file object never written to is read.
         {
           filename: PAGE,
           options,
-          code: `${button}\nconst theme = { className: "bg-red-500" }\nexport const A = () => <Button className={theme.className}>Go</Button>`,
+          code: `${button}\nconst theme = { class: "bg-red-500" }\nexport const A = () => <Button class={theme.class}>Go</Button>`,
           errors: [{ messageId: "appearanceClassWithVariants" }],
         },
       ],

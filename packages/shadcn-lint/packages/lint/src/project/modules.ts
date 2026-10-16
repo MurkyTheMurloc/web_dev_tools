@@ -8,7 +8,6 @@ import * as fs from "node:fs"
 import * as path from "node:path"
 
 import { memoize, mtimeOf } from "./fs"
-import { isSfc, scriptOf, sfcNameOf } from "./parser"
 import { packageRoot, resolveFile } from "./resolve"
 
 export type ExportBinding = {
@@ -24,8 +23,6 @@ type ParsedModule = {
   // Local name -> specifier and imported name.
   imports: Map<string, { spec: string; name: string }>
   defaultName: string | null
-  // A .svelte or .vue file: the default export is the component itself.
-  sfc: boolean
   named: { exported: string; local: string; spec: string }[]
   namedIndices: Map<string, number[]>
   stars: string[]
@@ -38,9 +35,6 @@ const DECLARATION_RE =
 const DEFAULT_DECLARATION_RE =
   /export\s+default\s+(?:async\s+)?(?:function\*?|class)\s+([A-Za-z_$][\w$]*)/
 const DEFAULT_IDENTIFIER_RE = /export\s+default\s+([A-Za-z_$][\w$]*)\s*;?\s*$/m
-// `export default memo(Button)`: the component is inside the call.
-const DEFAULT_WRAPPED_RE =
-  /export\s+default\s+(?:React\.)?(?:memo|forwardRef)\(\s*(?:function\s+)?([A-Za-z_$][\w$]*)/
 const NAMED_RE =
   /export\s*(type\s+)?\{([^}]*)\}\s*(?:from\s*["']([^"']+)["'])?/g
 const STAR_RE = /export\s*\*\s*(?:as\s+([\w$]+)\s+)?from\s*["']([^"']+)["']/g
@@ -68,7 +62,6 @@ function parseModule(file: string): ParsedModule {
     local: new Set(),
     imports: new Map(),
     defaultName: null,
-    sfc: isSfc(file),
     named: [],
     namedIndices: new Map(),
     stars: [],
@@ -79,7 +72,6 @@ function parseModule(file: string): ParsedModule {
   } catch {
     return module
   }
-  if (module.sfc) source = scriptOf(source)
   for (const match of source.matchAll(IMPORT_RE)) {
     const [, defaultLocal, namespaceLocal, list, spec] = match
     if (defaultLocal)
@@ -92,14 +84,12 @@ function parseModule(file: string): ParsedModule {
   for (const match of source.matchAll(DECLARATION_RE))
     module.local.add(match[1])
   const defaultDeclaration = source.match(DEFAULT_DECLARATION_RE)
-  const defaultIdentifier =
-    source.match(DEFAULT_IDENTIFIER_RE) ?? source.match(DEFAULT_WRAPPED_RE)
+  const defaultIdentifier = source.match(DEFAULT_IDENTIFIER_RE)
   if (defaultDeclaration) module.defaultName = defaultDeclaration[1]
   else if (defaultIdentifier) {
     module.defaultName = defaultIdentifier[1]
     module.local.add(defaultIdentifier[1])
   }
-  if (module.sfc) module.defaultName = sfcNameOf(file)
   for (const match of source.matchAll(NAMED_RE)) {
     if (match[1]) continue
     // No `from` clause: the empty specifier means this file's own name.
@@ -196,9 +186,7 @@ function collectExports(
   if (!module) return exports
   visiting.add(file)
   for (const name of module.local) exports.set(name, { file, name })
-  if (module.sfc && module.defaultName) {
-    exports.set("default", { file, name: module.defaultName })
-  } else if (module.defaultName) {
+  if (module.defaultName) {
     const imported = module.imports.get(module.defaultName)
     const target =
       imported && imported.name !== "*"
@@ -291,9 +279,7 @@ function exportRoute(module: ParsedModule, file: string, name: string) {
       continue
     }
     if (name === "default" && module.defaultName) {
-      return module.sfc
-        ? { binding: { file, name: module.defaultName }, follow: false }
-        : importedRoute(module.defaultName)
+      return importedRoute(module.defaultName)
     }
     const binding = module.local.has(name) ? { file, name } : fallback
     return binding ? { binding, follow: false } : null

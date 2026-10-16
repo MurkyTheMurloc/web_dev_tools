@@ -238,7 +238,7 @@ describe("CSS color leaves", () => {
     ],
     ["shadow color", "0 0 4px red", ["customPropColor"]],
   ])("%s", (_name, value, expected) => {
-    const code = `<div className="bg-(image:--icon)" style={{ "--icon": ${JSON.stringify(value)} }} />`
+    const code = `<div class="bg-(image:--icon)" style={{ "--icon": ${JSON.stringify(value)} }} />`
     expect(messages(code)).toEqual(expected)
   })
 

@@ -1,5 +1,7 @@
 import { cn } from "@/lib/utils"
-import { Button as ButtonPrimitive } from "@base-ui/react/button"
+import { Button as ButtonPrimitive } from "@kobalte/core/button"
+import { omit } from "solid-js"
+import type { ComponentProps } from "@solidjs/web"
 import { cva, type VariantProps } from "class-variance-authority"
 
 const buttonVariants = cva(
@@ -39,17 +41,19 @@ const buttonVariants = cva(
   }
 )
 
-function Button({
-  className,
-  variant = "default",
-  size = "default",
-  ...props
-}: ButtonPrimitive.Props & VariantProps<typeof buttonVariants>) {
+function Button(
+  props: ComponentProps<typeof ButtonPrimitive> &
+    VariantProps<typeof buttonVariants>
+) {
+  const rest = omit(props, "class", "variant", "size")
   return (
     <ButtonPrimitive
       data-slot="button"
-      className={cn(buttonVariants({ variant, size, className }))}
-      {...props}
+      class={cn(
+        buttonVariants({ variant: props.variant, size: props.size }),
+        props.class
+      )}
+      {...rest}
     />
   )
 }

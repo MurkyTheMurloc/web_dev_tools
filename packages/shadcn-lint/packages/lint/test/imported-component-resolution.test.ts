@@ -234,7 +234,7 @@ describe("imported component identity", () => {
 
   test("renamed component diagnostics retain identity, text and location", () => {
     const code =
-      'import { Action } from "@/components/barrel"\n<Action className="rounded-full" />'
+      'import { Action } from "@/components/barrel"\n<Action class="rounded-full" />'
     const messages = new Linter({ cwd: PROJECT }).verify(
       code,
       {
@@ -269,9 +269,9 @@ describe("imported component identity", () => {
         message:
           '"rounded-full" is not allowed on <Button>: <Button> owns its shape. Use a variant: default, outline, secondary, ghost, destructive, link. Add a new variant in components/ui/button.tsx only if the design explicitly calls for a treatment none of these provides.',
         line: 2,
-        column: 19,
+        column: 15,
         endLine: 2,
-        endColumn: 33,
+        endColumn: 29,
       },
     ])
   })

@@ -1,5 +1,5 @@
-// A Solid 2.0 shadcn button: `class` instead of className, props never
-// destructured, `omit` instead of splitProps.
+// A Solid 2.0 shadcn button: props are never destructured, `omit` instead
+// of splitProps.
 import type { ComponentProps } from "@solidjs/web"
 import { cva, type VariantProps } from "class-variance-authority"
 import { omit } from "solid-js"

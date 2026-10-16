@@ -1,7 +1,6 @@
 import type { ComponentIndex } from "./components"
 import { NODE_MODULES } from "./fs"
 import type { ExportBinding } from "./modules"
-import { isSfc } from "./parser"
 
 export type ComponentImport = {
   source: string
@@ -48,13 +47,7 @@ export function componentFromImport(
     }
   }
   if (patterns.some((pattern) => pattern.test(importedName.source))) {
-    // A single-file component is named by its file: a barrel's `Content`
-    // says nothing, `dialog-content.svelte` does.
-    const component =
-      binding && isSfc(binding.file)
-        ? `${binding.name}${importedName.suffix}`
-        : importedName.name
-    return { component, file: binding?.file ?? null }
+    return { component: importedName.name, file: binding?.file ?? null }
   }
   return null
 }

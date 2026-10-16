@@ -32,14 +32,14 @@ describe("no-restyle", () => {
         // Allowing it by name stays the way through.
         {
           filename: PAGE,
-          code: `${button}\nconst a = <Button className="tap-target" />`,
+          code: `${button}\nconst a = <Button class="tap-target" />`,
           options: [{ allow: ["layout", "tap-target"] }],
         },
       ],
       invalid: [
         {
           filename: PAGE,
-          code: `${button}\nconst a = <Button className="tap-target" />`,
+          code: `${button}\nconst a = <Button class="tap-target" />`,
           options: [{ allow: ["layout"] }],
           errors: [
             {
@@ -51,7 +51,7 @@ describe("no-restyle", () => {
         // A name nothing declares is still a spelling finding.
         {
           filename: PAGE,
-          code: `${button}\nconst a = <Button className="flex-cols" />`,
+          code: `${button}\nconst a = <Button class="flex-cols" />`,
           options: [{ allow: ["layout"] }],
           errors: [{ messageId: "unclassifiedClass" }],
         },

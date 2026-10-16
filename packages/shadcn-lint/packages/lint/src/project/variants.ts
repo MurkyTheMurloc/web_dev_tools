@@ -6,10 +6,9 @@ import * as fs from "node:fs"
 import * as path from "node:path"
 
 import { walk } from "./ast"
-import { barrelOf } from "./components"
 import { mtimeOf } from "./fs"
 import { exportsOf } from "./modules"
-import { isSfc, parseSource } from "./parser"
+import { parseSource } from "./parser"
 
 export type VariantDefinition = {
   // buttonVariants, or the component whose props declare the axes.
@@ -136,7 +135,7 @@ function literalValues(
 }
 
 // Follows intersections, unions and same-file aliases, so
-// `React.ComponentProps<"div"> & Props` resolves.
+// `ComponentProps<"div"> & Props` resolves.
 function axesOfPropsType(
   input: any,
   declared: ReturnType<typeof declarationsIn>,
@@ -350,31 +349,21 @@ export function variantDefinitionsOf(file: string) {
 
 // The definition for a component: the cva named after it
 // (buttonVariants for Button), else the component's own props (Text),
-// else the first cva the component uses. An SFC is its file's only
-// component, so any cva in it is the component's. Another component's
-// props or cva never apply.
+// else the first cva the component uses. Another component's props or
+// cva never apply.
 function definitionFor(file: string, component: string) {
   const expected =
     component.charAt(0).toLowerCase() + component.slice(1) + "Variants"
   const read = fileVariantsOf(file)
   const definitions = read?.definitions ?? []
-  if (!definitions.length) {
-    // A `buttonVariants` may live in the barrel beside Button.vue.
-    // Only the factory named after the component: a barrel speaks for
-    // many components, so its first factory is no one's by default.
-    const barrel = isSfc(file) ? barrelOf(path.dirname(file)) : null
-    if (!barrel) return null
-    const exported = [...exportsOf(barrel).values()]
-    if (!exported.some((binding) => binding.file === file)) return null
-    return variantDefinitionsOf(barrel).find((d) => d.name === expected) ?? null
-  }
   return (
     definitions.find((d) => d.name === expected) ??
     definitions.find((d) => d.name === component && d.source === "props") ??
     definitions.find(
       (d) =>
         d.source === "factory" &&
-        (isSfc(file) || (!!d.name && !!read?.uses.get(component)?.has(d.name)))
+        !!d.name &&
+        !!read?.uses.get(component)?.has(d.name)
     ) ??
     null
   )

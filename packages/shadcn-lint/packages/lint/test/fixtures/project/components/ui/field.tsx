@@ -1,3 +1,5 @@
+import { omit } from "solid-js"
+import type { ComponentProps } from "@solidjs/web"
 import { cn } from "@/lib/utils"
 import { cva, type VariantProps } from "class-variance-authority"
 
@@ -23,30 +25,24 @@ const fieldLabelVariants = cva("text-sm font-medium", {
   },
 })
 
-function Field({
-  className,
-  orientation,
-  ...props
-}: React.ComponentProps<"div"> & VariantProps<typeof fieldVariants>) {
+function Field(props: ComponentProps<"div"> & VariantProps<typeof fieldVariants>) {
+  const rest = omit(props, "class", "orientation")
   return (
     <div
       data-slot="field"
-      className={cn(fieldVariants({ orientation }), className)}
-      {...props}
+      class={cn(fieldVariants({ orientation: props.orientation }), props.class)}
+      {...rest}
     />
   )
 }
 
-function FieldLabel({
-  className,
-  variant,
-  ...props
-}: React.ComponentProps<"label"> & VariantProps<typeof fieldLabelVariants>) {
+function FieldLabel(props: ComponentProps<"label"> & VariantProps<typeof fieldLabelVariants>) {
+  const rest = omit(props, "class", "variant")
   return (
     <label
       data-slot="field-label"
-      className={cn(fieldLabelVariants({ variant }), className)}
-      {...props}
+      class={cn(fieldLabelVariants({ variant: props.variant }), props.class)}
+      {...rest}
     />
   )
 }

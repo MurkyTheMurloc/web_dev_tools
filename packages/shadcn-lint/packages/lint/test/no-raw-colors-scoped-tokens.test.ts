@@ -54,35 +54,35 @@ describe("scoped color namespaces", () => {
       valid: [
         {
           filename: PAGE,
-          code: `export const A = () => <div className="bg-surface text-ink border-t-edge fill-brand bg-gray-500" />`,
+          code: `export const A = () => <div class="bg-surface text-ink border-t-edge fill-brand bg-gray-500" />`,
         },
         {
           filename: PAGE,
-          code: `export const A = () => <div className="hover:bg-surface/50" />`,
+          code: `export const A = () => <div class="hover:bg-surface/50" />`,
         },
       ],
       invalid: [
         // A background-color token is not a text color.
         {
           filename: PAGE,
-          code: `export const A = () => <div className="text-surface" />`,
+          code: `export const A = () => <div class="text-surface" />`,
           errors: [{ messageId: "undeclaredToken" }],
         },
         // A reset namespace drops its token.
         {
           filename: PAGE,
-          code: `export const A = () => <div className="bg-old" />`,
+          code: `export const A = () => <div class="bg-old" />`,
           errors: [{ messageId: "undeclaredToken" }],
         },
         // The spelling suggestion knows the namespace's tokens.
         {
           filename: PAGE,
-          code: `export const A = () => <div className="bg-surfaec" />`,
+          code: `export const A = () => <div class="bg-surfaec" />`,
           errors: [
             {
               messageId: "undeclaredTokenTypo",
               data: {
-                className: "bg-surfaec",
+                class: "bg-surfaec",
                 suggestion: "bg-surface",
                 tokens: "gray-500",
               },
@@ -90,7 +90,7 @@ describe("scoped color namespaces", () => {
                 {
                   messageId: "useToken",
                   data: { replacement: "bg-surface" },
-                  output: `export const A = () => <div className="bg-surface" />`,
+                  output: `export const A = () => <div class="bg-surface" />`,
                 },
               ],
             },

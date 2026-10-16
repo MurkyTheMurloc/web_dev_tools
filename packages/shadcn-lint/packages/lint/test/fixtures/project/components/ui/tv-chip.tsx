@@ -14,8 +14,8 @@ export const chip = tv({
 export function TvChip({ tone }: { tone?: "neutral" | "loud" }) {
   const { root, label } = chip({ tone })
   return (
-    <span className={root()}>
-      <span className={label()}>chip</span>
+    <span class={root()}>
+      <span class={label()}>chip</span>
     </span>
   )
 }

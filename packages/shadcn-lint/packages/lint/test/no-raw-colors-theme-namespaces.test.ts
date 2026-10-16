@@ -25,38 +25,38 @@ describe("no-raw-colors and theme namespaces", () => {
         // --text-stat-label: a font-size, not a color.
         {
           filename: PAGE,
-          code: `export const A = () => <p className="text-stat-label" />`,
+          code: `export const A = () => <p class="text-stat-label" />`,
         },
         // --shadow-card-glow and --drop-shadow-lift: box-shadows.
         {
           filename: PAGE,
-          code: `export const A = () => <div className="shadow-card-glow drop-shadow-lift" />`,
+          code: `export const A = () => <div class="shadow-card-glow drop-shadow-lift" />`,
         },
         // bg-* reads --background-image-*, where the namespace and the
         // prefix are not the same word.
         {
           filename: PAGE,
-          code: `export const A = () => <div className="bg-stripes" />`,
+          code: `export const A = () => <div class="bg-stripes" />`,
         },
         // A variant and a modifier do not change the namespace.
         {
           filename: PAGE,
-          code: `export const A = () => <p className="md:text-stat-label hover:shadow-card-glow/50" />`,
+          code: `export const A = () => <p class="md:text-stat-label hover:shadow-card-glow/50" />`,
         },
         // The project's own @utility is its own vocabulary.
         {
           filename: PAGE,
-          code: `export const A = () => <p className="text-callout" />`,
+          code: `export const A = () => <p class="text-callout" />`,
         },
         // With a variant and an opacity, still the same @utility.
         {
           filename: PAGE,
-          code: `export const A = () => <p className="hover:text-callout/50" />`,
+          code: `export const A = () => <p class="hover:text-callout/50" />`,
         },
         // The declared color still reads as a color.
         {
           filename: PAGE,
-          code: `export const A = () => <div className="bg-primary text-primary" />`,
+          code: `export const A = () => <div class="bg-primary text-primary" />`,
         },
       ],
       invalid: [
@@ -64,7 +64,7 @@ describe("no-raw-colors and theme namespaces", () => {
         // the color behind it is exactly the raw color to report.
         {
           filename: PAGE,
-          code: `export const A = () => <p className="text-legacy" />`,
+          code: `export const A = () => <p class="text-legacy" />`,
           errors: [{ messageId: "undeclaredToken" }],
         },
       ],
@@ -79,12 +79,12 @@ describe("no-raw-colors and theme namespaces", () => {
         invalid: [
           {
             filename: PAGE,
-            code: `export const A = () => <div className="bg-stat-label" />`,
+            code: `export const A = () => <div class="bg-stat-label" />`,
             errors: [{ messageId: "undeclaredToken" }],
           },
           {
             filename: PAGE,
-            code: `export const A = () => <div className="text-brand" />`,
+            code: `export const A = () => <div class="text-brand" />`,
             errors: [{ messageId: "undeclaredToken" }],
           },
         ],
@@ -103,14 +103,14 @@ describe("no-restyle and theme namespaces", () => {
         {
           filename: PAGE,
           options: [{ allow: ["typography"] }],
-          code: `${button}\nexport const A = () => <Button className="text-stat-label" />`,
+          code: `${button}\nexport const A = () => <Button class="text-stat-label" />`,
         },
       ],
       invalid: [
         {
           filename: PAGE,
           options: [{ allow: ["layout"] }],
-          code: `${button}\nexport const A = () => <Button className="text-stat-label" />`,
+          code: `${button}\nexport const A = () => <Button class="text-stat-label" />`,
           errors: [{ message: /owns its typography/ }],
         },
       ],
@@ -126,14 +126,14 @@ describe("no-restyle and theme namespaces", () => {
         {
           filename: PAGE,
           options: [{ allow: ["shape"] }],
-          code: `${button}\nexport const A = () => <Button className="rounded-card" />`,
+          code: `${button}\nexport const A = () => <Button class="rounded-card" />`,
         },
       ],
       invalid: [
         {
           filename: PAGE,
           options: [{ allow: ["layout"] }],
-          code: `${button}\nexport const A = () => <Button className="rounded-card" />`,
+          code: `${button}\nexport const A = () => <Button class="rounded-card" />`,
           errors: [{ message: /owns its shape/ }],
         },
       ],
