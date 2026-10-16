@@ -1,6 +1,6 @@
 {
   "name": "@murky-web/shadcn-lint",
-  "version": "0.3.0",
+  "version": "0.4.0",
   "description": "Solid 2.0 class linter for Tailwind design systems, for Oxlint. Originally a fork of @shadcn/lint.",
   "license": "MIT",
   "author": {
