@@ -192,7 +192,7 @@ function parseDomainName(url: string, defaultValue?: string): Optional<string> {
     // Everything that depends on a parseable URL stays inside the `try`, so
     // there is no binding that has to be declared before it can be assigned.
     try {
-        const { hostname } = new URL(urlCandidate);
+        const { hostname } = new globalThis.URL(urlCandidate);
         const normalizedHostname = hostname.replace(/^www\d?\./i, "");
         const [domainName] = normalizedHostname.split(".");
         if (domainName === undefined || domainName === "") {

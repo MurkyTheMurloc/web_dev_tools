@@ -5,9 +5,7 @@
 const optionalValue: Optional<string> = undefined;
 const maybeValue: Maybe<string> = null;
 const nullableValue: Nullable<string> = null;
-const parsed = JSON.parse<{ value: string }>(JSON.stringify({ value: "x" }));
+const serialized = JSON.stringify({ value: "x" });
+const parsed = JSON.parse<{ value: string }>(serialized);
 
-void optionalValue;
-void maybeValue;
-void nullableValue;
-void parsed;
+export { maybeValue, nullableValue, optionalValue, parsed };

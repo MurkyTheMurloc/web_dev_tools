@@ -20,6 +20,30 @@ const pkg = JSON.parse(
     readFileSync(path.join(packageRoot, "package.json"), "utf8"),
 ) as { name: string; exports: Record<string, string | { import?: string }> };
 
+const NO_EXPORTS = 0;
+const NO_FAILURES = 0;
+const ONE_ENTRY = 1;
+const SUBPATH_COLUMN_WIDTH = 12;
+const FAILURE_EXIT_CODE = 1;
+
+function resolveImportTarget(
+    target: string | { import?: string },
+): string | undefined {
+    if (typeof target === "string") {
+        return target;
+    }
+
+    return target.import;
+}
+
+function describeError(error: unknown): string {
+    if (error instanceof Error) {
+        return error.message;
+    }
+
+    return String(error);
+}
+
 const failures: string[] = [];
 let loaded = 0;
 
@@ -28,7 +52,7 @@ for (const [subpath, target] of Object.entries(pkg.exports)) {
         continue;
     }
 
-    const file = typeof target === "string" ? target : target.import;
+    const file = resolveImportTarget(target);
     if (file === undefined) {
         failures.push(`exports["${subpath}"] has no import condition`);
         continue;
@@ -37,29 +61,29 @@ for (const [subpath, target] of Object.entries(pkg.exports)) {
     const resolved = path.join(packageRoot, file);
     try {
         const module: Record<string, unknown> = await import(resolved);
-        const names = Object.keys(module).filter((name) => name !== "default");
-        if (names.length === 0) {
+        const names = Object.keys(module).filter((name) => {
+            return name !== "default";
+        });
+        if (names.length === NO_EXPORTS) {
             failures.push(`${subpath} -> ${file} loaded but exports nothing`);
             continue;
         }
-        loaded += 1;
-        console.log(`  ok  ${subpath.padEnd(12)} ${names.join(", ")}`);
+        loaded += ONE_ENTRY;
+        console.log(`  ok  ${subpath.padEnd(SUBPATH_COLUMN_WIDTH)} ${names.join(", ")}`);
     } catch (error) {
         // An unresolved import between two built files surfaces here and nowhere else.
         failures.push(
-            `${subpath} -> ${file} failed to load: ${
-                error instanceof Error ? error.message : String(error)
-            }`,
+            `${subpath} -> ${file} failed to load: ${describeError(error)}`,
         );
     }
 }
 
-if (failures.length > 0) {
+if (failures.length > NO_FAILURES) {
     console.error(`\n${failures.length} entry point(s) failed:`);
     for (const failure of failures) {
         console.error(`  ${failure}`);
     }
-    process.exit(1);
+    process.exit(FAILURE_EXIT_CODE);
 }
 
 console.log(`\nEntry smoke passed (${loaded} entry points loaded).`);

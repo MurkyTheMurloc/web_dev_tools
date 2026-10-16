@@ -1,6 +1,7 @@
 import { mkdirSync, readFileSync, rmSync } from "node:fs";
 import path from "node:path";
 
+const SUCCESS_EXIT_CODE = 0;
 const smokeDir = path.resolve(import.meta.dir);
 const outputDir = path.join(smokeDir, ".output");
 const bundlePath = path.join(outputDir, "bundle.js");
@@ -27,7 +28,7 @@ const buildProcess = Bun.spawnSync(
     },
 );
 
-if (buildProcess.exitCode !== 0) {
+if (buildProcess.exitCode !== SUCCESS_EXIT_CODE) {
     throw new Error(
         `Tree-shake smoke build failed:\n${new TextDecoder().decode(buildProcess.stderr)}`,
     );
