@@ -1,5 +1,16 @@
 # @murky-web/typebuddy
 
+## 2.0.0
+
+### Major Changes
+
+- 3f873f5: Remove the `@murky-web/typebuddy/biome` entry point.
+
+  Biome is no longer supported. The `./biome` export (`MaybePromiseRule`,
+  `OptionalRule`, `TryCatchAsyncRule`) and the Grit plugin files it pointed at are
+  gone from npm and JSR. Use the `@murky-web/typebuddy/oxlint` plugin with oxlint
+  instead; it has the matching rules.
+
 ## 1.5.0
 
 ### Minor Changes
