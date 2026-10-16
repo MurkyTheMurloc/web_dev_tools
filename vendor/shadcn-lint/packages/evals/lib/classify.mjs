@@ -8,7 +8,7 @@
 
 import * as fs from "node:fs"
 import * as path from "node:path"
-import { project } from "@shadcn/lint"
+import { project } from "@murky-web/shadcn-lint"
 
 import { manifestFor } from "./fixture.mjs"
 
