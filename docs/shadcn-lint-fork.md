@@ -1,30 +1,24 @@
-# shadcn-lint fork
+# shadcn-lint
 
-`vendor/shadcn-lint` is [shadcn-ui/lint](https://github.com/shadcn-ui/lint) (MIT) as a git
-subtree, published as `@murky-web/shadcn-lint` with Solid 2.0 support. We do not send changes
-back, but we follow upstream: their fixes and new rules come in through the subtree.
+`packages/shadcn-lint` started as [shadcn-ui/lint](https://github.com/shadcn-ui/lint) (MIT). It is
+now our own package, published as `@murky-web/shadcn-lint`, and reads Solid 2.0 JSX only. We no
+longer track upstream: there is no subtree and no upstream pull. React, Vue and Svelte support
+and the upstream eval harness are removed.
 
-## Pull upstream
+## Layout
+
+- `packages/shadcn-lint/packages/lint`: the published package (rules, class grammar, project
+  analysis, tests).
+- `packages/shadcn-lint/docs`: user docs.
+
+Upstream's pnpm workspace files and `packageManager` field are gone; the repo root is a bun
+workspace and changesets detects bun.
+
+## Checks
 
 ```sh
-bun run shadcn-lint:upstream
+bun run release:verify:shadcn-lint
 ```
 
-That is `git subtree pull --prefix vendor/shadcn-lint https://github.com/shadcn-ui/lint main --squash`.
-Then run `bun run release:verify:shadcn-lint` and add a changeset for `@murky-web/shadcn-lint`.
-
-## Keep the fork easy to update
-
-Change as few upstream files as possible; add new files instead. Every changed upstream file can
-conflict on the next pull. Our changes:
-
-| File | Change |
-|---|---|
-| `packages/lint/package.json` | name, description, repository, homepage, bugs, publishConfig, keywords, devDependencies (prettier, sort-imports plugin) |
-| `packages/lint/scripts/prepack.mjs` | README links point at this repo |
-| `packages/evals/package.json`, `packages/evals/lib/{lint,classify}.mjs` | the new package name |
-| `README.md` | fork note at the top |
-| Solid 2.0 support (SID-384) | `src/` and `test/` changes for `class` objects, `props.class`, `merge`, `omit`; `docs/solid.md` |
-| `packages/lint/package-readme.md` | **new file, ours.** The README npm shows: Solid setup and examples. `prepack.mjs` uses it instead of upstream's root README. |
-| `src/rules/no-restyle.ts`, `src/rules/require-static-classes.ts`, tests | messages say `class` instead of `className` (Solid only; upstream tests changed to match) |
-| `packages/lint/package-lock.json` | **new file, ours.** Upstream keeps `pnpm-lock.yaml` and `packageManager: pnpm` in `vendor/shadcn-lint`; changesets detects the package manager from the nearest lock file and would call `pnpm publish`, which CI does not have. This near-empty npm lock file makes it pick npm, without touching upstream files. Do not delete it. |
+Builds, typechecks and tests the package. Add a changeset for `@murky-web/shadcn-lint` for every
+user-visible change.

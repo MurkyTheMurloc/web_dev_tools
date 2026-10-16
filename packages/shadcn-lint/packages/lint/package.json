@@ -1,0 +1,89 @@
+{
+  "name": "@murky-web/shadcn-lint",
+  "version": "0.3.0",
+  "description": "Solid 2.0 class linter for Tailwind design systems, for Oxlint. Originally a fork of @shadcn/lint.",
+  "license": "MIT",
+  "author": {
+    "name": "shadcn",
+    "url": "https://twitter.com/shadcn"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/MurkyTheMurloc/web_dev_tools.git",
+    "directory": "packages/shadcn-lint/packages/lint"
+  },
+  "homepage": "https://github.com/MurkyTheMurloc/web_dev_tools/tree/main/packages/shadcn-lint#readme",
+  "bugs": {
+    "url": "https://github.com/MurkyTheMurloc/web_dev_tools/issues"
+  },
+  "type": "module",
+  "publishConfig": {
+    "access": "public",
+    "provenance": true
+  },
+  "sideEffects": [
+    "./dist/tailwind-worker.js"
+  ],
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    },
+    "./package.json": "./package.json"
+  },
+  "types": "./dist/index.d.ts",
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsdown && node scripts/postbuild.mjs",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run --config vitest.config.ts",
+    "prepack": "node scripts/prepack.mjs",
+    "postpack": "node -e \"const fs=require('fs');fs.rmSync('README.md',{force:true});fs.rmSync('LICENSE',{force:true})\""
+  },
+  "keywords": [
+    "shadcn",
+    "lint",
+    "eslint",
+    "oxlint",
+    "tailwind",
+    "tailwindcss",
+    "design-system",
+    "cn",
+    "solid",
+    "solidjs"
+  ],
+  "dependencies": {
+    "@eslint/core": "^0.17.0",
+    "cn": "0.4.0"
+  },
+  "peerDependencies": {
+    "@typescript-eslint/parser": ">=8.40.0"
+  },
+  "peerDependenciesMeta": {
+    "@typescript-eslint/parser": {
+      "optional": true
+    }
+  },
+  "devDependencies": {
+    "@ianvs/prettier-plugin-sort-imports": "^4.7.1",
+    "@tailwindcss/node": "^4.3.3",
+    "@types/node": "^24.3.0",
+    "@typescript-eslint/parser": "^8.40.0",
+    "eslint": "^9.33.0",
+    "oxlint": "^1.80.0",
+    "prettier": "^3.6.2",
+    "tailwind-merge": "^3.6.0",
+    "tailwindcss": "^4.3.3",
+    "tsdown": "^0.12.0",
+    "typescript": "^5.9.2",
+    "vitest": "^3.2.6"
+  },
+  "engines": {
+    "node": ">=20.19"
+  },
+  "optionalDependencies": {
+    "oxc-parser": "^0.148.0"
+  }
+}

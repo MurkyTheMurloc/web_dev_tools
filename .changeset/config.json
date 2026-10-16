@@ -9,8 +9,7 @@
   "commit": false,
   "fixed": [],
   "ignore": [
-    "@murky-web/config",
-    "evals"
+    "@murky-web/config"
   ],
   "linked": [],
   "privatePackages": {

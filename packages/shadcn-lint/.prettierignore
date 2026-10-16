@@ -1,0 +1,18 @@
+# build output and deps
+node_modules/
+dist/
+
+# fetched registry and eval runs
+.registry/
+
+# real component files vendored as test and eval fixtures
+packages/lint/test/fixtures/
+
+# written by changesets during release PRs, without prettier
+CHANGELOG.md
+
+# session/tooling state and private planning
+.claude/
+
+# side builds
+dist-next/
