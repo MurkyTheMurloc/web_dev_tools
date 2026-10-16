@@ -10,9 +10,9 @@
   "repository": {
     "type": "git",
     "url": "git+https://github.com/MurkyTheMurloc/web_dev_tools.git",
-    "directory": "vendor/shadcn-lint/packages/lint"
+    "directory": "packages/shadcn-lint/packages/lint"
   },
-  "homepage": "https://github.com/MurkyTheMurloc/web_dev_tools/tree/main/vendor/shadcn-lint#readme",
+  "homepage": "https://github.com/MurkyTheMurloc/web_dev_tools/tree/main/packages/shadcn-lint#readme",
   "bugs": {
     "url": "https://github.com/MurkyTheMurloc/web_dev_tools/issues"
   },

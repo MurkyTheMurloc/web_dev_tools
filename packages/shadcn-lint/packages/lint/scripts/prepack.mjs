@@ -7,7 +7,7 @@ import * as path from "node:path"
 import { fileURLToPath } from "node:url"
 
 const RAW =
-  "https://raw.githubusercontent.com/MurkyTheMurloc/web_dev_tools/main/vendor/shadcn-lint/"
+  "https://raw.githubusercontent.com/MurkyTheMurloc/web_dev_tools/main/packages/shadcn-lint/"
 
 const PKG_DIR = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..")
 const ROOT = path.resolve(PKG_DIR, "../..")
