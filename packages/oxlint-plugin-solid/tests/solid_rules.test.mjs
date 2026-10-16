@@ -16,7 +16,7 @@ import {
 } from "./rule_cases.mjs";
 
 const EXIT_SUCCESS = 0;
-const SOLID_LINT_CONFIG_PATH = "/packages/config/oxc/linting/solid.jsonc";
+const SOLID_LINT_CONFIG_PATH = "/config/oxc/linting/solid.jsonc";
 let harness = null;
 let solidPlugin = null;
 

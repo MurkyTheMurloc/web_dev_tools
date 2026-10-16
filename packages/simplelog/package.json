@@ -66,15 +66,14 @@
         "clean": "rm -rf dist",
         "lint": "oxlint -c ./.oxlintrc.jsonc --tsconfig ./tsconfig.json --type-aware src tsdown.config.ts",
         "lint:fix": "oxlint -c ./.oxlintrc.jsonc --tsconfig ./tsconfig.json --type-aware --fix src tsdown.config.ts",
-        "format": "oxfmt -c ../config/oxc/.oxfmtrc.jsonc src oxlint smoke tsdown.config.ts",
-        "format:check": "oxfmt -c ../config/oxc/.oxfmtrc.jsonc --check src oxlint smoke tsdown.config.ts",
+        "format": "oxfmt -c ../../config/oxc/.oxfmtrc.jsonc src oxlint smoke tsdown.config.ts",
+        "format:check": "oxfmt -c ../../config/oxc/.oxfmtrc.jsonc --check src oxlint smoke tsdown.config.ts",
         "smoke:oxlint": "bun ./smoke/oxlint/run-smoke.ts",
         "smoke:entries": "bun run build && bun ./smoke/entries/run.ts",
         "test": "vitest run",
         "typecheck": "tsc --project ./tsconfig.json --noEmit"
     },
     "devDependencies": {
-        "@murky-web/config": "workspace:*",
         "@opentelemetry/api": "^1.9.0",
         "@types/node": "^25.5.0",
         "hono": "^4.12.8"

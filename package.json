@@ -1,9 +1,6 @@
 {
     "name": "@murky-web/workspace",
     "private": true,
-    "bin": {
-        "web-dev-config": "./bin/web-dev-config.mjs"
-    },
     "packageManager": "bun@1.4.0",
     "workspaces": [
         "packages/*",
@@ -13,18 +10,16 @@
         "build": "bun run --workspaces --if-present build",
         "changeset": "changeset",
         "clean": "bun run --workspaces --if-present clean",
-        "config:init": "bun ./packages/config/bin/web-dev-config.mjs init",
-        "config:init:solid": "bun ./packages/config/bin/web-dev-config.mjs init --frontend-solid",
         "release:verify": "bun run release:verify:typebuddy && bun run release:verify:simplelog && bun run release:verify:oxlint-plugin-solid && bun run release:verify:shadcn-lint",
         "release:verify:oxlint-plugin-solid": "bun run --cwd ./packages/oxlint-plugin-solid test",
         "release:verify:simplelog": "bun run --cwd ./packages/simplelog lint && bun run --cwd ./packages/simplelog typecheck && bun run --cwd ./packages/simplelog test && bun run --cwd ./packages/simplelog smoke:oxlint && bun run --cwd ./packages/simplelog smoke:entries",
         "release:verify:typebuddy": "bun run --cwd ./packages/typebuddy lint && bun run --cwd ./packages/typebuddy typecheck && bun run --cwd ./packages/typebuddy test && bun run --cwd ./packages/typebuddy smoke:globals && bun run --cwd ./packages/typebuddy smoke:oxlint && bun run --cwd ./packages/typebuddy smoke:oxlint:fix && bun run --cwd ./packages/typebuddy smoke:subpath && bun run --cwd ./packages/typebuddy smoke:treeshake",
         "test": "bun run --workspaces --if-present test",
         "typecheck": "bun run --workspaces --if-present typecheck",
-        "lint": "oxlint -c ./packages/config/oxc/.oxlintrc.jsonc --type-aware ./packages",
-        "lint:fix": "oxlint -c ./packages/config/oxc/.oxlintrc.jsonc --type-aware --fix ./packages",
-        "format": "oxfmt -c ./packages/config/oxc/.oxfmtrc.jsonc ./packages",
-        "format:check": "oxfmt -c ./packages/config/oxc/.oxfmtrc.jsonc --check ./packages",
+        "lint": "oxlint -c ./config/oxc/.oxlintrc.jsonc --type-aware --ignore-pattern 'packages/shadcn-lint/**' --ignore-pattern 'packages/oxlint-plugin-solid/**' --ignore-pattern 'packages/typebuddy/rules/**' --ignore-pattern 'packages/simplelog/oxlint/**' --ignore-pattern 'packages/*/smoke/oxlint/**' ./packages",
+        "lint:fix": "oxlint -c ./config/oxc/.oxlintrc.jsonc --type-aware --fix --ignore-pattern 'packages/shadcn-lint/**' --ignore-pattern 'packages/oxlint-plugin-solid/**' --ignore-pattern 'packages/typebuddy/rules/**' --ignore-pattern 'packages/simplelog/oxlint/**' --ignore-pattern 'packages/*/smoke/oxlint/**' ./packages",
+        "format": "oxfmt -c ./config/oxc/.oxfmtrc.jsonc ./packages/typebuddy ./packages/simplelog ./packages/oxlint-plugin-solid",
+        "format:check": "oxfmt -c ./config/oxc/.oxfmtrc.jsonc --check ./packages/typebuddy ./packages/simplelog ./packages/oxlint-plugin-solid",
         "publish:jsr": "bun ./scripts/publish-jsr.mjs",
         "publish:jsr:dry": "bun ./scripts/publish-jsr.mjs --dry-run",
         "publish:npm:dry": "bun ./scripts/publish-npm-dry.mjs",

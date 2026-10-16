@@ -8,9 +8,7 @@
   ],
   "commit": false,
   "fixed": [],
-  "ignore": [
-    "@murky-web/config"
-  ],
+  "ignore": [],
   "linked": [],
   "privatePackages": {
     "tag": false,
