@@ -130,7 +130,7 @@ export const noArbitraryValues = {
     docs: {
       description:
         "Disallow arbitrary values on appearance utilities; use theme tokens and scale values.",
-      url: "https://github.com/shadcn-ui/lint/blob/main/docs/rules/no-arbitrary-values.md",
+      url: "https://github.com/MurkyTheMurloc/web_dev_tools/blob/main/packages/shadcn-lint/docs/rules/no-arbitrary-values.md",
     },
     schema: [
       {

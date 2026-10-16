@@ -1,7 +1,7 @@
 # Rules
 
 Enable each rule at `warn` or `error`. Start with the
-[README setup](../README.md#get-started), then add the checks your project needs.
+[README setup](../README.md#install), then add the checks your project needs.
 
 | Rule                                                        | What it checks                                         |
 | ----------------------------------------------------------- | ------------------------------------------------------ |
@@ -13,7 +13,7 @@ Enable each rule at `warn` or `error`. Start with the
 | [require-static-classes](./rules/require-static-classes.md) | Unreadable class values on components.                 |
 
 Turn `no-restyle` off inside your component directory so components
-can style themselves. The [setup](../README.md#get-started) includes
+can style themselves. The [setup](../README.md#install) includes
 this override. When you enable `no-arbitrary-values` and
 `require-static-classes`, turn them off there too. See
 [Add more rules](./adoption.md#add-more-rules) for that override.
@@ -88,8 +88,7 @@ only amber-500 classes are exempt. `deny: []` clears the inherited denial,
 so `bg-amber-500` passes there. Declared theme colors pass in both cases.
 
 For `no-inline-styles`, contracts match the component name as written
-(`Card.Title` in Svelte, `CardTitle` or `card-title` in Vue), without
-resolving wrappers. Lowercase elements use the top-level policy.
+(`CardTitle`, or `Card.Title` for a member), without resolving wrappers. Lowercase elements use the top-level policy.
 
 Class rules accept these entries in `allow` and `deny`:
 
@@ -161,7 +160,7 @@ Set `message` to replace a rule's error text:
 
 ```js
 "shadcn/no-raw-colors": ["error", {
-  message: 'Use a theme color for "{{className}}". See {{file}}.',
+  message: 'Use a theme color for "{{class}}". See {{file}}.',
 }]
 ```
 
@@ -169,7 +168,7 @@ Every finding provides these placeholders, empty when they do not apply:
 
 | Placeholder       | Value                                                     |
 | ----------------- | --------------------------------------------------------- |
-| `{{className}}`   | The class, or an SVG attribute such as `fill="#f00"`.     |
+| `{{class}}`   | The class, or an SVG attribute such as `fill="#f00"`.     |
 | `{{property}}`    | The inline CSS property.                                  |
 | `{{component}}`   | The component name.                                       |
 | `{{suggestions}}` | Suggested tokens, scale values, or a spelling correction. |

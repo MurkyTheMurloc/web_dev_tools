@@ -1,12 +1,7 @@
 # Documentation
 
-Start with [Get started](../README.md#get-started) to set up ESLint or Oxlint.
+Start with [Install](../README.md#install) to set up Oxlint.
 
-## Frameworks
-
-- [React](./react.md): Oxlint or ESLint, shadcn/ui or your own components.
-- [Vue](./vue.md): ESLint with `vue-eslint-parser`, and what Oxlint can and cannot read.
-- [Svelte](./svelte.md): ESLint with `svelte-eslint-parser`, and what Oxlint can and cannot read.
 - [Solid](./solid.md): Solid 2.0 JSX, `class` objects and arrays, `props.class` wrappers.
 
 ## Guides

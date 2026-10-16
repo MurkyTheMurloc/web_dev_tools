@@ -472,7 +472,7 @@ export function tailwindEntryFor(fromFile: string) {
     `components.json sets tailwind.css to ${relativeTo(project.root, file)}, which does not import Tailwind. ${
       discovered
         ? `Using ${relativeTo(project.root, discovered)} to read the classes Tailwind knows until the path is fixed.`
-        : "No stylesheet importing Tailwind was found under the project, so no-unknown-classes is using the grammar bundled with @shadcn/lint until the path is fixed."
+        : "No stylesheet importing Tailwind was found under the project, so no-unknown-classes is using the grammar bundled with @murky-web/shadcn-lint until the path is fixed."
     }`
   )
   return discovered

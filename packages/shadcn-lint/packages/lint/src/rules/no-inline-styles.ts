@@ -279,7 +279,7 @@ export const noInlineStyles = {
     docs: {
       description:
         "Disallow inline style attributes, except CSS custom properties.",
-      url: "https://github.com/shadcn-ui/lint/blob/main/docs/rules/no-inline-styles.md",
+      url: "https://github.com/MurkyTheMurloc/web_dev_tools/blob/main/packages/shadcn-lint/docs/rules/no-inline-styles.md",
     },
     schema: [
       {

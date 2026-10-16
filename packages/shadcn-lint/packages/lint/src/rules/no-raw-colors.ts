@@ -167,7 +167,7 @@ export const noRawColors = {
     docs: {
       description:
         "Require theme tokens for color utilities instead of the raw Tailwind palette.",
-      url: "https://github.com/shadcn-ui/lint/blob/main/docs/rules/no-raw-colors.md",
+      url: "https://github.com/MurkyTheMurloc/web_dev_tools/blob/main/packages/shadcn-lint/docs/rules/no-raw-colors.md",
     },
     schema: [
       {

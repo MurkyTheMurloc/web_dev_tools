@@ -1,35 +1,32 @@
 # Solid
 
-`@shadcn/lint` reads Solid 2.0 JSX under Oxlint and ESLint, with the same
-setup as [React](./react.md). Solid 2.0 changes three things the linter
-has to know about:
+`@murky-web/shadcn-lint` reads Solid 2.0 JSX under Oxlint; setup is in the
+[README](../README.md#install). Solid 2.0 changes three things the linter knows about:
 
-- `classList` is gone. `class` takes a string, an object (keys are
-  classes, values are conditions) or an array of both.
-- Components receive their classes as `props.class` and do not
-  destructure props.
+- `classList` is gone. `class` takes a string, an object (keys are classes, values are
+  conditions) or an array, or both.
+- Components receive classes in `props.class` and do not destructure props.
 - `mergeProps` and `splitProps` are now `merge` and `omit`.
 
 ## What is read
 
-| Markup                                          | Read as                                          |
+| Markup | Read as |
 | ----------------------------------------------- | ------------------------------------------------ |
-| `class="p-4"`                                   | a static class string                            |
-| `class={{ "bg-primary": active() }}`            | an object, keys as classes, values ignored       |
-| `class={["p-4", { "mt-2": open() }, [nested]]}` | an array, nested arrays and objects too          |
-| `class={cn("p-4", props.class)}`                | a helper call, the received class accepted       |
-| `class={{ [name()]: true }}`                    | unreadable, reported by `require-static-classes` |
+| `class="p-4"` | a static class string |
+| `class={{ "bg-primary": active() }}` | an object, keys are classes, values are ignored |
+| `class={["p-4", { "mt-2": open() }, [nested]]}` | an array, nested arrays and objects too |
+| `class={cn("p-4", props.class)}` | a helper call, the received class is accepted |
+| `class={{ [name()]: true }}` | unreadable, reported by `require-static-classes` |
 
-An object on `class` is read as clsx reads it in every JSX file, not only
-in Solid files: React has no `class` prop an object could mean anything
-else on. `className`, `classNames` and other class-like props keep reading
-an object as a map of slots to classes, as before.
+An object on `class` is read the way clsx reads it: keys are classes. Other class-like
+props (`containerClass`, `classes`) read an object as a map of slots to classes, by its
+values.
 
 ## Wrappers
 
-A component outside the ui directory that forwards its received class to
-a design-system component is a wrapper, so `no-restyle` checks classes
-written on it against the component it wraps:
+A component outside the ui directory that forwards its received class to a design-system
+component is a wrapper, so `no-restyle` checks classes written on it against the
+component it wraps:
 
 ```tsx
 import type { ComponentProps } from "@solidjs/web"
@@ -45,24 +42,20 @@ export const SaveButton = (props: ComponentProps<typeof Button>) => {
 
 ```text
 "bg-primary" is not allowed on <SaveButton>: <SaveButton> forwards
-className to <Button>, which owns its color.
+class to <Button>, which owns its color.
 ```
 
-Forwarding is found through `props.class` in `class` (string, `cn()`,
-array or object), through a spread of `props`, of `omit(props, ...)`
-when `"class"` is not omitted, and of `merge(..., props)` when no later
-source sets `class`. A `merge` default for `class` is checked where it
-is written.
+Forwarding is found through `props.class` in `class` (string, `cn()`, array or object),
+through a spread of `props`, through `omit(props, ...)` when `"class"` is not omitted,
+and through `merge(..., props)` when no later source sets `class`. A `merge` default for
+`class` is checked where it is written.
 
 ## Limits
 
-- The `class` prop and `merge`/`omit` are recognized only in a file that
-  imports from `solid-js` or `@solidjs/*`. A type import such as
-  `import type { ComponentProps } from "@solidjs/web"` is enough. In other
-  JSX files `props.class` stays what it was before: an unreadable value.
-- `merge` and `omit` are recognized by their import, under any local
-  name. Solid 1.x `mergeProps` and `splitProps` are not followed.
-- Destructured props (`({ class: cls }) => ...`) are followed like
-  React's, though Solid warns about them.
-- Messages say `class`, the prop Solid components receive. The
-  `{{className}}` placeholder keeps its name.
+- `merge` and `omit` are recognized by import from `solid-js` or `@solidjs/*`, under any
+  local name. Solid 1.x `mergeProps` and `splitProps` are not followed.
+- Destructured props (`({ class: cls }) => ...`) are followed too, though Solid warns
+  about them. A props object handed to another function keeps the forwarding: Solid's
+  props are read-only.
+- Messages say `class`, the prop Solid components receive. The placeholder for the
+  offending class in custom messages is `{{class}}`.

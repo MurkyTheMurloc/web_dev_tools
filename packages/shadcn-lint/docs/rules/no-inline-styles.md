@@ -20,8 +20,8 @@ all JSX elements and does not need component import settings.
 
 ```tsx
 // Allowed.
-<div className="text-primary">Account settings</div>
-<div className="text-(--label-color)" style={{ "--label-color": "var(--color-primary)" }} />
+<div class="text-primary">Account settings</div>
+<div class="text-(--label-color)" style={{ "--label-color": "var(--color-primary)" }} />
 
 // Reported: an ordinary inline property.
 <div style={{ color: "var(--color-primary)" }}>Account settings</div>
@@ -30,17 +30,19 @@ all JSX elements and does not need component import settings.
 <div style={{ "--label-color": "#ec4899" }}>Account settings</div>
 ```
 
+Solid also accepts CSS text, `style="color: red"`; it is judged the same way.
+
 The rule reports each disallowed property separately. A custom property
 can carry a dynamic value:
 
 ```tsx
-import * as React from "react"
+import type { JSX } from "solid-js"
 
 export function Panel({ width }: { width: number }) {
   return (
     <div
-      className="w-(--panel-width)"
-      style={{ "--panel-width": `${width}px` } as React.CSSProperties}
+      class="w-(--panel-width)"
+      style={{ "--panel-width": `${width}px` } as JSX.CSSProperties}
     />
   )
 }
@@ -76,10 +78,12 @@ import { panelStyle } from "./styles"
 A component can forward the `style` prop it received:
 
 ```tsx
-import * as React from "react"
+import type { ComponentProps } from "solid-js"
+import { omit } from "solid-js"
 
-export function Panel({ style, ...props }: React.ComponentProps<"div">) {
-  return <div style={style} {...props} />
+export function Panel(props: ComponentProps<"div">) {
+  const rest = omit(props, "style")
+  return <div style={props.style} {...rest} />
 }
 ```
 

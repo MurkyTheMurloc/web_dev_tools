@@ -1,6 +1,6 @@
 # no-restyle
 
-Use component variants for appearance and `className` for the changes your
+Use component variants for appearance and `class` for the changes your
 policy allows. The error lists the component's variants or sizes and the
 file that defines them.
 
@@ -13,7 +13,7 @@ Start with layout classes allowed:
 ```
 
 Turn this rule off inside your component directory so components can
-style their own internals. See [Get started](../../README.md#get-started).
+style their own internals. See [Get started](../../README.md#install).
 
 ## Examples
 
@@ -31,11 +31,11 @@ changes are reported:
 
 ```tsx
 // Allowed.
-<Button className="mt-4 w-full">Save changes</Button>
+<Button class="mt-4 w-full">Save changes</Button>
 <Button size="lg" variant="destructive">Delete account</Button>
 
 // Reported.
-<Button className="p-4 bg-pink-500 rounded-full">Save changes</Button>
+<Button class="p-4 bg-pink-500 rounded-full">Save changes</Button>
 ```
 
 Spacing errors suggest sizes defined by the component. Other appearance
@@ -58,11 +58,11 @@ CardTitle and spacing on CardContent:
 
 ```tsx
 // Allowed.
-<CardTitle className="text-sm">Account settings</CardTitle>
-<CardContent className="p-4">Profile details</CardContent>
+<CardTitle class="text-sm">Account settings</CardTitle>
+<CardContent class="p-4">Profile details</CardContent>
 
 // Reported: color is not allowed by either contract.
-<CardTitle className="text-pink-500">Account settings</CardTitle>
+<CardTitle class="text-pink-500">Account settings</CardTitle>
 ```
 
 A contract replaces the keys it writes and inherits the rest from the
@@ -83,10 +83,10 @@ Use `deny` to remove classes from the allowed set:
 
 ```tsx
 // Allowed.
-<Button className="mt-4">Save changes</Button>
+<Button class="mt-4">Save changes</Button>
 
 // Reported.
-<Button className="w-full">Save changes</Button>
+<Button class="w-full">Save changes</Button>
 ```
 
 With `deny` alone, every class except the denied classes is allowed.
@@ -107,7 +107,7 @@ Use one message for every error, or write a message for each category:
 }]
 ```
 
-For `<Button className="p-4">`, when Button defines `sm` and `lg` sizes:
+For `<Button class="p-4">`, when Button defines `sm` and `lg` sizes:
 
 ```text
 Use a Button size: sm, lg.
@@ -122,11 +122,8 @@ See [message placeholders](../rules.md#your-own-words).
 ### Wrappers and variables
 
 The rule follows imports, re-exports, and wrappers that forward
-`className`, including a Base UI `render` prop: the classes on
-`<DialogTrigger render={<Button />} className="...">` belong to Button. A
-plain element such as `render={<a />}`, or a `render` value the rule
-cannot read, leaves them on the component itself. A wrapper
-uses the underlying component's contract and variant suggestions.
+`class`. A wrapper uses the underlying component's contract and variant
+suggestions.
 
 It also reads same-file values and known class helpers:
 
@@ -135,7 +132,7 @@ import { cn } from "@/lib/utils"
 
 export function SaveButton({ active }: { active: boolean }) {
   return (
-    <Button className={cn("w-full", active && "bg-pink-500")}>
+    <Button class={cn("w-full", active && "bg-pink-500")}>
       Save changes
     </Button>
   )

@@ -21,13 +21,13 @@ Given a theme that declares `primary` and `muted-foreground`:
 
 ```tsx
 // Allowed.
-<div className="bg-primary text-muted-foreground">Account settings</div>
+<div class="bg-primary text-muted-foreground">Account settings</div>
 
 // Reported: raw palette color.
-<div className="bg-pink-500">Account settings</div>
+<div class="bg-pink-500">Account settings</div>
 
 // Reported: the theme has no highlight token.
-<div className="bg-highlight">Account settings</div>
+<div class="bg-highlight">Account settings</div>
 ```
 
 The error lists theme tokens, suggests a nearby color or spelling
@@ -60,7 +60,7 @@ Use `currentColor` with a text color class, or reference a theme variable:
 
 ```tsx
 // Allowed.
-<svg className="text-primary" fill="currentColor" />
+<svg class="text-primary" fill="currentColor" />
 <svg fill="var(--color-primary)" />
 
 // Reported.
@@ -86,13 +86,13 @@ Use class names or patterns for colors your design system permits:
 
 ```tsx
 // Allowed by the exception.
-<div className="text-amber-500">Pending</div>
+<div class="text-amber-500">Pending</div>
 
 // Reported by deny.
-<div className="bg-amber-500">Pending</div>
+<div class="bg-amber-500">Pending</div>
 
 // Reported: no exception allows pink.
-<div className="bg-pink-500">Pending</div>
+<div class="bg-pink-500">Pending</div>
 ```
 
 Use a full class pattern such as `*-amber-500`, not a color name such
@@ -115,10 +115,10 @@ An exception can apply to one component:
 import { Badge } from "@/components/ui/badge"
 
 // Allowed by the contract.
-<Badge className="bg-amber-500">Pending</Badge>
+<Badge class="bg-amber-500">Pending</Badge>
 
 // Reported: the exception applies only to Badge.
-<div className="bg-amber-500">Pending</div>
+<div class="bg-amber-500">Pending</div>
 ```
 
 This exception does not allow the class through `no-restyle`. Each rule
@@ -128,7 +128,7 @@ has its own policy. See [contracts](../rules.md#contracts).
 
 ```js
 "shadcn/no-raw-colors": ["error", {
-  message: 'Use a theme color for "{{className}}". See {{file}}.',
+  message: 'Use a theme color for "{{class}}". See {{file}}.',
 }]
 ```
 

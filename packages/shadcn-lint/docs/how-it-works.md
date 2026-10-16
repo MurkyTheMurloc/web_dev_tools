@@ -21,12 +21,11 @@ import { Action } from "@/components/widgets"
 
 export function Page() {
   // no-restyle reports a color override on Button.
-  return <Action className="bg-primary">Save</Action>
+  return <Action class="bg-primary">Save</Action>
 }
 ```
 
-A default export counts under the component's own name, including one
-wrapped as `export default memo(Button)` or `forwardRef`.
+A default export counts under the component's own name.
 
 A component from another package does not become a design-system
 component just because it has the same name. Name matching is a fallback
@@ -121,11 +120,6 @@ the same file. Spacing findings suggest values from the `size` axis.
 The file can come from the UI directory or a resolved import, including
 a barrel. Variant suggestions work without `components.json`.
 
-In a `.svelte` or `.vue` component the scripts are read, including
-Svelte's `<script module>`. When the component's own file has no
-definition, the barrel beside it is read for the one named after the
-component: `buttonVariants` in `button/index.ts` for `Button.vue`.
-
 ## Class categories
 
 The linter uses `cn`'s class groups to distinguish classes such as
@@ -165,7 +159,7 @@ function SaveAction({ active }: { active: boolean }) {
   const tone = active ? "bg-primary" : "bg-destructive"
 
   // no-restyle checks both colors on Button.
-  return <Button className={tone}>Save</Button>
+  return <Button class={tone}>Save</Button>
 }
 ```
 
@@ -180,75 +174,41 @@ a recognized component:
 
 ```tsx
 // require-static-classes reports a value it cannot check.
-<Button className={props.tone}>Save</Button>
+<Button class={props.tone}>Save</Button>
 ```
 
 ## Wrappers
 
-A wrapper that forwards `className` to a design-system component gets
+A wrapper that forwards `class` to a design-system component gets
 that component's contract and variant suggestions:
 
 ```tsx
-import * as React from "react"
+import type { ComponentProps } from "@solidjs/web"
+import { omit } from "solid-js"
 import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
 
-export function SaveButton({
-  className,
-  ...props
-}: React.ComponentProps<typeof Button>) {
-  return <Button className={cn("w-full", className)} {...props} />
+export function SaveButton(props: ComponentProps<typeof Button>) {
+  const rest = omit(props, "class")
+  return <Button class={cn("w-full", props.class)} {...rest} />
 }
 ```
 
 ```tsx
 // no-restyle reports a color override on Button through SaveButton.
-<SaveButton className="bg-primary">Save</SaveButton>
+<SaveButton class="bg-primary">Save</SaveButton>
 ```
 
 Wrapper chains can cross files and use namespace imports such as
 `<W.SaveButton>`. They are separate from the one-hop limit on class
 values. A props spread counts as forwarding only if it still contains
-`className`. If several targets qualify, the first supplies the contract.
-
-A `render` prop forwards the same way. Base UI renders another component
-in a trigger's place, and the `className` goes with it:
-
-```tsx
-// no-restyle reports a color override on Button through DialogTrigger.
-<DialogTrigger render={<Button />} className="bg-primary">
-  Open
-</DialogTrigger>
-```
-
-The suggestion lists Button's variants, since Button is what wears the
-classes. `render={(props) => <Button {...props} />}` reads the same,
-because the spread is what carries `className` across. A plain element,
-such as `render={<a />}`, still wears the component's own classes, so
-the component's contract decides, whether the classes are written on
-the component or on the element:
-
-```tsx
-// no-restyle reports a padding override on Button, both ways.
-<Button className="p-4" render={<a href="/" />} />
-<Button render={<a href="/" className="p-4" />} />
-```
-
-When the value cannot be read, a variable or a function that renders
-without spreading its props, the classes stay on the trigger and its
-own contract decides.
-
-Svelte and Vue components forward `class` the same way. See
-[Vue](./vue.md#what-is-read) and [Svelte](./svelte.md#what-is-read).
+`class`. If several targets qualify, the first supplies the contract.
 
 ## Where it looks
 
-- `className` and similar props, including `wrapperClassName`,
-  `classNames={{ day: "..." }}`, and Astro's `class:list` with a string,
+- `class` and similar props, including `containerClass`,
+  `classes={{ day: "..." }}`, and Astro's `class:list` with a string,
   array, object, or Set.
-- Svelte and Vue templates under ESLint: `class`, `:class`, `class:name`,
-  `style`, `:style`, `style:property`, and spreads. See
-  [Vue](./vue.md) and [Svelte](./svelte.md).
 - Calls to `cn`, `cx`, `clsx`, `cva`, `tv`, `twMerge`, `twJoin`, and
   `classNames`, including calls outside JSX. Add functions through
   `mergeFunctions` and `variantFunctions` in shared settings or rule options.
@@ -256,7 +216,7 @@ Svelte and Vue components forward `class` the same way. See
 - Same-file variables and object values, one hop deep.
 - Readable objects spread onto elements, including nested spreads and
   computed keys.
-- `style` attributes, `<style>` elements, and SVG color attributes:
+- `style` attributes (an object, or a CSS string, which Solid accepts), `<style>` elements, and SVG color attributes:
   `fill`, `stroke`, `color`, `stopColor`, `floodColor`, and `lightingColor`.
 - Every string literal when `scanAllStrings` is enabled on
   `no-raw-colors` or `no-arbitrary-values`.
@@ -266,25 +226,20 @@ Svelte and Vue components forward `class` the same way. See
 A clean lint result does not mean every styling path was checked:
 
 - **Parent selectors.** `no-restyle` does not trace
-  `<div className="[&_button]:bg-primary">` to a child component. The
+  `<div class="[&_button]:bg-primary">` to a child component. The
   same applies to `*:` and `**:`. Token rules still check these classes.
 - **Unknown props objects.** `<Button {...props}>` is left alone if the
   object cannot be read. Readable objects are checked, and
   `require-static-classes` reports unreadable class values it can identify.
 - **Imported values.** Class values are followed within a file, not
-  across imports. Wrapper tracing only follows `className` forwarding.
+  across imports. Wrapper tracing only follows `class` forwarding.
 - **Plain CSS.** Stylesheet declarations and `@apply` are outside these
-  rules. Use a CSS linter for them. That includes `<style>` blocks in
-  `.svelte` and `.vue` files.
-- **Templates under Oxlint.** Oxlint gives a plugin the `<script>` blocks
-  of `.svelte` and `.vue` files and no template. The run warns once. Use
-  ESLint for those files.
+  rules. Use a CSS linter for them.
 - **Locally rebuilt components.** Token rules still apply, but
   `no-restyle` needs a recognized design-system component.
 - **New tokens and disabled rules.** New `@theme` declarations are
-  allowed by design, and `eslint-disable` comments can bypass rules.
-  Review those changes; you can also require descriptions on disable
-  comments and report unused directives.
+  allowed by design, and `oxlint-disable` comments can bypass rules.
+  Review those changes.
 
 To remove Tailwind's default palette entirely, use
 `@theme { --color-*: initial; }`. Keep `--spacing` if you want to retain
@@ -300,7 +255,3 @@ If results stay unchanged after an edit, see
 The linter caches project analysis across files. Performance depends on
 the enabled rules, project size, imports, and number of diagnostics.
 `no-unknown-classes` also loads Tailwind for each theme it checks.
-
-The repository includes benchmarks for the pinned registry and generated
-monorepos. See [Measuring](../CONTRIBUTING.md#measuring) to compare cold and
-warm runs or measure individual rules.

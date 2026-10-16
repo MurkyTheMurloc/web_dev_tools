@@ -3,26 +3,23 @@
 Start with one rule. Fix the common violations, then add more checks.
 You can set each rule's severity and choose which files it checks.
 
-Use the [README setup](../README.md#get-started) first. The examples below
-use ESLint; keep its plugin and parser configuration. Oxlint supports the
-same rule settings and file overrides.
+Use the [README setup](../README.md#install) first. The examples below are
+`.oxlintrc.jsonc` snippets.
 
 ## Start with warnings
 
 Set `no-restyle` to `warn` in the main `rules` object:
 
-```js
-"shadcn/no-restyle": ["warn", { allow: ["layout"] }]
+```jsonc
+"shadcn/no-restyle": ["warn", { "allow": ["layout"] }]
 ```
 
 This keeps layout classes allowed, as in the README. Keep the
 component-directory override, then run:
 
 ```bash
-npx eslint .
+bunx oxlint
 ```
-
-With Oxlint, run `npx oxlint`.
 
 Look for repeated errors, such as padding on buttons. Fix those patterns
 before working through individual files.
@@ -35,41 +32,35 @@ has 287 warnings:
 ```json
 {
   "scripts": {
-    "lint": "eslint . --max-warnings 287"
+    "lint": "oxlint --max-warnings 287"
   }
 }
 ```
 
 Run this script in CI. It fails when the total increases. Lower the cap
-as you fix findings. Oxlint supports the same flag.
-
-For a baseline per file and rule, ESLint also has
-[bulk suppressions](https://eslint.org/docs/latest/use/suppressions).
-They apply to errors, not warnings. `eslint --suppress-all` records
-existing violations; `eslint --prune-suppressions` removes resolved entries.
+as you fix findings.
 
 ## Keep new code strict
 
 You can enforce a rule in new code while leaving legacy code at `warn`.
-Add these objects after the main ESLint config object and before the
-component-directory override:
+Add these objects to `overrides`, before the component-directory override:
 
-```js
+```jsonc
 {
-  files: ["app/**", "features/**"],
-  rules: { "shadcn/no-restyle": ["error", { allow: ["layout"] }] },
+  "files": ["app/**", "features/**"],
+  "rules": { "shadcn/no-restyle": ["error", { "allow": ["layout"] }] }
 },
 {
-  files: ["legacy/**"],
-  rules: { "shadcn/no-restyle": ["warn", { allow: ["layout"] }] },
-},
+  "files": ["legacy/**"],
+  "rules": { "shadcn/no-restyle": ["warn", { "allow": ["layout"] }] }
+}
 ```
 
 To exempt a folder, turn off the specific rule there. Other lint checks
 still run:
 
-```js
-{ files: ["marketing/**"], rules: { "shadcn/no-restyle": "off" } }
+```jsonc
+{ "files": ["marketing/**"], "rules": { "shadcn/no-restyle": "off" } }
 ```
 
 ## Fix findings
@@ -81,17 +72,17 @@ still run:
 
 For example, a title can allow typography through a contract:
 
-```js
+```jsonc
 "shadcn/no-restyle": ["warn", {
-  allow: ["layout"],
-  contracts: [
-    { pattern: "^CardTitle$", allow: ["layout", "typography"] },
-  ],
+  "allow": ["layout"],
+  "contracts": [
+    { "pattern": "^CardTitle$", "allow": ["layout", "typography"] }
+  ]
 }]
 ```
 
 ```tsx
-<CardTitle className="text-sm">Account settings</CardTitle>
+<CardTitle class="text-sm">Account settings</CardTitle>
 ```
 
 A contract overrides the keys it writes and inherits the rest, so a
@@ -105,27 +96,27 @@ When a rule is clean, change it to `error`. Add other rules at `warn`
 first, then promote each one as you resolve its findings. A configuration
 with all five core rules enabled looks like this:
 
-```js
-rules: {
-  "shadcn/no-restyle": ["error", { allow: ["layout"] }],
+```jsonc
+"rules": {
+  "shadcn/no-restyle": ["error", { "allow": ["layout"] }],
   "shadcn/no-raw-colors": "error",
-  "shadcn/no-arbitrary-values": ["error", { allow: ["layout"] }],
+  "shadcn/no-arbitrary-values": ["error", { "allow": ["layout"] }],
   "shadcn/no-inline-styles": "error",
-  "shadcn/require-static-classes": "error",
+  "shadcn/require-static-classes": "error"
 }
 ```
 
 Update the component-directory override too. Components own their
 appearance and may need structural values such as `ring-[3px]`:
 
-```js
+```jsonc
 {
-  files: ["components/ui/**"],
-  rules: {
+  "files": ["components/ui/**"],
+  "rules": {
     "shadcn/no-restyle": "off",
     "shadcn/no-arbitrary-values": "off",
-    "shadcn/require-static-classes": "off",
-  },
+    "shadcn/require-static-classes": "off"
+  }
 }
 ```
 
@@ -141,7 +132,7 @@ entry. Remove `--max-warnings` once all enabled rules are errors.
 Add your lint command to `package.json`, then put this in `AGENTS.md`:
 
 ```md
-After making changes, run `npm run lint` and fix all errors.
+After making changes, run `bun run lint` and fix all errors.
 ```
 
 Review new tokens, variants, and exceptions in the resulting changes.
@@ -151,10 +142,8 @@ Review new tokens, variants, and exceptions in the resulting changes.
 Document an intentional exception next to the code:
 
 ```tsx
-// eslint-disable-next-line shadcn/no-raw-colors -- Partner brand color, approved by design.
-<span className="bg-amber-400">Sponsor</span>
+// oxlint-disable-next-line shadcn/no-raw-colors -- Partner brand color, approved by design.
+<span class="bg-amber-400">Sponsor</span>
 ```
 
-`rg "eslint-disable.*shadcn/"` finds these comments. You can require a
-reason with `require-description` from
-`@eslint-community/eslint-plugin-eslint-comments`.
+`rg "oxlint-disable.*shadcn/"` finds these comments.

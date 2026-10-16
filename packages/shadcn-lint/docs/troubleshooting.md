@@ -2,15 +2,13 @@
 
 ## Lint results did not change after an edit
 
-Run lint without ESLint's `--cache` after changing a component, variant,
-theme, or dependency. That cache can skip unchanged files that use the
-changed code, leaving both errors and clean results stale.
+Lint results for a file depend on the components, variants, and theme it uses.
+After changing one of them, lint the whole project again instead of only the
+changed file, and do not reuse results from an earlier run.
 
 ```bash
-npx eslint .
+bunx oxlint
 ```
-
-If you lint through a script, check that the script does not add `--cache`.
 
 For a long-running editor integration, restart its lint process if results
 still look stale. The linter keeps project information in memory and checks
@@ -45,26 +43,6 @@ This recognizes `@/ds` and `@/ds/button`. Also check that the file is
 included in your lint command and that a config override has not disabled
 the rule for it. See [Settings](../README.md#settings) and
 [component discovery](./how-it-works.md#your-components-from-imports).
-
-## A .svelte or .vue file reports nothing
-
-Templates are read under ESLint with `svelte-eslint-parser` or
-`vue-eslint-parser`. Check that a config block matches the file and sets
-the parser:
-
-```js
-{
-  files: ["**/*.svelte"],
-  languageOptions: {
-    parser: svelteParser,
-    parserOptions: { parser: tsParser },
-  },
-  plugins: { shadcn },
-}
-```
-
-Under Oxlint only the `<script>` blocks are linted, and the run prints a
-warning that says so. See [Vue](./vue.md) and [Svelte](./svelte.md).
 
 ## The linter cannot load the theme
 

@@ -24,11 +24,11 @@ With the setup above:
 
 ```tsx
 // Allowed.
-<div className="p-4 rounded-lg bg-primary">Account settings</div>
-<div className="w-[320px]">Sidebar</div>
+<div class="p-4 rounded-lg bg-primary">Account settings</div>
+<div class="w-[320px]">Sidebar</div>
 
 // Reported.
-<div className="p-[13px] rounded-[10px] bg-[#333]">Account settings</div>
+<div class="p-[13px] rounded-[10px] bg-[#333]">Account settings</div>
 ```
 
 The rule offers editor suggestions when it finds an exact scale value
@@ -54,7 +54,7 @@ CSS variables. Neither is an arbitrary value:
 
 ```tsx
 // Allowed.
-<div className="data-[state=open]:flex [&_svg]:size-4 bg-(--brand)" />
+<div class="data-[state=open]:flex [&_svg]:size-4 bg-(--brand)" />
 ```
 
 An arbitrary property such as `[padding:13px]` is an arbitrary value and
@@ -72,10 +72,10 @@ Use an exact class when the design needs a specific value:
 
 ```tsx
 // Allowed, including variant forms of the same class.
-<div className="p-[13px] md:p-[13px]" />
+<div class="p-[13px] md:p-[13px]" />
 
 // Reported.
-<div className="p-[15px]" />
+<div class="p-[15px]" />
 ```
 
 You can also allow a category or class group. `rounded` covers the plain
@@ -99,11 +99,11 @@ import { Button } from "@/components/ui/button"
 import { Sidebar } from "@/components/ui/sidebar"
 
 // Allowed by the contract.
-<Sidebar className="w-[320px]" />
+<Sidebar class="w-[320px]" />
 
 // Reported.
-<Button className="w-[320px]">Save changes</Button>
-<Sidebar className="p-[13px]" />
+<Button class="w-[320px]">Save changes</Button>
+<Sidebar class="p-[13px]" />
 ```
 
 Adding `allow: ["layout"]` at the top level would also allow the Button's
@@ -115,7 +115,7 @@ contract inheritance.
 ```js
 "shadcn/no-arbitrary-values": ["error", {
   allow: ["layout"],
-  message: 'Use {{suggestions|a theme token or scale value}} instead of "{{className}}".',
+  message: 'Use {{suggestions|a theme token or scale value}} instead of "{{class}}".',
 }]
 ```
 

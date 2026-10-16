@@ -41,7 +41,7 @@ export const noUnknownClasses = {
     docs: {
       description:
         "Disallow classes Tailwind does not know; no CSS is generated for them.",
-      url: "https://github.com/shadcn-ui/lint/blob/main/docs/rules/no-unknown-classes.md",
+      url: "https://github.com/MurkyTheMurloc/web_dev_tools/blob/main/packages/shadcn-lint/docs/rules/no-unknown-classes.md",
     },
     schema: [
       {

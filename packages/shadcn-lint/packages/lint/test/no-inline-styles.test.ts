@@ -14,6 +14,8 @@ describe("no-inline-styles", () => {
           code: `export const A = ({ w }: { w: string }) => <div style={{ "--sidebar-width": w }} />`,
         },
         { code: `export const A = () => <div style={{ "--gap": "8px" }} />` },
+        // Solid takes CSS text as a style too; a custom property passes.
+        { code: `export const A = () => <div style="--gap: 8px" />` },
         // A forwarded style prop, with or without the cast.
         {
           code: `export const A = ({ style }: { style?: JSX.CSSProperties }) => <div style={{ "--w": 4, ...style } as JSX.CSSProperties} />`,
@@ -24,6 +26,15 @@ describe("no-inline-styles", () => {
         },
       ],
       invalid: [
+        // Solid takes CSS text as a style, so it is judged like the object.
+        {
+          code: `export const A = () => <div style="color: red" />`,
+          errors: [{ messageId: "inlineStyle" }],
+        },
+        {
+          code: `export const A = () => <div style="--x: #ff00aa" />`,
+          errors: [{ messageId: "customPropColor" }],
+        },
         // A contract's own words reach a style the collector cannot
         // read, the same as they reach a property finding.
         {

@@ -34,9 +34,9 @@ import { cn } from "@/lib/utils"
 export function SaveButton({ wide }: { wide: boolean }) {
   return (
     <>
-      <Button className="mt-4">Save changes</Button>
-      <Button className={wide ? "w-full" : "w-auto"}>Save changes</Button>
-      <Button className={cn("mt-4", wide && "w-full")}>Save changes</Button>
+      <Button class="mt-4">Save changes</Button>
+      <Button class={wide ? "w-full" : "w-auto"}>Save changes</Button>
+      <Button class={cn("mt-4", wide && "w-full")}>Save changes</Button>
     </>
   )
 }
@@ -46,12 +46,12 @@ Building a class name from a prop is reported:
 
 ```tsx
 export function SaveButton({ color }: { color: string }) {
-  return <Button className={`bg-${color}`}>Save changes</Button>
+  return <Button class={`bg-${color}`}>Save changes</Button>
 }
 ```
 
 ```text
-Dynamically built className on <Button> cannot be checked. Use static class strings.
+Dynamically built class on <Button> cannot be checked. Use static class strings.
 ```
 
 ### Variables and functions
@@ -65,29 +65,29 @@ import { buttonClasses } from "./styles"
 const layout = "mt-4 w-full"
 
 // Allowed.
-<Button className={layout}>Save changes</Button>
+<Button class={layout}>Save changes</Button>
 
 // Reported.
-<Button className={buttonClasses}>Save changes</Button>
-<Button className={getClasses()}>Save changes</Button>
+<Button class={buttonClasses}>Save changes</Button>
+<Button class={getClasses()}>Save changes</Button>
 ```
 
 In `cn("mt-4", extra)`, only the unreadable `extra` value is reported.
 Other rules still check the known classes.
 
-### Forwarding the received className
+### Forwarding the received class
 
-A wrapper can forward its received `className`:
+A wrapper can forward its received `class`:
 
 ```tsx
-import * as React from "react"
+import type { ComponentProps } from "@solidjs/web"
+import { omit } from "solid-js"
+import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
 
-export function SaveButton({
-  className,
-  ...props
-}: React.ComponentProps<typeof Button>) {
-  return <Button className={cn("w-full", className)} {...props} />
+export function SaveButton(props: ComponentProps<typeof Button>) {
+  const rest = omit(props, "class")
+  return <Button class={cn("w-full", props.class)} {...rest} />
 }
 ```
 
@@ -105,7 +105,7 @@ import { cva } from "class-variance-authority"
 const buttonVariants = cva("w-full")
 
 // Reported by require-static-classes at this call site.
-<Button className={buttonVariants()}>Save changes</Button>
+<Button class={buttonVariants()}>Save changes</Button>
 ```
 
 This is why the rule is disabled inside component implementations.
@@ -125,7 +125,7 @@ settings: {
 
 ```tsx
 // Allowed with the setting above.
-<Button className={mergeClasses("mt-4", "w-full")}>Save changes</Button>
+<Button class={mergeClasses("mt-4", "w-full")}>Save changes</Button>
 ```
 
 A dotted name matches a method call by its exact path. Effect's `Option`
@@ -137,11 +137,11 @@ mergeFunctions: ["Option.some", "Option.none", "Option.fromNullishOr"]
 
 ```tsx
 // Allowed: the classes are written out, and none() has none.
-<OptionButton className={Option.some("w-full")} />
-<OptionButton className={Option.none()} />
+<OptionButton class={Option.some("w-full")} />
+<OptionButton class={Option.none()} />
 
 // Still dynamic: the argument is not static.
-<OptionButton className={Option.some(load())} />
+<OptionButton class={Option.some(load())} />
 ```
 
 The linter reads the arguments; it does not execute the helper. Only
@@ -171,7 +171,7 @@ can be read; the other rules decide whether that value is allowed.
 
 - Only recognized components and their forwarding wrappers are checked.
   Plain elements are outside this rule.
-- Forwarding a component's received `className` is allowed. Its authored
+- Forwarding a component's received `class` is allowed. Its authored
   defaults and local classes are still checked.
 
 See [wrappers](../how-it-works.md#wrappers) and

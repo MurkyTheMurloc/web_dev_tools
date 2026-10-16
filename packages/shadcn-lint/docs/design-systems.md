@@ -3,7 +3,7 @@
 Use variants for appearances you want to reuse. Use contracts to define
 which styling changes a page can make.
 
-Start with the [setup](../README.md#get-started). For an existing
+Start with the [setup](../README.md#install). For an existing
 codebase, follow [Adding linting to an existing project](./adoption.md).
 
 ## Variants
@@ -71,12 +71,12 @@ With these contracts:
 
 ```tsx
 // Passes.
-<CardTitle className="text-sm">Account settings</CardTitle>
-<Avatar className="size-8" />
+<CardTitle class="text-sm">Account settings</CardTitle>
+<Avatar class="size-8" />
 
 // Reports a contract violation.
-<Avatar className="w-full" />
-<CardContent className="px-0" />
+<Avatar class="w-full" />
+<CardContent class="px-0" />
 ```
 
 Add spacing allowances for containers whose padding and gap belong to
@@ -108,7 +108,7 @@ one message for all findings, or a different message for each category:
 }
 ```
 
-For `<Button className="w-full">`, the message is:
+For `<Button class="w-full">`, the message is:
 
 ```txt
 Set width on the parent container.
@@ -124,8 +124,8 @@ for example `"See docs/design-rules.md for approved exceptions."`. See
 
 ## Share a policy
 
-ESLint and Oxlint can read the same rule settings. Put `rules` and
-`overrides` in `design-system.lint.json`:
+Share rule settings between projects. Put `rules` and `overrides` in
+`design-system.lint.json`:
 
 ```json
 {
@@ -143,21 +143,10 @@ In `.oxlintrc.json`:
 
 ```json
 {
-  "jsPlugins": ["@shadcn/lint"],
+  "jsPlugins": ["@murky-web/shadcn-lint"],
   "extends": ["./design-system.lint.json"]
 }
 ```
-
-In the [ESLint setup](../README.md#react), import the policy and use
-`policy.rules` for the main config object's rules. Replace the component
-override with `...policy.overrides`:
-
-```js
-import policy from "./design-system.lint.json" with { type: "json" }
-```
-
-The plugin requires Node.js 20.19 or later, which supports this import
-syntax.
 
 Keep Oxlint's `settings` in the root `.oxlintrc.json`; they are not inherited
 through `extends`.

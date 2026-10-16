@@ -101,7 +101,7 @@ describe("settings.shadcn.ui", () => {
       lint(NO_JSON, NO_JSON_PAGE, restyle, rules, { shadcn: { ui: 42 } })
     ).toEqual([])
     expect(warnings).toEqual([
-      "[@shadcn/lint] settings.shadcn.ui must be a string or an array of strings; it is ignored.",
+      "[@murky-web/shadcn-lint] settings.shadcn.ui must be a string or an array of strings; it is ignored.",
     ])
   })
 })

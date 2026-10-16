@@ -18,7 +18,7 @@ export const requireStaticClasses = {
     docs: {
       description:
         "Require statically analyzable class values on design-system components.",
-      url: "https://github.com/shadcn-ui/lint/blob/main/docs/rules/require-static-classes.md",
+      url: "https://github.com/MurkyTheMurloc/web_dev_tools/blob/main/packages/shadcn-lint/docs/rules/require-static-classes.md",
     },
     schema: [
       {

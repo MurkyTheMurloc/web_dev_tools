@@ -1,7 +1,6 @@
 # build output and deps
 node_modules/
 dist/
-pnpm-lock.yaml
 
 # fetched registry and eval runs
 .registry/
