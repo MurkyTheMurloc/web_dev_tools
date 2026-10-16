@@ -2,20 +2,24 @@ import { describe, expect, it } from "vitest";
 
 import { isRegExp } from "../src/type_helper.js";
 
-describe("isRegExp", () => {
+const NUM_123 = 123;
+
+const missingValue: unknown = undefined;
+
+describe(isRegExp, () => {
     it("should return true for RegExp inputs", () => {
-        expect(isRegExp(/abc/)).toBe(true);
-        expect(isRegExp(new RegExp("abc"))).toBe(true);
+        expect(isRegExp(/abc/)).toBeTruthy();
+        expect(isRegExp(/abc/u)).toBeTruthy();
     });
 
     it("should return false for non-RegExp inputs", () => {
-        expect(isRegExp("Hello")).toBe(false);
-        expect(isRegExp(123)).toBe(false);
-        expect(isRegExp({})).toBe(false);
-        expect(isRegExp([])).toBe(false);
-        expect(isRegExp(null)).toBe(false);
-        expect(isRegExp(undefined)).toBe(false);
-        expect(isRegExp(Symbol())).toBe(false);
-        expect(isRegExp(NaN)).toBe(false);
+        expect(isRegExp("Hello")).toBeFalsy();
+        expect(isRegExp(NUM_123)).toBeFalsy();
+        expect(isRegExp({})).toBeFalsy();
+        expect(isRegExp([])).toBeFalsy();
+        expect(isRegExp(null)).toBeFalsy();
+        expect(isRegExp(missingValue)).toBeFalsy();
+        expect(isRegExp(Symbol("test"))).toBeFalsy();
+        expect(isRegExp(Number.NaN)).toBeFalsy();
     });
 });

@@ -14,26 +14,42 @@ const pkg = JSON.parse(
 
 // `./globals` is declarations only: no runtime file to emit or check.
 const subpaths = Object.entries(pkg.exports).filter(
-    ([key, target]) =>
-        key !== "./package.json" &&
-        !(typeof target !== "string" && target.import === undefined && target.types?.endsWith(".d.ts")),
+    ([key, target]) => {
+        return (
+            key !== "./package.json" &&
+            !(typeof target !== "string" && target.import === undefined && target.types?.endsWith(".d.ts") === true)
+        );
+    },
 );
 
-for (const [key, target] of subpaths) {
-    const file = typeof target === "string" ? target : target.import;
-    if (file === undefined) {
-        throw new Error(`exports["${key}"] has no import condition`);
+function resolveImportTarget(
+    target: string | { import?: string; types?: string },
+): string | undefined {
+    if (typeof target === "string") {
+        return target;
     }
 
-    const resolved = path.join(packageRoot, file);
-    let source: string;
+    return target.import;
+}
+
+function readEmittedFile(resolved: string, key: string, file: string): string {
     try {
-        source = readFileSync(resolved, "utf8");
+        return readFileSync(resolved, "utf8");
     } catch {
         throw new Error(
             `exports["${key}"] points at ${file}, which the build did not emit — add it to tsdown.config.ts`,
         );
     }
+}
+
+for (const [key, target] of subpaths) {
+    const file = resolveImportTarget(target);
+    if (file === undefined) {
+        throw new Error(`exports["${key}"] has no import condition`);
+    }
+
+    const resolved = path.join(packageRoot, file);
+    const source = readEmittedFile(resolved, key, file);
 
     // An entry that emitted but exports nothing is the same bug wearing a hat.
     if (file.endsWith(".js") && source.trim() !== "" && !source.includes("export")) {

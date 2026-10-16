@@ -5,7 +5,7 @@ import { join } from "node:path";
 const smokeDir = new URL("./", import.meta.url);
 const configPath = new URL("./.oxlintrc.jsonc", smokeDir);
 const formatConfigPath = new URL(
-    "../../../config/oxc/.oxfmtrc.jsonc",
+    "../../../../config/oxc/.oxfmtrc.jsonc",
     smokeDir,
 );
 

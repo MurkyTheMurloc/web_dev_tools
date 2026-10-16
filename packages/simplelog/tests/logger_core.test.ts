@@ -13,6 +13,15 @@ import type {
     LoggerRuntime,
 } from "../src/logger_factory";
 
+const NUM_0 = 0;
+const NUM_1 = 1;
+const NUM_2 = 2;
+const NUM_3 = 3;
+const NUM_4 = 4;
+const NUM_42 = 42;
+const NUM_5 = 5;
+const NUM_6 = 6;
+
 type LogCall = Readonly<{
     args: readonly unknown[];
     type: "error" | "log";
@@ -34,7 +43,25 @@ class TestLogger extends LoggerBase {
     }
 }
 
-function createTestRuntime() {
+type TestRuntime = Readonly<{
+    consoleCalls: LogCall[];
+    fileCalls: FileCall[];
+    runtime: LoggerRuntime;
+}>;
+
+function argumentText(value: unknown): string {
+    if (typeof value === "string") {
+        return value;
+    }
+
+    return JSON.stringify(value);
+}
+
+function noop(): void {
+    // intentionally empty
+}
+
+function createTestRuntime(): TestRuntime {
     const consoleCalls: LogCall[] = [];
     const fileCalls: FileCall[] = [];
 
@@ -56,25 +83,27 @@ function createTestRuntime() {
 }
 
 function createTestSpan(): Span {
-    return {
-        spanContext() {
-            return {
-                spanId: "0123456789abcdef",
-                traceFlags: 1,
-                traceId: "0123456789abcdef0123456789abcdef",
-            };
-        },
-    } as unknown as Span;
+    return trace.wrapSpanContext({
+        spanId: "0123456789abcdef",
+        traceFlags: NUM_1,
+        traceId: "0123456789abcdef0123456789abcdef",
+    });
 }
 
-describe("LoggerBase", () => {
-    beforeEach(() => {
-        vi.restoreAllMocks();
-        vi.useRealTimers();
-        // The reader is module state; leaving one registered would make the
-        // "no reader" case pass for the wrong reason.
-        disableOpenTelemetryContext();
-    });
+function namedHelper(): string {
+    return "named";
+}
+
+function resetLoggerState(): void {
+    vi.restoreAllMocks();
+    vi.useRealTimers();
+    // The reader is module state; leaving one registered would make the
+    // "no reader" case pass for the wrong reason.
+    disableOpenTelemetryContext();
+}
+
+describe(LoggerBase, () => {
+    beforeEach(resetLoggerState);
 
     it("suppresses messages below the configured threshold", () => {
         const { consoleCalls, runtime } = createTestRuntime();
@@ -85,9 +114,9 @@ describe("LoggerBase", () => {
         logger.info("not visible");
         logger.warn("visible");
 
-        expect(consoleCalls).toHaveLength(1);
-        expect(consoleCalls[0]?.type).toBe("log");
-        expect(`${consoleCalls[0]?.args[0] ?? ""}`).toContain("[WARN]");
+        expect(consoleCalls).toHaveLength(NUM_1);
+        expect(consoleCalls[NUM_0]?.type).toBe("log");
+        expect(argumentText(consoleCalls[NUM_0]?.args[NUM_0])).toContain("[WARN]");
     });
 
     it("inherits parent options in child loggers", () => {
@@ -102,9 +131,9 @@ describe("LoggerBase", () => {
         childLogger.info("hidden");
         childLogger.warn("persisted");
 
-        expect(fileCalls).toHaveLength(1);
-        expect(fileCalls[0]?.filePath).toBe("/tmp/simplelog/parent.log");
-        expect(fileCalls[0]?.content).toContain("parent -> child");
+        expect(fileCalls).toHaveLength(NUM_1);
+        expect(fileCalls[NUM_0]?.filePath).toBe("/tmp/simplelog/parent.log");
+        expect(fileCalls[NUM_0]?.content).toContain("parent -> child");
     });
 
     it("warns when a performance benchmark is ended without a start", () => {
@@ -113,12 +142,16 @@ describe("LoggerBase", () => {
 
         logger.endPerformanceBenchmark("missing", "done");
 
-        expect(consoleCalls).toHaveLength(1);
-        expect(`${consoleCalls[0]?.args[0] ?? ""}`).toContain("[WARN]");
-        expect(`${consoleCalls[0]?.args[0] ?? ""}`).toContain(
+        expect(consoleCalls).toHaveLength(NUM_1);
+        expect(argumentText(consoleCalls[NUM_0]?.args[NUM_0])).toContain("[WARN]");
+        expect(argumentText(consoleCalls[NUM_0]?.args[NUM_0])).toContain(
             "No start time found",
         );
     });
+});
+
+describe("LoggerBase console colors", () => {
+    beforeEach(resetLoggerState);
 
     it("colorizes additional console arguments and keeps file output plain", () => {
         const { consoleCalls, fileCalls, runtime } = createTestRuntime();
@@ -129,13 +162,13 @@ describe("LoggerBase", () => {
 
         logger.info("headline", "part-one", "part-two");
 
-        expect(consoleCalls).toHaveLength(1);
-        expect(`${consoleCalls[0]?.args[0] ?? ""}`).toContain("\u001B[32m");
-        expect(`${consoleCalls[0]?.args[1] ?? ""}`).toContain("\u001B[32m");
-        expect(`${consoleCalls[0]?.args[2] ?? ""}`).toContain("\u001B[32m");
-        expect(fileCalls).toHaveLength(1);
-        expect(fileCalls[0]?.content).toContain("[INFO]");
-        expect(fileCalls[0]?.content).not.toContain("\u001B[");
+        expect(consoleCalls).toHaveLength(NUM_1);
+        expect(argumentText(consoleCalls[NUM_0]?.args[NUM_0])).toContain("\u001B[32m");
+        expect(argumentText(consoleCalls[NUM_0]?.args[NUM_1])).toContain("\u001B[32m");
+        expect(argumentText(consoleCalls[NUM_0]?.args[NUM_2])).toContain("\u001B[32m");
+        expect(fileCalls).toHaveLength(NUM_1);
+        expect(fileCalls[NUM_0]?.content).toContain("[INFO]");
+        expect(fileCalls[NUM_0]?.content).not.toContain("\u001B[");
     });
 
     it("supports syntax highlighting for different value kinds", () => {
@@ -144,17 +177,17 @@ describe("LoggerBase", () => {
             valueColorMode: "syntax",
         });
 
-        logger.info("typed", "text", 42, false, null, Symbol("token"), {
+        logger.info("typed", "text", NUM_42, false, null, Symbol("token"), {
             ok: true,
         });
 
-        expect(consoleCalls).toHaveLength(1);
-        expect(`${consoleCalls[0]?.args[1] ?? ""}`).toContain("\u001B[32m");
-        expect(`${consoleCalls[0]?.args[2] ?? ""}`).toContain("\u001B[36m");
-        expect(`${consoleCalls[0]?.args[3] ?? ""}`).toContain("\u001B[33m");
-        expect(`${consoleCalls[0]?.args[4] ?? ""}`).toContain("\u001B[90m");
-        expect(`${consoleCalls[0]?.args[5] ?? ""}`).toContain("\u001B[35m");
-        expect(`${consoleCalls[0]?.args[6] ?? ""}`).toContain("\u001B[34m");
+        expect(consoleCalls).toHaveLength(NUM_1);
+        expect(argumentText(consoleCalls[NUM_0]?.args[NUM_1])).toContain("\u001B[32m");
+        expect(argumentText(consoleCalls[NUM_0]?.args[NUM_2])).toContain("\u001B[36m");
+        expect(argumentText(consoleCalls[NUM_0]?.args[NUM_3])).toContain("\u001B[33m");
+        expect(argumentText(consoleCalls[NUM_0]?.args[NUM_4])).toContain("\u001B[90m");
+        expect(argumentText(consoleCalls[NUM_0]?.args[NUM_5])).toContain("\u001B[35m");
+        expect(argumentText(consoleCalls[NUM_0]?.args[NUM_6])).toContain("\u001B[34m");
     });
 
     it("supports fully plain console output", () => {
@@ -165,10 +198,14 @@ describe("LoggerBase", () => {
 
         logger.info("headline", "part-one");
 
-        expect(consoleCalls).toHaveLength(1);
-        expect(`${consoleCalls[0]?.args[0] ?? ""}`).not.toContain("\u001B[");
-        expect(`${consoleCalls[0]?.args[1] ?? ""}`).not.toContain("\u001B[");
+        expect(consoleCalls).toHaveLength(NUM_1);
+        expect(argumentText(consoleCalls[NUM_0]?.args[NUM_0])).not.toContain("\u001B[");
+        expect(argumentText(consoleCalls[NUM_0]?.args[NUM_1])).not.toContain("\u001B[");
     });
+});
+
+describe("LoggerBase structured output and assertions", () => {
+    beforeEach(resetLoggerState);
 
     it("serializes functions nested inside structured log arguments", () => {
         const { consoleCalls, runtime } = createTestRuntime();
@@ -176,28 +213,43 @@ describe("LoggerBase", () => {
             valueColorMode: "off",
         });
 
-        function namedHelper(): string {
-            return "named";
-        }
-
         logger.info("payload", {
             callback: namedHelper,
             nested: {
                 inner: namedHelper,
             },
             values: [
-                function () {
+                (): string => {
                     return "anonymous";
                 },
             ],
         });
 
-        const payload = `${consoleCalls[0]?.args[1] ?? ""}`;
+        const payload = argumentText(consoleCalls[NUM_0]?.args[NUM_1]);
 
-        expect(consoleCalls).toHaveLength(1);
+        expect(consoleCalls).toHaveLength(NUM_1);
         expect(payload).toContain("[Function namedHelper]");
         expect(payload).toContain("[Function anonymous]");
     });
+
+    it("logs assertion failures with a stack trace", () => {
+        const { consoleCalls, runtime } = createTestRuntime();
+        const logger = new TestLogger(runtime, "assertions");
+
+        logger.assert(false, "broken", { detail: "payload" });
+
+        expect(consoleCalls).toHaveLength(NUM_2);
+        expect(consoleCalls[NUM_0]?.type).toBe("log");
+        expect(argumentText(consoleCalls[NUM_0]?.args[NUM_0])).toContain("[ERROR]");
+        expect(consoleCalls[NUM_1]?.type).toBe("error");
+        expect(argumentText(consoleCalls[NUM_1]?.args[NUM_0])).toContain(
+            "Assertion failed",
+        );
+    });
+});
+
+describe("LoggerBase OpenTelemetry context", () => {
+    beforeEach(resetLoggerState);
 
     it("includes active OpenTelemetry trace context when enabled", () => {
         const { consoleCalls, fileCalls, runtime } = createTestRuntime();
@@ -214,16 +266,16 @@ describe("LoggerBase", () => {
 
         logger.info("correlated");
 
-        expect(consoleCalls).toHaveLength(1);
-        expect(`${consoleCalls[0]?.args[0] ?? ""}`).toContain("trace_id=");
-        expect(`${consoleCalls[0]?.args[0] ?? ""}`).toContain("span_id=");
-        expect(fileCalls).toHaveLength(1);
-        expect(fileCalls[0]?.content).toContain("trace_id=");
-        expect(fileCalls[0]?.content).toContain("span_id=");
+        expect(consoleCalls).toHaveLength(NUM_1);
+        expect(argumentText(consoleCalls[NUM_0]?.args[NUM_0])).toContain("trace_id=");
+        expect(argumentText(consoleCalls[NUM_0]?.args[NUM_0])).toContain("span_id=");
+        expect(fileCalls).toHaveLength(NUM_1);
+        expect(fileCalls[NUM_0]?.content).toContain("trace_id=");
+        expect(fileCalls[NUM_0]?.content).toContain("span_id=");
     });
 
     it("logs empty context and warns once when no reader is registered", () => {
-        const warn = vi.spyOn(console, "warn").mockImplementation(() => undefined);
+        const warn = vi.spyOn(globalThis.console, "warn").mockImplementation(noop);
         const { consoleCalls, runtime } = createTestRuntime();
         const logger = new TestLogger(runtime, "otel-unwired", undefined, {
             includeOpenTelemetryContext: true,
@@ -233,9 +285,9 @@ describe("LoggerBase", () => {
         logger.info("correlated");
 
         // Silently logging empty ids would look like working span correlation.
-        expect(`${consoleCalls[0]?.args[0] ?? ""}`).not.toContain("trace_id=");
-        expect(warn).toHaveBeenCalledTimes(1);
-        expect(`${warn.mock.calls[0]?.[0] ?? ""}`).toContain(
+        expect(argumentText(consoleCalls[NUM_0]?.args[NUM_0])).not.toContain("trace_id=");
+        expect(warn).toHaveBeenCalledTimes(NUM_1);
+        expect(argumentText(warn.mock.calls[NUM_0]?.[NUM_0])).toContain(
             "@murky-web/simplelog/otel",
         );
     });
@@ -250,24 +302,9 @@ describe("LoggerBase", () => {
 
         logger.info("uncorrelated");
 
-        expect(consoleCalls).toHaveLength(1);
-        expect(`${consoleCalls[0]?.args[0] ?? ""}`).not.toContain("trace_id=");
-        expect(`${consoleCalls[0]?.args[0] ?? ""}`).not.toContain("span_id=");
+        expect(consoleCalls).toHaveLength(NUM_1);
+        expect(argumentText(consoleCalls[NUM_0]?.args[NUM_0])).not.toContain("trace_id=");
+        expect(argumentText(consoleCalls[NUM_0]?.args[NUM_0])).not.toContain("span_id=");
         expect(getActiveSpanSpy).not.toHaveBeenCalled();
-    });
-
-    it("logs assertion failures with a stack trace", () => {
-        const { consoleCalls, runtime } = createTestRuntime();
-        const logger = new TestLogger(runtime, "assertions");
-
-        logger.assert(false, "broken", { detail: "payload" });
-
-        expect(consoleCalls).toHaveLength(2);
-        expect(consoleCalls[0]?.type).toBe("log");
-        expect(`${consoleCalls[0]?.args[0] ?? ""}`).toContain("[ERROR]");
-        expect(consoleCalls[1]?.type).toBe("error");
-        expect(`${consoleCalls[1]?.args[0] ?? ""}`).toContain(
-            "Assertion failed",
-        );
     });
 });

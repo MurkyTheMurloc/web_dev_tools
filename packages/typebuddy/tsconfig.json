@@ -1,6 +1,6 @@
 {
   "$schema": "https://json.schemastore.org/tsconfig",
-  "extends": "../config/typescript/tsconfig.base.jsonc",
+  "extends": "../../config/typescript/tsconfig.base.jsonc",
   "compilerOptions": {
     "types": ["node"],
     "rootDir": "."
@@ -10,7 +10,6 @@
     "src/**/*.ts",
     "rules/**/*.ts",
     "oxlint/**/*.ts",
-    "biome/**/*.ts",
     "tsdown.config.ts"
   ],
   "exclude": ["dist", "tests", "smoke", "vitest.config.ts"]

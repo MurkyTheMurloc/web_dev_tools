@@ -50,22 +50,17 @@
       "import": "./dist/oxlint.js",
       "default": "./dist/oxlint.js"
     },
-    "./biome": {
-      "types": "./biome/index.ts",
-      "import": "./dist/biome.js",
-      "default": "./dist/biome.js"
-    },
     "./package.json": "./package.json"
   },
   "scripts": {
     "test": "vitest run",
     "build:local": "bun run build",
-    "build": "bun run clean && tsdown && cp ./biome/*.grit ./dist/ && cp ./biome/*.gritt ./dist/",
+    "build": "bun run clean && tsdown",
     "clean": "rm -rf dist",
-    "lint": "oxlint -c ./.oxlintrc.jsonc --tsconfig ./tsconfig.lint.json --type-aware src biome tsdown.config.ts vitest.config.ts",
-    "lint:fix": "oxlint -c ./.oxlintrc.jsonc --tsconfig ./tsconfig.lint.json --type-aware --fix src biome tsdown.config.ts vitest.config.ts",
-    "format": "oxfmt -c ../config/oxc/.oxfmtrc.jsonc src rules biome tests tsdown.config.ts vitest.config.ts",
-    "format:check": "oxfmt -c ../config/oxc/.oxfmtrc.jsonc --check src rules biome tests tsdown.config.ts vitest.config.ts",
+    "lint": "oxlint -c ./.oxlintrc.jsonc --tsconfig ./tsconfig.lint.json --type-aware src tsdown.config.ts vitest.config.ts",
+    "lint:fix": "oxlint -c ./.oxlintrc.jsonc --tsconfig ./tsconfig.lint.json --type-aware --fix src tsdown.config.ts vitest.config.ts",
+    "format": "oxfmt -c ../../config/oxc/.oxfmtrc.jsonc src rules tests tsdown.config.ts vitest.config.ts",
+    "format:check": "oxfmt -c ../../config/oxc/.oxfmtrc.jsonc --check src rules tests tsdown.config.ts vitest.config.ts",
     "smoke:globals": "bun run build && tsc --project ./smoke/globals/tsconfig.json --noEmit && mkdir -p ./smoke/globals/node_modules/@murky-web && ln -sfn ../../../.. ./smoke/globals/node_modules/@murky-web/typebuddy && tsc --project ./smoke/globals/tsconfig.types.json --noEmit",
     "smoke:oxlint": "bun run build && bun ./smoke/oxlint/run-smoke.ts",
     "smoke:oxlint:fix": "bun run build && bun ./smoke/oxlint/run-fix-smoke.ts",
@@ -74,7 +69,6 @@
     "typecheck": "tsc --project ./tsconfig.json --noEmit && tsc --project ./tsconfig.vitest.json --noEmit"
   },
   "files": [
-    "biome",
     "dist",
     "globals.d.ts",
     "jsr.json",
@@ -99,7 +93,6 @@
     "provenance": true
   },
   "devDependencies": {
-    "@murky-web/config": "workspace:*",
     "@types/node": "^25.5.0"
   }
 }

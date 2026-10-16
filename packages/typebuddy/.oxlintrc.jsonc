@@ -1,6 +1,6 @@
 {
     "$schema": "./node_modules/oxlint/configuration_schema.json",
-    "extends": ["../config/oxc/.oxlintrc.jsonc"],
+    "extends": ["../../config/oxc/.oxlintrc.jsonc"],
     "ignorePatterns": ["smoke/treeshake/.output/**"],
     "globals": {
         "console": "readonly",
@@ -37,7 +37,7 @@
             }
         },
         {
-            "files": ["tsdown.config.ts", "vitest.config.ts", "biome/**/*.ts"],
+            "files": ["tsdown.config.ts", "vitest.config.ts"],
             "globals": {
                 "URL": "readonly"
             },

@@ -1,3 +1,0 @@
-`$type | null | undefined` where {
-  $type <: not contains `null | undefined`
-} => `Nullable<$type>`

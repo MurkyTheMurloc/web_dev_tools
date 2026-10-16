@@ -5,7 +5,6 @@
   "license": "ISC",
   "exports": {
     ".": "./src/index.ts",
-    "./biome": "./biome/index.ts",
     "./oxlint": "./oxlint/index.ts"
   },
   "publish": {
@@ -13,10 +12,7 @@
       "README.md",
       "src/**/*.ts",
       "oxlint/**/*.ts",
-      "rules/**/*.ts",
-      "biome/**/*.ts",
-      "biome/*.grit",
-      "biome/*.gritt"
+      "rules/**/*.ts"
     ],
     "exclude": [
       "tests/**",

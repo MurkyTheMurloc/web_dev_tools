@@ -9,6 +9,9 @@ import {
 } from "../src/type_helper.js";
 import type { Nullable, Optional } from "../src/types/index.js";
 
+const NUM_0 = 0;
+const NUM_42 = 42;
+
 describe("primitive guard narrowing", () => {
     it("should preserve string literal types through isString", () => {
         const value: Optional<"ready"> = "ready";
@@ -22,14 +25,14 @@ describe("primitive guard narrowing", () => {
     });
 
     it("should preserve numeric literal types through isNumber", () => {
-        const value: Nullable<42> = 42;
+        const value: Nullable<typeof NUM_42> = NUM_42;
 
         if (!isNumber(value)) {
             throw new Error("Expected a number literal.");
         }
 
-        const narrowed: 42 = value;
-        expect(narrowed).toBe(42);
+        const narrowed: typeof NUM_42 = value;
+        expect(narrowed).toBe(NUM_42);
     });
 
     it("should preserve array element types through isArray", () => {
@@ -39,7 +42,7 @@ describe("primitive guard narrowing", () => {
             throw new Error("Expected an array.");
         }
 
-        const first: string = value[0]!;
+        const first: string | undefined = value[NUM_0];
         expect(first).toBe("a");
     });
 

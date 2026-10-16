@@ -1,1 +1,1 @@
-import type {} from "@murky-web/typebuddy/globals";
+import "@murky-web/typebuddy/globals";

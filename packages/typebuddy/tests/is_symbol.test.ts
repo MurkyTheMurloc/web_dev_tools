@@ -2,17 +2,21 @@ import { describe, expect, it } from "vitest";
 
 import { isSymbol } from "../src/type_helper.js";
 
-describe("isSymbol", () => {
+const NUM_123 = 123;
+
+const missingValue: unknown = undefined;
+
+describe(isSymbol, () => {
     it("should return true for symbol inputs", () => {
-        expect(isSymbol(Symbol())).toBe(true);
+        expect(isSymbol(Symbol("test"))).toBeTruthy();
     });
 
     it("should return false for non-symbol inputs", () => {
-        expect(isSymbol("Hello")).toBe(false);
-        expect(isSymbol(123)).toBe(false);
-        expect(isSymbol({})).toBe(false);
-        expect(isSymbol([])).toBe(false);
-        expect(isSymbol(null)).toBe(false);
-        expect(isSymbol(undefined)).toBe(false);
+        expect(isSymbol("Hello")).toBeFalsy();
+        expect(isSymbol(NUM_123)).toBeFalsy();
+        expect(isSymbol({})).toBeFalsy();
+        expect(isSymbol([])).toBeFalsy();
+        expect(isSymbol(null)).toBeFalsy();
+        expect(isSymbol(missingValue)).toBeFalsy();
     });
 });

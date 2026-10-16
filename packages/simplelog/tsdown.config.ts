@@ -2,6 +2,7 @@ import { defineConfig } from "tsdown";
 
 export default defineConfig([
   {
+    dts: true,
     entry: {
       bun_logger: "./src/bun_logger.ts",
       logger: "./src/logger.ts",
@@ -15,7 +16,6 @@ export default defineConfig([
       logger_factory: "./src/logger_factory.ts",
       otel: "./src/otel.ts",
     },
-    dts: true,
     // tsdown defaults `fixedExtension` to true for platform "node", which emits
     // .mjs/.d.mts. The package is "type": "module", so .js is already ESM and
     // matches what the exports map (and every released version) points at.
@@ -26,6 +26,7 @@ export default defineConfig([
     unbundle: true,
   },
   {
+    dts: true,
     entry: {
       deno_logger: "./src/deno_logger.ts",
       hono_middleware: "./src/hono_middleware.ts",
@@ -34,7 +35,6 @@ export default defineConfig([
       logger_factory: "./src/logger_factory.ts",
       web_logger: "./src/web_logger.ts",
     },
-    dts: true,
     format: "esm",
     outDir: "dist",
     platform: "neutral",

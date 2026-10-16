@@ -1,4 +1,4 @@
-import { existsSync, readFileSync, writeFileSync } from "node:fs";
+import { copyFileSync, cpSync, existsSync, readFileSync, writeFileSync } from "node:fs";
 
 const EXIT_SUCCESS = 0;
 const FIXTURE_FILE_PATH = "src/rule_case.tsx";
@@ -113,19 +113,7 @@ function initializeTempProject(repoRoot, tempDirectoryPath) {
         ]);
     }
 
-    runCommandOrThrow(
-        [
-            "bun",
-            `${repoRoot}/packages/config/bin/web-dev-config.mjs`,
-            "init",
-            "--oxc",
-            "--typescript",
-            "--frontend-solid",
-            "--skip-install",
-            tempDirectoryPath,
-        ],
-        repoRoot,
-    );
+    writeSolidProjectConfig(repoRoot, tempDirectoryPath);
     runCommandOrThrow(
         ["mkdir", "-p", `${tempDirectoryPath}/node_modules`],
         repoRoot,
@@ -139,6 +127,58 @@ function initializeTempProject(repoRoot, tempDirectoryPath) {
     }
     runCommandOrThrow(["mkdir", "-p", `${tempDirectoryPath}/src`], repoRoot);
     neutralizeUnresolvableTypes(tempDirectoryPath);
+}
+
+// The shared configs from config/ as a Solid project sees them: the rule
+// files under oxc/linting, an .oxlintrc extending them with the Solid
+// plugin, and the client tsconfig on top of the base.
+const LINTING_FILES = [
+    "base",
+    "eslint",
+    "typescript",
+    "unicorn",
+    "oxc",
+    "import",
+    "jsx_a11y",
+    "vitest",
+    "promise",
+    "node",
+    "jsdoc",
+    "solid",
+];
+
+function writeSolidProjectConfig(repoRoot, tempDirectoryPath) {
+    const configRoot = `${repoRoot}/config`;
+    cpSync(`${configRoot}/oxc/linting`, `${tempDirectoryPath}/oxc/linting`, {
+        recursive: true,
+    });
+    writeFileSync(
+        `${tempDirectoryPath}/.oxlintrc.jsonc`,
+        JSON.stringify({
+            extends: LINTING_FILES.map((name) => `./oxc/linting/${name}.jsonc`),
+            jsPlugins: ["@murky-web/oxlint-plugin-solid"],
+            plugins: [
+                "eslint",
+                "typescript",
+                "unicorn",
+                "oxc",
+                "import",
+                "jsx-a11y",
+                "vitest",
+                "promise",
+                "node",
+                "jsdoc",
+            ],
+        }),
+    );
+    copyFileSync(
+        `${configRoot}/typescript/tsconfig.base.jsonc`,
+        `${tempDirectoryPath}/tsconfig.base.jsonc`,
+    );
+    copyFileSync(
+        `${configRoot}/typescript/tsconfig.client.jsonc`,
+        `${tempDirectoryPath}/tsconfig.json`,
+    );
 }
 
 // The templates are written for real projects; the harness links a handful of

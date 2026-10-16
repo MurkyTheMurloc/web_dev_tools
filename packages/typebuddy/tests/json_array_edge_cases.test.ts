@@ -4,15 +4,15 @@ import { hasEmptyValues, parseArray } from "../src/type_helper.js";
 
 describe("json and array edge cases", () => {
     it("should not throw on non-json strings in hasEmptyValues", () => {
-        expect(hasEmptyValues("not-json")).toBe(false);
-        expect(hasEmptyValues("")).toBe(true);
-        expect(hasEmptyValues("   ")).toBe(true);
+        expect(hasEmptyValues("not-json")).toBeFalsy();
+        expect(hasEmptyValues("")).toBeTruthy();
+        expect(hasEmptyValues("   ")).toBeTruthy();
     });
 
     it("should treat empty JSON objects as empty values", () => {
-        expect(hasEmptyValues("{}")).toBe(true);
-        expect(hasEmptyValues('{"value":1}')).toBe(false);
-        expect(hasEmptyValues("[]")).toBe(false);
+        expect(hasEmptyValues("{}")).toBeTruthy();
+        expect(hasEmptyValues('{"value":1}')).toBeFalsy();
+        expect(hasEmptyValues("[]")).toBeFalsy();
     });
 
     it("should split parseArray strings without empty artifacts", () => {

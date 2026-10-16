@@ -2,8 +2,9 @@ import type { UserConfig } from "tsdown";
 
 const config = [
   {
+    clean: true,
+    dts: false,
     entry: {
-      index: "./src/index.ts",
       // One entry per published subpath. Without them tsdown emits a single
       // graph reachable from `index`, so `exports["./guards"]` would point at
       // a file that was never built.
@@ -11,11 +12,10 @@ const config = [
       empty: "./src/empty.ts",
       guards: "./src/guards.ts",
       ids: "./src/ids.ts",
+      index: "./src/index.ts",
       parse: "./src/parse.ts",
       result: "./src/result.ts",
     },
-    clean: true,
-    dts: false,
     format: "esm",
     outDir: "dist",
     platform: "neutral",
@@ -23,12 +23,11 @@ const config = [
     unbundle: true,
   },
   {
-    entry: {
-      oxlint: "./oxlint/index.ts",
-      biome: "./biome/index.ts",
-    },
     clean: false,
     dts: false,
+    entry: {
+      oxlint: "./oxlint/index.ts",
+    },
     // tsdown defaults `fixedExtension` to true for platform "node", which emits
     // .mjs. The package is "type": "module", so .js is already ESM and matches
     // what the exports map points at.
