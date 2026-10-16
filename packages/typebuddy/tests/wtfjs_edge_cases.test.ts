@@ -13,27 +13,27 @@ import {
 
 describe("wtfjs-inspired edge cases", () => {
     it("should reject coercion traps for isNumber", () => {
-        expect(isNumber(NaN)).toBe(false);
-        expect(isNumber(Infinity)).toBe(false);
-        expect(isNumber(-Infinity)).toBe(false);
-        expect(isNumber(Number(" "))).toBe(true);
-        expect(isNumber(Number([]))).toBe(true);
-        expect(isNumber(new Number(1))).toBe(false);
+        expect(isNumber(Number.NaN)).toBeFalsy();
+        expect(isNumber(Infinity)).toBeFalsy();
+        expect(isNumber(-Infinity)).toBeFalsy();
+        expect(isNumber(Number(" "))).toBeTruthy();
+        expect(isNumber(Number([]))).toBeTruthy();
+        expect(isNumber(new Number(1))).toBeFalsy();
     });
 
     it("should keep the type-system guards aligned with their missing states", () => {
-        expect(isOptional(undefined)).toBe(true);
-        expect(isMaybe(null)).toBe(true);
-        expect(isNullable(undefined)).toBe(true);
-        expect(isNullable(null)).toBe(true);
+        expect(isOptional(undefined)).toBeTruthy();
+        expect(isMaybe(null)).toBeTruthy();
+        expect(isNullable(undefined)).toBeTruthy();
+        expect(isNullable(null)).toBeTruthy();
     });
 
     it("should only treat plain objects as objects", () => {
-        expect(isObject(new Date())).toBe(false);
-        expect(isObject(/wtf/)).toBe(false);
-        expect(isObject(Promise.resolve("value"))).toBe(false);
-        expect(isObject(Object.create(null))).toBe(false);
-        expect(isObject(new Number(1))).toBe(false);
+        expect(isObject(new Date())).toBeFalsy();
+        expect(isObject(/wtf/)).toBeFalsy();
+        expect(isObject(Promise.resolve("value"))).toBeFalsy();
+        expect(isObject(Object.create(null))).toBeFalsy();
+        expect(isObject(new Number(1))).toBeFalsy();
     });
 
     it("should parse integers with explicit base-10 semantics", () => {

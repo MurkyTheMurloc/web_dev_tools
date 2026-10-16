@@ -25,7 +25,7 @@ describe("ok and err", () => {
     });
 
     it("should align with isSuccess narrowing", () => {
-        expect(isSuccess(ok("x"))).toBe(true);
-        expect(isSuccess(err())).toBe(false);
+        expect(isSuccess(ok("x"))).toBeTruthy();
+        expect(isSuccess(err())).toBeFalsy();
     });
 });

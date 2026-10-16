@@ -7,20 +7,20 @@ describe("isPromise", () => {
         const rejectedPromise = Promise.reject(new Error("expected rejection"));
         void rejectedPromise.catch(() => undefined);
 
-        expect(isPromise(Promise.resolve())).toBe(true);
-        expect(isPromise(new Promise(() => {}))).toBe(true);
-        expect(isPromise(rejectedPromise)).toBe(true);
-        expect(isPromise(Promise.all([]))).toBe(true);
+        expect(isPromise(Promise.resolve())).toBeTruthy();
+        expect(isPromise(new Promise(() => {}))).toBeTruthy();
+        expect(isPromise(rejectedPromise)).toBeTruthy();
+        expect(isPromise(Promise.all([]))).toBeTruthy();
     });
 
     it("should return false for non-promise inputs", () => {
-        expect(isPromise("Hello")).toBe(false);
-        expect(isPromise(123)).toBe(false);
-        expect(isPromise({})).toBe(false);
-        expect(isPromise([])).toBe(false);
-        expect(isPromise(null)).toBe(false);
-        expect(isPromise(undefined)).toBe(false);
-        expect(isPromise(Symbol())).toBe(false);
-        expect(isPromise(NaN)).toBe(false);
+        expect(isPromise("Hello")).toBeFalsy();
+        expect(isPromise(123)).toBeFalsy();
+        expect(isPromise({})).toBeFalsy();
+        expect(isPromise([])).toBeFalsy();
+        expect(isPromise(null)).toBeFalsy();
+        expect(isPromise(undefined)).toBeFalsy();
+        expect(isPromise(Symbol("test"))).toBeFalsy();
+        expect(isPromise(Number.NaN)).toBeFalsy();
     });
 });

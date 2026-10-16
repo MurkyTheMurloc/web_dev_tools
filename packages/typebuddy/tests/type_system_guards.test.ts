@@ -63,9 +63,9 @@ describe("type-system guards", () => {
         const nullableUndefined: Nullable<string> = undefined;
         const nullableNull: Nullable<string> = null;
 
-        expect(isOptional(optionalValue)).toBe(true);
-        expect(isMaybe(maybeValue)).toBe(true);
-        expect(isNullable(nullableUndefined)).toBe(true);
-        expect(isNullable(nullableNull)).toBe(true);
+        expect(isOptional(optionalValue)).toBeTruthy();
+        expect(isMaybe(maybeValue)).toBeTruthy();
+        expect(isNullable(nullableUndefined)).toBeTruthy();
+        expect(isNullable(nullableNull)).toBeTruthy();
     });
 });

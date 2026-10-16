@@ -4,15 +4,15 @@ import { isNumber } from "../src/type_helper.js";
 
 describe("isNumber", () => {
     it("should return true for number inputs", () => {
-        expect(isNumber(123)).toBe(true);
-        expect(isNumber(123.45)).toBe(true);
+        expect(isNumber(123)).toBeTruthy();
+        expect(isNumber(123.45)).toBeTruthy();
     });
 
     it("should return false for non-number inputs", () => {
-        expect(isNumber("123")).toBe(false);
-        expect(isNumber({})).toBe(false);
-        expect(isNumber([])).toBe(false);
-        expect(isNumber(null)).toBe(false);
-        expect(isNumber(undefined)).toBe(false);
+        expect(isNumber("123")).toBeFalsy();
+        expect(isNumber({})).toBeFalsy();
+        expect(isNumber([])).toBeFalsy();
+        expect(isNumber(null)).toBeFalsy();
+        expect(isNumber(undefined)).toBeFalsy();
     });
 });

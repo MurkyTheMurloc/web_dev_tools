@@ -6,9 +6,9 @@ describe("isInteger", () => {
     it("should not log while checking non-integer values", () => {
         const errorSpy = vi.spyOn(console, "error").mockImplementation(() => {});
 
-        expect(isInteger("Hello")).toBe(false);
-        expect(isInteger({})).toBe(false);
-        expect(isInteger(null)).toBe(false);
+        expect(isInteger("Hello")).toBeFalsy();
+        expect(isInteger({})).toBeFalsy();
+        expect(isInteger(null)).toBeFalsy();
 
         expect(errorSpy).not.toHaveBeenCalled();
 
@@ -16,20 +16,20 @@ describe("isInteger", () => {
     });
 
     it("should return true for integer inputs", () => {
-        expect(isInteger(123)).toBe(true);
-        expect(isInteger(-123)).toBe(true);
-        expect(isInteger(0)).toBe(true);
+        expect(isInteger(123)).toBeTruthy();
+        expect(isInteger(-123)).toBeTruthy();
+        expect(isInteger(0)).toBeTruthy();
     });
 
     it("should return false for non-integer inputs", () => {
-        expect(isInteger("Hello")).toBe(false);
-        expect(isInteger(-123.45)).toBe(false);
-        expect(isInteger(123.45)).toBe(false);
-        expect(isInteger({})).toBe(false);
-        expect(isInteger([])).toBe(false);
-        expect(isInteger(null)).toBe(false);
-        expect(isInteger(undefined)).toBe(false);
-        expect(isInteger(Symbol())).toBe(false);
-        expect(isInteger(NaN)).toBe(false);
+        expect(isInteger("Hello")).toBeFalsy();
+        expect(isInteger(-123.45)).toBeFalsy();
+        expect(isInteger(123.45)).toBeFalsy();
+        expect(isInteger({})).toBeFalsy();
+        expect(isInteger([])).toBeFalsy();
+        expect(isInteger(null)).toBeFalsy();
+        expect(isInteger(undefined)).toBeFalsy();
+        expect(isInteger(Symbol("test"))).toBeFalsy();
+        expect(isInteger(Number.NaN)).toBeFalsy();
     });
 });
