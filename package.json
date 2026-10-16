@@ -33,7 +33,8 @@
         "release:dry": "bun run release:verify && bun run publish:npm:dry",
         "publish:npm": "changeset publish",
         "version-packages": "changeset version && bun ./scripts/sync-jsr-manifests.mjs",
-        "release:verify:shadcn-lint": "bun run --cwd ./vendor/shadcn-lint/packages/lint build && bun run --cwd ./vendor/shadcn-lint/packages/lint typecheck && bun run --cwd ./vendor/shadcn-lint/packages/lint test"
+        "release:verify:shadcn-lint": "bun run --cwd ./vendor/shadcn-lint/packages/lint build && bun run --cwd ./vendor/shadcn-lint/packages/lint typecheck && bun run --cwd ./vendor/shadcn-lint/packages/lint test",
+        "shadcn-lint:upstream": "git subtree pull --prefix vendor/shadcn-lint https://github.com/shadcn-ui/lint main --squash"
     },
     "devDependencies": {
         "@changesets/changelog-git": "^0.2.1",
