@@ -52,7 +52,10 @@ function registerPreferArrowDiagnosticTests() {
 function registerRuleDiagnosticsTests() {
     ruleCases.forEach((ruleCase) => {
         test(`reports ${ruleCase.ruleId}`, async () => {
-            const result = await harness.lint(ruleCase.code);
+            const result = await harness.lint(ruleCase.code, {
+                fileName: ruleCase.fileName,
+                files: ruleCase.files,
+            });
 
             expect(result.exitCode).toBeGreaterThan(EXIT_SUCCESS);
             expect(result.output).toContain(`solid(${ruleCase.ruleId})`);

@@ -17,14 +17,17 @@
         "solid/no-react-deps": "error",
         "solid/no-react-specific-props": "error",
         "solid/no-setter-in-effect": "error",
+        "solid/no-server-import-in-client": "error",
         "solid/no-unknown-namespaces": "error",
         "solid/no-untracked-effect-read": "error",
         "solid/prefer-arrow-components": "error",
         "solid/prefer-class-object": "error",
         "solid/prefer-for": "error",
         "solid/prefer-show": "error",
+        "solid/reactive-async": "error",
         "solid/reactivity": "error",
         "solid/self-closing-comp": "error",
+        "solid/strict-void-return": "error",
         "solid/style-prop": "error",
         "solid/validate-jsx-nesting": "error",
     },
@@ -37,6 +40,15 @@
                 // prefer-readonly-parameter-types rule conflicts with that
                 // convention and would reject the autofix immediately.
                 "prefer-readonly-parameter-types": "off",
+                // Solid reads a promise returned from a reactive computation
+                // like a value, so `createMemo(() => load(id()))` needs no
+                // `async`. `solid/reactive-async` covers the async cases
+                // (reads after an await, `return await`).
+                "typescript/promise-function-async": "off",
+                // The typed rule needs types for what handlers return; the
+                // syntax-only `solid/strict-void-return` covers handlers,
+                // `ref` and `onCleanup`/`onSettled` callbacks.
+                "typescript/strict-void-return": "off",
             },
         },
     ],
