@@ -17,10 +17,17 @@ const expectedRuleIds = [
 ] as const;
 
 const result =
-    await Bun.$`oxlint -c ${configPath.pathname} ${violationsPath.pathname} ${asyncViolationsPath.pathname} ${frameworkCallbackPath.pathname} ${deliberateThrowPath.pathname} ${useServerModulePath.pathname} ${useServerFunctionPath.pathname} ${useServerSiblingPath.pathname}`
+    await Bun.$`oxlint -f json -c ${configPath.pathname} ${violationsPath.pathname} ${asyncViolationsPath.pathname} ${frameworkCallbackPath.pathname} ${deliberateThrowPath.pathname} ${useServerModulePath.pathname} ${useServerFunctionPath.pathname} ${useServerSiblingPath.pathname}`
         .nothrow()
         .quiet();
 const output = `${result.stdout.toString()}${result.stderr.toString()}`;
+
+// JSON, so the checks do not depend on the reporter oxlint picks (in GitHub
+// Actions it switches to annotations, with the file name on a separate line).
+type Diagnostic = { readonly code: string; readonly filename: string };
+const diagnostics: readonly Diagnostic[] = (
+    JSON.parse(result.stdout.toString()) as { diagnostics: Diagnostic[] }
+).diagnostics;
 
 if (result.exitCode !== 1) {
     console.error(
@@ -31,19 +38,18 @@ if (result.exitCode !== 1) {
 }
 
 for (const ruleId of expectedRuleIds) {
-    if (!output.includes(ruleId)) {
+    if (!diagnostics.some((d) => d.code === ruleId)) {
         console.error(`Expected oxlint smoke output to include ${ruleId}.`);
         console.error(output);
         process.exit(1);
     }
 }
 
-// Every diagnostic line starts with the path of its file.
+// typebuddy diagnostics reported for one smoke file
 function countDiagnostics(fileName: string): number {
-    return output
-        .split("\n")
-        .filter((line) => line.includes(`${fileName}:`) && line.includes("error typebuddy("))
-        .length;
+    return diagnostics.filter(
+        (d) => d.filename.endsWith(`/${fileName}`) && d.code.startsWith("typebuddy("),
+    ).length;
 }
 
 // The files that must stay silent. (Checked by file name: oxlint prints paths
@@ -70,7 +76,7 @@ if (countDiagnostics("violations.ts") === 0) {
 }
 
 const detectedRuleHits = expectedRuleIds.filter((ruleId) =>
-    output.includes(ruleId),
+    diagnostics.some((d) => d.code === ruleId),
 ).length;
 
 if (detectedRuleHits !== expectedRuleIds.length) {
