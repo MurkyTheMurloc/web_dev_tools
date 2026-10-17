@@ -1,5 +1,15 @@
 # @murky-web/typebuddy
 
+## 2.1.0
+
+### Minor Changes
+
+- 71b9457: `isSuccess` narrows a `Result<T>` to its `Success<T>` member: after the check,
+  `result.value` is `T`, not `T | null`. The type parameter is now the whole
+  result (`isSuccess<Result<T>>(…)` if you spelled it out); inferring it, as
+  almost every caller does, needs no change.
+- d2f9215: `require-try-catch` and `prefer-maybe-promise` skip `"use server"` code: files whose first statement is the directive, and functions whose body starts with it. Server functions log and throw on failure and the page catches the throw with `<Errored>`; a returned failure would resolve the caller's promise as success.
+
 ## 2.0.0
 
 ### Major Changes
