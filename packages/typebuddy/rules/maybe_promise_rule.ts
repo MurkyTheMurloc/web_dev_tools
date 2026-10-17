@@ -1,6 +1,7 @@
 import { throwsDeliberately } from "./deliberate_throw.js";
 import { getTypeBuddyImportInsertion } from "./typebuddy_import.js";
 import { walkOwnSubtree } from "./own_subtree.js";
+import { createUseServerGuard } from "./use_server.js";
 
 type AstNode = {
     type: string;
@@ -545,14 +546,17 @@ const rule = {
             });
         }
 
+        const { Program, guard } = createUseServerGuard();
+
         return {
-            FunctionDeclaration: checkReturnType,
-            FunctionExpression: checkReturnType,
-            ArrowFunctionExpression: checkReturnType,
-            TSDeclareFunction: checkSignatureReturnType,
-            TSFunctionType: checkSignatureReturnType,
-            TSMethodSignature: checkSignatureReturnType,
-            TryStatement: processTryCatch,
+            Program,
+            FunctionDeclaration: guard(checkReturnType),
+            FunctionExpression: guard(checkReturnType),
+            ArrowFunctionExpression: guard(checkReturnType),
+            TSDeclareFunction: guard(checkSignatureReturnType),
+            TSFunctionType: guard(checkSignatureReturnType),
+            TSMethodSignature: guard(checkSignatureReturnType),
+            TryStatement: guard(processTryCatch),
         };
     },
     defaultOptions: [],

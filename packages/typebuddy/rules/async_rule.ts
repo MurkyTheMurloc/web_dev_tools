@@ -1,5 +1,6 @@
 import { throwsDeliberately } from "./deliberate_throw.js";
 import { getTypeBuddyImportInsertion } from "./typebuddy_import.js";
+import { createUseServerGuard } from "./use_server.js";
 
 type AstNode = {
     type: string;
@@ -205,10 +206,13 @@ const rule = {
             });
         }
 
+        const { Program, guard } = createUseServerGuard();
+
         return {
-            FunctionDeclaration: checkFunction,
-            FunctionExpression: checkFunction,
-            ArrowFunctionExpression: checkFunction,
+            Program,
+            FunctionDeclaration: guard(checkFunction),
+            FunctionExpression: guard(checkFunction),
+            ArrowFunctionExpression: guard(checkFunction),
         };
     },
     defaultOptions: [],
