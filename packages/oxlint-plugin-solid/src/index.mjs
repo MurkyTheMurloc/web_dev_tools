@@ -13,14 +13,17 @@ import noProxyApisRule from "./rules/no_proxy_apis.mjs";
 import noReactDepsRule from "./rules/no_react_deps.mjs";
 import { noReactSpecificPropsRule } from "./rules/no_react_specific_props.mjs";
 import noSetterInEffectRule from "./rules/no_setter_in_effect.mjs";
+import { noServerImportInClientRule } from "./rules/no_server_import_in_client.mjs";
 import noUnknownNamespacesRule from "./rules/no_unknown_namespaces.mjs";
 import noUntrackedEffectReadRule from "./rules/no_untracked_effect_read.mjs";
 import { preferArrowComponentsRule } from "./rules/prefer_arrow_components.mjs";
 import preferClassObjectRule from "./rules/prefer_class_object.mjs";
 import preferForRule from "./rules/prefer_for.mjs";
 import preferShowRule from "./rules/prefer_show.mjs";
+import { reactiveAsyncRule } from "./rules/reactive_async.mjs";
 import reactivityRule from "./rules/reactivity.mjs";
 import selfClosingCompRule from "./rules/self_closing_comp.mjs";
+import { strictVoidReturnRule } from "./rules/strict_void_return.mjs";
 import stylePropRule from "./rules/style_prop.mjs";
 import validateJsxNestingRule from "./rules/validate_jsx_nesting.mjs";
 
@@ -45,14 +48,17 @@ const extendedPlugin = {
         "no-react-deps": noReactDepsRule,
         "no-react-specific-props": noReactSpecificPropsRule,
         "no-setter-in-effect": noSetterInEffectRule,
+        "no-server-import-in-client": noServerImportInClientRule,
         "no-unknown-namespaces": noUnknownNamespacesRule,
         "no-untracked-effect-read": noUntrackedEffectReadRule,
         "prefer-arrow-components": preferArrowComponentsRule,
         "prefer-class-object": preferClassObjectRule,
         "prefer-for": preferForRule,
         "prefer-show": preferShowRule,
+        "reactive-async": reactiveAsyncRule,
         reactivity: reactivityRule,
         "self-closing-comp": selfClosingCompRule,
+        "strict-void-return": strictVoidReturnRule,
         "style-prop": stylePropRule,
         "validate-jsx-nesting": validateJsxNestingRule,
     },

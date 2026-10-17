@@ -246,8 +246,18 @@ export async function createLintHarness() {
         getRepoRoot() {
             return repoRoot;
         },
-        async lint(code, { fix = false } = {}) {
-            const fixturePath = `${tempDirectoryPath}/${FIXTURE_FILE_PATH}`;
+        // `fileName` places the fixture elsewhere in the temp project, and
+        // `files` writes more files next to it (path -> content) for rules that
+        // read other modules.
+        async lint(
+            code,
+            { fix = false, fileName = FIXTURE_FILE_PATH, files = {} } = {},
+        ) {
+            const fixturePath = `${tempDirectoryPath}/${fileName}`;
+            for (const [path, content] of Object.entries(files)) {
+                await writeFixtureFile(`${tempDirectoryPath}/${path}`, content);
+            }
+
             await writeFixtureFile(fixturePath, code);
 
             const cmd = [
@@ -258,7 +268,7 @@ export async function createLintHarness() {
             if (fix) {
                 cmd.push("--fix");
             }
-            cmd.push(FIXTURE_FILE_PATH);
+            cmd.push(fileName);
 
             const result = runCommand(cmd, tempDirectoryPath);
 

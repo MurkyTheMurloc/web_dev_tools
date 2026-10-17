@@ -338,3 +338,36 @@ export function jsxGetProp(props, prop) {
         );
     });
 }
+
+/**
+ * Visit `node` and everything below it, stopping at nested functions.
+ *
+ * What a function does itself is a different question from what a callback it
+ * creates does later, so the rules that reason about "this body" do not look
+ * into inner functions.
+ */
+export function walkOwnBody(node, visit) {
+    if (node === null || typeof node !== "object") {
+        return;
+    }
+
+    visit(node);
+
+    for (const [key, value] of Object.entries(node)) {
+        if (key === "parent") {
+            continue;
+        }
+
+        const candidates = Array.isArray(value) ? value : [value];
+        for (const candidate of candidates) {
+            if (
+                candidate !== null &&
+                typeof candidate === "object" &&
+                typeof candidate.type === "string" &&
+                !isFunctionNode(candidate)
+            ) {
+                walkOwnBody(candidate, visit);
+            }
+        }
+    }
+}

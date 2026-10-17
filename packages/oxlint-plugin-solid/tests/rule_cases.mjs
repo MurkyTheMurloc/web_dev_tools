@@ -13,6 +13,7 @@ const expectedRuleIds = Object.freeze([
     "no-proxy-apis",
     "no-react-deps",
     "no-react-specific-props",
+    "no-server-import-in-client",
     "no-setter-in-effect",
     "no-unknown-namespaces",
     "no-untracked-effect-read",
@@ -20,8 +21,10 @@ const expectedRuleIds = Object.freeze([
     "prefer-class-object",
     "prefer-for",
     "prefer-show",
+    "reactive-async",
     "reactivity",
     "self-closing-comp",
+    "strict-void-return",
     "style-prop",
     "validate-jsx-nesting",
 ]);
@@ -268,6 +271,41 @@ export const View = () => {
 };
 `,
         ruleId: "reactivity",
+    }),
+    Object.freeze({
+        code: `import { createMemo, createSignal } from "solid-js";
+
+declare function load(id: number): Promise<string>;
+
+export const createUser = (): unknown => {
+    const [id] = createSignal(1);
+    const first = createMemo(async () => {
+        await load(0);
+        return load(id());
+    });
+
+    return first;
+};
+`,
+        ruleId: "reactive-async",
+    }),
+    Object.freeze({
+        code: `import { db } from "~/server/db";
+
+export const rows = db.rows;
+`,
+        fileName: "src/routes/index.tsx",
+        files: {
+            "src/server/db.ts": "export const db = { rows: [] };\n",
+        },
+        ruleId: "no-server-import-in-client",
+    }),
+    Object.freeze({
+        code: `export const View = () => {
+    return <button onClick={() => console.log("x")}>Save</button>;
+};
+`,
+        ruleId: "strict-void-return",
     }),
     Object.freeze({
         code: `export const View = () => {

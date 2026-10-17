@@ -26,7 +26,9 @@ Aktuell sind enthalten:
   apply-Phase eines zweiphasigen `createEffect`, die dort nicht tracken) und
   `solid/no-owned-primitives-in-ref` (meldet `createEffect`/`onCleanup` und
   Verwandte in einem Ref-Callback -- der laeuft ohne Owner, nichts raeumt sie
-  je wieder ab)
+  je wieder ab),
+  `solid/reactive-async`, `solid/no-server-import-in-client` und
+  `solid/strict-void-return` (siehe unten)
 - ein Test-Harness, der die exportierte Rule-Surface und echte Diagnostik
   gegen Temp-Projekte prueft
 
@@ -41,6 +43,66 @@ Wichtig dabei:
   Paketauflösung
 - Zielprojekte brauchen dadurch weiter nur die kopierte Runtime unter
   `./oxc/jsplugins/solid/`, nicht dieses Paket als direkte Dependency
+
+## Regeln fuer das Solid-2.0-Modell
+
+Die drei Regeln arbeiten ohne Typinformation, nur mit Syntax und Scope. Sie
+sind in `config/oxc/linting/solid.jsonc` aktiv und ersetzen dort fuer
+`*.tsx`/`*.jsx` die Typ-Regeln `typescript/promise-function-async` und
+`typescript/strict-void-return`.
+
+### `solid/reactive-async`
+
+In einer reaktiven Berechnung liest Solid ein zurueckgegebenes Promise wie einen
+Wert; `createMemo(() => getProduct(props.id))` braucht kein `async`. Geprueft
+werden die Callbacks von `createMemo`, `createSignal(fn)`, `createStore(fn)`,
+`createProjection`, `createOptimistic`, `createOptimisticStore` und die
+Compute-Phase des zweiphasigen `createEffect`/`createRenderEffect`.
+
+Gemeldet wird
+
+- ein Read nach dem ersten `await` im selben Callback (Aufruf eines Signals oder
+  Memos, `props.x`, Property-Read eines Stores): Solid meldet das zur Laufzeit
+  als `UNTRACKED_READ_AFTER_AWAIT`, es wird nie eine Dependency. Lies den Wert
+  vor dem `await` in eine lokale Variable.
+- ein `async`-Callback, dessen einziges `await` ein `return await x` ist: `async`
+  und `await` weglassen und das Promise zurueckgeben. Innerhalb von `try` bleibt
+  `return await` erlaubt, weil es das `catch` erst moeglich macht.
+
+Grenzen: Reads in verschachtelten Funktionen, Helfern und `.then`-Callbacks
+sieht die Regel nicht (die Laufzeit-Diagnose schon). Ob ein Name ein Signal ist,
+folgt nur aus `createSignal`/`createMemo`/den Store-Primitiven in derselben
+Datei und aus dem Namen `props`.
+
+### `solid/no-server-import-in-client`
+
+Client-Dateien (`.tsx` und `.ts` ausserhalb von `src/server/`, ohne
+Test-Dateien) duerfen ein Modul unter `src/server/` nur importieren, wenn dessen
+erste Anweisung `"use server"` ist. Der Pfad wird vom importierenden File aus
+aufgeloest (relativ oder `~/` = `<Projekt>/src/`, Projektwurzel = naechstes
+Verzeichnis mit `package.json`) und die Zieldatei gelesen. Fehlt das Ziel,
+wird nichts gemeldet. `import type` wird ignoriert. Geprueft werden auch
+`export ... from` und `import("...")` mit String-Literal.
+
+Grenze: andere Aliase und Server-Code ausserhalb von `src/server/` kennt die
+Regel nicht.
+
+### `solid/strict-void-return`
+
+Ohne Typen meldet sie Funktionen, deren Rueckgabewert Solid verwirft:
+
+- ein Arrow mit Expression-Body (nicht `void x`) in einem `on*`-Attribut,
+  `on:event` oder in `ref` (auch in einem Ref-Array). Erlaubt sind Block-Body
+  und ein direkt uebergebener Setter (`ref={setInput}`).
+- ein `onCleanup`-Callback, der einen sicher nicht-void Wert zurueckgibt
+  (Literal, Zuweisung, Objekt, ...). Ein Call wie `() => clearInterval(id)`
+  bleibt erlaubt.
+- ein `onSettled`-Callback, der etwas anderes als eine Cleanup-Funktion
+  zurueckgibt (Literal, Zuweisung, ...).
+
+Die Regel ist schwaecher als `typescript/strict-void-return`: sie sieht nur
+Inline-Callbacks, keine Funktionen, die per Namen uebergeben werden, und bei
+`onCleanup`/`onSettled` keine Calls, deren Rueckgabetyp sie nicht kennt.
 
 ## Nutzung ueber @murky-web/config
 
