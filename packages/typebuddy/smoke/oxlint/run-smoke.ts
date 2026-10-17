@@ -38,6 +38,37 @@ for (const ruleId of expectedRuleIds) {
     }
 }
 
+// Every diagnostic line starts with the path of its file.
+function countDiagnostics(fileName: string): number {
+    return output
+        .split("\n")
+        .filter((line) => line.includes(`${fileName}:`) && line.includes("error typebuddy("))
+        .length;
+}
+
+// The files that must stay silent. (Checked by file name: oxlint prints paths
+// relative to the working directory, so matching absolute paths never fires.)
+const silent = {
+    "deliberate-throw.ts":
+        "a function that throws is not a result waiting to be wrapped",
+    "framework-callback.ts": "framework callbacks are ignored by the async rules",
+} as const;
+
+for (const [fileName, reason] of Object.entries(silent)) {
+    if (countDiagnostics(fileName) !== 0) {
+        console.error(`Expected no typebuddy diagnostics in ${fileName}: ${reason}.`);
+        console.error(output);
+        process.exit(1);
+    }
+}
+
+// The counter itself must see the violations, or every check above passes vacuously.
+if (countDiagnostics("violations.ts") === 0) {
+    console.error("Expected typebuddy diagnostics in violations.ts; the smoke check cannot see oxlint's output.");
+    console.error(output);
+    process.exit(1);
+}
+
 const detectedRuleHits = expectedRuleIds.filter((ruleId) =>
     output.includes(ruleId),
 ).length;
@@ -48,30 +79,6 @@ if (detectedRuleHits !== expectedRuleIds.length) {
     );
     console.error(output);
     process.exit(1);
-}
-
-if (output.includes(frameworkCallbackPath.pathname)) {
-    console.error(
-        "Expected framework callback smoke file to be ignored by async typebuddy rules.",
-    );
-    console.error(output);
-    process.exit(1);
-}
-
-if (output.includes(deliberateThrowPath.pathname)) {
-    console.error(
-        "Expected a function that throws to be ignored by async typebuddy rules: a deliberate throw is not a result waiting to be wrapped.",
-    );
-    console.error(output);
-    process.exit(1);
-}
-
-// Every diagnostic line starts with the path of its file.
-function countDiagnostics(fileName: string): number {
-    return output
-        .split("\n")
-        .filter((line) => line.includes(`${fileName}:`) && line.includes("error typebuddy("))
-        .length;
 }
 
 for (const fileName of ["use-server-module.ts", "use-server-function.ts"]) {
