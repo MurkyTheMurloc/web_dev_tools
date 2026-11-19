@@ -1,5 +1,0 @@
----
-"@murky-web/oxlint-plugin-solid": patch
----
-
-Review fixes for the Solid 2.0.2 autofixes. `solid/no-destructure` no longer produces a duplicate binding when the file already has a `merge` or `omit` (another import, a local declaration): it imports the `solid-js` one under a free alias (`merge as solidMerge`, then `solidMerge2`, ...) and calls that. One `oxlint --fix` run fixes every destructuring component of a file again: the fix of the first component carries the `solid-js` import for all of them, so the fixes no longer overlap. If such a fix is dropped (another rule's fix overlaps it), later runs heal the file: in a file with JSX or a `solid-js` import, calls of the shape the fix writes (`merge({ ... }, props)`, `omit(props, "a", "b")`, and their `solidMerge`/`solidOmit` aliases) that no binding resolves get their own `solid/no-destructure` report, whose fix adds the `solid-js` import for them. `solid/imports` no longer suggests `createOwner`, `createErrorBoundary`, `createLoadingBoundary` and `createRevealOrder`, which `solid-js` 2.0.2 marks `@internal` and strips from its type declarations.
