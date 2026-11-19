@@ -85,6 +85,9 @@
     "peerDependenciesMeta": {
         "@opentelemetry/api": {
             "optional": true
+        },
+        "hono": {
+            "optional": true
         }
     }
 }

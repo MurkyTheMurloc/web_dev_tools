@@ -1,3 +1,9 @@
+import {
+    escapeFileCharacters,
+    formatFunctionLabel,
+    toJsonSafeValue,
+} from "./serialize_value";
+
 const ANSI_RESET_COLOR = 0;
 const ANSI_GREEN = 32;
 const ANSI_YELLOW = 33;
@@ -18,12 +24,11 @@ const EMPTY_OPEN_TELEMETRY_CONTEXT: OpenTelemetryContext = {
     traceId: "",
 };
 const CAPTURE_STACK_TRACE_MESSAGE = "simplelog";
-const FUNCTION_LABEL_PREFIX = "[Function ";
-const FUNCTION_LABEL_SUFFIX = "]";
-const ANONYMOUS_FUNCTION_LABEL = "[Function anonymous]";
 const LOGGER_NAME_SEPARATOR = " -> ";
 const LOG_FILE_LINE_BREAK = "\n";
 const NODE_MODULES_SEGMENT = "node_modules";
+const FILE_ARGUMENT_SEPARATOR = " ";
+const STACK_CONTINUATION_PREFIX = "\t";
 
 type LogLevel = "DEBUG" | "INFO" | "WARN" | "ERROR";
 
@@ -75,7 +80,7 @@ type LogPayload = Readonly<{
     consoleArgs: readonly string[];
     consoleLogMessage: string;
     consoleStackTrace: string;
-    plainLogMessage: string;
+    plainFileLine: string;
     plainStackTrace: string;
 }>;
 
@@ -90,6 +95,8 @@ type PlainLogParts = Readonly<{
 type StringifiablePrimitive = bigint | boolean | number | string | symbol;
 
 type StringifiedArgument = Readonly<{
+    /** What goes into a log file when it differs from `text` (compact JSON). */
+    fileText?: string;
     kind: StringifiedArgumentKind;
     text: string;
 }>;
@@ -215,36 +222,26 @@ function stringifyPrimitiveArgument(
 }
 
 function stringifyFunctionArgument(functionName: string): StringifiedArgument {
-    if (functionName.length === EMPTY_FUNCTION_NAME_LENGTH) {
-        return {
-            kind: "function",
-            text: ANONYMOUS_FUNCTION_LABEL,
-        };
-    }
-
     return {
         kind: "function",
-        text: `${FUNCTION_LABEL_PREFIX}${functionName}${FUNCTION_LABEL_SUFFIX}`,
+        text: formatFunctionLabel(functionName),
     };
-}
-
-function identityJsonReplacer(_key: string, value: unknown): unknown {
-    if (typeof value === "function") {
-        return stringifyFunctionArgument(value.name).text;
-    }
-
-    return value;
 }
 
 function stringifyJsonArgument(argument: unknown): StringifiedArgument {
     try {
+        const safeValue = toJsonSafeValue(argument);
         const stringifiedArgument = JSON.stringify(
-            argument,
-            identityJsonReplacer,
+            safeValue,
+            undefined,
             JSON_INDENTATION,
         );
+        const compactArgument = JSON.stringify(safeValue);
 
-        if (typeof stringifiedArgument !== "string") {
+        if (
+            typeof stringifiedArgument !== "string" ||
+            typeof compactArgument !== "string"
+        ) {
             return {
                 kind: "object",
                 text: FALLBACK_OBJECT_STRING,
@@ -252,6 +249,7 @@ function stringifyJsonArgument(argument: unknown): StringifiedArgument {
         }
 
         return {
+            fileText: compactArgument,
             kind: "object",
             text: stringifiedArgument,
         };
@@ -523,12 +521,14 @@ function createPlainLogParts(
     return {
         openTelemetryContext,
         plainArgs: stringifyArguments(args),
-        plainLogMessage: buildLogMessage(
-            timestamp,
-            `[${level}]`,
-            loggerName,
-            formatOpenTelemetryContextLabel(openTelemetryContext),
-            message,
+        plainLogMessage: escapeFileCharacters(
+            buildLogMessage(
+                timestamp,
+                `[${level}]`,
+                loggerName,
+                formatOpenTelemetryContextLabel(openTelemetryContext),
+                message,
+            ),
         ),
         plainStackTrace,
         timestamp,
@@ -591,6 +591,28 @@ function resolveOpenTelemetryContext(
     return spanContextReader();
 }
 
+function escapeFileArgument(argument: StringifiedArgument): string {
+    // Objects use their compact, single-line JSON. JSON already escaped the
+    // control characters below U+0020; the rest (DEL, C1, U+2028, bidi
+    // controls) is escaped here, and an escape inside a JSON string is still
+    // valid JSON.
+    return escapeFileCharacters(argument.fileText ?? argument.text);
+}
+
+/**
+ * The file line is the console line without colors: the header, then every
+ * argument, separated by a space the way `console.log` separates them.
+ *
+ * @param {PlainLogParts} plainLogParts - The plain header and arguments.
+ * @returns {string} One log file line, without the trailing line break.
+ */
+function buildPlainFileLine(plainLogParts: PlainLogParts): string {
+    return [
+        plainLogParts.plainLogMessage,
+        ...plainLogParts.plainArgs.map(escapeFileArgument),
+    ].join(FILE_ARGUMENT_SEPARATOR);
+}
+
 function combineLogPayload(
     consolePayload: Pick<
         LogPayload,
@@ -600,7 +622,7 @@ function combineLogPayload(
 ): LogPayload {
     return {
         ...consolePayload,
-        plainLogMessage: plainLogParts.plainLogMessage,
+        plainFileLine: buildPlainFileLine(plainLogParts),
         plainStackTrace: plainLogParts.plainStackTrace,
     };
 }
@@ -672,6 +694,23 @@ function writeLogLine(
     }
 
     appendTextFileSync(logFilePath, `${logMessage}${LOG_FILE_LINE_BREAK}`);
+}
+
+/**
+ * A stack trace is several lines. Every one of them starts with a tab in the
+ * file, while every log entry starts with a timestamp, so a reader can tell the
+ * continuation lines of an entry from the next entry.
+ *
+ * @param {string} stackTrace - The plain stack trace.
+ * @returns {string} The stack trace, each line tab-prefixed and escaped.
+ */
+function formatFileStackTrace(stackTrace: string): string {
+    return stackTrace
+        .split(LOG_FILE_LINE_BREAK)
+        .map((line) => {
+            return `${STACK_CONTINUATION_PREFIX}${escapeFileCharacters(line)}`;
+        })
+        .join(LOG_FILE_LINE_BREAK);
 }
 
 function shouldLog(level: LogLevel, threshold: LogLevel): boolean {
@@ -838,7 +877,7 @@ class LoggerBase {
             this.runtime,
             this.writeToFile,
             this.logFilePath,
-            plainStackTrace,
+            formatFileStackTrace(plainStackTrace),
         );
         this.runtime.console.error(coloredStackTrace);
     }
@@ -848,7 +887,7 @@ class LoggerBase {
             this.runtime,
             this.writeToFile,
             this.logFilePath,
-            payload.plainLogMessage,
+            payload.plainFileLine,
         );
         this.runtime.console.log(
             payload.consoleLogMessage,

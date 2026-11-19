@@ -10,6 +10,7 @@ const NUM_0 = 0;
 const NUM_1 = 1;
 const NUM_2 = 2;
 const NUM_200 = 200;
+const NUM_201 = 201;
 const NUM_500 = 500;
 
 type LoggedCall = readonly unknown[] | undefined;
@@ -121,5 +122,124 @@ describe("Hono logger middleware failures", () => {
     expect(argumentText(requestFailedCall, NUM_1)).toContain('"requestId": "req-123"');
     expect(argumentText(requestFailedCall, NUM_1)).toContain('"status": 500');
     expect(argumentText(requestFailedCall, NUM_2)).toContain('"message": "kaputt"');
+  });
+});
+
+function requestCompletedMetadata(): string {
+  const requestCompletedCall = loggedCalls().find((call) => {
+    return argumentText(call, NUM_0).includes("Request completed");
+  });
+
+  return argumentText(requestCompletedCall, NUM_1);
+}
+
+function createQueryApp(
+  includeQuery: boolean,
+): Hono<{ Variables: HonoLoggerVariables }> {
+  const logger = new WebLogger("server", undefined, {
+    valueColorMode: "off",
+  });
+  const app = new Hono<{ Variables: HonoLoggerVariables }>();
+
+  app.use(createHonoLoggerMiddleware({ includeQuery, logger }));
+
+  return app;
+}
+
+describe("Hono logger middleware query strings", () => {
+  beforeEach(setUpConsoleSpies);
+  afterEach(restoreMocks);
+
+  it("logs the path but not the query string by default", async () => {
+    const app = createApp();
+
+    app.get("/search", (c) => {
+      return c.text("ok");
+    });
+
+    await app.request("http://localhost/search?token=s3cret&code=abc");
+
+    const metadata = requestCompletedMetadata();
+
+    expect(metadata).toContain('"path": "/search"');
+    expect(metadata).not.toContain("s3cret");
+    expect(metadata).not.toContain("token");
+    expect(metadata).not.toContain("?");
+  });
+
+  it("does not log the query string of failed requests either", async () => {
+    const app = createApp();
+
+    app.onError((_error, c) => {
+      return c.text("boom", NUM_500);
+    });
+    app.get("/search", () => {
+      throw new Error("kaputt");
+    });
+
+    await app.request("http://localhost/search?token=s3cret");
+
+    const requestFailedCall = loggedCalls().find((call) => {
+      return argumentText(call, NUM_0).includes("Request failed");
+    });
+
+    expect(argumentText(requestFailedCall, NUM_1)).not.toContain("s3cret");
+  });
+
+  it("logs the query string as its own field when includeQuery is on", async () => {
+    const app = createQueryApp(true);
+
+    app.get("/search", (c) => {
+      return c.text("ok");
+    });
+
+    await app.request("http://localhost/search?q=cats&page=2");
+
+    const metadata = requestCompletedMetadata();
+
+    expect(metadata).toContain('"path": "/search"');
+    expect(metadata).toContain('"query": "?q=cats&page=2"');
+  });
+
+  it("logs no query field when includeQuery is on but the URL has none", async () => {
+    const app = createQueryApp(true);
+
+    app.get("/plain", (c) => {
+      return c.text("ok");
+    });
+
+    await app.request("http://localhost/plain");
+
+    expect(requestCompletedMetadata()).not.toContain("query");
+  });
+});
+
+describe("Hono logger middleware responses", () => {
+  beforeEach(setUpConsoleSpies);
+  afterEach(restoreMocks);
+
+  it("returns the handler's own Response object", async () => {
+    const app = createApp();
+    const handlerResponse = new Response("ok", { status: NUM_200 });
+
+    app.get("/identity", () => {
+      return handlerResponse;
+    });
+
+    const response = await app.request("http://localhost/identity");
+
+    expect(response).toBe(handlerResponse);
+  });
+
+  it("logs the status of the handler's Response", async () => {
+    const app = createApp();
+
+    app.get("/created", () => {
+      return new Response("made", { status: NUM_201 });
+    });
+
+    await app.request("http://localhost/created");
+
+    expect(requestCompletedMetadata()).toContain('"status": 201');
   });
 });
