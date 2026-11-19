@@ -202,16 +202,27 @@ export function appendImports(fixer, sourceCode, importNode, identifiers) {
         return fixer.insertTextAfter(namedSpecifier, `, ${identifiersString}`);
     }
 
-    const otherSpecifier = importNode.specifiers.find((specifier) => {
-        return (
-            specifier.type === "ImportDefaultSpecifier" ||
-            specifier.type === "ImportNamespaceSpecifier"
+    // A namespace import cannot share a declaration with named imports
+    // (`import * as X, { a }` and `import X, { a }, * as Y` do not parse), so
+    // the names get a declaration of their own right after it.
+    if (
+        importNode.specifiers.some((specifier) => {
+            return specifier.type === "ImportNamespaceSpecifier";
+        })
+    ) {
+        return fixer.insertTextAfter(
+            importNode,
+            `\nimport ${importNode.importKind === "type" ? "type " : ""}{ ${identifiersString} } from ${sourceCode.getText(importNode.source)};`,
         );
+    }
+
+    const defaultSpecifier = importNode.specifiers.find((specifier) => {
+        return specifier.type === "ImportDefaultSpecifier";
     });
 
-    if (otherSpecifier) {
+    if (defaultSpecifier) {
         return fixer.insertTextAfter(
-            otherSpecifier,
+            defaultSpecifier,
             `, { ${identifiersString} }`,
         );
     }

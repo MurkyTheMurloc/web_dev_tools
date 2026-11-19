@@ -1,6 +1,30 @@
 import { getStringIfConstant } from "@eslint-community/eslint-utils";
 
 import { getSourceCode } from "../compat.mjs";
+import { appendImports, insertImports } from "../utils.mjs";
+const SOLID_SOURCE = "solid-js";
+const isSolidValueImport = (node) =>
+    node.type === "ImportDeclaration" &&
+    node.importKind !== "type" &&
+    node.source.value === SOLID_SOURCE;
+// The local name `name` has in a value import from "solid-js", or null.
+const findSolidImportLocal = (program, name) => {
+    for (const node of program.body) {
+        if (!isSolidValueImport(node)) {
+            continue;
+        }
+        for (const specifier of node.specifiers) {
+            if (
+                specifier.type === "ImportSpecifier" &&
+                specifier.importKind !== "type" &&
+                (specifier.imported.name ?? specifier.imported.value) === name
+            ) {
+                return specifier.local.name;
+            }
+        }
+    }
+    return null;
+};
 const getName = (node) => {
     switch (node.type) {
         case "Literal":
@@ -125,15 +149,49 @@ export default {
             const restName = () =>
                 (rest.argument.type === "Identifier" && rest.argument.name) ||
                 "rest";
+            // The name to call `merge`/`omit` by: the local name of an
+            // existing import, otherwise the plain name, which is then
+            // imported below.
+            const program = sourceCode.ast;
+            const missingImports = [];
+            const solidCallName = (name) => {
+                const local = findSolidImportLocal(program, name);
+                if (local !== null) {
+                    return local;
+                }
+                if (!missingImports.includes(name)) {
+                    missingImports.push(name);
+                }
+                return name;
+            };
             let lineToInsert = "";
             if (hasDefaults && rest) {
                 // Merge the defaults, then take the rest off the merged object.
-                lineToInsert = `  const ${propsName} = merge({ ${defaultsObjectString()} }, ${origProps});\n  const ${restName()} = omit(${propsName}, ${omitArgs()});\n`;
+                lineToInsert = `  const ${propsName} = ${solidCallName("merge")}({ ${defaultsObjectString()} }, ${origProps});\n  const ${restName()} = ${solidCallName("omit")}(${propsName}, ${omitArgs()});\n`;
             } else if (hasDefaults) {
-                lineToInsert = `  const ${propsName} = merge({ ${defaultsObjectString()} }, ${origProps});\n`;
+                lineToInsert = `  const ${propsName} = ${solidCallName("merge")}({ ${defaultsObjectString()} }, ${origProps});\n`;
             } else if (rest) {
                 // `props` already carries the named props; only the rest is new.
-                lineToInsert = `  const ${restName()} = omit(${origProps}, ${omitArgs()});\n`;
+                lineToInsert = `  const ${restName()} = ${solidCallName("omit")}(${origProps}, ${omitArgs()});\n`;
+            }
+            if (missingImports.length > 0) {
+                const declaration = program.body.find(isSolidValueImport);
+                const importFix = declaration
+                    ? appendImports(
+                          fixer,
+                          sourceCode,
+                          declaration,
+                          missingImports,
+                      )
+                    : insertImports(
+                          fixer,
+                          sourceCode,
+                          SOLID_SOURCE,
+                          missingImports,
+                      );
+                if (importFix) {
+                    yield importFix;
+                }
             }
             if (lineToInsert) {
                 const body = func.body;

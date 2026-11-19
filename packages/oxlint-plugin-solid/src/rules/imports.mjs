@@ -3,13 +3,15 @@ import { appendImports, insertImports, removeSpecifier } from "../utils.mjs";
 // Solid 2.0 moved the renderers into `@solidjs/*` packages and pulled the store
 // APIs into the core. Symbols that are legitimately exported from more than one
 // package (the control-flow components, `ComponentProps`) are deliberately left
-// out of these maps: there is no single correct source to point at.
+// out of these maps: there is no single correct source to point at. That also
+// covers `dynamicComponent`, which `@solidjs/web` re-exports from `solid-js`.
 const primitiveMap = new Map();
 for (const primitive of [
     "action",
     "affects",
     "children",
     "createContext",
+    "createDeferred",
     "createEffect",
     // The primitive forms of `Loading`, `Errored` and `Reveal`. Only custom
     // boundary components and renderer integrations reach for them, which is
@@ -20,6 +22,9 @@ for (const primitive of [
     "createMemo",
     "createOptimistic",
     "createOptimisticStore",
+    // `@internal` like the boundary primitives above: a runtime export of
+    // `solid-js`, typed only through `solid-js/internal`.
+    "createOwner",
     "createProjection",
     "createReaction",
     "createRenderEffect",
@@ -27,10 +32,12 @@ for (const primitive of [
     "createRoot",
     "createSignal",
     "createStore",
+    "createTrackedEffect",
     "createUniqueId",
     "deep",
     "DEV",
     "flush",
+    "from",
     "getObserver",
     "getOwner",
     "isEqual",
@@ -41,13 +48,14 @@ for (const primitive of [
     "merge",
     "omit",
     "onCleanup",
+    "onFlush",
     "onSettled",
     "reconcile",
     "refresh",
+    "repeat",
     "resolve",
     "runWithOwner",
     "snapshot",
-    "storePath",
     "untrack",
     "until",
     "useContext",
@@ -91,13 +99,14 @@ for (const type of [
     "Ref",
     "ResolvedChildren",
     "Signal",
-    "ValidComponent",
     "VoidComponent",
     "VoidProps",
 ]) {
     typeMap.set(type, "solid-js");
 }
-for (const type of ["ClassValue", "IntrinsicElement", "JSX", "RequestEvent"]) {
+// `ClassValue` is not listed: it only exists as `JSX.ClassValue`. Neither is
+// `ValidComponent`: `solid-js` and `@solidjs/web` each declare their own.
+for (const type of ["IntrinsicElement", "JSX", "RequestEvent"]) {
     typeMap.set(type, "@solidjs/web");
 }
 const sourceRegex = /^(?:solid-js|@solidjs\/(?:web|h|html|universal))$/;

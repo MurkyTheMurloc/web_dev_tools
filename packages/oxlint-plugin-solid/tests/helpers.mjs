@@ -1,9 +1,12 @@
 import { copyFileSync, cpSync, existsSync, readFileSync, writeFileSync } from "node:fs";
+import { tmpdir } from "node:os";
 
 const EXIT_SUCCESS = 0;
 const FIXTURE_FILE_PATH = "src/rule_case.tsx";
 const OXLINT_CONFIG_PATH = "./.oxlintrc.jsonc";
-const TEMP_DIRECTORY_PATTERN = "/tmp/oxlint-plugin-solid-XXXXXX";
+// `os.tmpdir()` follows `$TMPDIR`, so the harness also runs where `/tmp` is
+// read-only (agent sandboxes).
+const TEMP_DIRECTORY_PATTERN = `${tmpdir()}/oxlint-plugin-solid-XXXXXX`;
 const PACKAGE_RUNTIME_DEPENDENCIES = [
     "@eslint-community",
     "estraverse",

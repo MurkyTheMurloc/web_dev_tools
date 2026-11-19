@@ -290,6 +290,23 @@ export const createUser = (): unknown => {
         ruleId: "reactive-async",
     }),
     Object.freeze({
+        code: `import { createDeferred, createSignal } from "solid-js";
+
+declare function load(id: number): Promise<string>;
+
+export const createUser = (): unknown => {
+    const [id] = createSignal(1);
+    const first = createDeferred(async () => {
+        await load(0);
+        return load(id());
+    });
+
+    return first;
+};
+`,
+        ruleId: "reactive-async",
+    }),
+    Object.freeze({
         code: `import { db } from "~/server/db";
 
 export const rows = db.rows;
