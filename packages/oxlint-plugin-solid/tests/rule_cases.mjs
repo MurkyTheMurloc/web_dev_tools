@@ -404,7 +404,8 @@ export function Panel(props: Props): JSX.Element {
 `,
     }),
     Object.freeze({
-        expectedFragment: "export const Card: Component<Props> = ({ title }: Props) => {",
+        expectedFragment:
+            "export const Card: Component<Props> = ({ title }: Props) => {",
         name: "preserves destructured props in arrow form",
         source: `import type { JSX } from "@solidjs/web";
 

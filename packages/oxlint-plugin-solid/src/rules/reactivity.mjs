@@ -1,5 +1,6 @@
 /**
  * File overview here, scroll to bottom.
+ *
  * @link https://github.com/solidjs-community/eslint-plugin-solid/blob/main/docs/reactivity.md
  */
 import { getFunctionHeadLocation } from "@eslint-community/eslint-utils";
@@ -24,18 +25,18 @@ import {
 // `__removed_*` names so they can never fire; delete them once no Solid 1
 // code is linted with this plugin any more.
 class ScopeStackItem {
-    /** the node for the current scope, or program if global scope */
+    /** The node for the current scope, or program if global scope */
     node;
     /**
-     * nodes whose descendants in the current scope are allowed to be reactive.
-     * JSXExpressionContainers can be any expression containing reactivity, while
-     * function nodes/identifiers are typically arguments to solid-js primitives
-     * and should match a tracked scope exactly.
+     * Nodes whose descendants in the current scope are allowed to be reactive.
+     * JSXExpressionContainers can be any expression containing reactivity,
+     * while function nodes/identifiers are typically arguments to solid-js
+     * primitives and should match a tracked scope exactly.
      */
     trackedScopes = [];
-    /** nameless functions with reactivity, should exactly match a tracked scope */
+    /** Nameless functions with reactivity, should exactly match a tracked scope */
     unnamedDerivedSignals = new Set();
-    /** switched to true by time of :exit if JSX is detected in the current scope */
+    /** Switched to true by time of :exit if JSX is detected in the current scope */
     hasJSX = false;
     constructor(node) {
         this.node = node;
@@ -57,8 +58,8 @@ class ScopeStack extends Array {
     /**
      * Add references to a signal, merging with existing references if the
      * variable is the same. Derived signals are special; they don't use the
-     * declaration scope of the function, but rather the minimum declaration scope
-     * of any signals they contain.
+     * declaration scope of the function, but rather the minimum declaration
+     * scope of any signals they contain.
      */
     pushUniqueSignal(variable, declarationScope) {
         const foundSignal = this.signals.find((s) => s.variable === variable);
@@ -85,7 +86,8 @@ class ScopeStack extends Array {
     syncCallbacks = new Set();
     /**
      * Iterate through and remove the signal references in the current scope.
-     * That way, the next Scope up can safely check for references in its scope.
+     * That way, the next Scope up can safely check for references in its
+     * scope.
      */
     *consumeSignalReferencesInScope() {
         yield* this.consumeReferencesInScope(this.signals);
@@ -120,7 +122,10 @@ class ScopeStack extends Array {
             variable.references = notInScope;
         }
     }
-    /** Returns the function node deepest in the tree. Assumes a === b, a is inside b, or b is inside a. */
+    /**
+     * Returns the function node deepest in the tree. Assumes a === b, a is
+     * inside b, or b is inside a.
+     */
     findDeepestDeclarationScope = (a, b) => {
         if (a === b) return a;
         for (let i = this.length - 1; i >= 0; i -= 1) {
@@ -151,9 +156,12 @@ class ScopeStack extends Array {
         }
         return parentFunction === this.currentScope().node;
     }
-    /** variable references to be treated as signals, memos, derived signals, etc. */
+    /**
+     * Variable references to be treated as signals, memos, derived signals,
+     * etc.
+     */
     signals = [];
-    /** variables references to be treated as props (or stores) */
+    /** Variables references to be treated as props (or stores) */
     props = [];
 }
 const getNthDestructuredVar = (id, n, context) => {
@@ -235,7 +243,10 @@ export default {
         const warnShouldAssign = (node) =>
             context.report({ node, messageId: "shouldAssign" });
         const sourceCode = getSourceCode(context);
-        /** Represents the lexical function stack and relevant information for each function */
+        /**
+         * Represents the lexical function stack and relevant information for
+         * each function
+         */
         const scopeStack = new ScopeStack();
         const { currentScope, parentScope } = scopeStack;
         /** Tracks imports from 'solid-js', handling aliases. */
@@ -269,7 +280,10 @@ export default {
             }
             scopeStack.push(new ScopeStackItem(node));
         };
-        /** Returns whether a node falls under a tracked scope in the current function scope */
+        /**
+         * Returns whether a node falls under a tracked scope in the current
+         * function scope
+         */
         const matchTrackedScope = (trackedScope, node) => {
             switch (trackedScope.expect) {
                 case "function":
@@ -285,7 +299,10 @@ export default {
                     );
             }
         };
-        /** Inspects a specific reference of a reactive variable for correct handling. */
+        /**
+         * Inspects a specific reference of a reactive variable for correct
+         * handling.
+         */
         const handleTrackedScopes = (identifier, declarationScope) => {
             const currentScopeNode = currentScope().node;
             // Check if the call falls outside any tracked scopes in the current scope
@@ -398,10 +415,11 @@ export default {
         /**
          * Where a function first suspends, or null if it never does.
          *
-         * `yield` counts alongside `await`: an async generator driven by `action`
-         * suspends there in exactly the same way, and a read afterwards is just as
-         * detached. Nested functions are skipped — their gaps are their own, and a
-         * callback defined after an await still runs with its own tracking.
+         * `yield` counts alongside `await`: an async generator driven by
+         * `action` suspends there in exactly the same way, and a read
+         * afterwards is just as detached. Nested functions are skipped — their
+         * gaps are their own, and a callback defined after an await still runs
+         * with its own tracking.
          */
         const firstAsyncGapStart = (node) => {
             if (!isFunctionNode(node) || node.async !== true) {
@@ -429,7 +447,10 @@ export default {
                     const start = Array.isArray(current.range)
                         ? current.range[0]
                         : null;
-                    if (start !== null && (earliest === null || start < earliest)) {
+                    if (
+                        start !== null &&
+                        (earliest === null || start < earliest)
+                    ) {
                         earliest = start;
                     }
                     // An await nested inside this one cannot start earlier.
@@ -442,7 +463,10 @@ export default {
                     if (
                         value &&
                         typeof value === "object" &&
-                        !(typeof value.type === "string" && isFunctionNode(value))
+                        !(
+                            typeof value.type === "string" &&
+                            isFunctionNode(value)
+                        )
                     ) {
                         pending.push(value);
                     }
@@ -772,7 +796,10 @@ export default {
                 scopeStack.syncCallbacks.add(node.callee);
             }
         };
-        /** Checks VariableDeclarators, AssignmentExpressions, and CallExpressions for reactivity. */
+        /**
+         * Checks VariableDeclarators, AssignmentExpressions, and
+         * CallExpressions for reactivity.
+         */
         const checkForReactiveAssignment = (id, init) => {
             init = ignoreTransparentWrappers(init);
             // Mark return values of certain functions as reactive
@@ -781,9 +808,7 @@ export default {
                 init.callee.type === "Identifier"
             ) {
                 const { callee } = init;
-                if (
-                    matchImport(["createSignal"], callee.name)
-                ) {
+                if (matchImport(["createSignal"], callee.name)) {
                     const signal = id && getNthDestructuredVar(id, 0, context);
                     if (signal) {
                         scopeStack.pushSignal(signal, currentScope().node);
@@ -843,7 +868,9 @@ export default {
                             scopeStack.pushProps(vars, currentScope().node);
                         }
                     }
-                } else if (matchImport("__removed_createResource", callee.name)) {
+                } else if (
+                    matchImport("__removed_createResource", callee.name)
+                ) {
                     // createResource return value has reactive .loading and .error
                     const resourceReturn =
                         id && getNthDestructuredVar(id, 0, context);
@@ -853,7 +880,9 @@ export default {
                             currentScope().node,
                         );
                     }
-                } else if (matchImport("__removed_createMutable", callee.name)) {
+                } else if (
+                    matchImport("__removed_createMutable", callee.name)
+                ) {
                     const mutable = id && getReturnedVar(id, context);
                     if (mutable) {
                         scopeStack.pushProps(mutable, currentScope().node);

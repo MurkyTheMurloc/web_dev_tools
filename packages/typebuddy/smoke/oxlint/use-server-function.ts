@@ -5,8 +5,8 @@
 declare function readTodos(): Promise<string[]>;
 
 export async function listTodos(): Promise<string[]> {
-  "use server";
-  const todos = await readTodos();
-  const titles = todos.map(async (todo): Promise<string> => todo);
-  return (await Promise.all(titles)).concat(todos);
+    "use server";
+    const todos = await readTodos();
+    const titles = todos.map(async (todo): Promise<string> => todo);
+    return (await Promise.all(titles)).concat(todos);
 }

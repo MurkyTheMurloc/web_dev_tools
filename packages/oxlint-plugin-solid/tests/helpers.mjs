@@ -252,11 +252,7 @@ export async function createLintHarness() {
         // read other modules. A fixture that does not parse is an error.
         async lint(
             code,
-            {
-                fix = false,
-                fileName = FIXTURE_FILE_PATH,
-                files = {},
-            } = {},
+            { fix = false, fileName = FIXTURE_FILE_PATH, files = {} } = {},
         ) {
             const fixturePath = `${tempDirectoryPath}/${fileName}`;
             for (const [path, content] of Object.entries(files)) {

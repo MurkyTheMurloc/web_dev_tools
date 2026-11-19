@@ -4,17 +4,18 @@
 
 https://github.com/solidjs-community/eslint-plugin-solid
 
-Most rules of this package are ports of rules from eslint-plugin-solid, rewritten
-as plain JavaScript on the Oxlint AST (the original port is the 0.14.5 state, see
-`meta.version` in `src/index.mjs`; `validate-jsx-nesting` was ported again from
-0.20.0). The rules and the helpers they share are covered by its licence:
+Most rules of this package are ports of rules from eslint-plugin-solid,
+rewritten as plain JavaScript on the Oxlint AST (the original port is the 0.14.5
+state, see `meta.version` in `src/index.mjs`; `validate-jsx-nesting` was ported
+again from 0.20.0). The rules and the helpers they share are covered by its
+licence:
 
-- `components-return-once`, `event-handlers`, `imports`, `jsx-no-duplicate-props`,
-  `jsx-no-script-url`, `jsx-no-undef`, `jsx-uses-vars`, `no-array-handlers`,
-  `no-destructure`, `no-innerhtml`, `no-proxy-apis`, `no-react-deps`,
-  `no-react-specific-props`, `no-unknown-namespaces`, `prefer-for`, `prefer-show`,
-  `reactivity`, `self-closing-comp`, `style-prop`, `validate-jsx-nesting`
-  (`src/rules/`)
+- `components-return-once`, `event-handlers`, `imports`,
+  `jsx-no-duplicate-props`, `jsx-no-script-url`, `jsx-no-undef`,
+  `jsx-uses-vars`, `no-array-handlers`, `no-destructure`, `no-innerhtml`,
+  `no-proxy-apis`, `no-react-deps`, `no-react-specific-props`,
+  `no-unknown-namespaces`, `prefer-for`, `prefer-show`, `reactivity`,
+  `self-closing-comp`, `style-prop`, `validate-jsx-nesting` (`src/rules/`)
 - `prefer-class-object`, derived from the upstream rule `prefer-classlist`
 - the helpers in `src/utils.mjs` and `src/compat.mjs`
 

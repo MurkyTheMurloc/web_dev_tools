@@ -8,8 +8,8 @@ import {
 
 /**
  * Primitives whose first argument, when it is a function, is a reactive
- * computation. Solid 2.0 reads a promise returned from one like a value, so
- * the callback needs no `async` to be asynchronous.
+ * computation. Solid 2.0 reads a promise returned from one like a value, so the
+ * callback needs no `async` to be asynchronous.
  */
 const COMPUTATION_PRIMITIVES = [
     "createDeferred",
@@ -85,7 +85,9 @@ function isOnlyReturnAwait(callback, awaits) {
     }
 
     // Inside `try`, `return await` is what makes the catch see a rejection.
-    return only.parent?.type === "ReturnStatement" && !isInsideTry(only, callback);
+    return (
+        only.parent?.type === "ReturnStatement" && !isInsideTry(only, callback)
+    );
 }
 
 export const reactiveAsyncRule = {
@@ -169,7 +171,10 @@ export const reactiveAsyncRule = {
                 return;
             }
 
-            if (callback.async === true && isOnlyReturnAwait(callback, awaits)) {
+            if (
+                callback.async === true &&
+                isOnlyReturnAwait(callback, awaits)
+            ) {
                 context.report({
                     node: callback,
                     messageId: "redundantAsync",

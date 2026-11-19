@@ -1,10 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import {
-    isMaybe,
-    isNullable,
-    isOptional,
-} from "../src/type_helper.js";
+import { isMaybe, isNullable, isOptional } from "../src/type_helper.js";
 import type {
     Maybe,
     Nullable,

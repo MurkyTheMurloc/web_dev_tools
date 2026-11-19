@@ -25,8 +25,8 @@ function childrenIsMultilineSpaces(node) {
     );
 }
 /**
- * This rule is adapted from eslint-plugin-react's self-closing-comp rule under the MIT license,
- * with some enhancements. Thank you for your work!
+ * This rule is adapted from eslint-plugin-react's self-closing-comp rule under
+ * the MIT license, with some enhancements. Thank you for your work!
  */
 export default {
     meta: {

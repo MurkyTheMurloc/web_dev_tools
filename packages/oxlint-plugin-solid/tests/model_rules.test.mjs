@@ -27,9 +27,7 @@ function registerRule(ruleId, reports, silent, message) {
                 const result = await lintCase(modelCase);
 
                 expect(result.output).toContain(`solid(${ruleId})`);
-                expect(result.output).toContain(
-                    modelCase.message ?? message,
-                );
+                expect(result.output).toContain(modelCase.message ?? message);
             });
         });
 

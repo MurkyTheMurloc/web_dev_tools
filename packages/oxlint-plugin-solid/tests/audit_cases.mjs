@@ -567,10 +567,7 @@ const nestingReports = Object.freeze(
         ],
         ["a figcaption in a paragraph", "<p><figcaption /></p>"],
         ["an input without a type in a table", "<table><input /></table>"],
-        [
-            "a text input in a table",
-            `<table><input type="text" /></table>`,
-        ],
+        ["a text input in a table", `<table><input type="text" /></table>`],
         [
             "a hidden input in a column group, which the parser moves out",
             `<table><colgroup><input type="hidden" /></colgroup></table>`,
@@ -761,49 +758,126 @@ const nestingUpstreamReports = Object.freeze([
     nestingCase(`<p><div>Hello world!</div></p>`, ["plain", "p", "div"]),
     nestingCase(`<p><hr /></p>`, ["plain", "p", "hr"]),
     nestingCase(`<p>Hello <p>world</p>!</p>`, ["plain", "p", "p"]),
-    nestingCase(`<table><div>Hello world!</div></table>`, ["plain", "table", "div"]),
+    nestingCase(`<table><div>Hello world!</div></table>`, [
+        "plain",
+        "table",
+        "div",
+    ]),
     nestingCase(`<tr><div>Hello world!</div></tr>`, ["plain", "tr", "div"]),
-    nestingCase(`<table><tbody><tr><td><tr /></td></tr></tbody></table>`, ["plain", "td", "tr"]),
-    nestingCase(`<a href="/one"><a href="/two">Hello world!</a></a>`, ["plain", "a", "a"]),
-    nestingCase(`<button><button>Hello world!</button></button>`, ["plain", "button", "button"]),
-    nestingCase(`<form><form>Hello world!</form></form>`, ["plain", "form", "form"]),
+    nestingCase(`<table><tbody><tr><td><tr /></td></tr></tbody></table>`, [
+        "plain",
+        "td",
+        "tr",
+    ]),
+    nestingCase(`<a href="/one"><a href="/two">Hello world!</a></a>`, [
+        "plain",
+        "a",
+        "a",
+    ]),
+    nestingCase(`<button><button>Hello world!</button></button>`, [
+        "plain",
+        "button",
+        "button",
+    ]),
+    nestingCase(`<form><form>Hello world!</form></form>`, [
+        "plain",
+        "form",
+        "form",
+    ]),
     nestingCase(`<svg><div>Hello world!</div></svg>`, ["plain", "svg", "div"]),
     // integration points hand their children back to the HTML parser
-    nestingCase(`<svg><foreignObject><p><div>Hello world!</div></p></foreignObject></svg>`, ["plain", "p", "div"]),
-    nestingCase(`<math><mi><a href="/one"><a href="/two">x</a></a></mi></math>`, ["plain", "a", "a"]),
+    nestingCase(
+        `<svg><foreignObject><p><div>Hello world!</div></p></foreignObject></svg>`,
+        ["plain", "p", "div"],
+    ),
+    nestingCase(
+        `<math><mi><a href="/one"><a href="/two">x</a></a></mi></math>`,
+        ["plain", "a", "a"],
+    ),
     // the parser lowercases tag and attribute names first
-    nestingCase(`<svg><foreignobject><a href="/one"><a href="/two" /></a></foreignobject></svg>`, ["plain", "a", "a"]),
-    nestingCase(`<math><annotation-xml Encoding="text/html"><a href="/one"><a href="/two" /></a></annotation-xml></math>`, ["plain", "a", "a"]),
+    nestingCase(
+        `<svg><foreignobject><a href="/one"><a href="/two" /></a></foreignobject></svg>`,
+        ["plain", "a", "a"],
+    ),
+    nestingCase(
+        `<math><annotation-xml Encoding="text/html"><a href="/one"><a href="/two" /></a></annotation-xml></math>`,
+        ["plain", "a", "a"],
+    ),
     // one level down, <mglyph> is HTML like the rest
-    nestingCase(`<math><mi><span><mglyph><caption /></mglyph></span></mi></math>`, ["plain", "mglyph", "caption"]),
+    nestingCase(
+        `<math><mi><span><mglyph><caption /></mglyph></span></mi></math>`,
+        ["plain", "mglyph", "caption"],
+    ),
     // so do HTML tags that make the parser leave foreign content
-    nestingCase(`<svg><g><p><a href="/one"><a href="/two" /></a></p></g></svg>`, ["plain", "a", "a"]),
-    nestingCase(`<svg><font color="red"><a href="/one"><a href="/two" /></a></font></svg>`, ["plain", "a", "a"]),
-    nestingCase(`<math><annotation-xml encoding="text/html"><a href="/one"><a href="/two" /></a></annotation-xml></math>`, ["plain", "a", "a"]),
+    nestingCase(
+        `<svg><g><p><a href="/one"><a href="/two" /></a></p></g></svg>`,
+        ["plain", "a", "a"],
+    ),
+    nestingCase(
+        `<svg><font color="red"><a href="/one"><a href="/two" /></a></font></svg>`,
+        ["plain", "a", "a"],
+    ),
+    nestingCase(
+        `<math><annotation-xml encoding="text/html"><a href="/one"><a href="/two" /></a></annotation-xml></math>`,
+        ["plain", "a", "a"],
+    ),
     // below a nested <svg> or <math>, integration points are those of the namespace around it
-    nestingCase(`<math><svg><title><b>Hello world!</b></title></svg></math>`, ["plain", "title", "b"]),
-    nestingCase(`<svg><math><title><a href="/one"><a href="/two" /></a></title></math></svg>`, ["plain", "a", "a"]),
-    nestingCase(`<svg>{ok && <math><mi><a href="/one"><a href="/two" /></a></mi></math>}</svg>`, ["plain", "a", "a"]),
+    nestingCase(`<math><svg><title><b>Hello world!</b></title></svg></math>`, [
+        "plain",
+        "title",
+        "b",
+    ]),
+    nestingCase(
+        `<svg><math><title><a href="/one"><a href="/two" /></a></title></math></svg>`,
+        ["plain", "a", "a"],
+    ),
+    nestingCase(
+        `<svg>{ok && <math><mi><a href="/one"><a href="/two" /></a></mi></math>}</svg>`,
+        ["plain", "a", "a"],
+    ),
     // only <svg> right inside <annotation-xml> starts SVG within MathML
-    nestingCase(`<math><annotation-xml><svg><title><a href="/one"><a href="/two" /></a></title></svg></annotation-xml></math>`, ["plain", "a", "a"]),
-    nestingCase(`<table><thead><th>1</th></thead></table>`, ["plain", "thead", "th"]),
+    nestingCase(
+        `<math><annotation-xml><svg><title><a href="/one"><a href="/two" /></a></title></svg></annotation-xml></math>`,
+        ["plain", "a", "a"],
+    ),
+    nestingCase(`<table><thead><th>1</th></thead></table>`, [
+        "plain",
+        "thead",
+        "th",
+    ]),
     nestingCase(`<table><col /></table>`, ["plain", "table", "col"]),
     nestingCase(`<div><tr><td>1</td></tr></div>`, ["plain", "div", "tr"]),
     nestingCase(`<ul><li>one<li>two</li></li></ul>`, ["plain", "li", "li"]),
     nestingCase(`<h1><h2>Hello world!</h2></h1>`, ["plain", "h1", "h2"]),
-    nestingCase(`<textarea><div>Hello world!</div></textarea>`, ["plain", "textarea", "div"]),
+    nestingCase(`<textarea><div>Hello world!</div></textarea>`, [
+        "plain",
+        "textarea",
+        "div",
+    ]),
     // a custom element doesn't make table markup legal
     nestingCase(`<x-row><td>1</td></x-row>`, ["plain", "x-row", "td"]),
     // these all compile to the same insert() into the same parent, which only
     // server-rendered HTML sends back through the parser
     nestingCase(`<p>{<hr />}</p>`, ["inserted", "p", "hr"]),
     nestingCase(`<p>{condition && <hr />}</p>`, ["inserted", "p", "hr"]),
-    nestingCase(`<p>{condition ? <hr /> : <div />}</p>`, ["inserted", "p", "hr"], ["inserted", "p", "div"]),
+    nestingCase(
+        `<p>{condition ? <hr /> : <div />}</p>`,
+        ["inserted", "p", "hr"],
+        ["inserted", "p", "div"],
+    ),
     nestingCase(`<p>{[<hr />]}</p>`, ["inserted", "p", "hr"]),
     nestingCase(`<p children={<hr />} />`, ["inserted", "p", "hr"]),
     // each level is reported on its own
-    nestingCase(`<p><div><p><hr /></p></div></p>`, ["plain", "p", "div"], ["plain", "p", "hr"]),
-    nestingCase(`<p><div /><div /></p>`, ["plain", "p", "div"], ["plain", "p", "div"]),
+    nestingCase(
+        `<p><div><p><hr /></p></div></p>`,
+        ["plain", "p", "div"],
+        ["plain", "p", "hr"],
+    ),
+    nestingCase(
+        `<p><div /><div /></p>`,
+        ["plain", "p", "div"],
+        ["plain", "p", "div"],
+    ),
 ]);
 
 export {

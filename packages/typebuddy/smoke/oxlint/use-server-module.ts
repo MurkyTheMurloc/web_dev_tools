@@ -7,10 +7,10 @@
 declare function readTodos(): Promise<string[]>;
 
 export async function listTodos(): Promise<string[]> {
-  return readTodos();
+    return readTodos();
 }
 
 export async function countTodos(): Promise<number> {
-  const todos = await readTodos();
-  return todos.length;
+    const todos = await readTodos();
+    return todos.length;
 }

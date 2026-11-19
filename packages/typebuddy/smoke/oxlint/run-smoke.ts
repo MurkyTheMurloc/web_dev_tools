@@ -50,7 +50,9 @@ for (const ruleId of expectedRuleIds) {
 // typebuddy diagnostics reported for one smoke file
 function countDiagnostics(fileName: string): number {
     return diagnostics.filter(
-        (d) => d.filename.endsWith(`/${fileName}`) && d.code.startsWith("typebuddy("),
+        (d) =>
+            d.filename.endsWith(`/${fileName}`) &&
+            d.code.startsWith("typebuddy("),
     ).length;
 }
 
@@ -59,14 +61,18 @@ function countDiagnostics(fileName: string): number {
 const silent = {
     "deliberate-throw.ts":
         "a function that throws is not a result waiting to be wrapped",
-    "framework-callback.ts": "framework callbacks are ignored by the async rules",
-    "violations.bench.ts": "typebuddy does not apply to test files (*.bench.ts)",
+    "framework-callback.ts":
+        "framework callbacks are ignored by the async rules",
+    "violations.bench.ts":
+        "typebuddy does not apply to test files (*.bench.ts)",
     "async-helper.ts": "typebuddy does not apply to files under __tests__/",
 } as const;
 
 for (const [fileName, reason] of Object.entries(silent)) {
     if (countDiagnostics(fileName) !== 0) {
-        console.error(`Expected no typebuddy diagnostics in ${fileName}: ${reason}.`);
+        console.error(
+            `Expected no typebuddy diagnostics in ${fileName}: ${reason}.`,
+        );
         console.error(output);
         process.exit(1);
     }
@@ -74,7 +80,9 @@ for (const [fileName, reason] of Object.entries(silent)) {
 
 // The counter itself must see the violations, or every check above passes vacuously.
 if (countDiagnostics("violations.ts") === 0) {
-    console.error("Expected typebuddy diagnostics in violations.ts; the smoke check cannot see oxlint's output.");
+    console.error(
+        "Expected typebuddy diagnostics in violations.ts; the smoke check cannot see oxlint's output.",
+    );
     console.error(output);
     process.exit(1);
 }

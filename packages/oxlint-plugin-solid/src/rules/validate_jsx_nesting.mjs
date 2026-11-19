@@ -382,7 +382,8 @@ const getParsingNamespace = (node) => {
     for (const [element, tag] of elements.reverse()) {
         // Anything between two elements, like an expression or a component, is
         // a boundary.
-        const outer = parent && element.parent === parent[0] ? parent : undefined;
+        const outer =
+            parent && element.parent === parent[0] ? parent : undefined;
         // The namespace this element's own start tag is parsed in.
         const own =
             outer &&
@@ -446,7 +447,9 @@ export default {
             if (isValidHTMLNesting(parent, child)) {
                 return;
             }
-            if (!parserRewrites(parent, child, getParsingNamespace(parentNode))) {
+            if (
+                !parserRewrites(parent, child, getParsingNamespace(parentNode))
+            ) {
                 return;
             }
             // Not in upstream, which parses a bare `<input>` and so reports

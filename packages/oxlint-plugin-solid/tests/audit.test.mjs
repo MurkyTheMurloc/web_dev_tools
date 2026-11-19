@@ -31,9 +31,9 @@ function countOccurrences(text, fragment) {
 
 // The messages of the reports of one rule, in the order of the output.
 function reportMessages(output, ruleId) {
-    return [...output.matchAll(new RegExp(`solid\\(${ruleId}\\): (.+)`, "gu"))].map(
-        (match) => match[1],
-    );
+    return [
+        ...output.matchAll(new RegExp(`solid\\(${ruleId}\\): (.+)`, "gu")),
+    ].map((match) => match[1]);
 }
 
 function lintCase(auditCase) {
