@@ -5,7 +5,25 @@
 { pkgs, ... }:
 
 {
-  packages = [ pkgs.jq ];
+  # act runs the GitHub workflows locally in Docker (see scripts.ci-local).
+  packages = [
+    pkgs.jq
+    pkgs.act
+  ];
+
+  # The pull-request workflows (ci.yml, publish-dry-run.yml) as GitHub runs them,
+  # CI=true included. `ci-local -j typebuddy` runs one job. The job container gets
+  # no Docker socket: none of the jobs needs one, and the agents' socket refuses
+  # that bind mount.
+  scripts.ci-local = {
+    description = "Run the pull-request workflows locally with act";
+    exec = ''
+      act pull_request \
+        -P ubuntu-latest=catthehacker/ubuntu:act-latest \
+        --container-daemon-socket=- \
+        "$@"
+    '';
+  };
 
   # Node 24 as in the publish workflow (vitest 5 and changesets 3 need >= 22.12).
   # bun install runs by itself when bun.lock changed; devenv keeps a checksum of the lock
