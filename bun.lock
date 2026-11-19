@@ -18,7 +18,7 @@
     },
     "packages/oxlint-plugin-solid": {
       "name": "@murky-web/oxlint-plugin-solid",
-      "version": "1.4.0",
+      "version": "1.4.1",
       "dependencies": {
         "@eslint-community/eslint-utils": "^4.10.1",
         "estraverse": "^5.3.0",
