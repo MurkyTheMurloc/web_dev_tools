@@ -63,7 +63,7 @@ type TakenItems<Item> = Readonly<{
  *   `\uXXXX`. Tab and backslash stay as they are.
  */
 function escapeFileCharacters(text: string): string {
-    return text.replace(FILE_UNSAFE_CHARACTER_PATTERN, (character) => {
+    return text.replaceAll(FILE_UNSAFE_CHARACTER_PATTERN, (character) => {
         const knownEscape = FILE_CHARACTER_ESCAPES[character];
 
         if (typeof knownEscape === "string") {
