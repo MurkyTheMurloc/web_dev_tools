@@ -7,5 +7,5 @@ export type MaybeCandidate = string | null;
 export type NullableCandidate = string | null | undefined;
 
 export async function loadValue(): Promise<string> {
-  return "value";
+    return "value";
 }

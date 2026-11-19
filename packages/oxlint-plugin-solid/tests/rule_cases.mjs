@@ -183,7 +183,9 @@ createEffect(
         ruleId: "no-unknown-namespaces",
     }),
     Object.freeze({
-        code: `interface Props {
+        code: `import type { JSX } from "@solidjs/web";
+
+interface Props {
     readonly children?: JSX.Element;
 }
 
@@ -330,10 +332,19 @@ export const rows = db.rows;
 `,
         ruleId: "style-prop",
     }),
+    Object.freeze({
+        code: `export const View = () => {
+    return <p><div>Hello</div></p>;
+};
+`,
+        ruleId: "validate-jsx-nesting",
+    }),
 ]);
 
 const jsxUsesVarsCase = Object.freeze({
-    code: `const UsedComponent = (): JSX.Element => {
+    code: `import type { JSX } from "@solidjs/web";
+
+const UsedComponent = (): JSX.Element => {
     return <div>Hello</div>;
 };
 
@@ -393,7 +404,8 @@ export function Panel(props: Props): JSX.Element {
 `,
     }),
     Object.freeze({
-        expectedFragment: "export const Card: Component<Props> = ({ title }: Props) => {",
+        expectedFragment:
+            "export const Card: Component<Props> = ({ title }: Props) => {",
         name: "preserves destructured props in arrow form",
         source: `import type { JSX } from "@solidjs/web";
 

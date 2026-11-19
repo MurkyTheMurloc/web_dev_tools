@@ -1,16 +1,16 @@
 type AstNode = {
-  type: string;
-  [key: string]: unknown;
+    type: string;
+    [key: string]: unknown;
 };
 
 const FUNCTION_TYPES = new Set([
-  "ArrowFunctionExpression",
-  "FunctionDeclaration",
-  "FunctionExpression",
+    "ArrowFunctionExpression",
+    "FunctionDeclaration",
+    "FunctionExpression",
 ]);
 
 function isNode(value: unknown): value is AstNode {
-  return typeof value === "object" && value !== null && "type" in value;
+    return typeof value === "object" && value !== null && "type" in value;
 }
 
 /**
@@ -31,40 +31,40 @@ function isNode(value: unknown): value is AstNode {
  * @returns {void}
  */
 function walkOwnSubtree(
-  root: unknown,
-  visit: (node: AstNode) => boolean | void,
+    root: unknown,
+    visit: (node: AstNode) => boolean | void,
 ): void {
-  if (!isNode(root)) {
-    return;
-  }
-
-  const pending: AstNode[] = [root];
-  while (pending.length > 0) {
-    // `pop` on a non-empty array always yields a node; the length check above
-    // is the loop condition, but `noUncheckedIndexedAccess` cannot see that.
-    const current = pending.pop();
-    if (current === undefined) {
-      break;
+    if (!isNode(root)) {
+        return;
     }
 
-    if (visit(current) === false) {
-      continue;
-    }
-
-    for (const [key, value] of Object.entries(current)) {
-      if (key === "parent") {
-        continue;
-      }
-
-      const candidates = Array.isArray(value) ? value : [value];
-      for (const candidate of candidates) {
-        if (!isNode(candidate) || FUNCTION_TYPES.has(candidate.type)) {
-          continue;
+    const pending: AstNode[] = [root];
+    while (pending.length > 0) {
+        // `pop` on a non-empty array always yields a node; the length check above
+        // is the loop condition, but `noUncheckedIndexedAccess` cannot see that.
+        const current = pending.pop();
+        if (current === undefined) {
+            break;
         }
-        pending.push(candidate);
-      }
+
+        if (visit(current) === false) {
+            continue;
+        }
+
+        for (const [key, value] of Object.entries(current)) {
+            if (key === "parent") {
+                continue;
+            }
+
+            const candidates = Array.isArray(value) ? value : [value];
+            for (const candidate of candidates) {
+                if (!isNode(candidate) || FUNCTION_TYPES.has(candidate.type)) {
+                    continue;
+                }
+                pending.push(candidate);
+            }
+        }
     }
-  }
 }
 
 export { walkOwnSubtree };

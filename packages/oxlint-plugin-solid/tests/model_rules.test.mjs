@@ -1,4 +1,4 @@
-import { afterAll, beforeAll, describe, expect, test } from "bun:test";
+import { afterAll, beforeAll, describe, expect, test } from "vitest";
 
 import { createLintHarness } from "./helpers.mjs";
 import {
@@ -27,9 +27,7 @@ function registerRule(ruleId, reports, silent, message) {
                 const result = await lintCase(modelCase);
 
                 expect(result.output).toContain(`solid(${ruleId})`);
-                expect(result.output).toContain(
-                    modelCase.message ?? message,
-                );
+                expect(result.output).toContain(modelCase.message ?? message);
             });
         });
 

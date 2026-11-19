@@ -2,7 +2,7 @@
 // files, so the smoke test expects silence for this async helper.
 
 export async function loadFixture(): Promise<string> {
-  return "fixture";
+    return "fixture";
 }
 
 export type FixtureCandidate = string | undefined;

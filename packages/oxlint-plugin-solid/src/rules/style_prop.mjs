@@ -1,4 +1,7 @@
-import { getPropertyName, getStaticValue } from "@eslint-community/eslint-utils";
+import {
+    getPropertyName,
+    getStaticValue,
+} from "@eslint-community/eslint-utils";
 import kebabCase from "kebab-case";
 import { all as allCssProperties } from "known-css-properties";
 import parse from "style-to-object";

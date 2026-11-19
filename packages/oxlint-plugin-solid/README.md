@@ -135,17 +135,19 @@ hindurch gesucht; ein Kind, das erst durch einen Ausdruck (`{cond && <div />}`)
 in den Elternknoten kommt, bekommt die Meldung fuer Hydration (der Client baut
 es wie geschrieben, nur der vom Server gerenderte HTML-Text wird umgebaut).
 
-Die Tabelle der ungueltigen Paare stammt aus `validate-html-nesting`
-(ISC-Lizenz), wie in `eslint-plugin-solid` 0.20. Dieses Plugin fragt aber nicht
-parse5, was der Parser daraus macht, sondern hat die Antwort in
-`src/html_nesting.mjs` aufgeschrieben (Einfuegemodi "in body", "in table", "in
-select", "in head" und das Ende von Foreign Content). Grenzen: Der Inhalt von
-`<svg>` und `<math>` wird nicht geprueft (nur `<svg>` direkt in HTML-Elementen
-mit seinen Kindern, die aus dem SVG ausbrechen), ein `<input type="hidden">` in
-einer Tabelle ist erlaubt, der Inhalt eines `<template>` wird nicht geprueft
-(der Parser behaelt dort jedes Element), ein Elternknoten, der kein DOM-Element
-ist (`<Show>`, eine Komponente), wird nicht durchschaut, und fuer Paare, die
-diese Tabelle nicht kennt, kommt keine Meldung.
+Die Regel ist die aus `eslint-plugin-solid` 0.20 (MIT, Josh Wilson) und arbeitet
+wie dort in zwei Schritten: `validate-html-nesting` (ISC) sagt, ob ein Paar nach
+der HTML-Spezifikation gueltig ist, und parse5 -- der Parser, den auch Solids
+Compiler fuer Templates nutzt -- entscheidet, ob er das Kind wirklich anders
+einsortiert. Nur dann gibt es eine Meldung; Markup, das die Spezifikation
+verbietet, der Parser aber so laesst (`<div><figcaption /></div>`,
+`<h1><div /></h1>`), wird nicht gemeldet. Der Inhalt von `<svg>` und `<math>`
+wird in dem Namensraum geprueft, den der Parser dort hat
+(`<svg><a><a /></a></svg>` bleibt erlaubt, unter `<foreignObject>` oder `<p>`
+gilt wieder HTML). Abweichung von Upstream: ein `<input type="hidden">` in einer
+Tabelle wird nicht gemeldet, der Parser laesst es dort stehen. Grenzen: ein
+Elternknoten, der kein DOM-Element ist (`<Show>`, eine Komponente, ein
+`.map()`-Callback), wird nicht durchschaut.
 
 ## Autofixes
 

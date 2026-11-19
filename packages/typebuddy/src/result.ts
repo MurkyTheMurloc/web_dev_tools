@@ -13,15 +13,15 @@ import type { Failed, Result, Success } from "./types/maybe_promise.js";
  *     ```typescript
  *     const result = await someAsyncFunction();
  *     if (isSuccess(result)) {
- *         return result.value; // TypeScript knows `value` is of type `T`
+ *     return result.value; // TypeScript knows `value` is of type `T`
  *     }
  *     ```
  *
  * @template R The result type passed in. The guard narrows it by its `isError`
  *   flag, so `value` keeps the success type without an extra `| null`. A
  *   `Result<T | null>`, a generic `Result<T>` and a `Result<any>` all work.
- * @param {R} result The result to check, which can be either a `Success<T>`
- *   or `Failed`.
+ * @param {R} result The result to check, which can be either a `Success<T>` or
+ *   `Failed`.
  * @returns {boolean} `true` if the result is a `Success<T>`, `false` if it is a
  *   `Failed`. This function acts as a type guard, narrowing `result` to its
  *   `Success` member when the condition is met.

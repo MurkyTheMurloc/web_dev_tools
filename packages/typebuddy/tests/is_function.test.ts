@@ -13,9 +13,11 @@ function noop(): void {
 describe(isFunction, () => {
     it("should return true for function inputs", () => {
         expect(isFunction(noop)).toBeTruthy();
-        expect(isFunction(function named(): void {
-            // intentionally empty
-        })).toBeTruthy();
+        expect(
+            isFunction(function named(): void {
+                // intentionally empty
+            }),
+        ).toBeTruthy();
     });
 
     it("should return false for non-function inputs", () => {

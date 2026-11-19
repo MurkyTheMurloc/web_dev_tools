@@ -43,7 +43,8 @@ export default {
             },
         ],
         messages: {
-            removed: "'{{namespace}}:' was removed in Solid 2.0. Use {{replacement}} instead.",
+            removed:
+                "'{{namespace}}:' was removed in Solid 2.0. Use {{replacement}} instead.",
             unknown:
                 "'{{namespace}}:' is not a namespace Solid understands. Solid 2.0 has no special JSX prefixes.",
             component: "Namespaced props have no effect on components.",

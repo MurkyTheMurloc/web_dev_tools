@@ -16,7 +16,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repo
-        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
 
@@ -29,35 +29,35 @@ jobs:
         run: bun install --frozen-lockfile
 
       - name: Typecheck typebuddy
-        run: bun --cwd packages/typebuddy run typecheck
+        run: bun run --cwd packages/typebuddy typecheck
 
       - name: Lint typebuddy
-        run: bun --cwd packages/typebuddy run lint
+        run: bun run --cwd packages/typebuddy lint
 
       - name: Test typebuddy
-        run: bun --cwd packages/typebuddy run test
+        run: bun run --cwd packages/typebuddy test
 
       - name: Smoke globals
-        run: bun --cwd packages/typebuddy run smoke:globals
+        run: bun run --cwd packages/typebuddy smoke:globals
 
       - name: Smoke oxlint
-        run: bun --cwd packages/typebuddy run smoke:oxlint
+        run: bun run --cwd packages/typebuddy smoke:oxlint
 
       - name: Smoke oxlint fix
-        run: bun --cwd packages/typebuddy run smoke:oxlint:fix
+        run: bun run --cwd packages/typebuddy smoke:oxlint:fix
 
       - name: Smoke treeshaking
-        run: bun --cwd packages/typebuddy run smoke:treeshake
+        run: bun run --cwd packages/typebuddy smoke:treeshake
 
       - name: Smoke subpaths
-        run: bun --cwd packages/typebuddy run smoke:subpath
+        run: bun run --cwd packages/typebuddy smoke:subpath
 
   oxlint-plugin-solid:
     name: Oxlint plugin solid
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repo
-        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
 
@@ -70,14 +70,14 @@ jobs:
         run: bun install --frozen-lockfile
 
       - name: Test oxlint-plugin-solid
-        run: bun --cwd packages/oxlint-plugin-solid run test
+        run: bun run --cwd packages/oxlint-plugin-solid test
 
   shadcn-lint:
     name: shadcn-lint
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repo
-        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
 

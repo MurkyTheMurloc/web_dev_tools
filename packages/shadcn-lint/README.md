@@ -17,7 +17,7 @@ bun add -D @murky-web/shadcn-lint oxlint
 ```
 
 Needs Tailwind v4 (the rules read the `@theme` in your CSS), Oxlint 1.80 or later
-and Node.js 20.19 or later.
+and Node.js 22 or later.
 
 `.oxlintrc.jsonc`:
 

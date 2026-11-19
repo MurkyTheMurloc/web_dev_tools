@@ -4,11 +4,11 @@
 declare function readTodos(): Promise<string[]>;
 
 export async function listTodos(): Promise<string[]> {
-  "use server";
-  return readTodos();
+    "use server";
+    return readTodos();
 }
 
 export async function countTodos(): Promise<number> {
-  const todos = await readTodos();
-  return todos.length;
+    const todos = await readTodos();
+    return todos.length;
 }

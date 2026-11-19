@@ -62,7 +62,8 @@ function isUseServerFunction(node: UseServerNode): boolean {
     }
 
     return (
-        node.body.type === "BlockStatement" && startsWithUseServer(node.body.body)
+        node.body.type === "BlockStatement" &&
+        startsWithUseServer(node.body.body)
     );
 }
 

@@ -16,6 +16,7 @@ import {
   animationGroupFor,
   projectClassifierFor,
 } from "../src/project/namespaces"
+import { themeScalesFromCss } from "../src/project/theme-scales"
 import { resetWarnings, setWarningSink } from "../src/project/warn"
 
 describe("animate values, from cn's grammar", () => {
@@ -187,6 +188,197 @@ describe("theme scales refresh and fail safe", () => {
     // Unchanged files keep the classifier they had.
     vi.setSystemTime(Date.now() + 1500)
     expect(classifierFor(page)).toBe(classifierFor(page))
+  })
+
+  // cn 0.5.0: a reset discards the names declared before it.
+  test("a reset discards the names declared before it", () => {
+    const { page } = createProject(
+      "@theme { --radius-old: 4px; --radius-*: initial; --radius-fresh: 1rem; }"
+    )
+    expect(groupOf("rounded-old", page)).toBeNull()
+    expect(groupOf("rounded-fresh", page)).toBe("rounded")
+  })
+
+  test("--*: initial discards every name declared before it", () => {
+    const { page } = createProject(
+      "@theme { --radius-old: 4px; --*: initial; --radius-fresh: 1rem; }"
+    )
+    expect(groupOf("rounded-old", page)).toBeNull()
+    expect(groupOf("rounded-fresh", page)).toBe("rounded")
+  })
+
+  // cn 0.5.0: a declaration after a nested block such as @keyframes is read.
+  test("a declaration after a nested block is read", () => {
+    const { page } = createProject(
+      "@theme { --radius-before: 1px; @keyframes fade { from { opacity: 0; } to { opacity: 1; } } --radius-after: 2px; }"
+    )
+    expect(groupOf("rounded-before", page)).toBe("rounded")
+    expect(groupOf("rounded-after", page)).toBe("rounded")
+  })
+
+  // cn 0.5.2: a declared --spacing keeps numeric spacing through a reset.
+  test("--spacing keeps numeric spacing through a spacing reset", () => {
+    const { page } = createProject(
+      "@theme { --spacing-*: initial; --spacing: 0.25rem; --spacing-gutter: 1rem; }"
+    )
+    expect(groupOf("p-4", page)).toBe("p")
+    expect(groupOf("p-px", page)).toBe("p")
+    expect(groupOf("p-gutter", page)).toBe("p")
+  })
+
+  test("a spacing reset without --spacing keeps only px and the declared names", () => {
+    const { page } = createProject(
+      "@theme { --spacing-*: initial; --spacing-gutter: 1rem; }"
+    )
+    expect(groupOf("p-4", page)).toBeNull()
+    expect(groupOf("p-px", page)).toBe("p")
+    expect(groupOf("p-gutter", page)).toBe("p")
+  })
+
+  test("--spacing: initial after a declaration removes numeric spacing again", () => {
+    const { page } = createProject(
+      "@theme { --spacing-*: initial; --spacing: 0.25rem; --spacing: initial; }"
+    )
+    expect(groupOf("p-4", page)).toBeNull()
+  })
+
+  // cn 0.5.0 follows `@import`s of packages, the usual monorepo setup.
+  describe("package imports", () => {
+    const IMPORT = '@import "tailwindcss"; @import "@workspace/ui/globals.css";'
+    const CARD = "@theme { --radius-card: 1px; }"
+
+    test("an exports entry is followed", () => {
+      const { write, page } = createProject(IMPORT)
+      write(
+        "node_modules/@workspace/ui/package.json",
+        JSON.stringify({ exports: { "./globals.css": "./src/globals.css" } })
+      )
+      write("node_modules/@workspace/ui/src/globals.css", CARD)
+      expect(groupOf("rounded-card", page)).toBe("rounded")
+      expect(warnings).toEqual([])
+    })
+
+    test("an exports pattern and its style condition are followed", () => {
+      const { write, page } = createProject(IMPORT)
+      write(
+        "node_modules/@workspace/ui/package.json",
+        JSON.stringify({
+          exports: {
+            "./*": { types: "./types/*.d.ts", style: "./src/*" },
+          },
+        })
+      )
+      write("node_modules/@workspace/ui/src/globals.css", CARD)
+      expect(groupOf("rounded-card", page)).toBe("rounded")
+    })
+
+    test("without exports the subpath is read from the package folder", () => {
+      const { write, page } = createProject(IMPORT)
+      write("node_modules/@workspace/ui/package.json", "{}")
+      write("node_modules/@workspace/ui/globals.css", CARD)
+      expect(groupOf("rounded-card", page)).toBe("rounded")
+    })
+
+    test("a bare import reads the package's style entry", () => {
+      const { write, page } = createProject(
+        '@import "tailwindcss"; @import "@workspace/ui";'
+      )
+      write(
+        "node_modules/@workspace/ui/package.json",
+        JSON.stringify({ style: "theme/index.css" })
+      )
+      write("node_modules/@workspace/ui/theme/index.css", CARD)
+      expect(groupOf("rounded-card", page)).toBe("rounded")
+    })
+
+    test("node_modules is looked up from the importing file upward", () => {
+      const { write, page } = createProject(
+        '@import "tailwindcss"; @import "./deep/inner/more.css";'
+      )
+      write("deep/inner/more.css", '@import "@workspace/ui/globals.css";')
+      write("node_modules/@workspace/ui/package.json", "{}")
+      write("node_modules/@workspace/ui/globals.css", CARD)
+      expect(groupOf("rounded-card", page)).toBe("rounded")
+    })
+
+    test("the package's own imports and a cycle back are followed once", () => {
+      const { write, page } = createProject(IMPORT)
+      write("node_modules/@workspace/ui/package.json", "{}")
+      write(
+        "node_modules/@workspace/ui/globals.css",
+        '@import "./tokens.css"; @import "@workspace/ui/globals.css";'
+      )
+      write(
+        "node_modules/@workspace/ui/tokens.css",
+        '@import "./globals.css"; @theme { --radius-card: 1px; }'
+      )
+      expect(groupOf("rounded-card", page)).toBe("rounded")
+    })
+
+    test("a package that cannot be resolved is skipped without a warning", () => {
+      const { write, page } = createProject(IMPORT)
+      write(
+        "theme.css",
+        `${IMPORT} @import "tailwindcss/theme.css"; @theme { --radius-own: 1px; }`
+      )
+      expect(groupOf("rounded-card", page)).toBeNull()
+      expect(groupOf("rounded-own", page)).toBe("rounded")
+      expect(warnings).toEqual([])
+    })
+
+    test("a package whose exports do not list the subpath is skipped", () => {
+      const { write, page } = createProject(IMPORT)
+      write(
+        "node_modules/@workspace/ui/package.json",
+        JSON.stringify({ exports: { "./other.css": "./other.css" } })
+      )
+      write("node_modules/@workspace/ui/globals.css", CARD)
+      expect(groupOf("rounded-card", page)).toBeNull()
+    })
+  })
+
+  // A quoted value can hold the characters that structure a stylesheet.
+  describe("strings and comments", () => {
+    test("a comment opener inside a string does not start a comment", () => {
+      const { page } = createProject(
+        '@theme { --font-sans: "a/*"; --radius-card: 1px; --font-mono: "*/b"; }'
+      )
+      expect(groupOf("rounded-card", page)).toBe("rounded")
+    })
+
+    test("; { and } inside a quoted value do not end the declaration or block", () => {
+      const { page } = createProject(
+        `@theme { --font-sans: "a;b}{"; --font-mono: 'it\\'s;}'; --radius-card: 1px; }`
+      )
+      expect(groupOf("rounded-card", page)).toBe("rounded")
+    })
+
+    test("a comment left open ends at the end of the file", () => {
+      const { page } = createProject(
+        "@theme { --radius-card: 1px; --radius-lost: 2px; /* --radius-gone: 3px; } /* never closed"
+      )
+      expect(groupOf("rounded-card", page)).toBe("rounded")
+      expect(groupOf("rounded-lost", page)).toBe("rounded")
+      expect(groupOf("rounded-gone", page)).toBeNull()
+    })
+
+    test("a closed comment inside @theme hides its declarations", () => {
+      const { page } = createProject(
+        "@theme { /* --radius-gone: 3px; */ --radius-card: 1px; }"
+      )
+      expect(groupOf("rounded-card", page)).toBe("rounded")
+      expect(groupOf("rounded-gone", page)).toBeNull()
+    })
+  })
+
+  test("a reset in one entry stylesheet does not drop another entry's names", () => {
+    const { write, page } = createProject("@theme { --radius-one: 1px; }")
+    const second = write("second.css", "@theme { --radius-*: initial; }")
+    const theme = themeScalesFromCss([
+      path.join(path.dirname(page), "theme.css"),
+      second,
+    ])
+    expect(theme.extension.override?.theme?.radius).toEqual(["one"])
   })
 
   test("an unreadable import warns once and leaves the grammar alone", () => {

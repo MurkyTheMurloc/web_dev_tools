@@ -70,7 +70,9 @@ export default {
             },
             CallExpression(node) {
                 if (node.callee.type === "Identifier") {
-                    if (matchImport(["merge", "mergeProps"], node.callee.name)) {
+                    if (
+                        matchImport(["merge", "mergeProps"], node.callee.name)
+                    ) {
                         node.arguments
                             .filter((arg) => {
                                 if (arg.type === "SpreadElement") return true;

@@ -1,10 +1,12 @@
-import { afterAll, beforeAll, describe, expect, test } from "bun:test";
+import { afterAll, beforeAll, describe, expect, test } from "vitest";
 
 import {
     importsFixes,
     nestingInsertedReports,
     nestingReports,
     nestingSilent,
+    nestingUpstreamReports,
+    nestingUpstreamSilent,
     noDestructureFixes,
     noDestructureUnfixed,
     preferArrowFixes,
@@ -25,6 +27,13 @@ let harness = null;
 
 function countOccurrences(text, fragment) {
     return text.split(fragment).length - 1;
+}
+
+// The messages of the reports of one rule, in the order of the output.
+function reportMessages(output, ruleId) {
+    return [
+        ...output.matchAll(new RegExp(`solid\\(${ruleId}\\): (.+)`, "gu")),
+    ].map((match) => match[1]);
 }
 
 function lintCase(auditCase) {
@@ -54,6 +63,11 @@ function registerReports(ruleId, reports, silent) {
                 expect(result.output).toContain(`solid(${ruleId})`);
                 if (auditCase.message !== undefined) {
                     expect(result.output).toContain(auditCase.message);
+                }
+                if (auditCase.reports !== undefined) {
+                    expect(reportMessages(result.output, ruleId)).toEqual(
+                        auditCase.reports,
+                    );
                 }
             });
         });
@@ -144,8 +158,12 @@ describe("oxlint-plugin-solid audit fixes", () => {
     registerReports("jsx-no-script-url", scriptUrlReports, scriptUrlSilent);
     registerReports(
         "validate-jsx-nesting",
-        [...nestingReports, ...nestingInsertedReports],
-        nestingSilent,
+        [
+            ...nestingReports,
+            ...nestingInsertedReports,
+            ...nestingUpstreamReports,
+        ],
+        [...nestingSilent, ...nestingUpstreamSilent],
     );
     registerFixes("solid/prefer-arrow-components", preferArrowFixes);
     registerUnfixed("solid/prefer-arrow-components", preferArrowUnfixed);

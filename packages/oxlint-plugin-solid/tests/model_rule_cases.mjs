@@ -356,7 +356,9 @@ export const View = () => <input onInput={(event) => (value = event.currentTarge
     Object.freeze({
         name: "namespaced on:click",
         message: "expression-bodied arrow",
-        code: withImports(`export const View = () => <button on:click={() => save("x")}>Save</button>;`),
+        code: withImports(
+            `export const View = () => <button on:click={() => save("x")}>Save</button>;`,
+        ),
     }),
     Object.freeze({
         name: "ref callback that assigns",
@@ -404,7 +406,9 @@ export const View = () => <button onClick={() => { setCount(count() + 1); }}>+</
     }),
     Object.freeze({
         name: "void-prefixed expression",
-        code: withImports(`export const View = () => <button onClick={() => void save("x")}>Save</button>;`),
+        code: withImports(
+            `export const View = () => <button onClick={() => void save("x")}>Save</button>;`,
+        ),
     }),
     Object.freeze({
         name: "handler passed by name",
@@ -423,7 +427,9 @@ export const View = () => <input ref={(el) => { input = el; }} />;`),
     }),
     Object.freeze({
         name: "an attribute that is not a handler",
-        code: withImports(`export const View = () => <input value={(() => "x")()} class={"a"} />;`),
+        code: withImports(
+            `export const View = () => <input value={(() => "x")()} class={"a"} />;`,
+        ),
     }),
     Object.freeze({
         name: "onCleanup calling a function",

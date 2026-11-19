@@ -16,7 +16,9 @@ function noop(): void {
 
 describe(isInteger, () => {
     it("should not log while checking non-integer values", () => {
-        const errorSpy = vi.spyOn(globalThis.console, "error").mockImplementation(noop);
+        const errorSpy = vi
+            .spyOn(globalThis.console, "error")
+            .mockImplementation(noop);
 
         expect(isInteger("Hello")).toBeFalsy();
         expect(isInteger({})).toBeFalsy();

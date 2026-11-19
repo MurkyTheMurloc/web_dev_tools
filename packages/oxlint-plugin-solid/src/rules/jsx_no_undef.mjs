@@ -70,6 +70,7 @@ export default {
         const missingComponentsSet = new Set();
         /**
          * Compare an identifier with the variables declared in the scope
+         *
          * @param {ASTNode} node - Identifier or JSXIdentifier node
          * @returns {void}
          */

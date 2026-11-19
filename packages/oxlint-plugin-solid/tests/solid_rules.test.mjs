@@ -1,4 +1,6 @@
-import { afterAll, beforeAll, describe, expect, test } from "bun:test";
+import { readFile } from "node:fs/promises";
+
+import { afterAll, beforeAll, describe, expect, test } from "vitest";
 
 import { createLintHarness } from "./helpers.mjs";
 import {
@@ -35,7 +37,7 @@ function loadSolidPlugin() {
 }
 
 function readSolidLintConfig(repoRoot) {
-    return globalThis.Bun.file(`${repoRoot}${SOLID_LINT_CONFIG_PATH}`).text();
+    return readFile(`${repoRoot}${SOLID_LINT_CONFIG_PATH}`, "utf8");
 }
 
 function registerFixTests() {
