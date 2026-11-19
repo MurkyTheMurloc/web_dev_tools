@@ -1,7 +1,7 @@
 # SimpleLog
 
-`SimpleLog` is a lightweight and flexible logging utility for Node.js, Bun,
-Deno, and fetch-style edge runtimes. It provides various log levels, performance
+`SimpleLog` is a lightweight and flexible logging utility for Node.js, Bun
+and fetch-style edge runtimes. It provides various log levels, performance
 benchmarking, and the ability to log messages to both the console and a file.
 
 ## Features
@@ -41,12 +41,6 @@ Bun:
 
 ```typescript
 import { Logger } from "@murky-web/simplelog/bun";
-```
-
-Deno:
-
-```typescript
-import { Logger } from "@murky-web/simplelog/deno";
 ```
 
 Web and edge runtimes:
@@ -172,7 +166,6 @@ the caller.
 - `@murky-web/simplelog`: Node-first default entry
 - `@murky-web/simplelog/node`: explicit Node entry
 - `@murky-web/simplelog/bun`: Bun entry
-- `@murky-web/simplelog/deno`: Deno entry
 - `@murky-web/simplelog/web`: runtime-neutral console logger for fetch-style
   runtimes
 - `@murky-web/simplelog/hono`: Hono middleware for request-scoped logging
@@ -228,7 +221,7 @@ This adapter is intentionally thin:
 
 - it uses Hono's middleware and request context model
 - it creates a request-scoped child logger
-- it works across Node, Bun, Deno, Cloudflare, and Netlify style runtimes
+- it works across Node, Bun, Cloudflare, and Netlify style runtimes
 - it does not own your tracing SDK or framework-specific SSR handoff
 
 If you want a custom request logger name, you can provide one directly or

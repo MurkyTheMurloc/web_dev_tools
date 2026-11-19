@@ -9,7 +9,7 @@ export const preferRuntimeEntryRule = {
         },
         schema: [],
         messages: {
-            preferRuntimeEntry: `Prefer an explicit runtime entry over "${SIMPLELOG_PACKAGE}". Use a runtime-specific import like "@murky-web/simplelog/node", "@murky-web/simplelog/web", "@murky-web/simplelog/bun", "@murky-web/simplelog/deno", or "@murky-web/simplelog/hono".`,
+            preferRuntimeEntry: `Prefer an explicit runtime entry over "${SIMPLELOG_PACKAGE}". Use a runtime-specific import like "@murky-web/simplelog/node", "@murky-web/simplelog/web", "@murky-web/simplelog/bun", or "@murky-web/simplelog/hono".`,
         },
     },
     create(context) {

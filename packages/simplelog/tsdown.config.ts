@@ -28,7 +28,6 @@ export default defineConfig([
   {
     dts: true,
     entry: {
-      deno_logger: "./src/deno_logger.ts",
       hono_middleware: "./src/hono_middleware.ts",
       // See the note in the block above: both blocks emit this file, so both have to
       // treat it as an entry or the loser truncates it.
