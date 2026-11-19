@@ -14,4 +14,9 @@ export const publicPackages = [
         name: "@murky-web/oxlint-plugin-solid",
         publishToJsr: false,
     },
+    {
+        dir: "packages/shadcn-lint/packages/lint",
+        name: "@murky-web/shadcn-lint",
+        publishToJsr: false,
+    },
 ];

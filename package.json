@@ -26,7 +26,7 @@
         "release": "bun run release:verify && bun run publish:npm",
         "release:dry": "bun run release:verify && bun run publish:npm:dry",
         "publish:npm": "changeset publish",
-        "version-packages": "changeset version && bun ./scripts/sync-jsr-manifests.mjs",
+        "version-packages": "changeset version && bun install --lockfile-only && bun ./scripts/sync-jsr-manifests.mjs",
         "release:verify:shadcn-lint": "bun run --cwd ./packages/shadcn-lint/packages/lint build && bun run --cwd ./packages/shadcn-lint/packages/lint typecheck && bun run --cwd ./packages/shadcn-lint/packages/lint test"
     },
     "devDependencies": {
