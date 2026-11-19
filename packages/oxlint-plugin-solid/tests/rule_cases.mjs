@@ -501,9 +501,85 @@ function test(props: Props): JSX.Element {
     }),
 ]);
 
+// no-unknown-namespaces with and without `allowedNamespaces`. `report` is the
+// message the rule must print, `null` means the rule stays silent.
+const ISLAND = `import type { Component } from "solid-js";
+
+declare const Island: Component<Record<string, unknown>>;
+`;
+const ALLOW_CLIENT = Object.freeze({
+    "solid/no-unknown-namespaces": ["error", { allowedNamespaces: ["client"] }],
+});
+const COMPONENT_MESSAGE = "Namespaced props have no effect on components.";
+const namespaceCases = Object.freeze([
+    Object.freeze({
+        code: `${ISLAND}export const View = () => {
+    return <Island client:visible />;
+};
+`,
+        name: "an allowed namespace on a component",
+        report: null,
+        rules: ALLOW_CLIENT,
+    }),
+    Object.freeze({
+        code: `${ISLAND}export const View = () => {
+    return <Island client:visible />;
+};
+`,
+        name: "a namespace on a component without the option",
+        report: COMPONENT_MESSAGE,
+    }),
+    Object.freeze({
+        code: `export const View = () => <div client:foo="a" />;\n`,
+        name: "an allowed namespace on a DOM element",
+        report: null,
+        rules: ALLOW_CLIENT,
+    }),
+    Object.freeze({
+        code: `declare const f: () => void;
+export const View = () => <div on:click={f} />;
+`,
+        name: "a removed namespace the option does not cover",
+        report: "'on:' was removed in Solid 2.0.",
+        rules: ALLOW_CLIENT,
+    }),
+    Object.freeze({
+        code: `export const View = () => (
+    <svg>
+        <use xlink:href="#a" />
+    </svg>
+);
+`,
+        name: "xlink on an SVG element",
+        report: null,
+    }),
+]);
+
+// Fix-on-save in editors applies suggestions, including the ones marked as
+// changing behaviour. None of them may touch a namespaced prop.
+const namespaceFixCases = Object.freeze([
+    Object.freeze({
+        code: `${ISLAND}export const View = () => {
+    return <Island client:visible />;
+};
+`,
+        name: "a namespace on a component without the option",
+    }),
+    Object.freeze({
+        code: `${ISLAND}export const View = () => {
+    return <Island client:visible />;
+};
+`,
+        name: "an allowed namespace on a component",
+        rules: ALLOW_CLIENT,
+    }),
+]);
+
 export {
     expectedRuleIds,
     jsxUsesVarsCase,
+    namespaceCases,
+    namespaceFixCases,
     noDestructureFixCases,
     preferArrowDiagnosticCases,
     preferArrowFixCases,

@@ -22,7 +22,6 @@ export default {
                 "Disallow Solid's removed JSX attribute namespaces. Solid 2.0 dropped `on:`, `oncapture:`, `use:`, `prop:`, `attr:`, `bool:`, `class:` and `style:`.",
             url: "https://docs.solidjs.com/",
         },
-        hasSuggestions: true,
         schema: [
             {
                 type: "object",
@@ -48,8 +47,6 @@ export default {
             unknown:
                 "'{{namespace}}:' is not a namespace Solid understands. Solid 2.0 has no special JSX prefixes.",
             component: "Namespaced props have no effect on components.",
-            "component-suggest":
-                "Replace {{namespace}}:{{name}} with {{name}}.",
         },
     },
     defaultOptions: [],
@@ -58,34 +55,24 @@ export default {
             context.options?.[0]?.allowedNamespaces;
         return {
             "JSXAttribute > JSXNamespacedName": (node) => {
+                const namespace = node.namespace?.name;
+                // The allow list covers every element: a framework can give a
+                // namespace meaning on components (`<Island client:visible>`).
+                if (explicitlyAllowedNamespaces?.includes(namespace)) {
+                    return;
+                }
                 const openingElement = node.parent.parent;
                 if (
                     openingElement.name.type === "JSXIdentifier" &&
                     !isDOMElementName(openingElement.name.name)
                 ) {
-                    // no namespaces on Solid component elements
-                    context.report({
-                        node,
-                        messageId: "component",
-                        suggest: [
-                            {
-                                messageId: "component-suggest",
-                                data: {
-                                    namespace: node.namespace.name,
-                                    name: node.name.name,
-                                },
-                                fix: (fixer) =>
-                                    fixer.replaceText(node, node.name.name),
-                            },
-                        ],
-                    });
+                    // Solid itself gives a namespaced prop on a component no
+                    // meaning. No suggestion: deleting the prefix changes the
+                    // prop's name, and the rule cannot know which one is meant.
+                    context.report({ node, messageId: "component" });
                     return;
                 }
-                const namespace = node.namespace?.name;
-                if (
-                    xmlNamespaces.includes(namespace) ||
-                    explicitlyAllowedNamespaces?.includes(namespace)
-                ) {
+                if (xmlNamespaces.includes(namespace)) {
                     return;
                 }
                 const replacement = replacements[namespace];
