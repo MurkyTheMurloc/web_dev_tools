@@ -332,6 +332,13 @@ export const rows = db.rows;
 `,
         ruleId: "style-prop",
     }),
+    Object.freeze({
+        code: `export const View = () => {
+    return <p><div>Hello</div></p>;
+};
+`,
+        ruleId: "validate-jsx-nesting",
+    }),
 ]);
 
 const jsxUsesVarsCase = Object.freeze({

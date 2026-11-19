@@ -566,6 +566,15 @@ const nestingReports = Object.freeze(
             "<table><colgroup><div /></colgroup></table>",
         ],
         ["a figcaption in a paragraph", "<p><figcaption /></p>"],
+        ["an input without a type in a table", "<table><input /></table>"],
+        [
+            "a text input in a table",
+            `<table><input type="text" /></table>`,
+        ],
+        [
+            "a hidden input in a column group, which the parser moves out",
+            `<table><colgroup><input type="hidden" /></colgroup></table>`,
+        ],
     ].map(([name, jsx]) =>
         Object.freeze({
             name,
@@ -598,6 +607,18 @@ const nestingSilent = Object.freeze(
             "<table><thead><tr><th /></tr></thead><tbody><tr><td /></tr></tbody></table>",
         ],
         ["a hidden input in a table", `<table><input type="hidden" /></table>`],
+        [
+            "a hidden input in a table, written as an expression",
+            `<table><input type={"hidden"} /></table>`,
+        ],
+        [
+            "a hidden input in a table body",
+            `<table><tbody><input type="hidden" /></tbody></table>`,
+        ],
+        [
+            "a hidden input in a table row",
+            `<table><tbody><tr><input type="hidden" /></tr></tbody></table>`,
+        ],
         ["a script in a table", "<table><script /></table>"],
         ["a definition in a list, which the parser keeps", "<ul><dd /></ul>"],
         ["svg content", "<svg><g><path /></g></svg>"],
@@ -621,11 +642,177 @@ const nestingSilent = Object.freeze(
     ].map(([name, jsx]) => Object.freeze({ name, code: view(jsx) })),
 );
 
+// The cases of eslint-plugin-solid 0.20 for `validate-jsx-nesting`. The rule
+// reports the pairs that parse5 does not keep as written, so the silent list
+// holds the markup the spec forbids but the parser keeps.
+const NESTING_MESSAGES = Object.freeze({
+    plain: (parent, child) =>
+        `Invalid HTML nesting: \`<${child}>\` cannot be a child of \`<${parent}>\`. The HTML parser restructures this, so the rendered DOM won't match this markup.`,
+    inserted: (parent, child) =>
+        `Invalid HTML nesting: \`<${child}>\` cannot be a child of \`<${parent}>\`. The client inserts it as written, but the HTML parser restructures it in server-rendered HTML, so hydration won't match this markup.`,
+});
+// `reports` are the messages of the rule, one per report and in source order:
+// the case fails on a missing, an extra or a wrong kind of report.
+const nestingCase = (jsx, ...errors) =>
+    Object.freeze({
+        name: jsx,
+        code: view(jsx),
+        reports: errors.map(([kind, parent, child]) =>
+            NESTING_MESSAGES[kind](parent, child),
+        ),
+    });
+
+const nestingUpstreamSilent = Object.freeze(
+    [
+        `<div><p>Hello world!</p></div>`,
+        `<p><span>Hello world!</span></p>`,
+        `<p>Hello <em>world</em>!</p>`,
+        `<p>one<br />two</p>`,
+        `<table><tbody><tr><td>1</td></tr></tbody></table>`,
+        `<ul><li>one</li><li>two</li></ul>`,
+        `<select><option>one</option></select>`,
+        // the parser keeps these, so they are not this rule's business even though
+        // the spec's content model disallows them
+        `<h1><div>Hello world!</div></h1>`,
+        `<div><figcaption>Hello world!</figcaption></div>`,
+        `<ul><figcaption>Hello world!</figcaption></ul>`,
+        `<div><summary>Hello world!</summary></div>`,
+        `<html><body><figcaption>Caption</figcaption></body></html>`,
+        `<body><dd>Definition</dd></body>`,
+        `<body><dt>Term</dt></body>`,
+        `<body><summary>More</summary></body>`,
+        `<body><area shape="rect" coords="0,0,1,1" href="/" /></body>`,
+        `<html><head><basefont /></head></html>`,
+        `<table><script>{"1"}</script></table>`,
+        `<table><style>{"td{}"}</style></table>`,
+        `<table><tbody><tr><td><figcaption>Caption</figcaption></td></tr></tbody></table>`,
+        `<table><tbody><tr><th><dd>Definition</dd></th></tr></tbody></table>`,
+        `<table><tbody><tr><template /></tr></tbody></table>`,
+        `<table><tbody><script>{"1"}</script></tbody></table>`,
+        `<table><thead><template /></thead></table>`,
+        `<table><tfoot><template /></tfoot></table>`,
+        `<table><colgroup><template /></colgroup></table>`,
+        `<table><caption><figcaption>Caption</figcaption></caption></table>`,
+        // MathML and SVG are not HTML content models
+        `<math><mi>x</mi><mo>=</mo><mn>1</mn></math>`,
+        `<math><mfrac><mi>a</mi><mi>b</mi></mfrac></math>`,
+        `<math><semantics><mi>x</mi></semantics></math>`,
+        `<svg><a href="/"><path d="" /></a></svg>`,
+        `<svg><tr /></svg>`,
+        // the parser keeps these inside <svg>, even though it rewrites them in HTML
+        `<svg><a href="/one"><a href="/two" /></a></svg>`,
+        `<svg><title><b>Hello world!</b></title></svg>`,
+        `<svg><font><a href="/one"><a href="/two" /></a></font></svg>`,
+        `<math><annotation-xml><a href="/one"><a href="/two" /></a></annotation-xml></math>`,
+        // void tags have no end tag; `</br>` would be parsed as a second <br>
+        `<svg><title>one<br />two</title></svg>`,
+        `<optgroup label="Group"><br /></optgroup>`,
+        // outside <svg> the parser lowercases tags like foreignObject, which is still the same tag
+        `<foreignObject><figcaption>Caption</figcaption></foreignObject>`,
+        `<math><clipPath /></math>`,
+        // <title> hands its children back to HTML only in SVG, and <mi> only in MathML
+        `<math><title><a href="/one"><a href="/two" /></a></title></math>`,
+        `<svg><mi><a href="/one"><a href="/two" /></a></mi></svg>`,
+        // nested in foreign content, <svg> and <math> are plain elements of the namespace around them
+        `<svg><math><mi><a href="/one"><a href="/two" /></a></mi></math></svg>`,
+        `<svg><g><math><title><b>Hello world!</b></title></math></g></svg>`,
+        `<math><svg><title><a href="/one"><a href="/two" /></a></title></svg></math>`,
+        // behind an expression they are the root of a separate template and start their own namespace
+        `<math>{ok && <svg><title><b>Hello world!</b></title></svg>}</math>`,
+        // <mglyph> and <malignmark> right inside <mi> and the like stay MathML, children included
+        `<math><mi><mglyph><caption /></mglyph></mi></math>`,
+        `<math><mtext><malignmark><caption /></malignmark></mtext></math>`,
+        // content-model restrictions the parser doesn't enforce by moving anything
+        `<figure><a href="/x"><img src="a.png" /><figcaption>Caption</figcaption></a></figure>`,
+        `<figure><div><figcaption>Caption</figcaption></div></figure>`,
+        `<details><div><summary>More</summary></div></details>`,
+        `<div><area shape="rect" coords="0,0,1,1" href="/" /></div>`,
+        `<dl><div><dt>term</dt><dd>definition</dd></div></dl>`,
+        `<my-figure><img src="a.png" /><figcaption>Caption</figcaption></my-figure>`,
+        `<p><my-widget>Hello world!</my-widget></p>`,
+        // headings close the current node, never an ancestor
+        `<h1><span><h2>Hello world!</h2></span></h1>`,
+        `<math><mi>x</mi></math>`,
+        `<math><msqrt><mn>2</mn></msqrt></math>`,
+        `<svg><text>Hello world!</text></svg>`,
+        `<svg><foreignObject><div>Hello world!</div></foreignObject></svg>`,
+        // custom elements can define any content model
+        `<my-widget><div>Hello world!</div></my-widget>`,
+        // components can render anything, including a wrapper that makes this legal
+        `<p><Foo /></p>`,
+        `<Foo><hr /></Foo>`,
+        `<p><Foo.Bar /></p>`,
+        `<Dynamic component={tag}><hr /></Dynamic>`,
+        // control flow hides what actually wraps the child at runtime
+        `<p><Show when={condition}><hr /></Show></p>`,
+        `<table>{items.map((item) => <div>{item}</div>)}</table>`,
+        // a prop that isn't `children` is data, not a child position
+        `<p fallback={<hr />}>Hello world!</p>`,
+        // sibling, not nested
+        `<><p>Hello world!</p><hr /></>`,
+        // no JSX parent at all
+        `<hr />`,
+    ].map((jsx) => Object.freeze({ name: jsx, code: view(jsx) })),
+);
+
+const nestingUpstreamReports = Object.freeze([
+    nestingCase(`<head><div /></head>`, ["plain", "head", "div"]),
+    nestingCase(`<body><tr /></body>`, ["plain", "body", "tr"]),
+    nestingCase(`<p><div>Hello world!</div></p>`, ["plain", "p", "div"]),
+    nestingCase(`<p><hr /></p>`, ["plain", "p", "hr"]),
+    nestingCase(`<p>Hello <p>world</p>!</p>`, ["plain", "p", "p"]),
+    nestingCase(`<table><div>Hello world!</div></table>`, ["plain", "table", "div"]),
+    nestingCase(`<tr><div>Hello world!</div></tr>`, ["plain", "tr", "div"]),
+    nestingCase(`<table><tbody><tr><td><tr /></td></tr></tbody></table>`, ["plain", "td", "tr"]),
+    nestingCase(`<a href="/one"><a href="/two">Hello world!</a></a>`, ["plain", "a", "a"]),
+    nestingCase(`<button><button>Hello world!</button></button>`, ["plain", "button", "button"]),
+    nestingCase(`<form><form>Hello world!</form></form>`, ["plain", "form", "form"]),
+    nestingCase(`<svg><div>Hello world!</div></svg>`, ["plain", "svg", "div"]),
+    // integration points hand their children back to the HTML parser
+    nestingCase(`<svg><foreignObject><p><div>Hello world!</div></p></foreignObject></svg>`, ["plain", "p", "div"]),
+    nestingCase(`<math><mi><a href="/one"><a href="/two">x</a></a></mi></math>`, ["plain", "a", "a"]),
+    // the parser lowercases tag and attribute names first
+    nestingCase(`<svg><foreignobject><a href="/one"><a href="/two" /></a></foreignobject></svg>`, ["plain", "a", "a"]),
+    nestingCase(`<math><annotation-xml Encoding="text/html"><a href="/one"><a href="/two" /></a></annotation-xml></math>`, ["plain", "a", "a"]),
+    // one level down, <mglyph> is HTML like the rest
+    nestingCase(`<math><mi><span><mglyph><caption /></mglyph></span></mi></math>`, ["plain", "mglyph", "caption"]),
+    // so do HTML tags that make the parser leave foreign content
+    nestingCase(`<svg><g><p><a href="/one"><a href="/two" /></a></p></g></svg>`, ["plain", "a", "a"]),
+    nestingCase(`<svg><font color="red"><a href="/one"><a href="/two" /></a></font></svg>`, ["plain", "a", "a"]),
+    nestingCase(`<math><annotation-xml encoding="text/html"><a href="/one"><a href="/two" /></a></annotation-xml></math>`, ["plain", "a", "a"]),
+    // below a nested <svg> or <math>, integration points are those of the namespace around it
+    nestingCase(`<math><svg><title><b>Hello world!</b></title></svg></math>`, ["plain", "title", "b"]),
+    nestingCase(`<svg><math><title><a href="/one"><a href="/two" /></a></title></math></svg>`, ["plain", "a", "a"]),
+    nestingCase(`<svg>{ok && <math><mi><a href="/one"><a href="/two" /></a></mi></math>}</svg>`, ["plain", "a", "a"]),
+    // only <svg> right inside <annotation-xml> starts SVG within MathML
+    nestingCase(`<math><annotation-xml><svg><title><a href="/one"><a href="/two" /></a></title></svg></annotation-xml></math>`, ["plain", "a", "a"]),
+    nestingCase(`<table><thead><th>1</th></thead></table>`, ["plain", "thead", "th"]),
+    nestingCase(`<table><col /></table>`, ["plain", "table", "col"]),
+    nestingCase(`<div><tr><td>1</td></tr></div>`, ["plain", "div", "tr"]),
+    nestingCase(`<ul><li>one<li>two</li></li></ul>`, ["plain", "li", "li"]),
+    nestingCase(`<h1><h2>Hello world!</h2></h1>`, ["plain", "h1", "h2"]),
+    nestingCase(`<textarea><div>Hello world!</div></textarea>`, ["plain", "textarea", "div"]),
+    // a custom element doesn't make table markup legal
+    nestingCase(`<x-row><td>1</td></x-row>`, ["plain", "x-row", "td"]),
+    // these all compile to the same insert() into the same parent, which only
+    // server-rendered HTML sends back through the parser
+    nestingCase(`<p>{<hr />}</p>`, ["inserted", "p", "hr"]),
+    nestingCase(`<p>{condition && <hr />}</p>`, ["inserted", "p", "hr"]),
+    nestingCase(`<p>{condition ? <hr /> : <div />}</p>`, ["inserted", "p", "hr"], ["inserted", "p", "div"]),
+    nestingCase(`<p>{[<hr />]}</p>`, ["inserted", "p", "hr"]),
+    nestingCase(`<p children={<hr />} />`, ["inserted", "p", "hr"]),
+    // each level is reported on its own
+    nestingCase(`<p><div><p><hr /></p></div></p>`, ["plain", "p", "div"], ["plain", "p", "hr"]),
+    nestingCase(`<p><div /><div /></p>`, ["plain", "p", "div"], ["plain", "p", "div"]),
+]);
+
 export {
     importsFixes,
     nestingInsertedReports,
     nestingReports,
     nestingSilent,
+    nestingUpstreamReports,
+    nestingUpstreamSilent,
     noDestructureFixes,
     noDestructureUnfixed,
     preferArrowFixes,

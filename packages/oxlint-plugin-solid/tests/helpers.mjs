@@ -38,8 +38,10 @@ const PACKAGE_RUNTIME_DEPENDENCIES = [
     "is-html",
     "kebab-case",
     "known-css-properties",
+    "parse5",
     "solid-js",
     "style-to-object",
+    "validate-html-nesting",
 ];
 
 function getRepoRoot() {
