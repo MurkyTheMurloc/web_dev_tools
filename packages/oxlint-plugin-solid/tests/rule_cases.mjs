@@ -502,10 +502,19 @@ function test(props: Props): JSX.Element {
 ]);
 
 // no-unknown-namespaces with and without `allowedNamespaces`. `report` is the
-// message the rule must print, `null` means the rule stays silent.
-const ISLAND = `import type { Component } from "solid-js";
+// message the rule must print, `null` means the rule stays silent. The
+// fixtures are written the way our components are: `const X: Component<P>`.
+const ISLAND_VIEW = `import type { Component } from "solid-js";
 
-declare const Island: Component<Record<string, unknown>>;
+type IslandProps = Readonly<Record<string, unknown>>;
+
+const Island: Component<IslandProps> = () => {
+    return null;
+};
+
+export const View: Component = () => {
+    return <Island client:visible />;
+};
 `;
 const ALLOW_CLIENT = Object.freeze({
     "solid/no-unknown-namespaces": ["error", { allowedNamespaces: ["client"] }],
@@ -513,42 +522,50 @@ const ALLOW_CLIENT = Object.freeze({
 const COMPONENT_MESSAGE = "Namespaced props have no effect on components.";
 const namespaceCases = Object.freeze([
     Object.freeze({
-        code: `${ISLAND}export const View = () => {
-    return <Island client:visible />;
-};
-`,
+        code: ISLAND_VIEW,
         name: "an allowed namespace on a component",
         report: null,
         rules: ALLOW_CLIENT,
     }),
     Object.freeze({
-        code: `${ISLAND}export const View = () => {
-    return <Island client:visible />;
-};
-`,
+        code: ISLAND_VIEW,
         name: "a namespace on a component without the option",
         report: COMPONENT_MESSAGE,
     }),
     Object.freeze({
-        code: `export const View = () => <div client:foo="a" />;\n`,
+        code: `import type { Component } from "solid-js";
+
+export const View: Component = () => {
+    return <div client:foo="a" />;
+};
+`,
         name: "an allowed namespace on a DOM element",
         report: null,
         rules: ALLOW_CLIENT,
     }),
     Object.freeze({
-        code: `declare const f: () => void;
-export const View = () => <div on:click={f} />;
+        code: `import type { Component } from "solid-js";
+
+declare const onClick: () => void;
+
+export const View: Component = () => {
+    return <div on:click={onClick} />;
+};
 `,
         name: "a removed namespace the option does not cover",
         report: "'on:' was removed in Solid 2.0.",
         rules: ALLOW_CLIENT,
     }),
     Object.freeze({
-        code: `export const View = () => (
-    <svg>
-        <use xlink:href="#a" />
-    </svg>
-);
+        code: `import type { Component } from "solid-js";
+
+export const View: Component = () => {
+    return (
+        <svg>
+            <use xlink:href="#a" />
+        </svg>
+    );
+};
 `,
         name: "xlink on an SVG element",
         report: null,
@@ -559,17 +576,11 @@ export const View = () => <div on:click={f} />;
 // changing behaviour. None of them may touch a namespaced prop.
 const namespaceFixCases = Object.freeze([
     Object.freeze({
-        code: `${ISLAND}export const View = () => {
-    return <Island client:visible />;
-};
-`,
+        code: ISLAND_VIEW,
         name: "a namespace on a component without the option",
     }),
     Object.freeze({
-        code: `${ISLAND}export const View = () => {
-    return <Island client:visible />;
-};
-`,
+        code: ISLAND_VIEW,
         name: "an allowed namespace on a component",
         rules: ALLOW_CLIENT,
     }),
