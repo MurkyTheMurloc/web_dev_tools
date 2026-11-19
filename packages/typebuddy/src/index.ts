@@ -7,21 +7,4 @@
 // oxlint-disable-next-line no-empty-named-blocks, no-relative-parent-imports, require-module-specifiers
 import type {} from "../globals.js";
 
-export * from "./type_helper.js";
-
-export type {
-  AsyncResult,
-  Failed,
-  JsonifiedObject,
-  JsonifiedValue,
-  Maybe,
-  MaybePromise,
-  Nullable,
-  Optional,
-  ResolveMaybe,
-  ResolveNullable,
-  ResolveOptional,
-  Result,
-  Stringified,
-  Success,
-} from "./types/index.js";
+export * from "./public_api.js";

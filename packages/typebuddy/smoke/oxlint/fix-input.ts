@@ -1,4 +1,4 @@
-import type { Maybe, Nullable, Optional } from "../../src/types/index.js";
+import type { Maybe, Nullable, Optional } from "@murky-web/typebuddy";
 
 export type OptionalCandidate = string | undefined;
 export type MaybeCandidate = string | null;

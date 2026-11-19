@@ -1,58 +1,87 @@
+import { createImportPlanner } from "./typebuddy_import.js";
+
+type RuleFixer = {
+    replaceText(node: unknown, text: string): unknown;
+    insertTextBeforeRange(range: [number, number], text: string): unknown;
+};
+
 const rule = {
-  create(context: {
-    getSourceCode(): { getText(node: unknown): string };
-    report(descriptor: {
-      node: unknown;
-      messageId: string;
-      data: { type: string };
-      fix(fixer: { replaceText(node: unknown, text: string): unknown }): unknown;
-    }): void;
-  }) {
-    return {
-      TSUnionType(node: {
-        types: Array<{ type: string }>;
-      }) {
-        if (node.types.length !== 2) return;
+    create(context: {
+        getSourceCode(): {
+            getText(node: unknown): string;
+            getScope(node: unknown): unknown;
+        };
+        report(descriptor: {
+            node: unknown;
+            messageId: string;
+            data: { type: string };
+            fix(fixer: RuleFixer): unknown;
+        }): void;
+    }) {
+        const sourceCode = context.getSourceCode();
+        const imports = createImportPlanner(sourceCode);
 
-        const undefinedType = node.types.find(
-          (typeNode) => typeNode.type === "TSUndefinedKeyword",
-        );
-        // `null | undefined` has no non-nullish member to name, and rewriting
-        // it to `Optional<null>` only restated it with more syntax.
-        const otherType = node.types.find(
-          (typeNode) =>
-            typeNode.type !== "TSUndefinedKeyword" &&
-            typeNode.type !== "TSNullKeyword",
-        );
+        return {
+            TSUnionType(node: { types: Array<{ type: string }> }) {
+                if (node.types.length !== 2) return;
 
-        if (undefinedType && otherType) {
-          const sourceCode = context.getSourceCode();
-          const typeText = sourceCode.getText(otherType);
+                const undefinedType = node.types.find(
+                    (typeNode) => typeNode.type === "TSUndefinedKeyword",
+                );
+                // `null | undefined` has no non-nullish member to name, and
+                // rewriting it to `Optional<null>` only restated it with more
+                // syntax.
+                const otherType = node.types.find(
+                    (typeNode) =>
+                        typeNode.type !== "TSUndefinedKeyword" &&
+                        typeNode.type !== "TSNullKeyword",
+                );
 
-          context.report({
-            node,
-            messageId: "preferOptional",
-            data: { type: typeText },
-            fix(fixer) {
-              return fixer.replaceText(node, `Optional<${typeText}>`);
+                if (undefinedType && otherType) {
+                    const typeText = sourceCode.getText(otherType);
+
+                    context.report({
+                        node,
+                        messageId: "preferOptional",
+                        data: { type: typeText },
+                        fix(fixer) {
+                            // See `prefer-maybe`: the fix only uses the
+                            // package's own `Optional`, imported where it is
+                            // not already.
+                            const importFixes = imports.fixes(
+                                node,
+                                fixer,
+                                "Optional",
+                                "type",
+                            );
+                            if (importFixes === null) return null;
+
+                            return [
+                                ...importFixes,
+                                fixer.replaceText(
+                                    node,
+                                    `Optional<${typeText}>`,
+                                ),
+                            ];
+                        },
+                    });
+                }
             },
-          });
-        }
-      },
-    };
-  },
-  defaultOptions: [],
-  meta: {
-    type: "suggestion",
-    docs: {
-      description: "Enforce using Optional<T> instead of T | undefined",
+        };
     },
-    fixable: "code",
-    schema: [],
-    messages: {
-      preferOptional: "Use Optional<{{type}}> instead of {{type}} | undefined",
+    defaultOptions: [],
+    meta: {
+        type: "suggestion",
+        docs: {
+            description: "Enforce using Optional<T> instead of T | undefined",
+        },
+        fixable: "code",
+        schema: [],
+        messages: {
+            preferOptional:
+                "Use Optional<{{type}}> instead of {{type}} | undefined",
+        },
     },
-  },
 };
 
 export { rule as optionalRule };

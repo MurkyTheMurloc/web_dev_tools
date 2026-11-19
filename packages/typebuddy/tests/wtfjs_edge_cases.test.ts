@@ -11,7 +11,6 @@ import {
     parseNumber,
 } from "../src/type_helper.js";
 
-const NUM_0 = 0;
 const NUM_0_1 = 0.1;
 const NUM_1 = 1;
 const NUM_1000 = 1000;
@@ -52,7 +51,8 @@ describe("wtfjs-inspired edge cases", () => {
     it("should parse integers with explicit base-10 semantics", () => {
         expect(parseInteger("08")).toBe(NUM_8);
         expect(parseInteger("015")).toBe(NUM_15);
-        expect(parseInteger("0e0")).toBe(NUM_0);
+        // Used to be 0 (`Number("0e0")`); exponent notation is not an integer.
+        expect(parseInteger("0e0")).toBeUndefined();
         expect(parseInteger("12px")).toBeUndefined();
         expect(parseInteger("12.5")).toBeUndefined();
     });

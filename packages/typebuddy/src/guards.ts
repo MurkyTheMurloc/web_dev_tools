@@ -9,6 +9,40 @@ import type { Optional } from "./types/optional.js";
 
 type UnknownFunction = (...args: readonly never[]) => unknown;
 
+declare const finiteNumberBrand: unique symbol;
+
+/**
+ * A `number` that `isNumber` accepted: neither `NaN` nor `±Infinity`.
+ *
+ * It is a brand rather than plain `number` on purpose. A guard typed `value is
+ * number` also narrows the false branch, so `number | null` would become `null`
+ * after `if (!isNumber(value))`, although `NaN` and `Infinity` are `number`s
+ * that land there too. A branded type is not what a bare `number` is assignable
+ * to, so the false branch keeps them.
+ */
+type FiniteNumber<T extends number = number> = T & {
+    readonly [finiteNumberBrand]: true;
+};
+
+declare const integerBrand: unique symbol;
+declare const floatBrand: unique symbol;
+
+/**
+ * A `number` that `isInteger` accepted. A brand for the same reason as
+ * `FiniteNumber`: a plain `value is number` would leave `null` alone in the
+ * false branch of a `number | null`, although `1.5` and `NaN` land there too.
+ */
+type IntegerNumber = FiniteNumber & { readonly [integerBrand]: true };
+
+/** A `number` that `isFloat` accepted. See `IntegerNumber` for the brand. */
+type FloatNumber = FiniteNumber & { readonly [floatBrand]: true };
+
+/**
+ * What `isEmptyObject` narrows to: an object with no own keys at all. The index
+ * signature of `never` is the type of "nothing can be read from it".
+ */
+type EmptyObject = Record<string, never>;
+
 const EMPTY_LENGTH = 0;
 
 /**
@@ -111,7 +145,10 @@ function isEmptyArray(value: unknown): value is readonly unknown[] {
 }
 
 /**
- * More performant implementation of isArray for large arrays
+ * Kept for compatibility: the same check as `isArray`. It used to compare
+ * `Object.prototype.toString` with `"[object Array]"`, which any object can
+ * fake through `Symbol.toStringTag`; `Array.isArray` cannot be faked and is the
+ * fast path engines optimise anyway.
  *
  * @param {unknown} value - The value to check.
  * @returns {boolean} True if the value is an array.
@@ -119,18 +156,23 @@ function isEmptyArray(value: unknown): value is readonly unknown[] {
 function fastIsArray<T>(value: Nullable<readonly T[]>): value is readonly T[];
 function fastIsArray(value: unknown): value is readonly unknown[];
 function fastIsArray(value: unknown): value is readonly unknown[] {
-    return Object.prototype.toString.call(value) === "[object Array]";
+    return Array.isArray(value);
 }
 
 /**
- * Check if a value is a number.
+ * Check if a value is a finite number: not `NaN`, not `±Infinity`.
+ *
+ * The narrowed type is `FiniteNumber`, a brand over `number`, so the false
+ * branch still contains the `number`s this guard rejects.
  *
  * @param {unknown} value - The value to check.
- * @returns {boolean} True if the value is a number.
+ * @returns {boolean} True if the value is a finite number.
  */
-function isNumber<T extends number>(value: Nullable<T>): value is T;
-function isNumber(value: unknown): value is number;
-function isNumber(value: unknown): value is number {
+function isNumber<T extends number>(
+    value: Nullable<T>,
+): value is FiniteNumber<T>;
+function isNumber(value: unknown): value is FiniteNumber;
+function isNumber(value: unknown): value is FiniteNumber {
     if (typeof value === "string" && value.trim() === "") {
         return false;
     }
@@ -190,7 +232,11 @@ function isFunction(value: unknown): value is UnknownFunction {
 }
 
 /**
- * Returns true if the value is a promise.
+ * Returns true if the value is a promise, or any other thenable: an object or a
+ * function with a callable `then`.
+ *
+ * A `then` getter that throws, or a revoked Proxy, means the value cannot be
+ * awaited safely; that is a `false`, not an exception from the guard.
  *
  * @param {unknown} value - The value to check.
  * @returns {boolean} True if the value is a promise.
@@ -200,11 +246,18 @@ function isPromise<T>(
 ): value is PromiseLike<T>;
 function isPromise(value: unknown): value is PromiseLike<unknown>;
 function isPromise(value: unknown): value is PromiseLike<unknown> {
-    if (typeof value !== "object" || value === null) {
+    if (
+        (typeof value !== "object" && typeof value !== "function") ||
+        value === null
+    ) {
         return false;
     }
 
-    return typeof Reflect.get(value, "then") === "function";
+    try {
+        return typeof Reflect.get(value, "then") === "function";
+    } catch {
+        return false;
+    }
 }
 
 /**
@@ -256,24 +309,31 @@ function isSymbol(value: unknown): value is symbol {
 }
 
 /**
- * Check if a value is a plain object.
+ * Check if a value is an empty plain object: its prototype is
+ * `Object.prototype` and it has no own keys at all. A symbol key or a
+ * non-enumerable key counts as a key, so `{ [Symbol()]: 1 }` is not empty.
+ *
+ * The guard narrows to `EmptyObject`, never to the caller's own object type: an
+ * object type with required keys can not be empty, and narrowing to it would
+ * hide the very values the guard rejects from the false branch.
  *
  * @param {unknown} value - The value to check.
- * @returns {boolean} True if the value is a plain object.
+ * @returns {boolean} True if the value is an empty plain object.
  */
-function isEmptyObject<T extends Record<string, unknown>>(
-    value: Nullable<T>,
-): value is T;
-function isEmptyObject(value: unknown): value is Record<string, unknown>;
-function isEmptyObject(value: unknown): value is Record<string, unknown> {
-    return (
-        typeof value === "object" &&
-        !isNull(value) &&
-        !isUndefined(value) &&
-        !isEmptyArray(value) &&
-        Object.getPrototypeOf(value) === Object.prototype &&
-        Object.keys(value).length === EMPTY_LENGTH
-    );
+function isEmptyObject(value: unknown): value is EmptyObject {
+    if (typeof value !== "object" || value === null) {
+        return false;
+    }
+
+    // A revoked Proxy is an `object` whose every trap throws.
+    try {
+        return (
+            Object.getPrototypeOf(value) === Object.prototype &&
+            Reflect.ownKeys(value).length === EMPTY_LENGTH
+        );
+    } catch {
+        return false;
+    }
 }
 
 /**
@@ -291,28 +351,34 @@ function isInstanceOf<T>(
 }
 
 /**
- * Check if a value is an integer.
+ * Check if a value is an integer. The narrowed type is `IntegerNumber`, a brand
+ * over `number`, so the false branch still contains the `number`s this guard
+ * rejects.
  *
  * @param {unknown} value - The value to check.
  * @returns {boolean} True if the value is an integer.
  */
-function isInteger(value: unknown): value is number {
+function isInteger(value: unknown): value is IntegerNumber {
     return typeof value === "number" && Number.isInteger(value);
 }
 
 /**
- * Check if a value is a float.
+ * Check if a value is a float: a finite number with a fractional part. `NaN`
+ * and `±Infinity` are not floats, consistent with `isNumber`. The narrowed type
+ * is `FloatNumber`, a brand over `number`, like `isInteger`'s.
  *
  * @param {unknown} value - The value to check.
  * @returns {boolean} True if the value is a float.
  */
-function isFloat(value: unknown): value is number {
+function isFloat(value: unknown): value is FloatNumber {
     return (
         typeof value === "number" &&
-        !Number.isNaN(value) &&
+        Number.isFinite(value) &&
         !Number.isInteger(value)
     );
 }
+
+export type { EmptyObject, FiniteNumber, FloatNumber, IntegerNumber };
 
 export {
     fastIsArray,

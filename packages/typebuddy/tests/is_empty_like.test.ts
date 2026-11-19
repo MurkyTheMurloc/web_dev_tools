@@ -51,6 +51,41 @@ describe(isEmptyLike, () => {
         ).toBeTruthy();
     });
 
+    it("should not overflow the stack on a self-referencing object", () => {
+        const cyclic: Record<string, unknown> = { note: "" };
+        cyclic["self"] = cyclic;
+
+        expect(isEmptyLike(cyclic)).toBeTruthy();
+    });
+
+    it("should not overflow the stack on a self-referencing array", () => {
+        const cyclic: unknown[] = [null];
+        cyclic.push(cyclic);
+
+        expect(isEmptyLike(cyclic)).toBeTruthy();
+    });
+
+    it("should not overflow the stack on a cycle through two objects", () => {
+        const first: Record<string, unknown> = {};
+        const second: Record<string, unknown> = { first };
+        first["second"] = second;
+
+        expect(isEmptyLike(first)).toBeTruthy();
+    });
+
+    it("should still find content in a self-referencing object", () => {
+        const cyclic: Record<string, unknown> = { name: "murky" };
+        cyclic["self"] = cyclic;
+
+        expect(isEmptyLike(cyclic)).toBeFalsy();
+    });
+
+    it("should not mistake a repeated, non-cyclic reference for a cycle", () => {
+        const shared = { value: "x" };
+
+        expect(isEmptyLike([shared, shared])).toBeFalsy();
+    });
+
     it("should return false for non-empty inputs", () => {
         expect(isEmptyLike("Hello")).toBeFalsy();
         expect(isEmptyLike(NUM_123)).toBeFalsy();
