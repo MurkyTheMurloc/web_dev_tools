@@ -52,8 +52,21 @@ function joinOutput(result) {
     return `${result.stdout}${result.stderr}`.trim();
 }
 
+// With `CI` set, Oxlint prints colors and a `×` marker even with `NO_COLOR`
+// and `--format=default`. The assertions read plain text, so the commands run
+// without it and the output is the same locally and in CI.
+function commandEnvironment() {
+    const { CI: _ci, ...environment } = process.env;
+
+    return environment;
+}
+
 function runCommand([command, ...args], cwd) {
-    const result = spawnSync(command, args, { cwd, encoding: "utf8" });
+    const result = spawnSync(command, args, {
+        cwd,
+        encoding: "utf8",
+        env: commandEnvironment(),
+    });
 
     return {
         // A command that did not start has no status; that is a failure.

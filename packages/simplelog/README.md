@@ -1,7 +1,7 @@
 # SimpleLog
 
-`SimpleLog` is a lightweight and flexible logging utility for Node.js, Bun
-and fetch-style edge runtimes. It provides various log levels, performance
+`SimpleLog` is a lightweight and flexible logging utility for Node.js, Bun and
+fetch-style edge runtimes. It provides various log levels, performance
 benchmarking, and the ability to log messages to both the console and a file.
 
 ## Features
@@ -124,8 +124,8 @@ Timestamp (`timestampFormat`):
 1. `SIMPLELOG_TIMESTAMP=time` or `SIMPLELOG_TIMESTAMP=iso`.
 2. Otherwise `"time"` when stdout is a terminal, `"iso"` when it is not.
 
-Set `SIMPLELOG_TIMESTAMP=time` for output that goes through a pipe but is read by
-people, for example a process manager's terminal UI.
+Set `SIMPLELOG_TIMESTAMP=time` for output that goes through a pipe but is read
+by people, for example a process manager's terminal UI.
 
 An explicit option always wins over the environment. Log files always get the
 ISO timestamp and never colors, whatever the console shows. The `web` entry has
@@ -216,10 +216,9 @@ For Hono-based servers and metaframeworks, prefer the runtime-neutral `web`
 logger together with the Hono middleware entry:
 
 ```typescript
-import { Hono } from "hono";
-
 import { createHonoLoggerMiddleware } from "@murky-web/simplelog/hono";
 import { Logger } from "@murky-web/simplelog/web";
+import { Hono } from "hono";
 
 type AppVariables = {
     logger: Logger;

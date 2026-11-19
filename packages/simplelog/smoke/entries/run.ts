@@ -5,15 +5,16 @@ import path from "node:path";
  * Imports every published entry point for real.
  *
  * 2.0.0 shipped a `/otel` entry that threw on import: `dist/otel.js` imported
- * `setSpanContextReader` from `dist/logger_factory.js`, which did not export it.
- * Nothing caught that, because every other check reads the source. The build emits
- * `logger_factory.js` from two tsdown config blocks writing the same `outDir`, and a
- * module reached only as a dependency keeps just the exports its own block's entries
- * use — so whichever block finished last decided the export list, and that order is
- * not fixed. Type-checking the source cannot see it; only loading the built files can.
+ * `setSpanContextReader` from `dist/logger_factory.js`, which did not export
+ * it. Nothing caught that, because every other check reads the source. The
+ * build emits `logger_factory.js` from two tsdown config blocks writing the
+ * same `outDir`, and a module reached only as a dependency keeps just the
+ * exports its own block's entries use — so whichever block finished last
+ * decided the export list, and that order is not fixed. Type-checking the
+ * source cannot see it; only loading the built files can.
  *
- * A `d.ts` next to a `.js` is no proof either: the declaration is generated from the
- * source, so it described an export the JavaScript did not have.
+ * A `d.ts` next to a `.js` is no proof either: the declaration is generated
+ * from the source, so it described an export the JavaScript did not have.
  */
 const packageRoot = path.resolve(import.meta.dir, "../..");
 const pkg = JSON.parse(
@@ -69,7 +70,9 @@ for (const [subpath, target] of Object.entries(pkg.exports)) {
             continue;
         }
         loaded += ONE_ENTRY;
-        console.log(`  ok  ${subpath.padEnd(SUBPATH_COLUMN_WIDTH)} ${names.join(", ")}`);
+        console.log(
+            `  ok  ${subpath.padEnd(SUBPATH_COLUMN_WIDTH)} ${names.join(", ")}`,
+        );
     } catch (error) {
         // An unresolved import between two built files surfaces here and nowhere else.
         failures.push(

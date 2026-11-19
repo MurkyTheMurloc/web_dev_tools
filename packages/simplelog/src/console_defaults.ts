@@ -7,8 +7,8 @@ import type {
 /**
  * What a runtime knows about where its console output goes, read raw from the
  * environment. The Node and Bun runtime fills it in; this module turns it into
- * defaults and never touches `process` itself, so it stays safe for the
- * browser build.
+ * defaults and never touches `process` itself, so it stays safe for the browser
+ * build.
  */
 type ConsoleEnvironment = Readonly<{
     forceColor: string | undefined;
