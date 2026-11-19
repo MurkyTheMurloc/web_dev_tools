@@ -22,33 +22,36 @@ Aktuell sind enthalten:
   `solid/no-setter-in-effect` (meldet Effects, die nur in ein Signal oder einen
   Store schreiben, statt den Wert abzuleiten -- und Effects, die etwas awaiten
   und das Ergebnis zurueckschreiben, statt es aus einer Derivation zu liefern)
-  `solid/no-untracked-effect-read` (meldet reaktive Reads in der
-  apply-Phase eines zweiphasigen `createEffect`, die dort nicht tracken) und
+  `solid/no-untracked-effect-read` (meldet reaktive Reads in der apply-Phase
+  eines zweiphasigen `createEffect`, die dort nicht tracken) und
   `solid/no-owned-primitives-in-ref` (meldet `createEffect`/`onCleanup` und
-  Verwandte in einem Ref-Callback -- der laeuft ohne Owner, nichts raeumt sie
-  je wieder ab),
-  `solid/reactive-async`, `solid/no-server-import-in-client` und
+  Verwandte in einem Ref-Callback -- der laeuft ohne Owner, nichts raeumt sie je
+  wieder ab), `solid/reactive-async`, `solid/no-server-import-in-client` und
   `solid/strict-void-return` (siehe unten)
-- ein Test-Harness, der die exportierte Rule-Surface und echte Diagnostik
-  gegen Temp-Projekte prueft
+- ein Test-Harness, der die exportierte Rule-Surface und echte Diagnostik gegen
+  Temp-Projekte prueft
 
-Aktuell wird das Paket nicht direkt im Zielprojekt installiert. Stattdessen
-kopiert `@murky-web/config` die Rule-Runtime in `./oxc/jsplugins/solid/`, damit
-Oxlint sie ueber einen lokalen `jsPlugins`-Pfad laden kann.
+Das Paket wird als normale Dependency installiert und in der
+Oxlint-Konfiguration als JS-Plugin geladen:
 
-Wichtig dabei:
+```jsonc
+{
+    "jsPlugins": ["@murky-web/oxlint-plugin-solid"],
+    "rules": {
+        "solid/reactivity": "error",
+        "solid/prefer-arrow-components": "error",
+    },
+}
+```
 
-- `@murky-web/config` loest dieses Paket als normale Workspace-Dependency auf
-- der Installer kopiert den lokalen Plugin-Src-Ordner aus der installierten
-  Paketauflösung
-- Zielprojekte brauchen dadurch weiter nur die kopierte Runtime unter
-  `./oxc/jsplugins/solid/`, nicht dieses Paket als direkte Dependency
+Die Regeln heissen `solid/<name>`. Welche Regeln dieses Repo selbst einschaltet,
+steht in `config/oxc/linting/solid.jsonc`.
 
 ## Regeln fuer das Solid-2.0-Modell
 
-Die drei Regeln arbeiten ohne Typinformation, nur mit Syntax und Scope. Sie
-sind in `config/oxc/linting/solid.jsonc` aktiv und ersetzen dort fuer
-`*.tsx`/`*.jsx` die Typ-Regeln `typescript/promise-function-async` und
+Die drei Regeln arbeiten ohne Typinformation, nur mit Syntax und Scope. Sie sind
+in `config/oxc/linting/solid.jsonc` aktiv und ersetzen dort fuer `*.tsx`/`*.jsx`
+die Typ-Regeln `typescript/promise-function-async` und
 `typescript/strict-void-return`.
 
 ### `solid/reactive-async`
@@ -65,9 +68,9 @@ Gemeldet wird
   Memos, `props.x`, Property-Read eines Stores): Solid meldet das zur Laufzeit
   als `UNTRACKED_READ_AFTER_AWAIT`, es wird nie eine Dependency. Lies den Wert
   vor dem `await` in eine lokale Variable.
-- ein `async`-Callback, dessen einziges `await` ein `return await x` ist: `async`
-  und `await` weglassen und das Promise zurueckgeben. Innerhalb von `try` bleibt
-  `return await` erlaubt, weil es das `catch` erst moeglich macht.
+- ein `async`-Callback, dessen einziges `await` ein `return await x` ist:
+  `async` und `await` weglassen und das Promise zurueckgeben. Innerhalb von
+  `try` bleibt `return await` erlaubt, weil es das `catch` erst moeglich macht.
 
 Grenzen: Reads in verschachtelten Funktionen, Helfern und `.then`-Callbacks
 sieht die Regel nicht (die Laufzeit-Diagnose schon). Ob ein Name ein Signal ist,
@@ -77,15 +80,32 @@ Datei und aus dem Namen `props`.
 ### `solid/no-server-import-in-client`
 
 Client-Dateien (`.tsx` und `.ts` ausserhalb von `src/server/`, ohne
-Test-Dateien) duerfen ein Modul unter `src/server/` nur importieren, wenn dessen
-erste Anweisung `"use server"` ist. Der Pfad wird vom importierenden File aus
-aufgeloest (relativ oder `~/` = `<Projekt>/src/`, Projektwurzel = naechstes
-Verzeichnis mit `package.json`) und die Zieldatei gelesen. Fehlt das Ziel,
-wird nichts gemeldet. `import type` wird ignoriert. Geprueft werden auch
-`export ... from` und `import("...")` mit String-Literal.
+Test-Dateien) duerfen ein Modul unter `src/server/` nur importieren, wenn es die
+Direktive `"use server"` hat. Der Pfad wird vom importierenden File aus
+aufgeloest (relativ oder `~/` = `<Projekt>/src/`) und die Zieldatei gelesen.
+Projektwurzel ist das naechste Verzeichnis ueber der Datei, das `src/server`
+enthaelt (nicht das naechste `package.json`: das kann in jedem Unterordner
+liegen). Die Suche nach oben endet beim ersten Verzeichnis mit `.git` oder mit
+einer `package.json` mit `workspaces`; ein `src/server` weiter oben (etwa im
+Home-Verzeichnis) gehoert zu etwas anderem. Ohne ein solches Verzeichnis meldet
+die Regel nichts. Das Ergebnis wird pro Verzeichnis fuer die Laufzeit des
+Prozesses gemerkt: ein `src/server`, das ein laufender Language Server erst
+spaeter sieht, wird nach einem Neustart gefunden. Fehlt das Ziel, wird nichts
+gemeldet. `import type` wird ignoriert. Geprueft werden auch `export ... from`,
+`import("...")` und `require("...")`, jeweils mit String- oder Template-Literal
+ohne Platzhalter.
 
-Grenze: andere Aliase und Server-Code ausserhalb von `src/server/` kennt die
-Regel nicht.
+Die Direktive muss im Direktiven-Prolog stehen, also unter den
+String-Anweisungen am Dateianfang (`"use strict"; "use server";` zaehlt).
+Kommentare davor sind erlaubt, ein Ausdruck wie `"use server".length;` oder
+`("use server");` und ein Escape wie `"use\x20server"` nicht. Ein Zeilenumbruch
+ohne Semikolon beendet die Anweisung nur dort, wo auch JavaScript ein Semikolon
+einfuegt (eine Folgezeile mit `.`, `(`, `[`, einem Operator oder einem
+Template-Literal gehoert noch zum String).
+
+Grenzen: andere Aliase als `~/` und Server-Code ausserhalb von `src/server/`
+kennt die Regel nicht, ein `require`, das lokal neu definiert ist, wird trotzdem
+geprueft, und `package.json`-`exports`/`paths` werden nicht gelesen.
 
 ### `solid/strict-void-return`
 
@@ -104,21 +124,54 @@ Die Regel ist schwaecher als `typescript/strict-void-return`: sie sieht nur
 Inline-Callbacks, keine Funktionen, die per Namen uebergeben werden, und bei
 `onCleanup`/`onSettled` keine Calls, deren Rueckgabetyp sie nicht kennt.
 
-## Nutzung ueber @murky-web/config
+### `solid/validate-jsx-nesting`
 
-Im Zielprojekt:
+Meldet HTML-Verschachtelung, die der Browser umbaut, so dass das gerenderte DOM
+nicht dem JSX entspricht: `<p><div /></p>`, ein Link im Link, ein Button im
+Button, `<tr>` direkt in `<table>` (der Parser setzt ein `<tbody>` dazwischen),
+`<td>` ausserhalb einer Zeile, ein `<div>` im `<svg>` und aehnliches. Der
+Elternknoten wird durch Fragmente, Expression-Container, Arrays und `&&`/`?:`
+hindurch gesucht; ein Kind, das erst durch einen Ausdruck (`{cond && <div />}`)
+in den Elternknoten kommt, bekommt die Meldung fuer Hydration (der Client baut
+es wie geschrieben, nur der vom Server gerenderte HTML-Text wird umgebaut).
 
-```bash
-web-dev-config init --oxc --typescript --frontend-solid
-```
+Die Tabelle der ungueltigen Paare stammt aus `validate-html-nesting`
+(ISC-Lizenz), wie in `eslint-plugin-solid` 0.20. Dieses Plugin fragt aber nicht
+parse5, was der Parser daraus macht, sondern hat die Antwort in
+`src/html_nesting.mjs` aufgeschrieben (Einfuegemodi "in body", "in table", "in
+select", "in head" und das Ende von Foreign Content). Grenzen: Der Inhalt von
+`<svg>` und `<math>` wird nicht geprueft (nur `<svg>` direkt in HTML-Elementen
+mit seinen Kindern, die aus dem SVG ausbrechen), ein `<input type="hidden">` in
+einer Tabelle ist erlaubt, der Inhalt eines `<template>` wird nicht geprueft
+(der Parser behaelt dort jedes Element), ein Elternknoten, der kein DOM-Element
+ist (`<Show>`, eine Komponente), wird nicht durchschaut, und fuer Paare, die
+diese Tabelle nicht kennt, kommt keine Meldung.
 
-Danach:
+## Autofixes
 
-- liegt die lokale Rule-Runtime unter `./oxc/jsplugins/solid/`
-- wird `./linting/solid.jsonc` in die Oxc-Konfiguration eingehängt
-- zeigt `jsPlugins` auf `./jsplugins/solid/index.mjs`
-- feuern sowohl die portierten Solid-Regeln als auch
-  `solid/prefer-arrow-components`
+`oxlint --fix` schreibt nur Code, der danach noch dasselbe tut. Wo ein Umbau das
+nicht sicher kann, bleibt es bei der Meldung ohne Fix:
+
+- `solid/prefer-arrow-components`: eine Funktion, die vor ihrer Deklaration
+  gelesen wird (`export const routes = [{ component: Home }]` vor
+  `export function Home`), wird nicht umgeschrieben, weil die `const` dort noch
+  nicht initialisiert waere (ReferenceError). Zaehlt jede Stelle vor der
+  Deklaration, auch in einer Funktion, weil das Plugin nicht weiss, wann sie
+  laeuft. `export default function Page` wird zu `const Page ... ;` plus
+  `export default Page;`. Der `solid-js`-Typ-Import steht einmal oben in der
+  Datei, nach einer `"use client"`-Direktive.
+- `solid/no-destructure`: ein verschachteltes Muster (`{ user: { name } }`), ein
+  berechneter Schluessel, der kein Literal ist (`{ [key]: label }`), eine
+  Zuweisung an einen destrukturierten Namen und ein Default, der einen frueheren
+  Prop liest, werden nur gemeldet. Der neue Parameter heisst `props`, oder
+  `props2`, `props3`, ... wenn der Name in einem umgebenden Scope schon vergeben
+  ist (sonst faengt er die Reads des aeusseren `props` ab). Ein Shorthand
+  (`{ title }`) wird zu `{ title: props.title }`.
+- `solid/imports`: ein Wert wird nie in ein `import type` verschoben, ein Typ
+  kommt in einem Wert-Import als `type Name` an und in einem `import type` ohne
+  `type`; passt keine vorhandene Deklaration, schreibt der Fix eine neue.
+- `solid/prefer-class-object`: steht neben `classList` schon ein `class`, wird
+  nur gemeldet (der Fix haette `class` doppelt geschrieben).
 
 Ein typischer Fix-Fall:
 

@@ -7,6 +7,8 @@ const deliberateThrowPath = new URL("./deliberate-throw.ts", smokeDir);
 const useServerModulePath = new URL("./use-server-module.ts", smokeDir);
 const useServerFunctionPath = new URL("./use-server-function.ts", smokeDir);
 const useServerSiblingPath = new URL("./use-server-sibling.ts", smokeDir);
+const testNamedPath = new URL("./violations.bench.ts", smokeDir);
+const testDirectoryPath = new URL("./__tests__/async-helper.ts", smokeDir);
 
 const expectedRuleIds = [
     "typebuddy(prefer-optional)",
@@ -17,7 +19,7 @@ const expectedRuleIds = [
 ] as const;
 
 const result =
-    await Bun.$`oxlint -f json -c ${configPath.pathname} ${violationsPath.pathname} ${asyncViolationsPath.pathname} ${frameworkCallbackPath.pathname} ${deliberateThrowPath.pathname} ${useServerModulePath.pathname} ${useServerFunctionPath.pathname} ${useServerSiblingPath.pathname}`
+    await Bun.$`oxlint -f json -c ${configPath.pathname} ${violationsPath.pathname} ${asyncViolationsPath.pathname} ${frameworkCallbackPath.pathname} ${deliberateThrowPath.pathname} ${useServerModulePath.pathname} ${useServerFunctionPath.pathname} ${useServerSiblingPath.pathname} ${testNamedPath.pathname} ${testDirectoryPath.pathname}`
         .nothrow()
         .quiet();
 const output = `${result.stdout.toString()}${result.stderr.toString()}`;
@@ -58,6 +60,8 @@ const silent = {
     "deliberate-throw.ts":
         "a function that throws is not a result waiting to be wrapped",
     "framework-callback.ts": "framework callbacks are ignored by the async rules",
+    "violations.bench.ts": "typebuddy does not apply to test files (*.bench.ts)",
+    "async-helper.ts": "typebuddy does not apply to files under __tests__/",
 } as const;
 
 for (const [fileName, reason] of Object.entries(silent)) {

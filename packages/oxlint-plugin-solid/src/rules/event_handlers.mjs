@@ -113,13 +113,12 @@ export default {
         messages: {
             "detected-attr":
                 'The {{name}} prop is named as an event handler (starts with "on"), but Solid knows its value ({{staticValue}}) is a string or number, so it will be treated as an attribute. If this is intentional, use the plain attribute name instead of an on-prefixed one.',
-            naming: "The {{name}} prop is ambiguous. If it is an event handler, change it to {{handlerName}}. If it is an attribute, change it to {{attrName}}.",
+            naming: "In Solid 2.0, {{name}} is a plain attribute, not an event handler, so a function value is never called. If it is an event handler, change it to {{handlerName}}.",
             capitalization:
                 "The {{name}} prop should be renamed to {{fixedName}} for readability.",
             nonstandard:
                 "The {{name}} prop should be renamed to {{fixedName}}, because it's not a standard event handler.",
             "make-handler": "Change the {{name}} prop to {{handlerName}}.",
-            "make-attr": "Change the {{name}} prop to {{attrName}}.",
             "spread-handler":
                 "The {{name}} prop should be added as a JSX attribute, not spread in. Solid doesn't add listeners when spreading into JSX.",
         },
@@ -216,14 +215,15 @@ export default {
                         }
                     } else if (name[2] === name[2].toLowerCase()) {
                         // this includes words like `only` and `ongoing` as well as unknown handlers like `onfoobar`.
-                        // Enforce using either /^on[A-Z]/ (event handler) or /^attr:on[a-z]/ (forced regular attribute)
-                        // to make user intent clear and code maximally readable
+                        // Enforce /^on[A-Z]/ (event handler) to make user intent clear. Solid 2.0
+                        // removed the `attr:` namespace: attributes are the default there, so a
+                        // lowercase `on...` name is already a plain attribute and there is no
+                        // `attr:` form to suggest.
                         const handlerName = `on${name[2].toUpperCase()}${name.slice(3)}`;
-                        const attrName = `attr:${name}`;
                         context.report({
                             node: node.name,
                             messageId: "naming",
-                            data: { name, attrName, handlerName },
+                            data: { name, handlerName },
                             suggest: [
                                 {
                                     messageId: "make-handler",
@@ -233,12 +233,6 @@ export default {
                                             node.name,
                                             handlerName,
                                         ),
-                                },
-                                {
-                                    messageId: "make-attr",
-                                    data: { name, attrName },
-                                    fix: (fixer) =>
-                                        fixer.replaceText(node.name, attrName),
                                 },
                             ],
                         });

@@ -2,9 +2,13 @@ import { getStaticValue } from "@eslint-community/eslint-utils";
 
 import { getScope } from "../compat.mjs";
 
-const JAVASCRIPT_PROTOCOL_PATTERN =
-    "^[\\\\u0000-\\\\u001F ]*j[\\\\r\\\\n\\\\t]*a[\\\\r\\\\n\\\\t]*v[\\\\r\\\\n\\\\t]*a[\\\\r\\\\n\\\\t]*s[\\\\r\\\\n\\\\t]*c[\\\\r\\\\n\\\\t]*r[\\\\r\\\\n\\\\t]*i[\\\\r\\\\n\\\\t]*p[\\\\r\\\\n\\\\t]*t[\\\\r\\\\n\\\\t]*:";
-const JAVASCRIPT_PROTOCOL_REGEX = new RegExp(JAVASCRIPT_PROTOCOL_PATTERN, "i");
+// A browser strips leading C0 control characters and spaces and drops tabs and
+// newlines inside the scheme before it reads the protocol, so all of
+// `"\njavascript:"`, `"\u0001javascript:"` and `"java\tscript:"` run code.
+// The regex literal is the one of eslint-plugin-solid 0.20: it is not an
+// escaped string, where `\\u0000` would match a backslash and the text `u0000`.
+const JAVASCRIPT_PROTOCOL_REGEX =
+    /^[\u0000-\u001F ]*j[\r\n\t]*a[\r\n\t]*v[\r\n\t]*a[\r\n\t]*s[\r\n\t]*c[\r\n\t]*r[\r\n\t]*i[\r\n\t]*p[\r\n\t]*t[\r\n\t]*:/i;
 
 export const jsxNoScriptUrlRule = {
     meta: {

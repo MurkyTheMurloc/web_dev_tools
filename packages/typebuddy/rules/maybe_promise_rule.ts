@@ -1,6 +1,6 @@
 import { throwsDeliberately } from "./deliberate_throw.js";
-import { getTypeBuddyImportInsertion } from "./typebuddy_import.js";
 import { walkOwnSubtree } from "./own_subtree.js";
+import { canAddImport, createImportPlanner } from "./typebuddy_import.js";
 import { createUseServerGuard } from "./use_server.js";
 
 type AstNode = {
@@ -9,24 +9,27 @@ type AstNode = {
     [key: string]: unknown;
 };
 
-type RuleContext = {
-    getSourceCode(): { getText(node: unknown): string };
-    report(descriptor: {
-        node: unknown;
-        messageId: string;
-        fix?(fixer: {
-            replaceText(node: unknown, text: string): unknown;
-            insertTextBeforeRange(
-                range: [number, number],
-                text: string,
-            ): unknown;
-        }): unknown;
-    }): void;
-};
-
 type RuleFixer = {
     replaceText(node: unknown, text: string): unknown;
     insertTextBeforeRange(range: [number, number], text: string): unknown;
+};
+
+type RuleSuggestion = {
+    messageId: string;
+    fix(fixer: RuleFixer): unknown;
+};
+
+type RuleContext = {
+    getSourceCode(): {
+        getText(node: unknown): string;
+        getScope(node: unknown): unknown;
+    };
+    report(descriptor: {
+        node: unknown;
+        messageId: string;
+        fix?(fixer: RuleFixer): unknown;
+        suggest?: RuleSuggestion[];
+    }): void;
 };
 
 function isNode(value: unknown): value is AstNode {
@@ -136,6 +139,30 @@ function getObjectPropertyValue(
     return null;
 }
 
+const RESULT_PROPERTY_COUNT = 2;
+
+/** An object literal with exactly `isError` and `value`: no spread, no extras. */
+function hasOnlyResultProperties(node: unknown): boolean {
+    if (
+        !isNode(node) ||
+        node.type !== "ObjectExpression" ||
+        !Array.isArray(node["properties"]) ||
+        node["properties"].length !== RESULT_PROPERTY_COUNT
+    ) {
+        return false;
+    }
+
+    return node["properties"].every((property) => {
+        return (
+            isNode(property) &&
+            property.type === "Property" &&
+            property["computed"] !== true &&
+            (isIdentifierNamed(property["key"], "isError") ||
+                isIdentifierNamed(property["key"], "value"))
+        );
+    });
+}
+
 function isBooleanLiteral(node: unknown, expected: boolean): boolean {
     return (
         isNode(node) && node.type === "Literal" && node["value"] === expected
@@ -149,7 +176,7 @@ function isNullLiteral(node: unknown): boolean {
 const rule = {
     create(context: RuleContext) {
         const sourceCode = context.getSourceCode();
-        const scheduledHelperImports = new Set<"ok" | "err">();
+        const imports = createImportPlanner(sourceCode);
 
         function isTypeReference(node: unknown): node is AstNode {
             return isNode(node) && node.type === "TSTypeReference";
@@ -175,9 +202,9 @@ const rule = {
         /**
          * The awaited type behind an async function's return annotation.
          *
-         * Every spelling counts. Matching only `Promise` meant the rule read the
-         * return type of code it had not migrated yet and went blind the moment
-         * `MaybePromise` was there — so a bare `return;` in a
+         * Every spelling counts. Matching only `Promise` meant the rule read
+         * the return type of code it had not migrated yet and went blind the
+         * moment `MaybePromise` was there — so a bare `return;` in a
          * `MaybePromise<void>` function never became `return ok();`, while the
          * identical `Promise<void>` function was fixed. It only ever worked
          * because the rename and this lookup happen in the same pass, off the
@@ -192,28 +219,59 @@ const rule = {
             return getTypeArgument(node);
         }
 
-        function ensureResultHelperImportFixes(
-            node: AstNode,
+        /**
+         * The fixes that rewrite `at` and make `helperName` available there, or
+         * `null` when the name is something else at that spot (a catch
+         * parameter called `err`, a local called `ok`): the rule then reports
+         * without offering a fix, because a fix would call the wrong thing.
+         */
+        function withHelperFixes(
+            at: AstNode,
             fixer: RuleFixer,
             helperName: "ok" | "err",
-        ): unknown[] {
-            if (scheduledHelperImports.has(helperName)) {
-                return [];
-            }
+            rewrite: unknown,
+        ): unknown[] | null {
+            const importFixes = imports.fixes(at, fixer, helperName, "value");
+            if (importFixes === null) return null;
 
-            const insertion = getTypeBuddyImportInsertion(node, helperName);
-            if (!insertion) {
-                return [];
-            }
+            return [...importFixes, rewrite];
+        }
 
-            scheduledHelperImports.add(helperName);
-
+        /**
+         * Same as `withHelperFixes`, as a suggestion. A suggestion is applied
+         * alone, so it carries its own import too.
+         */
+        function suggestWithHelper(
+            at: AstNode,
+            messageId: string,
+            helperName: "ok" | "err",
+            rewrite: (fixer: RuleFixer) => unknown,
+        ): RuleSuggestion[] {
             return [
-                fixer.insertTextBeforeRange(insertion.range, insertion.text),
+                {
+                    messageId,
+                    fix(fixer) {
+                        return withHelperFixes(
+                            at,
+                            fixer,
+                            helperName,
+                            rewrite(fixer),
+                        );
+                    },
+                },
             ];
         }
 
-        function reportPromiseReturnType(node: AstNode) {
+        /**
+         * `Promise<T>` to `MaybePromise<T>`.
+         *
+         * Only on a function this file defines (`own`) is it a fix: the author
+         * is moving that function's contract to `MaybePromise`. A function
+         * type, an interface method or an overload describes a shape that other
+         * code, often a library's, has to match, so there it is a suggestion
+         * the author decides on.
+         */
+        function reportPromiseReturnType(node: AstNode, own: boolean) {
             if (!isNode(node["returnType"])) return;
 
             const typeAnnotation = node["returnType"]["typeAnnotation"];
@@ -221,23 +279,60 @@ const rule = {
             if (getTypeName(typeAnnotation) !== "Promise") return;
 
             const typeName = typeAnnotation["typeName"];
+            const rewrite = (fixer: RuleFixer) => {
+                const typeImport = imports.fixes(
+                    typeName,
+                    fixer,
+                    "MaybePromise",
+                    "type",
+                );
+                if (typeImport === null) return null;
+
+                return [
+                    ...typeImport,
+                    fixer.replaceText(typeName, "MaybePromise"),
+                ];
+            };
+
+            // The rename is the first half of a migration: the returns of the
+            // function then have to become `ok(...)` and `err()`, and those
+            // fixes need an import. In a file that cannot take one (a script)
+            // they are not offered, so a rename by `--fix` would leave code
+            // that does not compile and never heals. There it is a suggestion.
+            if (own && canAddImport(node)) {
+                context.report({
+                    node: typeName,
+                    messageId: "replaceWithMaybePromise",
+                    fix(fixer) {
+                        return rewrite(fixer);
+                    },
+                });
+                return;
+            }
+
             context.report({
                 node: typeName,
                 messageId: "replaceWithMaybePromise",
-                fix(fixer) {
-                    return fixer.replaceText(typeName, "MaybePromise");
-                },
+                suggest: [
+                    {
+                        messageId: "suggestMaybePromise",
+                        fix(fixer) {
+                            return rewrite(fixer);
+                        },
+                    },
+                ],
             });
         }
 
         function checkReturnType(node: AstNode) {
             if (!isAsyncFunction(node)) return;
+            if (node["generator"] === true) return;
             if (isCallArgumentCallback(node)) return;
             // Same exemption as `require-try-catch`: a deliberate throw is not a
             // result waiting to be wrapped.
             if (throwsDeliberately(node["body"])) return;
 
-            reportPromiseReturnType(node);
+            reportPromiseReturnType(node, true);
         }
 
         /**
@@ -250,11 +345,15 @@ const rule = {
          * Ambient declarations are the exception: `declare` describes code the
          * project does not own, and rewriting a third-party framework's
          * callback shape to `MaybePromise` would be a lie about that API.
+         *
+         * Every other signature is a suggestion, never a fix: a function type
+         * or an interface method is often the shape a library hands in or
+         * expects back, and only the author knows which.
          */
         function checkSignatureReturnType(node: AstNode) {
             if (isAmbient(node)) return;
 
-            reportPromiseReturnType(node);
+            reportPromiseReturnType(node, false);
         }
 
         function wrapReturnValue(
@@ -271,14 +370,12 @@ const rule = {
                         node,
                         messageId: "returnVoidPromise",
                         fix(fixer) {
-                            return [
-                                ...ensureResultHelperImportFixes(
-                                    node,
-                                    fixer,
-                                    "ok",
-                                ),
-                                fixer.replaceText(node, "return ok()"),
-                            ];
+                            return withHelperFixes(
+                                node,
+                                fixer,
+                                "ok",
+                                fixer.replaceText(node, "return ok();"),
+                            );
                         },
                     });
                 }
@@ -303,16 +400,25 @@ const rule = {
             const isErrorValue = getObjectPropertyValue(argument, "isError");
             const objectValue = getObjectPropertyValue(argument, "value");
 
-            if (isBooleanLiteral(isErrorValue, false) && objectValue) {
+            // The inline object is only the same thing as `ok(value)` when it
+            // holds exactly these two properties. `{ isError: false, value,
+            // extra }` would lose `extra`.
+            if (
+                isBooleanLiteral(isErrorValue, false) &&
+                objectValue &&
+                hasOnlyResultProperties(argument)
+            ) {
                 context.report({
                     node: argument,
                     messageId: "preferOkResult",
                     fix(fixer) {
                         const valueText = sourceCode.getText(objectValue);
-                        return [
-                            ...ensureResultHelperImportFixes(node, fixer, "ok"),
+                        return withHelperFixes(
+                            node,
+                            fixer,
+                            "ok",
                             fixer.replaceText(argument, `ok(${valueText})`),
-                        ];
+                        );
                     },
                 });
                 return;
@@ -320,25 +426,29 @@ const rule = {
 
             if (
                 isBooleanLiteral(isErrorValue, true) &&
-                isNullLiteral(objectValue)
+                isNullLiteral(objectValue) &&
+                hasOnlyResultProperties(argument)
             ) {
                 context.report({
                     node: argument,
                     messageId: "preferErrResult",
                     fix(fixer) {
-                        return [
-                            ...ensureResultHelperImportFixes(
-                                node,
-                                fixer,
-                                "err",
-                            ),
+                        return withHelperFixes(
+                            node,
+                            fixer,
+                            "err",
                             fixer.replaceText(argument, "err()"),
-                        ];
+                        );
                     },
                 });
                 return;
             }
 
+            // Anything else is a suggestion, never a fix. `return session`
+            // may already be a failed Result, `return await load()` may
+            // already be a `MaybePromise`: wrapping either in `ok(...)` turns
+            // a failure into a success holding a failure. Only the author
+            // knows what the expression is.
             if (
                 !hasIsErrorFlag(argument, true) &&
                 !hasIsErrorFlag(argument, false)
@@ -346,13 +456,18 @@ const rule = {
                 context.report({
                     node: argument,
                     messageId: "wrapReturn",
-                    fix(fixer) {
-                        const argumentText = sourceCode.getText(argument);
-                        return [
-                            ...ensureResultHelperImportFixes(node, fixer, "ok"),
-                            fixer.replaceText(argument, `ok(${argumentText})`),
-                        ];
-                    },
+                    suggest: suggestWithHelper(
+                        node,
+                        "suggestWrapReturn",
+                        "ok",
+                        (fixer) => {
+                            const argumentText = sourceCode.getText(argument);
+                            return fixer.replaceText(
+                                argument,
+                                `ok(${argumentText})`,
+                            );
+                        },
+                    ),
                 });
             }
         }
@@ -387,32 +502,32 @@ const rule = {
         /**
          * Push a single `return` inside a catch block towards `err()`.
          *
-         * Only the lossless rewrites carry a fix. Replacing
-         * `return ok("defaults")` with `return err()` would silently drop the
-         * author's fallback, and the old behaviour — appending `return err()`
-         * after it — produced unreachable code and a report that could never be
-         * satisfied. Where the fallback matters, moving it into the try block is
-         * a decision the author has to make, so the rule reports and stops.
+         * Only the lossless rewrites carry a fix. Replacing `return
+         * ok("defaults")` with `return err()` would silently drop the author's
+         * fallback, and the old behaviour — appending `return err()` after it —
+         * produced unreachable code and a report that could never be satisfied.
+         * Where the fallback matters, moving it into the try block is a
+         * decision the author has to make, so the rule reports and stops.
          */
-        function reportCatchReturn(tryNode: AstNode, statement: AstNode) {
+        function reportCatchReturn(statement: AstNode) {
             const argument = statement["argument"];
 
             if (isSettledFailure(argument)) return;
 
             // `return;` — adding the result is pure addition, nothing is lost.
+            // `statement` is where the scope is read: the catch parameter is in
+            // scope there, and `catch (err)` makes `err()` the caught value.
             if (!isNode(argument)) {
                 context.report({
                     node: statement,
                     messageId: "returnFailedPromise",
                     fix(fixer) {
-                        return [
-                            ...ensureResultHelperImportFixes(
-                                tryNode,
-                                fixer,
-                                "err",
-                            ),
-                            fixer.replaceText(statement, "return err()"),
-                        ];
+                        return withHelperFixes(
+                            statement,
+                            fixer,
+                            "err",
+                            fixer.replaceText(statement, "return err();"),
+                        );
                     },
                 });
                 return;
@@ -421,19 +536,20 @@ const rule = {
             if (hasIsErrorFlag(argument, true)) {
                 // `{ isError: true, value: null }` says the right thing the
                 // long way round; `err()` is the same value.
-                if (isNullLiteral(getObjectPropertyValue(argument, "value"))) {
+                if (
+                    isNullLiteral(getObjectPropertyValue(argument, "value")) &&
+                    hasOnlyResultProperties(argument)
+                ) {
                     context.report({
                         node: argument,
                         messageId: "preferErrResult",
                         fix(fixer) {
-                            return [
-                                ...ensureResultHelperImportFixes(
-                                    tryNode,
-                                    fixer,
-                                    "err",
-                                ),
+                            return withHelperFixes(
+                                statement,
+                                fixer,
+                                "err",
                                 fixer.replaceText(argument, "err()"),
-                            ];
+                            );
                         },
                     });
                 }
@@ -465,6 +581,9 @@ const rule = {
             }
 
             if (!isAsync || !parentFunction) return;
+            // An async generator yields; what it returns is the end of the
+            // iteration, not a result for a caller to read.
+            if (parentFunction["generator"] === true) return;
             if (isCallArgumentCallback(parentFunction)) return;
             if (throwsDeliberately(parentFunction["body"])) return;
 
@@ -501,7 +620,7 @@ const rule = {
             const catchReturns = collectOwnReturns(handler["body"]);
 
             for (const statement of catchReturns) {
-                reportCatchReturn(node, statement);
+                reportCatchReturn(statement);
             }
 
             // A nested try/catch inside this catch settles the branch on its
@@ -529,8 +648,13 @@ const rule = {
                         return null;
                     }
 
-                    return [
-                        ...ensureResultHelperImportFixes(node, fixer, "err"),
+                    // The scope is the catch body's: `catch (err)` puts the
+                    // caught value under the name `err`, and `return err()`
+                    // would call it.
+                    return withHelperFixes(
+                        handlerBody,
+                        fixer,
+                        "err",
                         fixer.insertTextBeforeRange(
                             [
                                 handlerBody["range"][1] - 1,
@@ -541,7 +665,7 @@ const rule = {
                             // which does not parse.
                             "\nreturn err();\n",
                         ),
-                    ];
+                    );
                 },
             });
         }
@@ -567,11 +691,14 @@ const rule = {
                 "Ensure async functions' return values follow the MaybePromise pattern.",
         },
         fixable: "code",
+        hasSuggestions: true,
         schema: [],
         messages: {
             replaceWithMaybePromise:
                 "Use 'MaybePromise' instead of 'Promise' as the return type in async functions.",
+            suggestMaybePromise: "Replace 'Promise' with 'MaybePromise'.",
             wrapReturn: "Wrap return value with ok(value).",
+            suggestWrapReturn: "Wrap the return value in ok(...).",
             preferOkResult:
                 "Use ok(value) instead of an inline success result object.",
             preferErrResult:

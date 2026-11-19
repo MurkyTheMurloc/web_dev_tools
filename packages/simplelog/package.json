@@ -35,10 +35,6 @@
             "import": "./dist/bun_logger.js",
             "types": "./dist/bun_logger.d.ts"
         },
-        "./deno": {
-            "import": "./dist/deno_logger.js",
-            "types": "./dist/deno_logger.d.ts"
-        },
         "./hono": {
             "import": "./dist/hono_middleware.js",
             "types": "./dist/hono_middleware.d.ts"
@@ -84,6 +80,9 @@
     },
     "peerDependenciesMeta": {
         "@opentelemetry/api": {
+            "optional": true
+        },
+        "hono": {
             "optional": true
         }
     }

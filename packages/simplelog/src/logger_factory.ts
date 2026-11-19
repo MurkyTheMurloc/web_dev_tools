@@ -1,3 +1,11 @@
+import { formatConsoleTimestamp } from "./console_timestamp";
+import type { TimestampFormat } from "./console_timestamp";
+import {
+    escapeFileCharacters,
+    formatFunctionLabel,
+    toJsonSafeValue,
+} from "./serialize_value";
+
 const ANSI_RESET_COLOR = 0;
 const ANSI_GREEN = 32;
 const ANSI_YELLOW = 33;
@@ -18,12 +26,11 @@ const EMPTY_OPEN_TELEMETRY_CONTEXT: OpenTelemetryContext = {
     traceId: "",
 };
 const CAPTURE_STACK_TRACE_MESSAGE = "simplelog";
-const FUNCTION_LABEL_PREFIX = "[Function ";
-const FUNCTION_LABEL_SUFFIX = "]";
-const ANONYMOUS_FUNCTION_LABEL = "[Function anonymous]";
 const LOGGER_NAME_SEPARATOR = " -> ";
 const LOG_FILE_LINE_BREAK = "\n";
 const NODE_MODULES_SEGMENT = "node_modules";
+const FILE_ARGUMENT_SEPARATOR = " ";
+const STACK_CONTINUATION_PREFIX = "\t";
 
 type LogLevel = "DEBUG" | "INFO" | "WARN" | "ERROR";
 
@@ -38,8 +45,16 @@ type LoggerOptions = Readonly<{
     includeOpenTelemetryContext?: boolean;
     logFilePath?: string;
     logLevelThreshold?: LogLevel;
+    /** Console only; log files always get the ISO timestamp. */
+    timestampFormat?: TimestampFormat;
     valueColorMode?: ValueColorMode;
     writeToFile?: boolean;
+}>;
+
+/** What a logger uses for the console options its caller left out. */
+type ConsoleDefaults = Readonly<{
+    timestampFormat: TimestampFormat;
+    valueColorMode: ValueColorMode;
 }>;
 
 type LoggerConsole = Readonly<{
@@ -50,6 +65,13 @@ type LoggerConsole = Readonly<{
 type LoggerRuntime = Readonly<{
     appendTextFileSync?: (filePath: string, content: string) => void;
     console: LoggerConsole;
+    /**
+     * Reads the environment (NO_COLOR, FORCE_COLOR, SIMPLELOG_TIMESTAMP,
+     * whether stdout is a terminal) once per logger, when it is constructed.
+     * Runtimes without one (the browser) get
+     * {@link FALLBACK_CONSOLE_DEFAULTS}.
+     */
+    readConsoleDefaults?: () => ConsoleDefaults;
 }>;
 
 type LoggerParent = Readonly<{
@@ -67,6 +89,7 @@ type ResolvedLoggerOptions = Readonly<{
     includeOpenTelemetryContext: boolean;
     logFilePath: string;
     logLevelThreshold: LogLevel;
+    timestampFormat: TimestampFormat;
     valueColorMode: ValueColorMode;
     writeToFile: boolean;
 }>;
@@ -75,7 +98,7 @@ type LogPayload = Readonly<{
     consoleArgs: readonly string[];
     consoleLogMessage: string;
     consoleStackTrace: string;
-    plainLogMessage: string;
+    plainFileLine: string;
     plainStackTrace: string;
 }>;
 
@@ -90,6 +113,8 @@ type PlainLogParts = Readonly<{
 type StringifiablePrimitive = bigint | boolean | number | string | symbol;
 
 type StringifiedArgument = Readonly<{
+    /** What goes into a log file when it differs from `text` (compact JSON). */
+    fileText?: string;
     kind: StringifiedArgumentKind;
     text: string;
 }>;
@@ -136,16 +161,43 @@ function buildDefaultLogFilePath(loggerName: string): string {
     return `logs/${loggerName}.log`;
 }
 
+// The browser console renders ANSI codes, and there is no terminal to ask.
+const FALLBACK_CONSOLE_DEFAULTS: ConsoleDefaults = {
+    timestampFormat: "iso",
+    valueColorMode: "level",
+};
+
+function readConsoleDefaults(
+    runtime: LoggerRuntime,
+    options: LoggerOptions,
+): ConsoleDefaults {
+    // Child loggers pass both, so they never read the environment again.
+    if (
+        typeof options.timestampFormat === "string" &&
+        typeof options.valueColorMode === "string"
+    ) {
+        return FALLBACK_CONSOLE_DEFAULTS;
+    }
+
+    return runtime.readConsoleDefaults?.() ?? FALLBACK_CONSOLE_DEFAULTS;
+}
+
 function resolveLoggerOptions(
     loggerName: string,
     options: LoggerOptions,
+    runtime: LoggerRuntime,
 ): ResolvedLoggerOptions {
+    const consoleDefaults = readConsoleDefaults(runtime, options);
+
     return {
         includeOpenTelemetryContext:
             options.includeOpenTelemetryContext ?? false,
         logFilePath: options.logFilePath ?? buildDefaultLogFilePath(loggerName),
         logLevelThreshold: options.logLevelThreshold ?? DEFAULT_LOG_LEVEL,
-        valueColorMode: options.valueColorMode ?? "level",
+        timestampFormat:
+            options.timestampFormat ?? consoleDefaults.timestampFormat,
+        valueColorMode:
+            options.valueColorMode ?? consoleDefaults.valueColorMode,
         writeToFile: options.writeToFile ?? false,
     };
 }
@@ -215,36 +267,26 @@ function stringifyPrimitiveArgument(
 }
 
 function stringifyFunctionArgument(functionName: string): StringifiedArgument {
-    if (functionName.length === EMPTY_FUNCTION_NAME_LENGTH) {
-        return {
-            kind: "function",
-            text: ANONYMOUS_FUNCTION_LABEL,
-        };
-    }
-
     return {
         kind: "function",
-        text: `${FUNCTION_LABEL_PREFIX}${functionName}${FUNCTION_LABEL_SUFFIX}`,
+        text: formatFunctionLabel(functionName),
     };
-}
-
-function identityJsonReplacer(_key: string, value: unknown): unknown {
-    if (typeof value === "function") {
-        return stringifyFunctionArgument(value.name).text;
-    }
-
-    return value;
 }
 
 function stringifyJsonArgument(argument: unknown): StringifiedArgument {
     try {
+        const safeValue = toJsonSafeValue(argument);
         const stringifiedArgument = JSON.stringify(
-            argument,
-            identityJsonReplacer,
+            safeValue,
+            undefined,
             JSON_INDENTATION,
         );
+        const compactArgument = JSON.stringify(safeValue);
 
-        if (typeof stringifiedArgument !== "string") {
+        if (
+            typeof stringifiedArgument !== "string" ||
+            typeof compactArgument !== "string"
+        ) {
             return {
                 kind: "object",
                 text: FALLBACK_OBJECT_STRING,
@@ -252,6 +294,7 @@ function stringifyJsonArgument(argument: unknown): StringifiedArgument {
         }
 
         return {
+            fileText: compactArgument,
             kind: "object",
             text: stringifiedArgument,
         };
@@ -515,20 +558,23 @@ function createPlainLogParts(
     openTelemetryContext: OpenTelemetryContext | undefined,
     message: string,
     args: readonly unknown[],
+    epochMilliseconds: number,
     stackTrace?: string,
 ): PlainLogParts {
     const plainStackTrace = resolveStackTrace(stackTrace);
-    const timestamp = new Date().toISOString();
+    const timestamp = new Date(epochMilliseconds).toISOString();
 
     return {
         openTelemetryContext,
         plainArgs: stringifyArguments(args),
-        plainLogMessage: buildLogMessage(
-            timestamp,
-            `[${level}]`,
-            loggerName,
-            formatOpenTelemetryContextLabel(openTelemetryContext),
-            message,
+        plainLogMessage: escapeFileCharacters(
+            buildLogMessage(
+                timestamp,
+                `[${level}]`,
+                loggerName,
+                formatOpenTelemetryContextLabel(openTelemetryContext),
+                message,
+            ),
         ),
         plainStackTrace,
         timestamp,
@@ -591,6 +637,28 @@ function resolveOpenTelemetryContext(
     return spanContextReader();
 }
 
+function escapeFileArgument(argument: StringifiedArgument): string {
+    // Objects use their compact, single-line JSON. JSON already escaped the
+    // control characters below U+0020; the rest (DEL, C1, U+2028, bidi
+    // controls) is escaped here, and an escape inside a JSON string is still
+    // valid JSON.
+    return escapeFileCharacters(argument.fileText ?? argument.text);
+}
+
+/**
+ * The file line is the console line without colors: the header, then every
+ * argument, separated by a space the way `console.log` separates them.
+ *
+ * @param {PlainLogParts} plainLogParts - The plain header and arguments.
+ * @returns {string} One log file line, without the trailing line break.
+ */
+function buildPlainFileLine(plainLogParts: PlainLogParts): string {
+    return [
+        plainLogParts.plainLogMessage,
+        ...plainLogParts.plainArgs.map(escapeFileArgument),
+    ].join(FILE_ARGUMENT_SEPARATOR);
+}
+
 function combineLogPayload(
     consolePayload: Pick<
         LogPayload,
@@ -600,7 +668,7 @@ function combineLogPayload(
 ): LogPayload {
     return {
         ...consolePayload,
-        plainLogMessage: plainLogParts.plainLogMessage,
+        plainFileLine: buildPlainFileLine(plainLogParts),
         plainStackTrace: plainLogParts.plainStackTrace,
     };
 }
@@ -610,11 +678,12 @@ function createConsolePayloadFromPlainLogParts(
     loggerName: string,
     message: string,
     plainLogParts: PlainLogParts,
+    consoleTimestamp: string,
     valueColorMode: ValueColorMode,
 ): Pick<LogPayload, "consoleArgs" | "consoleLogMessage" | "consoleStackTrace"> {
     return createConsolePayload(
         level,
-        plainLogParts.timestamp,
+        consoleTimestamp,
         loggerName,
         plainLogParts.openTelemetryContext,
         message,
@@ -630,9 +699,11 @@ function createLogPayload(
     message: string,
     args: readonly unknown[],
     includeOpenTelemetryContext: boolean,
+    timestampFormat: TimestampFormat,
     valueColorMode: ValueColorMode,
     stackTrace?: string,
 ): LogPayload {
+    const now = Date.now();
     const openTelemetryContext = resolveOpenTelemetryContext(
         includeOpenTelemetryContext,
     );
@@ -642,6 +713,7 @@ function createLogPayload(
         openTelemetryContext,
         message,
         args,
+        now,
         stackTrace,
     );
     const consolePayload = createConsolePayloadFromPlainLogParts(
@@ -649,6 +721,7 @@ function createLogPayload(
         loggerName,
         message,
         plainLogParts,
+        formatConsoleTimestamp(now, timestampFormat),
         valueColorMode,
     );
 
@@ -674,6 +747,23 @@ function writeLogLine(
     appendTextFileSync(logFilePath, `${logMessage}${LOG_FILE_LINE_BREAK}`);
 }
 
+/**
+ * A stack trace is several lines. Every one of them starts with a tab in the
+ * file, while every log entry starts with a timestamp, so a reader can tell the
+ * continuation lines of an entry from the next entry.
+ *
+ * @param {string} stackTrace - The plain stack trace.
+ * @returns {string} The stack trace, each line tab-prefixed and escaped.
+ */
+function formatFileStackTrace(stackTrace: string): string {
+    return stackTrace
+        .split(LOG_FILE_LINE_BREAK)
+        .map((line) => {
+            return `${STACK_CONTINUATION_PREFIX}${escapeFileCharacters(line)}`;
+        })
+        .join(LOG_FILE_LINE_BREAK);
+}
+
 function shouldLog(level: LogLevel, threshold: LogLevel): boolean {
     return LOG_LEVEL_PRIORITY[level] >= LOG_LEVEL_PRIORITY[threshold];
 }
@@ -687,6 +777,7 @@ class LoggerBase {
     private readonly performanceBenchmarks = new Map<string, number>();
     private readonly runtime: LoggerRuntime;
     private readonly includeOpenTelemetryContext: boolean;
+    private readonly timestampFormat: TimestampFormat;
     private readonly valueColorMode: ValueColorMode;
     private readonly writeToFile: boolean;
 
@@ -697,7 +788,7 @@ class LoggerBase {
         parent?: LoggerParent,
         options: LoggerOptions = {},
     ) {
-        const resolvedOptions = resolveLoggerOptions(name, options);
+        const resolvedOptions = resolveLoggerOptions(name, options, runtime);
 
         this.LoggerConstructor = LoggerConstructor;
         this.includeOpenTelemetryContext =
@@ -707,6 +798,7 @@ class LoggerBase {
         this.name = name;
         this.parent = parent;
         this.runtime = runtime;
+        this.timestampFormat = resolvedOptions.timestampFormat;
         this.valueColorMode = resolvedOptions.valueColorMode;
         this.writeToFile = resolvedOptions.writeToFile;
     }
@@ -786,6 +878,7 @@ class LoggerBase {
             includeOpenTelemetryContext: this.includeOpenTelemetryContext,
             logFilePath: this.logFilePath,
             logLevelThreshold: this.logLevelThreshold,
+            timestampFormat: this.timestampFormat,
             valueColorMode: this.valueColorMode,
             writeToFile: this.writeToFile,
         };
@@ -819,6 +912,7 @@ class LoggerBase {
             message,
             args,
             this.includeOpenTelemetryContext,
+            this.timestampFormat,
             this.valueColorMode,
             stackTrace,
         );
@@ -838,7 +932,7 @@ class LoggerBase {
             this.runtime,
             this.writeToFile,
             this.logFilePath,
-            plainStackTrace,
+            formatFileStackTrace(plainStackTrace),
         );
         this.runtime.console.error(coloredStackTrace);
     }
@@ -848,7 +942,7 @@ class LoggerBase {
             this.runtime,
             this.writeToFile,
             this.logFilePath,
-            payload.plainLogMessage,
+            payload.plainFileLine,
         );
         this.runtime.console.log(
             payload.consoleLogMessage,
@@ -868,6 +962,7 @@ class LoggerBase {
 
 export { LoggerBase, createLoggerConsole, setSpanContextReader };
 export type {
+    ConsoleDefaults,
     OpenTelemetryContext,
     SpanContextReader,
     LogLevel,
@@ -876,5 +971,6 @@ export type {
     LoggerOptions,
     LoggerParent,
     LoggerRuntime,
+    TimestampFormat,
     ValueColorMode,
 };

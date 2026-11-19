@@ -8,38 +8,110 @@ on:
 
 concurrency: ${{ github.workflow }}-${{ github.ref }}
 
+# Default for every job; the publish job raises exactly what it needs.
 permissions:
-  contents: write
-  id-token: write
-  pull-requests: write
+  contents: read
 
 jobs:
-  publish:
-    name: Version or publish
+  # Installs, lints, typechecks, tests and builds. Runs the package scripts and
+  # their dependencies, so it holds no write access and no OIDC token.
+  verify:
+    name: Verify and build
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
     steps:
       - name: Checkout repo
-        uses: actions/checkout@v4
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          persist-credentials: false
 
       - name: Setup Node
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
         with:
           node-version: "24"
-          registry-url: "https://registry.npmjs.org"
 
       - name: Setup Bun
-        uses: oven-sh/setup-bun@v2
+        uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2.2.0
         with:
           bun-version-file: "package.json"
 
       - name: Install dependencies
         run: bun install --frozen-lockfile
 
+      # Lint, typecheck, tests and smoke checks of every published package;
+      # the smoke scripts and the shadcn-lint step also build the dist folders.
+      - name: Verify packages
+        run: bun run release:verify
+
+      # tar fails when a dist folder is missing, so a package that was not built
+      # stops the workflow here and not at publish time.
+      - name: Pack build output
+        run: >-
+          tar -cf "$RUNNER_TEMP/dist.tar"
+          packages/typebuddy/dist
+          packages/simplelog/dist
+          packages/shadcn-lint/packages/lint/dist
+
+      - name: Upload build output
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: dist
+          path: ${{ runner.temp }}/dist.tar
+          if-no-files-found: error
+          retention-days: 1
+
+  # Opens the version PR or publishes to npm with trusted publishing. Dependencies
+  # are installed with --ignore-scripts and the dist folders come from the verify
+  # job; `changeset publish` still runs `npm publish`, which runs the packages' own
+  # pack scripts (shadcn-lint prepack/postpack) while this job holds id-token.
+  # Re-run the whole workflow, not only this job: the dist artifact keeps one day.
+  publish:
+    name: Version or publish
+    needs: verify
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write # push the version branch and release tags
+      pull-requests: write # open and update the version PR
+      id-token: write # npm trusted publishing and provenance
+    steps:
+      # persist-credentials stays on: changesets/action pushes the version
+      # branch and the release tags with `git push` and uses the checkout's
+      # credentials for it.
+      - name: Checkout repo
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+
+      - name: Setup Node
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version: "24"
+          registry-url: "https://registry.npmjs.org"
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2.2.0
+        with:
+          bun-version-file: "package.json"
+
+      - name: Install dependencies
+        run: bun install --frozen-lockfile --ignore-scripts
+
+      - name: Download build output
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
+        with:
+          name: dist
+          path: ${{ runner.temp }}
+
+      - name: Unpack build output
+        run: |
+          tar -xf "$RUNNER_TEMP/dist.tar"
+          rm "$RUNNER_TEMP/dist.tar"
+
       - name: Create version PR or publish
-        uses: changesets/action@v1
+        uses: changesets/action@a45c4d594aa4e2c509dc14a9f2b3b67ba3780d0d # v1.9.0
         with:
           createGithubReleases: false
-          publish: bun run release
+          publish: bun run publish:npm
           version: bun run version-packages
           commit: "chore: version packages"
           title: "chore: version packages"

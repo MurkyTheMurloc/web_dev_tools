@@ -791,7 +791,10 @@ export default {
                         warnShouldDestructure(id ?? init, "first");
                     }
                 } else if (
-                    matchImport(["createMemo", "createProjection"], callee.name)
+                    matchImport(
+                        ["createMemo", "createDeferred", "createProjection"],
+                        callee.name,
+                    )
                 ) {
                     const memo = id && getReturnedVar(id, context);
                     // memos act like signals
@@ -1028,6 +1031,8 @@ export default {
                         matchImport(
                             [
                                 "createMemo",
+                                // An async memo: the callback may return a promise.
+                                "createDeferred",
                                 "children",
                                 "createTrackedEffect",
                                 "createProjection",
@@ -1036,6 +1041,8 @@ export default {
                                 "isPending",
                                 "latest",
                                 "resolve",
+                                // The predicate is re-evaluated reactively until it is truthy.
+                                "until",
                             ],
                             callee.name,
                         ) ||
@@ -1078,7 +1085,7 @@ export default {
                         pushTrackedScope(arg0, "called-function");
                     } else if (
                         matchImport(
-                            ["onSettled", "onCleanup"],
+                            ["onSettled", "onFlush", "onCleanup"],
                             callee.name,
                         ) ||
                         [

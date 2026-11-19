@@ -201,17 +201,9 @@ export function View(props: Props): JSX.Element {
         ruleId: "prefer-class-object",
     }),
     Object.freeze({
-        code: `import {
-    createErrorBoundary,
-    createLoadingBoundary,
-    createRevealOrder,
-} from "@solidjs/web";
+        code: `import { createContext, createRoot, createSignal } from "@solidjs/web";
 
-export const boundaries = [
-    createErrorBoundary,
-    createLoadingBoundary,
-    createRevealOrder,
-];
+export const primitives = [createContext, createRoot, createSignal];
 `,
         ruleId: "imports",
     }),
@@ -280,6 +272,23 @@ declare function load(id: number): Promise<string>;
 export const createUser = (): unknown => {
     const [id] = createSignal(1);
     const first = createMemo(async () => {
+        await load(0);
+        return load(id());
+    });
+
+    return first;
+};
+`,
+        ruleId: "reactive-async",
+    }),
+    Object.freeze({
+        code: `import { createDeferred, createSignal } from "solid-js";
+
+declare function load(id: number): Promise<string>;
+
+export const createUser = (): unknown => {
+    const [id] = createSignal(1);
+    const first = createDeferred(async () => {
         await load(0);
         return load(id());
     });

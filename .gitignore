@@ -1,5 +1,4 @@
 node_modules
-bun.lock
 .DS_Store
 dist
 coverage
@@ -7,3 +6,9 @@ coverage
 .output
 
 .npm-cache
+
+# devenv
+.devenv/
+.devenv.flake.nix
+.direnv/
+devenv.local.nix

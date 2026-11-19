@@ -1,5 +1,4 @@
 import type {
-  JsonifiedObject as JsonifiedObjectImport,
   JsonifiedValue as JsonifiedValueImport,
   Stringified as StringifiedImport,
 } from "./src/types/json.js";
@@ -41,7 +40,7 @@ declare global {
     parse<T>(
       str: Stringified<T>,
       replacer?: null,
-    ): JsonifiedObjectImport<T>;
+    ): JsonifiedValueImport<T>;
   }
 }
 

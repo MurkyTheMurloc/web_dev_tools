@@ -1,5 +1,8 @@
 import { throwsDeliberately } from "./deliberate_throw.js";
-import { getTypeBuddyImportInsertion } from "./typebuddy_import.js";
+import {
+    createImportPlanner,
+    getBodyStartAfterDirectives,
+} from "./typebuddy_import.js";
 import { createUseServerGuard } from "./use_server.js";
 
 type AstNode = {
@@ -11,24 +14,24 @@ type AstNode = {
     [key: string]: unknown;
 };
 
-type RuleContext = {
-    getSourceCode(): { getText(node: unknown): string };
-    report(descriptor: {
-        node: unknown;
-        messageId: string;
-        fix(fixer: {
-            replaceText(node: unknown, text: string): unknown;
-            insertTextBeforeRange(
-                range: [number, number],
-                text: string,
-            ): unknown;
-        }): unknown;
-    }): void;
-};
-
 type RuleFixer = {
     replaceText(node: unknown, text: string): unknown;
     insertTextBeforeRange(range: [number, number], text: string): unknown;
+};
+
+type RuleContext = {
+    getSourceCode(): {
+        getText(node: unknown): string;
+        getScope(node: unknown): unknown;
+    };
+    report(descriptor: {
+        node: unknown;
+        messageId: string;
+        suggest?: {
+            messageId: string;
+            fix(fixer: RuleFixer): unknown;
+        }[];
+    }): void;
 };
 
 function hasTryCatch(nodes: AstNode[]): boolean {
@@ -55,46 +58,32 @@ function isCallArgumentCallback(node: AstNode): boolean {
 const rule = {
     create(context: RuleContext) {
         const sourceCode = context.getSourceCode();
-        let scheduledErrImport = false;
-
-        function ensureErrImportFixes(
-            node: AstNode,
-            fixer: RuleFixer,
-        ): unknown[] {
-            if (scheduledErrImport) {
-                return [];
-            }
-
-            const insertion = getTypeBuddyImportInsertion(node, "err");
-            if (!insertion) {
-                return [];
-            }
-
-            scheduledErrImport = true;
-
-            return [
-                fixer.insertTextBeforeRange(insertion.range, insertion.text),
-            ];
-        }
+        const imports = createImportPlanner(sourceCode);
 
         // Two zero-width insertions leave the body's own text untouched, byte
         // for byte. Rebuilding it statement by statement used to strip leading
         // whitespace on every line — including lines inside template literals,
         // which silently changed string values.
+        //
+        // The `try {` goes after the directive prologue. `"use cache"` and
+        // `"use server"` only mean something as the first statements of the
+        // body; inside a `try` they are plain expression statements.
         function wrapBlockFixes(
             bodyNode: AstNode,
             fixer: RuleFixer,
         ): unknown[] | null {
             const range = bodyNode.range;
-            if (!Array.isArray(range) || range.length < 2) {
+            const tryStart = getBodyStartAfterDirectives(bodyNode);
+            if (
+                !Array.isArray(range) ||
+                range.length < 2 ||
+                tryStart === null
+            ) {
                 return null;
             }
 
             return [
-                fixer.insertTextBeforeRange(
-                    [range[0] + 1, range[0] + 1],
-                    "\ntry {",
-                ),
+                fixer.insertTextBeforeRange([tryStart, tryStart], "\ntry {"),
                 fixer.insertTextBeforeRange(
                     [range[1] - 1, range[1] - 1],
                     "} catch {\nreturn err();\n}\n",
@@ -153,8 +142,50 @@ const rule = {
             ];
         }
 
+        /**
+         * The wrap is a suggestion, never a fix. It turns every exception of
+         * the function into `err()`, so a failure nobody handled becomes a
+         * value somebody has to remember to check, and `catch { return err();
+         * }` hides what went wrong. Whether that is wanted is the author's
+         * call. `err` has to be free at that spot: a parameter or local called
+         * `err` would make `err()` call something else, and then there is no
+         * suggestion.
+         */
+        function suggestWrap(
+            scopeNode: AstNode,
+            wrap: (fixer: RuleFixer) => unknown[] | null,
+        ) {
+            return [
+                {
+                    messageId: "suggestTryCatch",
+                    fix(fixer: RuleFixer) {
+                        const wrapFixes = wrap(fixer);
+                        if (!wrapFixes) {
+                            return null;
+                        }
+
+                        const importFixes = imports.fixes(
+                            scopeNode,
+                            fixer,
+                            "err",
+                            "value",
+                        );
+                        if (importFixes === null) {
+                            return null;
+                        }
+
+                        return [...importFixes, ...wrapFixes];
+                    },
+                },
+            ];
+        }
+
         function checkFunction(node: AstNode) {
             if (node.async !== true) return;
+            // An async generator yields its values; there is no single result
+            // to wrap, and a `catch` that returns would end the iteration and
+            // swallow the error.
+            if (node["generator"] === true) return;
             if (isCallArgumentCallback(node)) return;
             const bodyNode = node.body;
             if (!bodyNode || Array.isArray(bodyNode)) return;
@@ -170,21 +201,9 @@ const rule = {
                 context.report({
                     node,
                     messageId: "missingTryCatch",
-                    fix(fixer) {
-                        const wrapFixes = wrapExpressionBodyFixes(
-                            node,
-                            bodyNode,
-                            fixer,
-                        );
-                        if (!wrapFixes) {
-                            return null;
-                        }
-
-                        return [
-                            ...ensureErrImportFixes(node, fixer),
-                            ...wrapFixes,
-                        ];
-                    },
+                    suggest: suggestWrap(node, (fixer) => {
+                        return wrapExpressionBodyFixes(node, bodyNode, fixer);
+                    }),
                 });
                 return;
             }
@@ -195,14 +214,9 @@ const rule = {
             context.report({
                 node,
                 messageId: "missingTryCatch",
-                fix(fixer) {
-                    const wrapFixes = wrapBlockFixes(bodyNode, fixer);
-                    if (!wrapFixes) {
-                        return null;
-                    }
-
-                    return [...ensureErrImportFixes(node, fixer), ...wrapFixes];
-                },
+                suggest: suggestWrap(bodyNode, (fixer) => {
+                    return wrapBlockFixes(bodyNode, fixer);
+                }),
             });
         }
 
@@ -218,15 +232,17 @@ const rule = {
     defaultOptions: [],
     meta: {
         type: "suggestion",
+        hasSuggestions: true,
         docs: {
             description:
                 "Async functions should have a try-catch block returning an error result.",
         },
-        fixable: "code",
         schema: [],
         messages: {
             missingTryCatch:
                 "Async functions must have a try-catch block returning an error result.",
+            suggestTryCatch:
+                "Wrap the body in try/catch and return err() from the catch.",
         },
     },
 };

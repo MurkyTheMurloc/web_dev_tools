@@ -12,6 +12,7 @@ import {
  * the callback needs no `async` to be asynchronous.
  */
 const COMPUTATION_PRIMITIVES = [
+    "createDeferred",
     "createMemo",
     "createOptimistic",
     "createOptimisticStore",
@@ -24,7 +25,12 @@ const COMPUTATION_PRIMITIVES = [
 const EFFECT_PRIMITIVES = ["createEffect", "createRenderEffect"];
 
 /** Primitives whose result is called to read it: `value()`. */
-const ACCESSOR_PRIMITIVES = ["createMemo", "createOptimistic", "createSignal"];
+const ACCESSOR_PRIMITIVES = [
+    "createDeferred",
+    "createMemo",
+    "createOptimistic",
+    "createSignal",
+];
 
 /** Primitives whose result is read by property access: `store.items`. */
 const STORE_PRIMITIVES = [

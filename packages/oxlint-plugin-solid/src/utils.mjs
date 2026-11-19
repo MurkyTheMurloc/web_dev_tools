@@ -161,7 +161,9 @@ export function getCommentAfter(node, sourceCode) {
 // Solid 2.0 split the runtime across packages: `solid-js` keeps the core and
 // the store APIs, while `@solidjs/web`, `@solidjs/h`, `@solidjs/html` and
 // `@solidjs/universal` own the renderers. Match both layouts.
-export function trackImports(fromModule = /^(?:solid-js|@solidjs\/[a-z-]+)(?:\/|$)/) {
+export function trackImports(
+    fromModule = /^(?:solid-js|@solidjs\/[a-z-]+)(?:\/|$)/,
+) {
     const importMap = new Map();
 
     function handleImportDeclaration(node) {
@@ -202,16 +204,27 @@ export function appendImports(fixer, sourceCode, importNode, identifiers) {
         return fixer.insertTextAfter(namedSpecifier, `, ${identifiersString}`);
     }
 
-    const otherSpecifier = importNode.specifiers.find((specifier) => {
-        return (
-            specifier.type === "ImportDefaultSpecifier" ||
-            specifier.type === "ImportNamespaceSpecifier"
+    // A namespace import cannot share a declaration with named imports
+    // (`import * as X, { a }` and `import X, { a }, * as Y` do not parse), so
+    // the names get a declaration of their own right after it.
+    if (
+        importNode.specifiers.some((specifier) => {
+            return specifier.type === "ImportNamespaceSpecifier";
+        })
+    ) {
+        return fixer.insertTextAfter(
+            importNode,
+            `\nimport ${importNode.importKind === "type" ? "type " : ""}{ ${identifiersString} } from ${sourceCode.getText(importNode.source)};`,
         );
+    }
+
+    const defaultSpecifier = importNode.specifiers.find((specifier) => {
+        return specifier.type === "ImportDefaultSpecifier";
     });
 
-    if (otherSpecifier) {
+    if (defaultSpecifier) {
         return fixer.insertTextAfter(
-            otherSpecifier,
+            defaultSpecifier,
             `, { ${identifiersString} }`,
         );
     }
@@ -262,10 +275,27 @@ export function insertImports(
         );
     }
 
-    return fixer.insertTextBeforeRange(
-        [0, 0],
-        `import ${isType ? "type " : ""}{ ${identifiersString} } from "${source}";\n`,
-    );
+    const importText = `import ${isType ? "type " : ""}{ ${identifiersString} } from "${source}";\n`;
+    // No import to go above: the new one goes in front of the first statement
+    // that is not a directive. In front of `"use client"` it would end the
+    // directive prologue, and the directive would stop being one.
+    const firstStatement = programNode.body.find((node) => {
+        return typeof node.directive !== "string";
+    });
+    if (firstStatement) {
+        return fixer.insertTextBeforeRange(
+            (getCommentBefore(firstStatement, sourceCode) ?? firstStatement)
+                .range,
+            importText,
+        );
+    }
+
+    const lastDirective = programNode.body.at(-1);
+    if (lastDirective) {
+        return fixer.insertTextAfter(lastDirective, `\n${importText}`);
+    }
+
+    return fixer.insertTextBeforeRange([0, 0], importText);
 }
 
 export function removeSpecifier(fixer, sourceCode, specifier, pure = true) {
@@ -276,10 +306,45 @@ export function removeSpecifier(fixer, sourceCode, specifier, pure = true) {
 
     const maybeComma = sourceCode.getTokenAfter(specifier);
     if (maybeComma?.value === ",") {
-        return fixer.removeRange([specifier.range[0], maybeComma.range[1]]);
+        // The space after the comma goes too, or `{ a, b }` turns into `{  b }`.
+        const spaceAfter = /^\s*/u.exec(
+            sourceCode.text.slice(maybeComma.range[1]),
+        );
+        return fixer.removeRange([
+            specifier.range[0],
+            maybeComma.range[1] + (spaceAfter?.[0].length ?? 0),
+        ]);
+    }
+
+    // The last specifier without a trailing comma: the comma in front of it
+    // goes with it, or `{ a, b }` turns into `{ a,  }`.
+    const maybeCommaBefore = sourceCode.getTokenBefore(specifier);
+    if (maybeCommaBefore?.value === ",") {
+        return fixer.removeRange([
+            maybeCommaBefore.range[0],
+            specifier.range[1],
+        ]);
     }
 
     return fixer.remove(specifier);
+}
+
+/**
+ * Whether `declaration` can take one more named specifier of a kind: a value
+ * never goes into an `import type`, and `import type D, { T }` and `import type *
+ * as ns, { T }` do not exist.
+ */
+export function canTakeSpecifier(declaration, isType) {
+    if (declaration.importKind !== "type") {
+        return true;
+    }
+
+    return (
+        isType &&
+        declaration.specifiers.every((specifier) => {
+            return specifier.type === "ImportSpecifier";
+        })
+    );
 }
 
 export function jsxPropName(prop) {

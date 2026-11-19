@@ -1,11 +1,13 @@
+import { appendImports, canTakeSpecifier, insertImports } from "../utils.mjs";
+
 const FALSE_SENTINEL = false;
 const FIRST_INDEX = 0;
-const LAST_INDEX = -1;
-const FILE_START_RANGE = [FIRST_INDEX, FIRST_INDEX];
 const NO_PARAMETERS = 0;
+const NO_ITEMS = 0;
 const ONE_PARAMETER = 1;
 const PASCAL_CASE_COMPONENT_NAME = /^[A-Z][A-Za-z0-9]*$/;
 const SOLID_IMPORT_SOURCE = "solid-js";
+const SOLID_COMPONENT_TYPES = ["Component", "ParentComponent"];
 
 function isAstNode(value) {
     return (
@@ -24,12 +26,15 @@ function hasJsxElementReturnType(node) {
         rt.typeName?.type === "TSQualifiedName" &&
         rt.typeName.left?.name === "JSX" &&
         rt.typeName.right?.name === "Element"
-    ) return true;
+    )
+        return true;
     // JSX.Element via plain identifier (rare but possible)
-    if (rt.type === "TSTypeReference" && rt.typeName?.name === "JSXElement") return true;
+    if (rt.type === "TSTypeReference" && rt.typeName?.name === "JSXElement")
+        return true;
     // Solid 2.0: `Element` from solid-js is the renderer-neutral return type,
     // and `JSX` now lives in the renderer package.
-    if (rt.type === "TSTypeReference" && rt.typeName?.name === "Element") return true;
+    if (rt.type === "TSTypeReference" && rt.typeName?.name === "Element")
+        return true;
     return false;
 }
 
@@ -39,7 +44,8 @@ function isFunctionComponent(node) {
         node.async === true ||
         node.generator === true ||
         node.typeParameters
-    ) return false;
+    )
+        return false;
 
     if (node.id?.type !== "Identifier") return false;
 
@@ -52,9 +58,6 @@ function isFunctionComponent(node) {
 
     return false;
 }
-
-// Keep old name as alias so call sites don't need changing
-const isExportedFunctionComponent = isFunctionComponent;
 
 function isJsxLikeNode(node) {
     return node?.type === "JSXElement" || node?.type === "JSXFragment";
@@ -236,147 +239,67 @@ function usesPropsChildren(functionNode, propsIdentifierName) {
     return found;
 }
 
-function getSolidTypeImportInfo(programNode, desiredTypeName) {
-    const importDeclarations = getSolidImportDeclarations(programNode);
+// Names the file declares at the top level (imports, types, classes,
+// functions, variables), exported or not.
+function getTopLevelNames(programNode) {
+    const names = new Set();
+    for (const statement of programNode.body) {
+        if (statement.type === "ImportDeclaration") {
+            for (const specifier of statement.specifiers) {
+                names.add(specifier.local.name);
+            }
+            continue;
+        }
 
-    return {
-        importDeclaration: importDeclarations.at(FIRST_INDEX),
-        localTypeName: findLocalTypeName(importDeclarations, desiredTypeName),
-    };
-}
-
-function getNamedImportSpecifiers(importDeclaration) {
-    return importDeclaration.specifiers.filter((specifier) => {
-        return specifier.type === "ImportSpecifier";
-    });
-}
-
-function getValueImportSpecifiers(importDeclaration) {
-    return importDeclaration.specifiers.filter((specifier) => {
-        return (
-            specifier.type === "ImportDefaultSpecifier" ||
-            specifier.type === "ImportNamespaceSpecifier"
-        );
-    });
-}
-
-function getTypeKeyword(importDeclaration, sourceCode) {
-    if (sourceCode.getText(importDeclaration).startsWith("import type")) {
-        return "";
+        const declaration =
+            statement.type === "ExportNamedDeclaration" ||
+            statement.type === "ExportDefaultDeclaration"
+                ? statement.declaration
+                : statement;
+        if (declaration?.type === "VariableDeclaration") {
+            for (const declarator of declaration.declarations) {
+                if (declarator.id.type === "Identifier") {
+                    names.add(declarator.id.name);
+                }
+            }
+        } else if (declaration?.id?.type === "Identifier") {
+            names.add(declaration.id.name);
+        }
     }
 
-    return "type ";
+    return names;
 }
 
-function insertSolidTypeIntoExistingImport({
-    desiredTypeName,
-    fixer,
-    importDeclaration,
-    sourceCode,
-}) {
-    const namedSpecifiers = getNamedImportSpecifiers(importDeclaration);
-    if (namedSpecifiers.length > NO_PARAMETERS) {
-        const lastNamedSpecifier = namedSpecifiers.at(LAST_INDEX);
-        const typeKeyword = getTypeKeyword(importDeclaration, sourceCode);
-        return fixer.insertTextAfter(
-            lastNamedSpecifier,
-            `, ${typeKeyword}${desiredTypeName}`,
-        );
-    }
+// What the module does in one walk: the position of the first JSX element of
+// each name, and the Solid component types it writes as a type reference
+// (`Component<Props>`) without declaring or importing them.
+function scanProgram(programNode) {
+    const firstJsxUse = new Map();
+    const referencedTypes = new Set();
+    const declared = getTopLevelNames(programNode);
 
-    const valueSpecifiers = getValueImportSpecifiers(importDeclaration);
-    if (valueSpecifiers.length > NO_PARAMETERS) {
-        const lastValueSpecifier = valueSpecifiers.at(LAST_INDEX);
-        return fixer.insertTextAfter(
-            lastValueSpecifier,
-            `, { type ${desiredTypeName} }`,
-        );
-    }
+    visitAstNode(programNode, (node) => {
+        if (
+            node.type === "JSXIdentifier" &&
+            (node.parent?.type === "JSXOpeningElement" ||
+                node.parent?.type === "JSXClosingElement" ||
+                node.parent?.type === "JSXMemberExpression") &&
+            !firstJsxUse.has(node.name)
+        ) {
+            firstJsxUse.set(node.name, node.range[FIRST_INDEX]);
+        }
 
-    return fixer.insertTextBefore(
-        importDeclaration,
-        `import type { ${desiredTypeName} } from "solid-js";\n`,
-    );
-}
-
-function createImportFix({ desiredTypeName, fixer, programNode, sourceCode }) {
-    const { importDeclaration, localTypeName } = getSolidTypeImportInfo(
-        programNode,
-        desiredTypeName,
-    );
-
-    if (localTypeName !== "") {
-        return {
-            localTypeName,
-            operation: null,
-        };
-    }
-
-    if (importDeclaration) {
-        return {
-            localTypeName: desiredTypeName,
-            operation: insertSolidTypeIntoExistingImport({
-                desiredTypeName,
-                fixer,
-                importDeclaration,
-                sourceCode,
-            }),
-        };
-    }
-
-    return {
-        localTypeName: desiredTypeName,
-        operation: fixer.insertTextBeforeRange(
-            FILE_START_RANGE,
-            `import type { ${desiredTypeName} } from "solid-js";\n`,
-        ),
-    };
-}
-
-function buildReplacementText({
-    componentName,
-    localTypeName,
-    propsParam,
-    sourceCode,
-    typeReference,
-    usesChildren,
-    functionNode,
-    isExported,
-}) {
-    const exportPrefix = isExported ? "export " : "";
-    const propsSuffix = getPropsSuffix(typeReference);
-    const paramsText = propsParam.text;
-    const bodyText = sourceCode.getText(functionNode.body);
-
-    return `${exportPrefix}const ${componentName}: ${localTypeName}${propsSuffix} = (${paramsText}) => ${bodyText}`;
-}
-
-function createRuleFix({
-    fixer,
-    functionNode,
-    localTypeName,
-    propsParam,
-    sourceCode,
-    typeReference,
-    usesChildren,
-}) {
-    const isExported = functionNode.parent?.type === "ExportNamedDeclaration";
-    const componentName = functionNode.id.name;
-    const replacementText = buildReplacementText({
-        componentName,
-        functionNode,
-        isExported,
-        localTypeName,
-        propsParam,
-        sourceCode,
-        typeReference,
-        usesChildren,
+        if (
+            node.type === "TSTypeReference" &&
+            node.typeName?.type === "Identifier" &&
+            SOLID_COMPONENT_TYPES.includes(node.typeName.name) &&
+            !declared.has(node.typeName.name)
+        ) {
+            referencedTypes.add(node.typeName.name);
+        }
     });
 
-    // For exported functions, replace the ExportNamedDeclaration (the parent).
-    // For non-exported functions, replace only the FunctionDeclaration itself.
-    const nodeToReplace = isExported ? functionNode.parent : functionNode;
-    return fixer.replaceText(nodeToReplace, replacementText);
+    return { firstJsxUse, referencedTypes };
 }
 
 export const preferArrowComponentsRule = {
@@ -393,13 +316,173 @@ export const preferArrowComponentsRule = {
     create(context) {
         const sourceCode = context.sourceCode;
         const programNode = sourceCode.ast;
+        const candidates = [];
+
+        // `function F` is hoisted, `const F` is not: a read of `F` that stands
+        // before the declaration (`export const routes = [{ component: Home }]`
+        // above `export function Home`) throws a ReferenceError once the
+        // function is a const. Such a function is reported but not fixed.
+        // Reads inside other functions run later and would be fine, but
+        // whether they do is not decidable here, so they count too.
+        const isUsedBeforeDeclaration = (node, firstJsxUse) => {
+            const start = node.range[FIRST_INDEX];
+            const jsxStart = firstJsxUse.get(node.id.name);
+            if (jsxStart !== undefined && jsxStart < start) {
+                return true;
+            }
+
+            let variable = null;
+            for (
+                let scope =
+                    sourceCode.scopeManager?.acquire(node)?.upper ?? null;
+                scope && variable === null;
+                scope = scope.upper
+            ) {
+                variable = scope.set.get(node.id.name) ?? null;
+            }
+
+            return (
+                variable?.references.some((reference) => {
+                    return (
+                        reference.identifier !== node.id &&
+                        reference.identifier.range[FIRST_INDEX] < start
+                    );
+                }) ?? false
+            );
+        };
+
+        const reportAll = () => {
+            if (candidates.length === NO_ITEMS) {
+                return;
+            }
+
+            const solidImports = getSolidImportDeclarations(programNode);
+            const { firstJsxUse, referencedTypes } = scanProgram(programNode);
+            const plans = candidates.map((candidate) => {
+                const localTypeName = findLocalTypeName(
+                    solidImports,
+                    candidate.desiredTypeName,
+                );
+
+                return {
+                    ...candidate,
+                    fixable: !isUsedBeforeDeclaration(
+                        candidate.node,
+                        firstJsxUse,
+                    ),
+                    resolvedTypeName:
+                        localTypeName === ""
+                            ? candidate.desiredTypeName
+                            : localTypeName,
+                    needsImport: localTypeName === "",
+                };
+            });
+
+            // The import of every name that a fix writes. Imports in the fix
+            // of every component would put one `import` next to each of them
+            // (and oxlint drops a fix that overlaps an earlier one), so the
+            // first fixable component carries the import for all of them, at
+            // the top of the file. A fix that was dropped leaves the others
+            // without their import: a type reference to `Component` that the
+            // module neither declares nor imports is imported by the next one.
+            const fixablePlans = plans.filter((plan) => plan.fixable);
+            const [carrier] = fixablePlans;
+            const namesToImport = [];
+            for (const name of [
+                ...fixablePlans
+                    .filter((plan) => plan.needsImport)
+                    .map((plan) => plan.desiredTypeName),
+                ...SOLID_COMPONENT_TYPES.filter((name) => {
+                    return (
+                        referencedTypes.has(name) &&
+                        findLocalTypeName(solidImports, name) === ""
+                    );
+                }),
+            ]) {
+                if (!namesToImport.includes(name)) {
+                    namesToImport.push(name);
+                }
+            }
+
+            const importFix = (fixer) => {
+                // The names are types: a value import takes them as
+                // `type Name`, a type import (without a default or namespace
+                // specifier) as `Name`.
+                const target = solidImports.find((declaration) => {
+                    return canTakeSpecifier(declaration, true);
+                });
+                if (target) {
+                    const typeKeyword =
+                        target.importKind === "type" ? "" : "type ";
+
+                    return appendImports(
+                        fixer,
+                        sourceCode,
+                        target,
+                        namesToImport.map((name) => `${typeKeyword}${name}`),
+                    );
+                }
+
+                return insertImports(
+                    fixer,
+                    sourceCode,
+                    SOLID_IMPORT_SOURCE,
+                    namesToImport,
+                    undefined,
+                    true,
+                );
+            };
+
+            const message =
+                "Prefer export const components typed as Component<Props> or ParentComponent<Props>.";
+            for (const plan of plans) {
+                const { node } = plan;
+                if (!plan.fixable) {
+                    context.report({ message, node });
+                    continue;
+                }
+
+                context.report({
+                    fix(fixer) {
+                        const exportKind = node.parent?.type;
+                        const propsSuffix = getPropsSuffix(plan.typeReference);
+                        const declaration = `const ${node.id.name}: ${plan.resolvedTypeName}${propsSuffix} = (${plan.propsParam.text}) => ${sourceCode.getText(node.body)};`;
+                        let replacement = declaration;
+                        let nodeToReplace = node;
+                        if (exportKind === "ExportNamedDeclaration") {
+                            replacement = `export ${declaration}`;
+                            nodeToReplace = node.parent;
+                        } else if (exportKind === "ExportDefaultDeclaration") {
+                            // `export default const` does not parse.
+                            replacement = `${declaration}\nexport default ${node.id.name};`;
+                            nodeToReplace = node.parent;
+                        }
+
+                        const edits = [
+                            fixer.replaceText(nodeToReplace, replacement),
+                        ];
+                        if (
+                            plan === carrier &&
+                            namesToImport.length > NO_ITEMS
+                        ) {
+                            const importEdit = importFix(fixer);
+                            if (importEdit) {
+                                edits.push(importEdit);
+                            }
+                        }
+
+                        return edits;
+                    },
+                    message,
+                    node,
+                });
+            }
+        };
 
         return {
+            "Program:exit": reportAll,
             FunctionDeclaration(node) {
-                if (
-                    !isExportedFunctionComponent(node) ||
-                    !hasJsxReturn(node.body)
-                ) {
+                if (!isFunctionComponent(node) || !hasJsxReturn(node.body)) {
                     return;
                 }
 
@@ -418,59 +501,12 @@ export const preferArrowComponentsRule = {
                 const usesChildren =
                     propsParam.name !== "" &&
                     usesPropsChildren(node, propsParam.name);
-                const desiredTypeName = getDesiredSolidTypeName(usesChildren);
 
-                const { importDeclaration, localTypeName } = getSolidTypeImportInfo(
-                    programNode,
-                    desiredTypeName,
-                );
-                const resolvedTypeName = localTypeName !== "" ? localTypeName : desiredTypeName;
-                const needsNewImport = localTypeName === "" && !importDeclaration;
-
-                context.report({
-                    fix(fixer) {
-                        const isExported = node.parent?.type === "ExportNamedDeclaration";
-                        const componentName = node.id.name;
-                        const propsSuffix = getPropsSuffix(typeReference);
-                        const paramsText = propsParam.text;
-                        const bodyText = sourceCode.getText(node.body);
-                        const exportPrefix = isExported ? "export " : "";
-
-                        // If we need a new import AND the function is not exported,
-                        // prepend the import declaration directly into the replacement text
-                        // to avoid multi-range fix conflicts.
-                        const importPrefix = needsNewImport
-                            ? `import type { ${desiredTypeName} } from "solid-js";\n`
-                            : "";
-
-                        const replacementText = `${importPrefix}${exportPrefix}const ${componentName}: ${resolvedTypeName}${propsSuffix} = (${paramsText}) => ${bodyText}`;
-                        const nodeToReplace = isExported ? node.parent : node;
-
-                        if (!needsNewImport && localTypeName === "" && importDeclaration) {
-                            // Need to add to existing import — use two fixes only when
-                            // the import is AFTER the function (safe, no overlap).
-                            // Otherwise embed the import in the replacement.
-                            const importEnd = importDeclaration.range?.[1] ?? 0;
-                            const funcStart = nodeToReplace.range?.[0] ?? 0;
-                            if (importEnd < funcStart) {
-                                const typeKeyword = getTypeKeyword(importDeclaration, sourceCode);
-                                const namedSpecifiers = getNamedImportSpecifiers(importDeclaration);
-                                const lastSpec = namedSpecifiers.at(LAST_INDEX);
-                                const importOp = lastSpec
-                                    ? fixer.insertTextAfter(lastSpec, `, ${typeKeyword}${desiredTypeName}`)
-                                    : fixer.insertTextBefore(importDeclaration, `import type { ${desiredTypeName} } from "solid-js";\n`);
-                                return [
-                                    fixer.replaceText(nodeToReplace, replacementText),
-                                    importOp,
-                                ];
-                            }
-                        }
-
-                        return fixer.replaceText(nodeToReplace, replacementText);
-                    },
-                    message:
-                        "Prefer export const components typed as Component<Props> or ParentComponent<Props>.",
+                candidates.push({
+                    desiredTypeName: getDesiredSolidTypeName(usesChildren),
                     node,
+                    propsParam,
+                    typeReference,
                 });
             },
         };

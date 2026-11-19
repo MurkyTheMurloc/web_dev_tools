@@ -17,6 +17,10 @@ workflow with npm trusted publishing).
 
 ## Tooling
 
+- Dev environment: devenv (`devenv.nix`; direnv loads it via `.envrc`). It provides Bun and
+  Node 24 and runs `bun install` when `bun.lock` changed; without direnv use
+  `devenv shell -- <cmd>`. `packageManager` in package.json must name the Bun version of the
+  shell, CI installs that version.
 - Bun only: `bun install`, `bun run <script>`, tests with `bun run test` (vitest), never `bun test`.
 - TypeScript 7 (`tsc`), builds with `tsdown`.
 - Lint and format with oxlint and oxfmt from `config/oxc`. Each package has its own `lint`

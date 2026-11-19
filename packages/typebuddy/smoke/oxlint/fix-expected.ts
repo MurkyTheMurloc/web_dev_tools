@@ -1,7 +1,10 @@
-import { ok } from "@murky-web/typebuddy";
-import { err } from "@murky-web/typebuddy";
-
-import type { Maybe, Nullable, Optional } from "../../src/types/index.js";
+import type {
+    Maybe,
+    Nullable,
+    Optional,
+    MaybePromise,
+} from "@murky-web/typebuddy";
+import { err, ok } from "@murky-web/typebuddy";
 
 export type OptionalCandidate = Optional<string>;
 export type MaybeCandidate = Maybe<string>;
@@ -9,7 +12,7 @@ export type NullableCandidate = Nullable<string>;
 
 export async function getGreeting(): MaybePromise<string> {
     try {
-        return ok("hello");
+        return "hello";
     } catch {
         return err();
     }
@@ -25,7 +28,7 @@ export async function complete(): MaybePromise<void> {
 
 export async function loadGreeting(): MaybePromise<string> {
     try {
-        return ok("hi");
+        return "hi";
     } catch {
         return err();
     }
@@ -40,11 +43,7 @@ export async function fromObject(): MaybePromise<string> {
 }
 
 export async function wrapMe(): MaybePromise<string> {
-    try {
-        return ok("wrapped");
-    } catch {
-        return err();
-    }
+    return "wrapped";
 }
 
 declare function log(message: string): void;
@@ -53,7 +52,7 @@ declare function log(message: string): void;
 // used to be glued onto it, producing code that does not parse.
 export async function oneLineCatch(): MaybePromise<string> {
     try {
-        return ok("one-line");
+        return "one-line";
     } catch {
         log("boom");
         return err();
@@ -63,39 +62,23 @@ export async function oneLineCatch(): MaybePromise<string> {
 // The wrapping fix used to strip leading whitespace on every line, which
 // silently rewrote the contents of template literals.
 export async function keepsTemplate(): MaybePromise<string> {
-    try {
-        return ok(`multi
-  line template`);
-    } catch {
-        return err();
-    }
+    return `multi
+  line template`;
 }
 
 // An expression-bodied arrow has no block for the try/catch to live in.
-export const arrowBody = async () => {
-    try {
-        return ok(await Promise.resolve("arrow"));
-    } catch {
-        return err();
-    }
-};
+export const arrowBody = async () => await Promise.resolve("arrow");
 
 // A parenthesised expression body: the parentheses sit outside the body node.
-export const parenthesisedArrowBody = async () => {
-    try {
-        return ok({ wrapped: true });
-    } catch {
-        return err();
-    }
-};
+export const parenthesisedArrowBody = async () => ({ wrapped: true });
 
 // Type-level signatures can never be `async`, so the async gate used to make
 // these three visitors unreachable.
 export interface Loader {
-    load(): MaybePromise<string>;
+    load(): Promise<string>;
 }
 
-export type LoadFn = () => MaybePromise<string>;
+export type LoadFn = () => Promise<string>;
 
 // Already migrated by hand. The awaited-type lookup used to match only
 // `Promise`, so this bare `return` stayed unwrapped while its `Promise<void>`
@@ -160,18 +143,18 @@ export async function nestedReturns(
     n: number,
 ): AsyncResult<string> {
     try {
-        if (flag) return ok("early");
+        if (flag) return "early";
         for (const x of [1]) {
-            if (x) return ok("loop");
+            if (x) return "loop";
         }
         switch (n) {
             case 1:
-                return ok("switch");
+                return "switch";
         }
         const cb = () => {
             return "belongs to the callback";
         };
-        return ok(cb());
+        return cb();
     } catch {
         return err();
     }
