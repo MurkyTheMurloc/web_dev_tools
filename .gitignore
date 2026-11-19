@@ -12,3 +12,15 @@ coverage
 .devenv.flake.nix
 .direnv/
 devenv.local.nix
+
+# Empty placeholders the agent sandbox creates in the project root
+/.bash_profile
+/.bashrc
+/.gitconfig
+/.idea
+/.mcp.json
+/.profile
+/.ripgreprc
+/.vscode
+/.zprofile
+/.zshrc
