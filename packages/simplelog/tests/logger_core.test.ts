@@ -9,6 +9,7 @@ import {
     enableOpenTelemetryContext,
 } from "../src/otel";
 import type {
+    ConsoleDefaults,
     LoggerOptions,
     LoggerParent,
     LoggerRuntime,
@@ -203,6 +204,105 @@ describe("LoggerBase console colors", () => {
         expect(consoleCalls).toHaveLength(NUM_1);
         expect(argumentText(consoleCalls[NUM_0]?.args[NUM_0])).not.toContain("\u001B[");
         expect(argumentText(consoleCalls[NUM_0]?.args[NUM_1])).not.toContain("\u001B[");
+    });
+});
+
+describe("LoggerBase console defaults from the runtime", () => {
+    beforeEach(resetLoggerState);
+
+    const pipeDefaults: ConsoleDefaults = {
+        timestampFormat: "iso",
+        valueColorMode: "off",
+    };
+
+    function withConsoleDefaults(
+        readConsoleDefaults: () => ConsoleDefaults,
+    ): TestRuntime {
+        const testRuntime = createTestRuntime();
+
+        return {
+            ...testRuntime,
+            runtime: { ...testRuntime.runtime, readConsoleDefaults },
+        };
+    }
+
+    it("uses the runtime defaults when the options leave them out", () => {
+        const { consoleCalls, runtime } = withConsoleDefaults(() => pipeDefaults);
+        const logger = new TestLogger(runtime, "pipe");
+
+        logger.info("headline", "part");
+
+        expect(argumentText(consoleCalls[NUM_0]?.args[NUM_0])).not.toContain("\u001B[");
+        expect(argumentText(consoleCalls[NUM_0]?.args[NUM_1])).not.toContain("\u001B[");
+    });
+
+    it("keeps colors and ISO timestamps for runtimes without defaults", () => {
+        const { consoleCalls, runtime } = createTestRuntime();
+        const logger = new TestLogger(runtime, "web");
+
+        logger.info("headline");
+
+        const line = argumentText(consoleCalls[NUM_0]?.args[NUM_0]);
+
+        expect(line).toContain("\u001B[32m");
+        expect(line).toMatch(/^\u001B\[32m\d{4}-\d{2}-\d{2}T/u);
+    });
+
+    it("prefers explicit options and skips the environment read", () => {
+        const readConsoleDefaults = vi.fn(() => pipeDefaults);
+        const { consoleCalls, runtime } = withConsoleDefaults(readConsoleDefaults);
+        const logger = new TestLogger(runtime, "explicit", undefined, {
+            timestampFormat: "iso",
+            valueColorMode: "syntax",
+        });
+
+        logger.info("headline", NUM_42);
+
+        expect(readConsoleDefaults).not.toHaveBeenCalled();
+        expect(argumentText(consoleCalls[NUM_0]?.args[NUM_1])).toContain("\u001B[36m");
+    });
+
+    it("defaults only the option the caller left out", () => {
+        const { runtime } = withConsoleDefaults(() => pipeDefaults);
+        const logger = new TestLogger(runtime, "half", undefined, {
+            valueColorMode: "syntax",
+        });
+
+        expect(logger.getInheritedOptions()).toMatchObject({
+            timestampFormat: "iso",
+            valueColorMode: "syntax",
+        });
+    });
+
+    it("passes the resolved defaults on to child loggers", () => {
+        const { runtime } = withConsoleDefaults(() => pipeDefaults);
+        const logger = new TestLogger(runtime, "parent");
+
+        expect(logger.createChildLogger("child").getInheritedOptions()).toMatchObject(
+            pipeDefaults,
+        );
+    });
+
+    it("prints the local time of day on the console and ISO in the file", () => {
+        vi.useFakeTimers();
+        const moment = new Date(2026, 10, 19, 16, 59, 23, 745);
+        vi.setSystemTime(moment);
+        const { consoleCalls, fileCalls, runtime } = withConsoleDefaults(() => ({
+            timestampFormat: "time",
+            valueColorMode: "off",
+        }));
+        const logger = new TestLogger(runtime, "clock", undefined, {
+            writeToFile: true,
+        });
+
+        logger.info("tick");
+
+        expect(argumentText(consoleCalls[NUM_0]?.args[NUM_0])).toBe(
+            "16:59:23.745 [INFO] [clock] - tick",
+        );
+        expect(fileCalls[NUM_0]?.content).toBe(
+            `${moment.toISOString()} [INFO] [clock] - tick\n`,
+        );
     });
 });
 

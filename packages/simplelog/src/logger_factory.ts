@@ -1,3 +1,5 @@
+import { formatConsoleTimestamp } from "./console_timestamp";
+import type { TimestampFormat } from "./console_timestamp";
 import {
     escapeFileCharacters,
     formatFunctionLabel,
@@ -43,8 +45,16 @@ type LoggerOptions = Readonly<{
     includeOpenTelemetryContext?: boolean;
     logFilePath?: string;
     logLevelThreshold?: LogLevel;
+    /** Console only; log files always get the ISO timestamp. */
+    timestampFormat?: TimestampFormat;
     valueColorMode?: ValueColorMode;
     writeToFile?: boolean;
+}>;
+
+/** What a logger uses for the console options its caller left out. */
+type ConsoleDefaults = Readonly<{
+    timestampFormat: TimestampFormat;
+    valueColorMode: ValueColorMode;
 }>;
 
 type LoggerConsole = Readonly<{
@@ -55,6 +65,13 @@ type LoggerConsole = Readonly<{
 type LoggerRuntime = Readonly<{
     appendTextFileSync?: (filePath: string, content: string) => void;
     console: LoggerConsole;
+    /**
+     * Reads the environment (NO_COLOR, FORCE_COLOR, SIMPLELOG_TIMESTAMP,
+     * whether stdout is a terminal) once per logger, when it is constructed.
+     * Runtimes without one (the browser) get
+     * {@link FALLBACK_CONSOLE_DEFAULTS}.
+     */
+    readConsoleDefaults?: () => ConsoleDefaults;
 }>;
 
 type LoggerParent = Readonly<{
@@ -72,6 +89,7 @@ type ResolvedLoggerOptions = Readonly<{
     includeOpenTelemetryContext: boolean;
     logFilePath: string;
     logLevelThreshold: LogLevel;
+    timestampFormat: TimestampFormat;
     valueColorMode: ValueColorMode;
     writeToFile: boolean;
 }>;
@@ -143,16 +161,43 @@ function buildDefaultLogFilePath(loggerName: string): string {
     return `logs/${loggerName}.log`;
 }
 
+// The browser console renders ANSI codes, and there is no terminal to ask.
+const FALLBACK_CONSOLE_DEFAULTS: ConsoleDefaults = {
+    timestampFormat: "iso",
+    valueColorMode: "level",
+};
+
+function readConsoleDefaults(
+    runtime: LoggerRuntime,
+    options: LoggerOptions,
+): ConsoleDefaults {
+    // Child loggers pass both, so they never read the environment again.
+    if (
+        typeof options.timestampFormat === "string" &&
+        typeof options.valueColorMode === "string"
+    ) {
+        return FALLBACK_CONSOLE_DEFAULTS;
+    }
+
+    return runtime.readConsoleDefaults?.() ?? FALLBACK_CONSOLE_DEFAULTS;
+}
+
 function resolveLoggerOptions(
     loggerName: string,
     options: LoggerOptions,
+    runtime: LoggerRuntime,
 ): ResolvedLoggerOptions {
+    const consoleDefaults = readConsoleDefaults(runtime, options);
+
     return {
         includeOpenTelemetryContext:
             options.includeOpenTelemetryContext ?? false,
         logFilePath: options.logFilePath ?? buildDefaultLogFilePath(loggerName),
         logLevelThreshold: options.logLevelThreshold ?? DEFAULT_LOG_LEVEL,
-        valueColorMode: options.valueColorMode ?? "level",
+        timestampFormat:
+            options.timestampFormat ?? consoleDefaults.timestampFormat,
+        valueColorMode:
+            options.valueColorMode ?? consoleDefaults.valueColorMode,
         writeToFile: options.writeToFile ?? false,
     };
 }
@@ -513,10 +558,11 @@ function createPlainLogParts(
     openTelemetryContext: OpenTelemetryContext | undefined,
     message: string,
     args: readonly unknown[],
+    epochMilliseconds: number,
     stackTrace?: string,
 ): PlainLogParts {
     const plainStackTrace = resolveStackTrace(stackTrace);
-    const timestamp = new Date().toISOString();
+    const timestamp = new Date(epochMilliseconds).toISOString();
 
     return {
         openTelemetryContext,
@@ -632,11 +678,12 @@ function createConsolePayloadFromPlainLogParts(
     loggerName: string,
     message: string,
     plainLogParts: PlainLogParts,
+    consoleTimestamp: string,
     valueColorMode: ValueColorMode,
 ): Pick<LogPayload, "consoleArgs" | "consoleLogMessage" | "consoleStackTrace"> {
     return createConsolePayload(
         level,
-        plainLogParts.timestamp,
+        consoleTimestamp,
         loggerName,
         plainLogParts.openTelemetryContext,
         message,
@@ -652,9 +699,11 @@ function createLogPayload(
     message: string,
     args: readonly unknown[],
     includeOpenTelemetryContext: boolean,
+    timestampFormat: TimestampFormat,
     valueColorMode: ValueColorMode,
     stackTrace?: string,
 ): LogPayload {
+    const now = Date.now();
     const openTelemetryContext = resolveOpenTelemetryContext(
         includeOpenTelemetryContext,
     );
@@ -664,6 +713,7 @@ function createLogPayload(
         openTelemetryContext,
         message,
         args,
+        now,
         stackTrace,
     );
     const consolePayload = createConsolePayloadFromPlainLogParts(
@@ -671,6 +721,7 @@ function createLogPayload(
         loggerName,
         message,
         plainLogParts,
+        formatConsoleTimestamp(now, timestampFormat),
         valueColorMode,
     );
 
@@ -726,6 +777,7 @@ class LoggerBase {
     private readonly performanceBenchmarks = new Map<string, number>();
     private readonly runtime: LoggerRuntime;
     private readonly includeOpenTelemetryContext: boolean;
+    private readonly timestampFormat: TimestampFormat;
     private readonly valueColorMode: ValueColorMode;
     private readonly writeToFile: boolean;
 
@@ -736,7 +788,7 @@ class LoggerBase {
         parent?: LoggerParent,
         options: LoggerOptions = {},
     ) {
-        const resolvedOptions = resolveLoggerOptions(name, options);
+        const resolvedOptions = resolveLoggerOptions(name, options, runtime);
 
         this.LoggerConstructor = LoggerConstructor;
         this.includeOpenTelemetryContext =
@@ -746,6 +798,7 @@ class LoggerBase {
         this.name = name;
         this.parent = parent;
         this.runtime = runtime;
+        this.timestampFormat = resolvedOptions.timestampFormat;
         this.valueColorMode = resolvedOptions.valueColorMode;
         this.writeToFile = resolvedOptions.writeToFile;
     }
@@ -825,6 +878,7 @@ class LoggerBase {
             includeOpenTelemetryContext: this.includeOpenTelemetryContext,
             logFilePath: this.logFilePath,
             logLevelThreshold: this.logLevelThreshold,
+            timestampFormat: this.timestampFormat,
             valueColorMode: this.valueColorMode,
             writeToFile: this.writeToFile,
         };
@@ -858,6 +912,7 @@ class LoggerBase {
             message,
             args,
             this.includeOpenTelemetryContext,
+            this.timestampFormat,
             this.valueColorMode,
             stackTrace,
         );
@@ -907,6 +962,7 @@ class LoggerBase {
 
 export { LoggerBase, createLoggerConsole, setSpanContextReader };
 export type {
+    ConsoleDefaults,
     OpenTelemetryContext,
     SpanContextReader,
     LogLevel,
@@ -915,5 +971,6 @@ export type {
     LoggerOptions,
     LoggerParent,
     LoggerRuntime,
+    TimestampFormat,
     ValueColorMode,
 };
