@@ -206,6 +206,16 @@ export async function flush(): MaybePromise<void> {
 -   `JsonifiedValue<T>`
 -   `Stringified<T>`
 
+### Oxlint rules
+
+`@murky-web/typebuddy/oxlint` has `prefer-maybe`, `prefer-maybe-promise`,
+`prefer-nullable`, `prefer-optional` and `require-try-catch`. They skip test
+files: `*.test.*`, `*.spec.*` and `*.bench.*`, anything under a `__tests__/`,
+`tests/`, `test/` or `__mocks__/` directory, and `vitest.setup.*`,
+`vitest-setup.*` and `setupTests.*`. Names like `latest.ts` or `contest.ts` are
+source files and stay checked. Directories count relative to the directory
+oxlint runs in, so a project checked out under `/tmp/test/` is not silenced.
+
 ### Tooling Entries
 
 -   `@murky-web/typebuddy/oxlint`
