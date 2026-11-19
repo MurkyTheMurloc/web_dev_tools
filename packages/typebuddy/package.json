@@ -93,6 +93,7 @@
     "provenance": true
   },
   "devDependencies": {
-    "@types/node": "^25.5.0"
+    "@types/node": "^24.19.2",
+    "oxlint": "^1.94.0"
   }
 }

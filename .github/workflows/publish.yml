@@ -22,12 +22,12 @@ jobs:
       contents: read
     steps:
       - name: Checkout repo
-        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
 
       - name: Setup Node
-        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
           node-version: "24"
 
@@ -54,7 +54,7 @@ jobs:
           packages/shadcn-lint/packages/lint/dist
 
       - name: Upload build output
-        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: dist
           path: ${{ runner.temp }}/dist.tar
@@ -76,14 +76,16 @@ jobs:
       pull-requests: write # open and update the version PR
       id-token: write # npm trusted publishing and provenance
     steps:
-      # persist-credentials stays on: changesets/action pushes the version
-      # branch and the release tags with `git push` and uses the checkout's
-      # credentials for it.
+      # No persisted credentials: changesets/action v2 pushes the version branch
+      # and the release tags through the GitHub API with its `github-token`, not
+      # with `git push`, so nothing in this job needs the checkout's token.
       - name: Checkout repo
-        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
 
       - name: Setup Node
-        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
           node-version: "24"
           registry-url: "https://registry.npmjs.org"
@@ -97,7 +99,7 @@ jobs:
         run: bun install --frozen-lockfile --ignore-scripts
 
       - name: Download build output
-        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
         with:
           name: dist
           path: ${{ runner.temp }}
@@ -107,14 +109,22 @@ jobs:
           tar -xf "$RUNNER_TEMP/dist.tar"
           rm "$RUNNER_TEMP/dist.tar"
 
+      # With changesets pending the action runs `version-script` and opens or
+      # updates the version PR; without any it runs `publish-script` (npm trusted
+      # publishing) and pushes the release tags. Both push through the GitHub API
+      # (`push-with-git-cli` stays at its default `false`): the version commit
+      # carries every file the working tree changed since checkout, including
+      # bun.lock and the JSR manifests `version-packages` regenerates, and
+      # GitHub signs it. The action sets GITHUB_TOKEN for the scripts itself.
       - name: Create version PR or publish
-        uses: changesets/action@a45c4d594aa4e2c509dc14a9f2b3b67ba3780d0d # v1.9.0
+        uses: changesets/action@ae32849d5ba541f9ae29e40e22a623bc13562f51 # v2.1.2
         with:
-          createGithubReleases: false
-          publish: bun run publish:npm
-          version: bun run version-packages
-          commit: "chore: version packages"
-          title: "chore: version packages"
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          create-github-releases: false
+          push-git-tags: true
+          publish-script: bun run publish:npm
+          version-script: bun run version-packages
+          commit-message: "chore: version packages"
+          pr-title: "chore: version packages"
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           NPM_CONFIG_PROVENANCE: "true"
