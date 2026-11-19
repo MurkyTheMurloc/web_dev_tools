@@ -13,6 +13,7 @@ import { dirname } from "node:path";
 const EXIT_SUCCESS = 0;
 const FIXTURE_FILE_PATH = "src/rule_case.tsx";
 const OXLINT_CONFIG_PATH = "./.oxlintrc.jsonc";
+const CASE_CONFIG_PATH = "./.oxlintrc.case.jsonc";
 // `os.tmpdir()` follows `$TMPDIR`, so the harness also runs where `/tmp` is
 // read-only (agent sandboxes).
 const TEMP_DIRECTORY_PATTERN = `${tmpdir()}/oxlint-plugin-solid-XXXXXX`;
@@ -188,29 +189,36 @@ const LINTING_FILES = [
     "solid",
 ];
 
+// `rules` overrides single rules on top of the shared configs, for cases that
+// test a rule's options.
+function solidProjectConfig(rules = {}) {
+    return {
+        extends: LINTING_FILES.map((name) => `./oxc/linting/${name}.jsonc`),
+        jsPlugins: ["@murky-web/oxlint-plugin-solid"],
+        plugins: [
+            "eslint",
+            "typescript",
+            "unicorn",
+            "oxc",
+            "import",
+            "jsx-a11y",
+            "vitest",
+            "promise",
+            "node",
+            "jsdoc",
+        ],
+        rules,
+    };
+}
+
 function writeSolidProjectConfig(repoRoot, tempDirectoryPath) {
     const configRoot = `${repoRoot}/config`;
     cpSync(`${configRoot}/oxc/linting`, `${tempDirectoryPath}/oxc/linting`, {
         recursive: true,
     });
     writeFileSync(
-        `${tempDirectoryPath}/.oxlintrc.jsonc`,
-        JSON.stringify({
-            extends: LINTING_FILES.map((name) => `./oxc/linting/${name}.jsonc`),
-            jsPlugins: ["@murky-web/oxlint-plugin-solid"],
-            plugins: [
-                "eslint",
-                "typescript",
-                "unicorn",
-                "oxc",
-                "import",
-                "jsx-a11y",
-                "vitest",
-                "promise",
-                "node",
-                "jsdoc",
-            ],
-        }),
+        `${tempDirectoryPath}/${OXLINT_CONFIG_PATH}`,
+        JSON.stringify(solidProjectConfig()),
     );
     copyFileSync(
         `${configRoot}/typescript/tsconfig.base.jsonc`,
@@ -262,10 +270,18 @@ export async function createLintHarness() {
         },
         // `fileName` places the fixture elsewhere in the temp project, and
         // `files` writes more files next to it (path -> content) for rules that
-        // read other modules. A fixture that does not parse is an error.
+        // read other modules. `rules` overrides rules (with their options) on
+        // top of the shared configs, `flags` adds Oxlint flags such as
+        // `--fix-suggestions`. A fixture that does not parse is an error.
         async lint(
             code,
-            { fix = false, fileName = FIXTURE_FILE_PATH, files = {} } = {},
+            {
+                fix = false,
+                fileName = FIXTURE_FILE_PATH,
+                files = {},
+                flags = [],
+                rules,
+            } = {},
         ) {
             const fixturePath = `${tempDirectoryPath}/${fileName}`;
             for (const [path, content] of Object.entries(files)) {
@@ -274,11 +290,21 @@ export async function createLintHarness() {
 
             writeFixtureFile(fixturePath, code);
 
+            let configPath = OXLINT_CONFIG_PATH;
+            if (rules !== undefined) {
+                configPath = CASE_CONFIG_PATH;
+                writeFileSync(
+                    `${tempDirectoryPath}/${configPath}`,
+                    JSON.stringify(solidProjectConfig(rules)),
+                );
+            }
+
             const cmd = [
                 `${repoRoot}/node_modules/.bin/oxlint`,
                 "-c",
-                OXLINT_CONFIG_PATH,
+                configPath,
                 "--format=default",
+                ...flags,
             ];
             if (fix) {
                 cmd.push("--fix");

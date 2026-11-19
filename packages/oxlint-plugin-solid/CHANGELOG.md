@@ -1,5 +1,11 @@
 # @murky-web/oxlint-plugin-solid
 
+## 1.4.1
+
+### Patch Changes
+
+- 7c46ee6: `no-unknown-namespaces`: `allowedNamespaces` now covers components, and the report on components no longer suggests deleting the prefix. Before, `<Island client:visible>` was always reported, and fix-on-save (`--fix-suggestions`) silently turned it into `<Island visible>`.
+
 ## 1.4.0
 
 ### Minor Changes

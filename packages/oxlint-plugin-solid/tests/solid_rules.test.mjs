@@ -21,6 +21,8 @@ import {
 import {
     expectedRuleIds,
     jsxUsesVarsCase,
+    namespaceCases,
+    namespaceFixCases,
     noDestructureFixCases,
     preferArrowDiagnosticCases,
     preferArrowFixCases,
@@ -139,6 +141,39 @@ function registerRuleDiagnosticsTests() {
     });
 }
 
+const NAMESPACE_RULE = "solid(no-unknown-namespaces)";
+
+function registerNamespaceTests() {
+    namespaceCases.forEach((namespaceCase) => {
+        test(`no-unknown-namespaces: ${namespaceCase.name}`, async () => {
+            const result = await harness.lint(namespaceCase.code, {
+                rules: namespaceCase.rules,
+            });
+
+            if (namespaceCase.report === null) {
+                expect(result.output).not.toContain(NAMESPACE_RULE);
+            } else {
+                expect(result.output).toContain(
+                    `${NAMESPACE_RULE}: ${namespaceCase.report}`,
+                );
+            }
+        });
+    });
+
+    namespaceFixCases.forEach((fixCase) => {
+        test(`no-unknown-namespaces: every fix and suggestion leaves ${fixCase.name} alone`, async () => {
+            const result = await harness.lint(fixCase.code, {
+                fix: true,
+                flags: ["--fix-suggestions", "--fix-dangerously"],
+                rules: fixCase.rules,
+            });
+
+            expect(result.source).toContain("<Island client:visible />");
+            expect(result.source).toBe(fixCase.code);
+        });
+    });
+}
+
 function registerReactivityAsyncTests() {
     reactivityAsyncReportingCases.forEach((asyncCase) => {
         test(`reactivity: ${asyncCase.name}`, async () => {
@@ -200,6 +235,7 @@ describe("oxlint-plugin-solid", () => {
     });
 
     registerRuleDiagnosticsTests();
+    registerNamespaceTests();
     registerPreferArrowDiagnosticTests();
     registerReactivityAsyncTests();
     registerReactivityScopeTests();
