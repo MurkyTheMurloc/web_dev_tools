@@ -1,7 +1,7 @@
 # SimpleLog
 
-`SimpleLog` is a lightweight and flexible logging utility for Node.js, Bun,
-Deno, and fetch-style edge runtimes. It provides various log levels, performance
+`SimpleLog` is a lightweight and flexible logging utility for Node.js, Bun and
+fetch-style edge runtimes. It provides various log levels, performance
 benchmarking, and the ability to log messages to both the console and a file.
 
 ## Features
@@ -41,12 +41,6 @@ Bun:
 
 ```typescript
 import { Logger } from "@murky-web/simplelog/bun";
-```
-
-Deno:
-
-```typescript
-import { Logger } from "@murky-web/simplelog/deno";
 ```
 
 Web and edge runtimes:
@@ -91,15 +85,51 @@ childLogger.info("This is a message from the child logger");
 - `logFilePath`: Path to the log file.
 - `logLevelThreshold`: Minimum log level for logging.
 - `valueColorMode`: `"level" | "syntax" | "off"` for console value coloring.
+- `timestampFormat`: `"iso" | "time"` for the console timestamp.
 - `includeOpenTelemetryContext`: Adds active `trace_id` and `span_id` to each
   log line when an OpenTelemetry span is active.
 
 `valueColorMode` modes:
 
-- `level`: current default, all console pieces use the log-level color
+- `level`: all console pieces use the log-level color
 - `syntax`: extra values use type-based colors like strings, numbers, booleans,
   nullish values, symbols, and objects
 - `off`: console output stays plain
+
+`timestampFormat` modes:
+
+- `iso`: the full UTC timestamp, `2026-11-19T16:59:23.745Z`
+- `time`: the local time of day, `16:59:23.745`
+
+### Defaults for colors and timestamps
+
+Without the option, the Node and Bun entries pick both from the environment when
+a logger is created. Child loggers inherit the parent's values.
+
+Colors (`valueColorMode`), `NO_COLOR` as https://no-color.org defines it plus
+Node's `FORCE_COLOR` values:
+
+1. `NO_COLOR` set and not empty: `"off"`.
+2. `FORCE_COLOR` set: `"level"`, even when empty, except `FORCE_COLOR=0` or
+   `false`, which means `"off"`.
+3. Otherwise `"level"` when stdout is a terminal, `"off"` when it is a pipe or a
+   file (CI, systemd, Docker, a process manager).
+
+The check looks at stdout only. Stack traces of `error()` and `assert()` go to
+stderr with the same colors, so `app 2>errors.log` in a terminal writes ANSI
+codes into `errors.log`; set `NO_COLOR=1` there.
+
+Timestamp (`timestampFormat`):
+
+1. `SIMPLELOG_TIMESTAMP=time` or `SIMPLELOG_TIMESTAMP=iso`.
+2. Otherwise `"time"` when stdout is a terminal, `"iso"` when it is not.
+
+Set `SIMPLELOG_TIMESTAMP=time` for output that goes through a pipe but is read
+by people, for example a process manager's terminal UI.
+
+An explicit option always wins over the environment. Log files always get the
+ISO timestamp and never colors, whatever the console shows. The `web` entry has
+no terminal to ask: it keeps `"level"` and `"iso"`.
 
 `includeOpenTelemetryContext` is intentionally opt-in. When enabled, `simplelog`
 reads the current active span from `@opentelemetry/api` and appends `trace_id`
@@ -110,10 +140,10 @@ SDK or exporter for you.
 
 ### File lines
 
-A log file entry is the console line without colors: timestamp, level, logger
-name, message, then every additional argument separated by a space. Objects are
-written as compact, single-line JSON (the console keeps the indented form), so
-one entry is one line.
+A log file entry is the console line without colors: ISO timestamp, level,
+logger name, message, then every additional argument separated by a space.
+Objects are written as compact, single-line JSON (the console keeps the indented
+form), so one entry is one line.
 
 Control characters, the Unicode line and paragraph separators (U+2028, U+2029),
 the bidirectional controls (U+200E, U+200F, U+061C, U+202A to U+202E, U+2066 to
@@ -172,7 +202,6 @@ the caller.
 - `@murky-web/simplelog`: Node-first default entry
 - `@murky-web/simplelog/node`: explicit Node entry
 - `@murky-web/simplelog/bun`: Bun entry
-- `@murky-web/simplelog/deno`: Deno entry
 - `@murky-web/simplelog/web`: runtime-neutral console logger for fetch-style
   runtimes
 - `@murky-web/simplelog/hono`: Hono middleware for request-scoped logging
@@ -187,10 +216,9 @@ For Hono-based servers and metaframeworks, prefer the runtime-neutral `web`
 logger together with the Hono middleware entry:
 
 ```typescript
-import { Hono } from "hono";
-
 import { createHonoLoggerMiddleware } from "@murky-web/simplelog/hono";
 import { Logger } from "@murky-web/simplelog/web";
+import { Hono } from "hono";
 
 type AppVariables = {
     logger: Logger;
@@ -228,7 +256,7 @@ This adapter is intentionally thin:
 
 - it uses Hono's middleware and request context model
 - it creates a request-scoped child logger
-- it works across Node, Bun, Deno, Cloudflare, and Netlify style runtimes
+- it works across Node, Bun, Cloudflare, and Netlify style runtimes
 - it does not own your tracing SDK or framework-specific SSR handoff
 
 If you want a custom request logger name, you can provide one directly or

@@ -12,15 +12,18 @@
   ];
 
   # The pull-request workflows (ci.yml, publish-dry-run.yml) as GitHub runs them,
-  # CI=true included. `ci-local -j typebuddy` runs one job. The job container gets
-  # no Docker socket: none of the jobs needs one, and the agents' socket refuses
-  # that bind mount.
+  # CI=true included. `ci-local -j typebuddy` runs one job. What the agents' Docker
+  # socket refuses is switched off, and no job needs it: the Docker socket in the job
+  # container, host networking (bridge instead), and the actions cache server (it
+  # binds to the host's outbound IP).
   scripts.ci-local = {
     description = "Run the pull-request workflows locally with act";
     exec = ''
       act pull_request \
         -P ubuntu-latest=catthehacker/ubuntu:act-latest \
         --container-daemon-socket=- \
+        --network bridge \
+        --no-cache-server \
         "$@"
     '';
   };

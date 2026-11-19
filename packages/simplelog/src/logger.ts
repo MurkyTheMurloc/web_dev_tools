@@ -1,15 +1,15 @@
-import { nodeRuntime } from "./node_runtime";
 import { LoggerBase } from "./logger_factory";
 import type { LoggerOptions, LoggerParent, LogLevel } from "./logger_factory";
+import { nodeRuntime } from "./node_runtime";
 
 class Logger extends LoggerBase {
-  constructor(
-    name: string,
-    parent?: LoggerParent,
-    options: LoggerOptions = {},
-  ) {
-    super(Logger, nodeRuntime, name, parent, options);
-  }
+    constructor(
+        name: string,
+        parent?: LoggerParent,
+        options: LoggerOptions = {},
+    ) {
+        super(Logger, nodeRuntime, name, parent, options);
+    }
 }
 
 export { Logger };
