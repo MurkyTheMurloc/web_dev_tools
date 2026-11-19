@@ -1,5 +1,14 @@
-import { copyFileSync, cpSync, existsSync, readFileSync, writeFileSync } from "node:fs";
+import { spawnSync } from "node:child_process";
+import {
+    copyFileSync,
+    cpSync,
+    existsSync,
+    mkdirSync,
+    readFileSync,
+    writeFileSync,
+} from "node:fs";
 import { tmpdir } from "node:os";
+import { dirname } from "node:path";
 
 const EXIT_SUCCESS = 0;
 const FIXTURE_FILE_PATH = "src/rule_case.tsx";
@@ -7,8 +16,24 @@ const OXLINT_CONFIG_PATH = "./.oxlintrc.jsonc";
 // `os.tmpdir()` follows `$TMPDIR`, so the harness also runs where `/tmp` is
 // read-only (agent sandboxes).
 const TEMP_DIRECTORY_PATTERN = `${tmpdir()}/oxlint-plugin-solid-XXXXXX`;
+// What Oxlint prints when the plugin does not load (a dependency that does not
+// resolve, a changed export) or a rule throws. Every "stays silent" case would
+// pass on such output, so the harness refuses it.
+const PLUGIN_FAILURE_PATTERN =
+    /Failed to load JS plugin|Error running JS plugin|Failed to parse oxlint configuration/u;
+// The summary line of the default format: it is only there when Oxlint ran to
+// the end. The default format is pinned because Oxlint picks another one when
+// it detects an agent or CI.
+const FINISHED_PATTERN = /^Finished in \d/mu;
+// A parser error is a diagnostic without a `plugin(rule)` code, like
+// `x Unexpected token`. The rules see no tree for a file that does not parse, so
+// every "stays silent" case would pass on it. The unused-disable-directive report
+// has no code either and is not a parser error.
+const PARSER_ERROR_PATTERN =
+    /^\s*x (?![\w-]+\([^)]*\):|Unused \S+-disable directive)/mu;
 const PACKAGE_RUNTIME_DEPENDENCIES = [
     "@eslint-community",
+    "@solidjs",
     "estraverse",
     "is-html",
     "kebab-case",
@@ -17,25 +42,23 @@ const PACKAGE_RUNTIME_DEPENDENCIES = [
     "style-to-object",
 ];
 
-function decodeBuffer(buffer) {
-    return new TextDecoder().decode(buffer);
-}
-
 function getRepoRoot() {
     return decodeURIComponent(new URL("../../../", import.meta.url).pathname);
 }
 
 function joinOutput(result) {
-    return `${decodeBuffer(result.stdout)}${decodeBuffer(result.stderr)}`.trim();
+    return `${result.stdout}${result.stderr}`.trim();
 }
 
-function runCommand(cmd, cwd) {
-    return globalThis.Bun.spawnSync({
-        cmd,
-        cwd,
-        stderr: "pipe",
-        stdout: "pipe",
-    });
+function runCommand([command, ...args], cwd) {
+    const result = spawnSync(command, args, { cwd, encoding: "utf8" });
+
+    return {
+        // A command that did not start has no status; that is a failure.
+        exitCode: result.status ?? 1,
+        stderr: result.error?.message ?? result.stderr,
+        stdout: result.stdout,
+    };
 }
 
 function runCommandOrThrow(cmd, cwd) {
@@ -76,8 +99,8 @@ function resolveDependencySourcePath({
     );
 }
 
-async function createTempPackageManifest(tempDirectoryPath) {
-    await globalThis.Bun.write(
+function createTempPackageManifest(tempDirectoryPath) {
+    writeFileSync(
         `${tempDirectoryPath}/package.json`,
         `${JSON.stringify({ name: "solid-oxlint-test", private: true }, null, 2)}\n`,
     );
@@ -185,11 +208,11 @@ function writeSolidProjectConfig(repoRoot, tempDirectoryPath) {
 }
 
 // The templates are written for real projects; the harness links a handful of
-// packages by hand and neither vite nor `@solidjs/web` is among them. Two
-// settings would otherwise fail the whole project before any rule runs:
-// `types: ["vite/client"]` raises TS2688, and `jsxImportSource` sends TS
-// looking for `@solidjs/web/jsx-runtime`. Neither is under test here, so both
-// are neutralized and JSX is typed loosely through a local shim.
+// packages by hand and vite is not among them, so `types: ["vite/client"]`
+// would raise TS2688 and fail the whole project before any rule runs. It is
+// not under test here, so it is neutralized. `jsxImportSource` stays: the
+// fixtures are typed by the real `@solidjs/web` (a devDependency), as in a
+// Solid 2.0 project, where `JSX` is imported from it and is no global.
 function neutralizeUnresolvableTypes(tempDirectoryPath) {
     const tsconfigPath = `${tempDirectoryPath}/tsconfig.json`;
     if (!existsSync(tsconfigPath)) {
@@ -202,44 +225,17 @@ function neutralizeUnresolvableTypes(tempDirectoryPath) {
             '"types": []',
         ),
     );
-    // `jsxImportSource` lives in the shared base that the leaf extends, not in
-    // the leaf itself.
-    const basePath = `${tempDirectoryPath}/tsconfig.base.jsonc`;
-    if (existsSync(basePath)) {
-        writeFileSync(
-            basePath,
-            readFileSync(basePath, "utf8").replace(
-                /\n\s*"jsxImportSource"\s*:\s*"[^"]*",?/,
-                "",
-            ),
-        );
-    }
-    writeFileSync(
-        `${tempDirectoryPath}/jsx-shim.d.ts`,
-        [
-            "declare namespace JSX {",
-            "    type Element = unknown;",
-            "    interface IntrinsicElements {",
-            "        [name: string]: Record<string, unknown>;",
-            "    }",
-            "}",
-            "",
-        ].join("\n"),
-    );
 }
 
-function readTextFile(filePath) {
-    return globalThis.Bun.file(filePath).text();
-}
-
-async function writeFixtureFile(filePath, code) {
-    await globalThis.Bun.write(filePath, code);
+function writeFixtureFile(filePath, code) {
+    mkdirSync(dirname(filePath), { recursive: true });
+    writeFileSync(filePath, code);
 }
 
 export async function createLintHarness() {
     const repoRoot = getRepoRoot();
     const tempDirectoryPath = createTempDirectory(repoRoot);
-    await createTempPackageManifest(tempDirectoryPath);
+    createTempPackageManifest(tempDirectoryPath);
     initializeTempProject(repoRoot, tempDirectoryPath);
 
     return {
@@ -251,22 +247,27 @@ export async function createLintHarness() {
         },
         // `fileName` places the fixture elsewhere in the temp project, and
         // `files` writes more files next to it (path -> content) for rules that
-        // read other modules.
+        // read other modules. A fixture that does not parse is an error.
         async lint(
             code,
-            { fix = false, fileName = FIXTURE_FILE_PATH, files = {} } = {},
+            {
+                fix = false,
+                fileName = FIXTURE_FILE_PATH,
+                files = {},
+            } = {},
         ) {
             const fixturePath = `${tempDirectoryPath}/${fileName}`;
             for (const [path, content] of Object.entries(files)) {
-                await writeFixtureFile(`${tempDirectoryPath}/${path}`, content);
+                writeFixtureFile(`${tempDirectoryPath}/${path}`, content);
             }
 
-            await writeFixtureFile(fixturePath, code);
+            writeFixtureFile(fixturePath, code);
 
             const cmd = [
                 `${repoRoot}/node_modules/.bin/oxlint`,
                 "-c",
                 OXLINT_CONFIG_PATH,
+                "--format=default",
             ];
             if (fix) {
                 cmd.push("--fix");
@@ -274,11 +275,21 @@ export async function createLintHarness() {
             cmd.push(fileName);
 
             const result = runCommand(cmd, tempDirectoryPath);
+            const output = joinOutput(result);
+            if (PLUGIN_FAILURE_PATTERN.test(output)) {
+                throw new Error(`The plugin did not run:\n${output}`);
+            }
+            if (!FINISHED_PATTERN.test(output)) {
+                throw new Error(`Oxlint did not finish:\n${output}`);
+            }
+            if (PARSER_ERROR_PATTERN.test(output)) {
+                throw new Error(`The fixture does not parse:\n${output}`);
+            }
 
             return {
                 exitCode: result.exitCode,
-                output: joinOutput(result),
-                source: await readTextFile(fixturePath),
+                output,
+                source: readFileSync(fixturePath, "utf8"),
             };
         },
     };

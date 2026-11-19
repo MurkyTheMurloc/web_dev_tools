@@ -183,7 +183,9 @@ createEffect(
         ruleId: "no-unknown-namespaces",
     }),
     Object.freeze({
-        code: `interface Props {
+        code: `import type { JSX } from "@solidjs/web";
+
+interface Props {
     readonly children?: JSX.Element;
 }
 
@@ -333,7 +335,9 @@ export const rows = db.rows;
 ]);
 
 const jsxUsesVarsCase = Object.freeze({
-    code: `const UsedComponent = (): JSX.Element => {
+    code: `import type { JSX } from "@solidjs/web";
+
+const UsedComponent = (): JSX.Element => {
     return <div>Hello</div>;
 };
 
