@@ -5,6 +5,7 @@ import {
     importFixCases,
     importsSilentCases,
     importsSolidJsNames,
+    noDestructureSilentCases,
 } from "./import_cases.mjs";
 import {
     READ_AFTER_GAP_MESSAGE,
@@ -54,7 +55,17 @@ function countOccurrences(text, fragment) {
 function registerImportFixTests() {
     importFixCases.forEach((fixCase) => {
         test(`fix: ${fixCase.name}`, async () => {
-            const result = await harness.lint(fixCase.source, { fix: true });
+            // `runs` fix runs in a row, each on the output of the last.
+            let result = { source: fixCase.source };
+            for (let run = 0; run < (fixCase.runs ?? 1); run += 1) {
+                result = await harness.lint(result.source, { fix: true });
+            }
+            if (fixCase.stable) {
+                // Nothing left to fix: one more run changes nothing.
+                const again = await harness.lint(result.source, { fix: true });
+
+                expect(again.source).toBe(result.source);
+            }
 
             for (const fragment of fixCase.expectedFragments ?? []) {
                 expect(result.source).toContain(fragment);
@@ -87,6 +98,16 @@ function registerImportsRuleTests() {
             const result = await harness.lint(silentCase.source);
 
             expect(result.output).not.toContain("solid(imports)");
+        });
+    });
+}
+
+function registerNoDestructureSilentTests() {
+    noDestructureSilentCases.forEach((silentCase) => {
+        test(`no-destructure: leaves ${silentCase.name} alone`, async () => {
+            const result = await harness.lint(silentCase.source);
+
+            expect(result.output).not.toContain("solid(no-destructure)");
         });
     });
 }
@@ -181,6 +202,7 @@ describe("oxlint-plugin-solid", () => {
     registerReactivityAsyncTests();
     registerReactivityScopeTests();
     registerImportsRuleTests();
+    registerNoDestructureSilentTests();
 
     test("tracks JSX component usage so no-unused-vars stays quiet", async () => {
         const result = await harness.lint(jsxUsesVarsCase.code);

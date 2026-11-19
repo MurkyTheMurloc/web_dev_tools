@@ -13,22 +13,12 @@ for (const primitive of [
     "createContext",
     "createDeferred",
     "createEffect",
-    // The primitive forms of `Loading`, `Errored` and `Reveal`. Only custom
-    // boundary components and renderer integrations reach for them, which is
-    // why they were missing here — and why a wrong-module import of one went
-    // unreported while every neighbouring primitive was checked.
-    "createErrorBoundary",
-    "createLoadingBoundary",
     "createMemo",
     "createOptimistic",
     "createOptimisticStore",
-    // `@internal` like the boundary primitives above: a runtime export of
-    // `solid-js`, typed only through `solid-js/internal`.
-    "createOwner",
     "createProjection",
     "createReaction",
     "createRenderEffect",
-    "createRevealOrder",
     "createRoot",
     "createSignal",
     "createStore",

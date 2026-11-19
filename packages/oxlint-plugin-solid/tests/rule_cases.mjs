@@ -201,17 +201,9 @@ export function View(props: Props): JSX.Element {
         ruleId: "prefer-class-object",
     }),
     Object.freeze({
-        code: `import {
-    createErrorBoundary,
-    createLoadingBoundary,
-    createRevealOrder,
-} from "@solidjs/web";
+        code: `import { createContext, createRoot, createSignal } from "@solidjs/web";
 
-export const boundaries = [
-    createErrorBoundary,
-    createLoadingBoundary,
-    createRevealOrder,
-];
+export const primitives = [createContext, createRoot, createSignal];
 `,
         ruleId: "imports",
     }),
