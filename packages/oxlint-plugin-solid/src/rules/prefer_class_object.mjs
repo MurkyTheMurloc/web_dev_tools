@@ -37,8 +37,7 @@ export default {
     },
     defaultOptions: [],
     create(context) {
-        const classnames =
-            context.options[0]?.classnames ?? DEFAULT_CLASSNAMES;
+        const classnames = context.options[0]?.classnames ?? DEFAULT_CLASSNAMES;
         return {
             JSXAttribute(node) {
                 const name = jsxPropName(node);
@@ -48,11 +47,20 @@ export default {
                 // the lowercase spelling missed every real Solid 1 call site —
                 // which is the code this rule exists to migrate.
                 if (name === "classList" || name === "classlist") {
+                    // With a `class` attribute next to it, renaming would
+                    // write the attribute twice (a parse error in TSX); the
+                    // two have to be merged by hand.
+                    const hasClassAttribute = node.parent.attributes.some(
+                        (attribute) =>
+                            attribute.type === "JSXAttribute" &&
+                            jsxPropName(attribute) === "class",
+                    );
                     context.report({
                         node,
                         messageId: "classlistRemoved",
-                        fix: (fixer) =>
-                            fixer.replaceText(node.name, "class"),
+                        fix: hasClassAttribute
+                            ? null
+                            : (fixer) => fixer.replaceText(node.name, "class"),
                     });
                     return;
                 }

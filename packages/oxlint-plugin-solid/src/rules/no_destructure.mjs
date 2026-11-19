@@ -162,25 +162,116 @@ export default {
         // the fixer: the new parameter, the line for the body, and the
         // `solid-js` names that line calls (`imports`, as imported/local pairs
         // that the file does not import yet).
+        //
+        // `fixable` is false when a rewrite would change what the code does:
+        // a nested pattern (`{ user: { name } }`) leaves `name` without a
+        // binding, a computed key that is not a literal (`{ [key]: label }`)
+        // cannot be named in `omit(props, ...)`, and a write to a destructured
+        // name (`count += 1`) or a read of one in the pattern itself (a
+        // default that uses an earlier prop) has no `props.x` form. Those
+        // components are reported without a fix.
         const planFix = (func, props) => {
-            const propsName = "props";
             const properties = props.properties;
             const propertyInfo = [];
             let rest = null;
+            let fixable = true;
             for (const property of properties) {
                 if (property.type === "RestElement") {
                     rest = property;
                 } else {
                     const info = getPropertyInfo(property);
-                    if (info === null) {
+                    if (
+                        info === null ||
+                        (info.computed && info.real.type !== "Literal")
+                    ) {
+                        fixable = false;
                         continue;
                     }
                     propertyInfo.push(info);
                 }
             }
-            const hasDefaults = propertyInfo.some((info) => info.init);
-            const origProps = hasDefaults ? "_" + propsName : propsName;
             const sourceCode = getSourceCode(context);
+            const program = sourceCode.ast;
+            const scopeManager = sourceCode.scopeManager;
+            const callScope = scopeManager?.acquire(func) ?? null;
+            // The bindings of the destructured props: the fix removes them.
+            const removedByFix = (variable) =>
+                propertyInfo.some((info) => info.var === variable.name) &&
+                variable.defs.every(
+                    (def) =>
+                        def.name?.range !== undefined &&
+                        def.name.range[0] >= props.range[0] &&
+                        def.name.range[1] <= props.range[1],
+                );
+            if (fixable && callScope) {
+                fixable = propertyInfo.every((info) => {
+                    const variable = callScope.set.get(info.var);
+                    return (
+                        variable === undefined ||
+                        variable.references.every((reference) => {
+                            const isInPattern =
+                                reference.identifier.range[0] >=
+                                    props.range[0] &&
+                                reference.identifier.range[1] <= props.range[1];
+                            if (isInPattern) {
+                                // The binding itself, nothing else.
+                                return variable.defs.some(
+                                    (def) => def.name === reference.identifier,
+                                );
+                            }
+                            return reference.isReadOnly();
+                        })
+                    );
+                });
+            }
+            if (!fixable) {
+                return { fixable, func, props, imports: [] };
+            }
+            // The scopes of the reads that the fix rewrites to `props.x`.
+            // They can sit inside functions of their own (`items.map((props)
+            // => ... title ...)`), where a binding of the name would be read
+            // instead of the parameter.
+            const rewrittenScopes = [];
+            for (const info of propertyInfo) {
+                for (const reference of callScope?.set.get(info.var)
+                    ?.references ?? []) {
+                    if (reference.isReadOnly() && !reference.init) {
+                        rewrittenScopes.push(reference.from);
+                    }
+                }
+            }
+            // The names the fix declares: the parameter and, when defaults
+            // are merged, the object next to it. Free means nothing visible
+            // from `func` or from any rewritten read has the name, and
+            // nothing in `func` reads an undeclared global of that name, or
+            // the new binding would capture the reads of the outer one
+            // (`props` of an outer component read in an inner one), or a
+            // rewritten read would find another binding first.
+            const isDeclaredOutside = (name) =>
+                lookupVariable(callScope, name, removedByFix) !== null ||
+                rewrittenScopes.some(
+                    (scope) =>
+                        lookupVariable(scope, name, removedByFix) !== null,
+                ) ||
+                (scopeManager?.globalScope?.through ?? []).some(
+                    ({ identifier }) =>
+                        identifier.name === name &&
+                        identifier.range[0] >= func.range[0] &&
+                        identifier.range[1] <= func.range[1],
+                );
+            const hasDefaults = propertyInfo.some((info) => info.init);
+            let propsName = "props";
+            for (let attempt = 2; ; attempt += 1) {
+                const origName = hasDefaults ? `_${propsName}` : propsName;
+                if (
+                    !isDeclaredOutside(propsName) &&
+                    !isDeclaredOutside(origName)
+                ) {
+                    break;
+                }
+                propsName = `props${attempt}`;
+            }
+            const origProps = hasDefaults ? "_" + propsName : propsName;
             const defaultsObjectString = () =>
                 propertyInfo
                     .filter((info) => info.init)
@@ -207,18 +298,6 @@ export default {
             // plain name if nothing else is called that, otherwise a free
             // alias (`solidMerge`, `solidMerge2`, ...). Both of the last two
             // are imported by the carrying fix.
-            const program = sourceCode.ast;
-            const scopeManager = sourceCode.scopeManager;
-            const callScope = scopeManager?.acquire(func) ?? null;
-            // The bindings of the destructured props: the fix removes them.
-            const removedByFix = (variable) =>
-                propertyInfo.some((info) => info.var === variable.name) &&
-                variable.defs.every(
-                    (def) =>
-                        def.name?.range !== undefined &&
-                        def.name.range[0] >= props.range[0] &&
-                        def.name.range[1] <= props.range[1],
-                );
             // A name the import would clash with: a binding in the module
             // scope (import, const, function, class, ...), one on the way from
             // the body of `func` up to it. An unresolved read of the name
@@ -272,6 +351,7 @@ export default {
                 lineToInsert = `  const ${restName()} = ${solidCallName("omit")}(${origProps}, ${omitArgs()});\n`;
             }
             return {
+                fixable,
                 func,
                 props,
                 propsName,
@@ -366,9 +446,18 @@ export default {
                                     !info.computed
                                         ? `.${info.real.name}`
                                         : `[${sourceCode.getText(info.real)}]`;
+                                // `{ title }` is `{ title: title }`: the key stays,
+                                // only the value becomes the property access.
+                                const parent = reference.identifier.parent;
+                                const isShorthand =
+                                    parent?.type === "Property" &&
+                                    parent.shorthand === true &&
+                                    parent.parent?.type === "ObjectExpression";
                                 yield fixer.replaceText(
                                     reference.identifier,
-                                    `${propsName}${access}`,
+                                    isShorthand
+                                        ? `${reference.identifier.name}: ${propsName}${access}`
+                                        : `${propsName}${access}`,
                                 );
                             }
                         }
@@ -447,14 +536,22 @@ export default {
                     fix: (fixer) => importFix(fixer, danglingImports),
                 });
             }
-            plans.forEach((plan, index) => {
+            const [carrier] = plans.filter((plan) => plan.fixable);
+            plans.forEach((plan) => {
+                if (!plan.fixable) {
+                    context.report({
+                        node: plan.props,
+                        messageId: "noDestructure",
+                    });
+                    return;
+                }
                 context.report({
                     node: plan.props,
                     messageId: "noDestructure",
                     fix: (fixer) =>
                         fixDestructure(
                             plan,
-                            index === 0 ? plannedImports : [],
+                            plan === carrier ? plannedImports : [],
                             fixer,
                         ),
                 });

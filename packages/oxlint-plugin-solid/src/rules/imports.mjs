@@ -1,5 +1,10 @@
 import { getSourceCode } from "../compat.mjs";
-import { appendImports, insertImports, removeSpecifier } from "../utils.mjs";
+import {
+    appendImports,
+    canTakeSpecifier,
+    insertImports,
+    removeSpecifier,
+} from "../utils.mjs";
 // Solid 2.0 moved the renderers into `@solidjs/*` packages and pulled the store
 // APIs into the core. Symbols that are legitimately exported from more than one
 // package (the control-flow components, `ComponentProps`) are deliberately left
@@ -101,6 +106,30 @@ for (const type of ["IntrinsicElement", "JSX", "RequestEvent"]) {
 }
 const sourceRegex = /^(?:solid-js|@solidjs\/(?:web|h|html|universal))$/;
 const isSource = (source) => sourceRegex.test(source);
+const isTypeDeclaration = (declaration) => declaration.importKind === "type";
+// The text of a specifier without its own `type` modifier, with one if asked
+// for: the modifier belongs to the declaration the specifier ends up in.
+const specifierText = (specifier, asType) => {
+    const imported = specifier.imported.name ?? specifier.imported.value;
+    const local = specifier.local.name;
+    const text = imported === local ? imported : `${imported} as ${local}`;
+    return asType ? `type ${text}` : text;
+};
+// The declaration from `source` that a specifier can join: for a type one a
+// type declaration first, then a value declaration. None if every one is of
+// the wrong kind; the caller then writes a declaration of its own.
+const findTarget = (program, source, isType) => {
+    const candidates = program.body.filter(
+        (node) =>
+            node.type === "ImportDeclaration" &&
+            node.source.value === source &&
+            canTakeSpecifier(node, isType),
+    );
+    return (
+        (isType ? candidates.find(isTypeDeclaration) : undefined) ??
+        candidates.at(0)
+    );
+};
 export default {
     meta: {
         type: "suggestion",
@@ -139,14 +168,16 @@ export default {
                                 fix(fixer) {
                                     const sourceCode = getSourceCode(context);
                                     const program = sourceCode.ast;
-                                    const correctDeclaration =
-                                        program.body.find(
-                                            (node) =>
-                                                node.type ===
-                                                    "ImportDeclaration" &&
-                                                node.source.value ===
-                                                    correctSource,
-                                        );
+                                    // A value never joins an `import type`
+                                    // (it would be gone at run time), and a
+                                    // type joins a value import only as
+                                    // `type Name`: the specifier is written
+                                    // for the declaration that takes it.
+                                    const correctDeclaration = findTarget(
+                                        program,
+                                        correctSource,
+                                        isType,
+                                    );
                                     if (correctDeclaration) {
                                         return [
                                             removeSpecifier(
@@ -158,7 +189,14 @@ export default {
                                                 fixer,
                                                 sourceCode,
                                                 correctDeclaration,
-                                                [sourceCode.getText(specifier)],
+                                                [
+                                                    specifierText(
+                                                        specifier,
+                                                        isType &&
+                                                            correctDeclaration.importKind !==
+                                                                "type",
+                                                    ),
+                                                ],
                                             ),
                                         ].filter(Boolean);
                                     }
@@ -179,7 +217,7 @@ export default {
                                             fixer,
                                             sourceCode,
                                             correctSource,
-                                            [sourceCode.getText(specifier)],
+                                            [specifierText(specifier, false)],
                                             firstSolidDeclaration,
                                             isType,
                                         ),
