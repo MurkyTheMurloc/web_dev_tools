@@ -6,3 +6,9 @@ coverage
 .output
 
 .npm-cache
+
+# devenv
+.devenv/
+.devenv.flake.nix
+.direnv/
+devenv.local.nix

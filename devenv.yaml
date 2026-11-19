@@ -1,0 +1,4 @@
+# Development environment (devenv CLI): `devenv shell -- <cmd>` runs one command.
+inputs:
+  nixpkgs:
+    url: github:NixOS/nixpkgs/nixos-unstable
