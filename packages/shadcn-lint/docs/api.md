@@ -6,7 +6,7 @@ The package exports `plugin` as both a named and default export. Oxlint
 loads the default. There is no shared config; enable each rule
 explicitly.
 
-The package is an ES module and requires Node.js 20.19 or later.
+The package is an ES module and requires Node.js 22 or later.
 
 ## Experimental project API
 

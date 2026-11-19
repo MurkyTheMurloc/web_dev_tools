@@ -18,7 +18,7 @@ import * as cnValidators from "./validators"
 
 // The grammar this package is written against. An older cn in the project
 // is linted with the bundled copy instead, with a one-time warning.
-export const BUNDLED_CN = "0.4.0"
+export const BUNDLED_CN = "0.5.2"
 
 function cnVersionAt(resolvedConfigPath: string) {
   let dir = path.dirname(resolvedConfigPath)
@@ -191,6 +191,15 @@ function getPart(node: Node, path: string) {
   return node
 }
 
+// Tailwind 4 still generates `bg-gradient-to-b` (a background-image,
+// the old name of `bg-linear-to-b`). cn 0.5.1 moved these into `bg-color`
+// to match tailwind-merge, which is right for merging but wrong for a
+// linter: a gradient direction would be read as an undeclared color. They
+// are classified as images here, whichever cn version the project has.
+const LEGACY_GRADIENT_DIRECTIONS: ClassGroupDef = {
+  bg: [{ "gradient-to": ["t", "tr", "r", "br", "b", "bl", "l", "tl"] }],
+}
+
 function buildTrie(config: CnConfig) {
   const root = createNode()
 
@@ -242,6 +251,7 @@ function buildTrie(config: CnConfig) {
   for (const [group, defs] of Object.entries(config.classGroups)) {
     for (const def of defs) process(def, root, group)
   }
+  process(LEGACY_GRADIENT_DIRECTIONS, root, "bg-image")
   return root
 }
 
