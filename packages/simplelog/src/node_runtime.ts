@@ -3,6 +3,8 @@ import { dirname } from "node:path";
 import process from "node:process";
 
 import { resolveConsoleDefaults } from "./console_defaults";
+import { createTextLogWriter } from "./console_text";
+import { createLogFileWriter } from "./log_file";
 import { createLoggerConsole } from "./logger_factory";
 import type { ConsoleDefaults, LoggerRuntime } from "./logger_factory";
 
@@ -22,12 +24,14 @@ function readNodeConsoleDefaults(): ConsoleDefaults {
 }
 
 const nodeRuntime = {
-    appendTextFileSync(filePath: string, content: string): void {
-        ensureParentDirectoryExists(filePath);
-        appendFileSync(filePath, content, LOG_FILE_ENCODING);
-    },
-    console: createLoggerConsole(),
     readConsoleDefaults: readNodeConsoleDefaults,
+    write: createTextLogWriter(
+        createLoggerConsole(),
+        createLogFileWriter((filePath, content) => {
+            ensureParentDirectoryExists(filePath);
+            appendFileSync(filePath, content, LOG_FILE_ENCODING);
+        }),
+    ),
 } satisfies LoggerRuntime;
 
 export { nodeRuntime };

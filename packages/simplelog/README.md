@@ -131,6 +131,31 @@ An explicit option always wins over the environment. Log files always get the
 ISO timestamp and never colors, whatever the console shows. The `web` entry has
 no terminal to ask: it keeps `"level"` and `"iso"`.
 
+### In the browser
+
+Bundlers that build for the browser resolve `@murky-web/simplelog/web` through
+its `browser` export condition to a smaller logger with the same API. It prints
+differently:
+
+- Arguments go to the console as they are, so DevTools shows objects you can
+  expand. Only the `Error` rules under "How arguments are printed" apply: an
+  `Error` argument is shown as a copy with `name`, `message`, `stack`, `cause`,
+  `code` and `errors`, and a `cause` that is no Error as `"[Object]"`. An Error
+  nested inside another object is shown in full.
+- Only the header (timestamp, level, logger name, message) is colored, with CSS
+  through `%c`. `"syntax"` colors it like `"level"`; DevTools colors the values
+  itself. `"off"` leaves it plain.
+- `writeToFile` and `logFilePath` do nothing.
+
+Server runtimes keep the text logger: the `workerd`, `worker`, `edge-light`,
+`deno`, `bun` and `node` conditions come before `browser`, and Vite's SSR build
+resolves `node`. A bundler that builds server code with only the `browser`
+condition gets the browser logger: `Error` arguments are still cut down, but
+an Error inside another object, `Map` or `Set` keeps all its properties, and
+nothing is truncated. Vite does that with `ssr.target: "webworker"` unless
+`ssr.resolve.conditions` names one of the server conditions, for example
+`["workerd", "worker"]`.
+
 `includeOpenTelemetryContext` is intentionally opt-in. When enabled, `simplelog`
 reads the current active span from `@opentelemetry/api` and appends `trace_id`
 and `span_id` to console and file output. It does not install an OpenTelemetry
@@ -203,7 +228,7 @@ the caller.
 - `@murky-web/simplelog/node`: explicit Node entry
 - `@murky-web/simplelog/bun`: Bun entry
 - `@murky-web/simplelog/web`: runtime-neutral console logger for fetch-style
-  runtimes
+  runtimes, and a smaller one for browsers (see "In the browser")
 - `@murky-web/simplelog/hono`: Hono middleware for request-scoped logging
 
 For Bun, file appends intentionally use Bun's `node:fs` compatibility layer

@@ -532,4 +532,4 @@ function toJsonSafeValue(value: unknown): unknown {
     return serializeAtPath(value, [], createBudget());
 }
 
-export { escapeFileCharacters, formatFunctionLabel, toJsonSafeValue };
+export { escapeFileCharacters, formatFunctionLabel, isError, toJsonSafeValue };

@@ -48,8 +48,15 @@
             "types": "./dist/otel.d.ts"
         },
         "./web": {
-            "import": "./dist/web_logger.js",
-            "types": "./dist/web_logger.d.ts"
+            "types": "./dist/web_logger.d.ts",
+            "workerd": "./dist/web_logger.js",
+            "worker": "./dist/web_logger.js",
+            "edge-light": "./dist/web_logger.js",
+            "deno": "./dist/web_logger.js",
+            "bun": "./dist/web_logger.js",
+            "node": "./dist/web_logger.js",
+            "browser": "./dist/browser_logger.js",
+            "import": "./dist/web_logger.js"
         },
         "./package.json": "./package.json"
     },
@@ -66,6 +73,7 @@
         "format:check": "oxfmt -c ../../config/oxc/.oxfmtrc.jsonc --check src oxlint smoke tsdown.config.ts",
         "smoke:oxlint": "bun ./smoke/oxlint/run-smoke.ts",
         "smoke:entries": "bun run build && bun ./smoke/entries/run.ts",
+        "smoke:treeshake": "bun run build && bun ./smoke/treeshake/run.ts",
         "test": "vitest run",
         "typecheck": "tsc --project ./tsconfig.json --noEmit"
     },
