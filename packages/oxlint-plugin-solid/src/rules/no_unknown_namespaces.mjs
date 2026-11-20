@@ -33,7 +33,17 @@ export default {
                         items: {
                             type: "string",
                         },
-                        default: [],
+                        minItems: 1,
+                        uniqueItems: true,
+                    },
+                    allowedNamespacedProps: {
+                        description:
+                            "an array of exact namespaced prop names to allow, such as `client:visible`",
+                        type: "array",
+                        items: {
+                            type: "string",
+                            pattern: "^[^:]+:[^:]+$",
+                        },
                         minItems: 1,
                         uniqueItems: true,
                     },
@@ -53,12 +63,21 @@ export default {
     create(context) {
         const explicitlyAllowedNamespaces =
             context.options?.[0]?.allowedNamespaces;
+        const explicitlyAllowedProps =
+            context.options?.[0]?.allowedNamespacedProps;
         return {
             "JSXAttribute > JSXNamespacedName": (node) => {
                 const namespace = node.namespace?.name;
-                // The allow list covers every element: a framework can give a
+                // Both allow lists cover every element: a framework can give a
                 // namespace meaning on components (`<Island client:visible>`).
-                if (explicitlyAllowedNamespaces?.includes(namespace)) {
+                // `allowedNamespacedProps` names single props, so a typo or an
+                // unsupported prop of the same namespace is still reported.
+                if (
+                    explicitlyAllowedNamespaces?.includes(namespace) ||
+                    explicitlyAllowedProps?.includes(
+                        `${namespace}:${node.name?.name}`,
+                    )
+                ) {
                     return;
                 }
                 const openingElement = node.parent.parent;
