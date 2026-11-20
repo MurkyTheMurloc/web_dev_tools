@@ -520,6 +520,37 @@ const ALLOW_CLIENT = Object.freeze({
     "solid/no-unknown-namespaces": ["error", { allowedNamespaces: ["client"] }],
 });
 const COMPONENT_MESSAGE = "Namespaced props have no effect on components.";
+// soferno's island directives: the six strategies its runtime implements.
+const ALLOW_ISLAND_DIRECTIVES = Object.freeze({
+    "solid/no-unknown-namespaces": [
+        "error",
+        {
+            allowedNamespacedProps: [
+                "client:delay",
+                "client:hover",
+                "client:idle",
+                "client:load",
+                "client:media",
+                "client:visible",
+            ],
+        },
+    ],
+});
+
+function islandView(prop) {
+    return `import type { Component } from "solid-js";
+
+type IslandProps = Readonly<Record<string, unknown>>;
+
+const Island: Component<IslandProps> = () => {
+    return null;
+};
+
+export const View: Component = () => {
+    return <Island ${prop} />;
+};
+`;
+}
 const namespaceCases = Object.freeze([
     Object.freeze({
         code: ISLAND_VIEW,
@@ -555,6 +586,41 @@ export const View: Component = () => {
         name: "a removed namespace the option does not cover",
         report: "'on:' was removed in Solid 2.0.",
         rules: ALLOW_CLIENT,
+    }),
+    Object.freeze({
+        code: islandView("client:visible"),
+        name: "an allowed namespaced prop on a component",
+        report: null,
+        rules: ALLOW_ISLAND_DIRECTIVES,
+    }),
+    Object.freeze({
+        code: islandView("client:media=\"(min-width: 40rem)\""),
+        name: "another allowed namespaced prop on a component",
+        report: null,
+        rules: ALLOW_ISLAND_DIRECTIVES,
+    }),
+    Object.freeze({
+        code: islandView("client:network=\"4g\""),
+        name: "a prop of an allowed namespace that is not in the list",
+        report: COMPONENT_MESSAGE,
+        rules: ALLOW_ISLAND_DIRECTIVES,
+    }),
+    Object.freeze({
+        code: islandView("client:visble"),
+        name: "a misspelled directive",
+        report: COMPONENT_MESSAGE,
+        rules: ALLOW_ISLAND_DIRECTIVES,
+    }),
+    Object.freeze({
+        code: `import type { Component } from "solid-js";
+
+export const View: Component = () => {
+    return <div client:visible />;
+};
+`,
+        name: "an allowed namespaced prop on a DOM element",
+        report: null,
+        rules: ALLOW_ISLAND_DIRECTIVES,
     }),
     Object.freeze({
         code: `import type { Component } from "solid-js";
