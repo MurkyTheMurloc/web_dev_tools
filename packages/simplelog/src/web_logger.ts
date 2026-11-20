@@ -1,3 +1,4 @@
+import { createTextLogWriter } from "./console_text";
 import { LoggerBase, createLoggerConsole } from "./logger_factory";
 import type {
     LoggerOptions,
@@ -6,8 +7,10 @@ import type {
     LogLevel,
 } from "./logger_factory";
 
+// Servers and edge runtimes (Cloudflare, Netlify, Deno): text output with the
+// serializer's safety rules. Browsers resolve `browser_logger` instead.
 const webRuntime = {
-    console: createLoggerConsole(),
+    write: createTextLogWriter(createLoggerConsole()),
 } satisfies LoggerRuntime;
 
 class Logger extends LoggerBase {

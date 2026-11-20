@@ -4,6 +4,8 @@ import { trace } from "@opentelemetry/api";
 import type { Span } from "@opentelemetry/api";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
+import { createTextLogWriter } from "../src/console_text";
+import { createLogFileWriter } from "../src/log_file";
 import { LoggerBase } from "../src/logger_factory";
 import type {
     ConsoleDefaults,
@@ -70,17 +72,19 @@ function createTestRuntime(): TestRuntime {
     const fileCalls: FileCall[] = [];
 
     const runtime = {
-        appendTextFileSync(filePath: string, content: string): void {
-            fileCalls.push({ content, filePath });
-        },
-        console: {
-            error(...args: readonly unknown[]): void {
-                consoleCalls.push({ args, type: "error" });
+        write: createTextLogWriter(
+            {
+                error(...args: readonly unknown[]): void {
+                    consoleCalls.push({ args, type: "error" });
+                },
+                log(...args: readonly unknown[]): void {
+                    consoleCalls.push({ args, type: "log" });
+                },
             },
-            log(...args: readonly unknown[]): void {
-                consoleCalls.push({ args, type: "log" });
-            },
-        },
+            createLogFileWriter((filePath, content) => {
+                fileCalls.push({ content, filePath });
+            }),
+        ),
     } satisfies LoggerRuntime;
 
     return { consoleCalls, fileCalls, runtime };
