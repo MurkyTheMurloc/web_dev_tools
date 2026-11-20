@@ -19,18 +19,18 @@ const buildProcess = Bun.spawnSync(
         "--format",
         "esm",
         "--target",
-        "browser",
+        "browser"
     ],
     {
         cwd: path.resolve(smokeDir, "../.."),
         stderr: "pipe",
-        stdout: "pipe",
-    },
+        stdout: "pipe"
+    }
 );
 
 if (buildProcess.exitCode !== SUCCESS_EXIT_CODE) {
     throw new Error(
-        `Tree-shake smoke build failed:\n${new TextDecoder().decode(buildProcess.stderr)}`,
+        `Tree-shake smoke build failed:\n${new TextDecoder().decode(buildProcess.stderr)}`
     );
 }
 
@@ -49,13 +49,13 @@ const forbiddenMarkers = [
     "function isEmptyLike",
     "function parseInteger",
     "uuidRegex",
-    "ulidRegex",
+    "ulidRegex"
 ];
 
 for (const marker of forbiddenMarkers) {
     if (bundleSource.includes(marker)) {
         throw new Error(
-            `Expected bundled output to tree-shake away unrelated runtime code, but found: ${marker}`,
+            `Expected bundled output to tree-shake away unrelated runtime code, but found: ${marker}`
         );
     }
 }

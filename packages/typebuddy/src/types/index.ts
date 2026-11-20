@@ -5,7 +5,7 @@ import type {
     Failed,
     MaybePromise,
     Result,
-    Success,
+    Success
 } from "./maybe_promise.js";
 import type { Nullable, ResolveNullable } from "./nullable.js";
 import type { Optional, ResolveOptional } from "./optional.js";
@@ -24,5 +24,5 @@ export type {
     ResolveOptional,
     Result,
     Stringified,
-    Success,
+    Success
 };

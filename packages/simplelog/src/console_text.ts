@@ -2,7 +2,7 @@ import { formatConsoleTimestamp } from "./console_timestamp";
 import type { LogFileWriter } from "./log_file";
 import {
     buildLogMessage,
-    formatOpenTelemetryContextLabel,
+    formatOpenTelemetryContextLabel
 } from "./logger_factory";
 import type {
     LogEntry,
@@ -11,7 +11,7 @@ import type {
     LogOutput,
     LogWriter,
     OpenTelemetryContext,
-    ValueColorMode,
+    ValueColorMode
 } from "./logger_factory";
 import { formatFunctionLabel, toJsonSafeValue } from "./serialize_value";
 
@@ -58,7 +58,7 @@ const LOG_LEVEL_COLORS: Readonly<Record<LogLevel, number>> = {
     DEBUG: ANSI_CYAN,
     ERROR: ANSI_RED,
     INFO: ANSI_GREEN,
-    WARN: ANSI_YELLOW,
+    WARN: ANSI_YELLOW
 };
 
 function colorize(text: string, colorCode: number): string {
@@ -66,7 +66,7 @@ function colorize(text: string, colorCode: number): string {
 }
 
 function isPrimitiveArgument(
-    argument: unknown,
+    argument: unknown
 ): argument is StringifiablePrimitive {
     return (
         typeof argument === "bigint" ||
@@ -78,39 +78,39 @@ function isPrimitiveArgument(
 }
 
 function stringifyPrimitiveArgument(
-    argument: StringifiablePrimitive,
+    argument: StringifiablePrimitive
 ): StringifiedArgument {
     if (typeof argument === "string") {
         return {
             kind: "string",
-            text: argument,
+            text: argument
         };
     }
 
     if (typeof argument === "symbol") {
         return {
             kind: "symbol",
-            text: argument.toString(),
+            text: argument.toString()
         };
     }
 
     if (typeof argument === "boolean") {
         return {
             kind: "boolean",
-            text: `${argument}`,
+            text: `${argument}`
         };
     }
 
     return {
         kind: "number",
-        text: `${argument}`,
+        text: `${argument}`
     };
 }
 
 function stringifyFunctionArgument(functionName: string): StringifiedArgument {
     return {
         kind: "function",
-        text: formatFunctionLabel(functionName),
+        text: formatFunctionLabel(functionName)
     };
 }
 
@@ -120,25 +120,25 @@ function stringifyJsonArgument(argument: unknown): StringifiedArgument {
         const stringifiedArgument = JSON.stringify(
             safeValue,
             undefined,
-            JSON_INDENTATION,
+            JSON_INDENTATION
         );
 
         if (typeof stringifiedArgument !== "string") {
             return {
                 kind: "object",
-                text: FALLBACK_OBJECT_STRING,
+                text: FALLBACK_OBJECT_STRING
             };
         }
 
         return {
             jsonValue: safeValue,
             kind: "object",
-            text: stringifiedArgument,
+            text: stringifiedArgument
         };
     } catch {
         return {
             kind: "object",
-            text: FALLBACK_OBJECT_STRING,
+            text: FALLBACK_OBJECT_STRING
         };
     }
 }
@@ -147,14 +147,14 @@ function stringifyArgument(argument: unknown): StringifiedArgument {
     if (typeof argument === "undefined") {
         return {
             kind: "nullish",
-            text: "undefined",
+            text: "undefined"
         };
     }
 
     if (argument === null) {
         return {
             kind: "nullish",
-            text: "null",
+            text: "null"
         };
     }
 
@@ -170,7 +170,7 @@ function stringifyArgument(argument: unknown): StringifiedArgument {
 }
 
 function stringifyArguments(
-    argumentsList: readonly unknown[],
+    argumentsList: readonly unknown[]
 ): readonly StringifiedArgument[] {
     return argumentsList.map((argument) => {
         return stringifyArgument(argument);
@@ -182,7 +182,7 @@ function buildColoredLogMessage(
     timestamp: string,
     loggerName: string,
     openTelemetryContextLabel: string,
-    message: string,
+    message: string
 ): string {
     const colorCode = LOG_LEVEL_COLORS[level];
 
@@ -191,14 +191,14 @@ function buildColoredLogMessage(
         colorize(`[${level}]`, colorCode),
         colorize(loggerName, colorCode),
         openTelemetryContextLabel,
-        colorize(message, colorCode),
+        colorize(message, colorCode)
     );
 }
 
 function colorizeOpenTelemetryContextLabel(
     level: LogLevel,
     openTelemetryContext: OpenTelemetryContext | undefined,
-    valueColorMode: ValueColorMode,
+    valueColorMode: ValueColorMode
 ): string {
     const plainOpenTelemetryContextLabel =
         formatOpenTelemetryContextLabel(openTelemetryContext);
@@ -249,7 +249,7 @@ function getSyntaxColorCode(kind: StringifiedArgumentKind): number {
 function colorizeArguments(
     argumentsList: readonly StringifiedArgument[],
     level: LogLevel,
-    valueColorMode: ValueColorMode,
+    valueColorMode: ValueColorMode
 ): readonly string[] {
     if (valueColorMode === "off") {
         return argumentsList.map((argument) => {
@@ -275,14 +275,14 @@ function buildPlainConsoleLogMessage(
     timestamp: string,
     loggerName: string,
     openTelemetryContext: OpenTelemetryContext | undefined,
-    message: string,
+    message: string
 ): string {
     return buildLogMessage(
         timestamp,
         `[${level}]`,
         loggerName,
         formatOpenTelemetryContextLabel(openTelemetryContext),
-        message,
+        message
     );
 }
 
@@ -292,7 +292,7 @@ function buildConsoleLogMessage(
     loggerName: string,
     openTelemetryContext: OpenTelemetryContext | undefined,
     message: string,
-    valueColorMode: ValueColorMode,
+    valueColorMode: ValueColorMode
 ): string {
     if (valueColorMode === "off") {
         return buildPlainConsoleLogMessage(
@@ -300,7 +300,7 @@ function buildConsoleLogMessage(
             timestamp,
             loggerName,
             openTelemetryContext,
-            message,
+            message
         );
     }
 
@@ -311,16 +311,16 @@ function buildConsoleLogMessage(
         colorizeOpenTelemetryContextLabel(
             level,
             openTelemetryContext,
-            valueColorMode,
+            valueColorMode
         ),
-        message,
+        message
     );
 }
 
 function buildConsoleStackTrace(
     stackTrace: string,
     level: LogLevel,
-    valueColorMode: ValueColorMode,
+    valueColorMode: ValueColorMode
 ): string {
     if (valueColorMode === "off") {
         return stackTrace;
@@ -332,7 +332,7 @@ function buildConsoleStackTrace(
 function createConsolePayload(
     entry: LogEntry,
     args: readonly StringifiedArgument[],
-    output: LogOutput,
+    output: LogOutput
 ): ConsolePayload {
     const { level } = entry;
     const { valueColorMode } = output;
@@ -343,18 +343,18 @@ function createConsolePayload(
             level,
             formatConsoleTimestamp(
                 entry.epochMilliseconds,
-                output.timestampFormat,
+                output.timestampFormat
             ),
             entry.loggerName,
             entry.openTelemetryContext,
             entry.message,
-            valueColorMode,
+            valueColorMode
         ),
         consoleStackTrace: buildConsoleStackTrace(
             entry.stackTrace,
             level,
-            valueColorMode,
-        ),
+            valueColorMode
+        )
     };
 }
 
@@ -370,7 +370,7 @@ function createConsolePayload(
  */
 function createTextLogWriter(
     loggerConsole: LoggerConsole,
-    writeLogFile?: LogFileWriter,
+    writeLogFile?: LogFileWriter
 ): LogWriter {
     return (entry, output) => {
         const args = stringifyArguments(entry.args);

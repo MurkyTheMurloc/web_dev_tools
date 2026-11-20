@@ -8,7 +8,11 @@
     },
     "overrides": [
         {
-            "files": ["src/logger.ts", "src/node_runtime.ts", "src/bun_logger.ts"],
+            "files": [
+                "src/logger.ts",
+                "src/node_runtime.ts",
+                "src/bun_logger.ts"
+            ],
             "rules": {
                 "import/no-nodejs-modules": "off"
             }

@@ -61,7 +61,7 @@ function isTestFile(filename: string, cwd?: string): boolean {
         TEST_FILE_NAME.test(baseName) ||
         SETUP_FILE_NAME.test(baseName) ||
         projectDirectories(path, cwd).some((segment) =>
-            TEST_DIRECTORIES.has(segment),
+            TEST_DIRECTORIES.has(segment)
         )
     );
 }
@@ -93,9 +93,9 @@ function getCwd(context: object): string | undefined {
 function withoutTestFiles<
     Context extends object,
     Visitors extends object,
-    Rest,
+    Rest
 >(
-    rule: Rest & { create(context: Context): Visitors },
+    rule: Rest & { create(context: Context): Visitors }
 ): Omit<Rest, "create"> & {
     create(context: Context): Visitors | Record<string, never>;
 } {
@@ -107,7 +107,7 @@ function withoutTestFiles<
             }
 
             return rule.create(context);
-        },
+        }
     };
 }
 

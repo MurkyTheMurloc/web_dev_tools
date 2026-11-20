@@ -3,7 +3,7 @@ import {
     isDOMElementName,
     formatList,
     appendImports,
-    insertImports,
+    insertImports
 } from "../utils.mjs";
 // Currently all of the control flow components are from 'solid-js'.
 // Solid 2.0 dropped `Index` (use `<For keyed={false}>`) and renamed the
@@ -16,7 +16,7 @@ const AUTO_COMPONENTS = [
     "Loading",
     "Errored",
     "Repeat",
-    "Reveal",
+    "Reveal"
 ];
 const SOURCE_MODULE = "solid-js";
 export default {
@@ -25,7 +25,7 @@ export default {
         docs: {
             description:
                 "Disallow references to undefined variables in JSX. Handles custom directives.",
-            url: "https://github.com/solidjs-community/eslint-plugin-solid/blob/main/packages/eslint-plugin-solid/docs/jsx-no-undef.md",
+            url: "https://github.com/solidjs-community/eslint-plugin-solid/blob/main/packages/eslint-plugin-solid/docs/jsx-no-undef.md"
         },
         fixable: "code",
         schema: [
@@ -36,30 +36,30 @@ export default {
                         type: "boolean",
                         description:
                             "When true, the rule will consider the global scope when checking for defined components.",
-                        default: false,
+                        default: false
                     },
                     autoImport: {
                         type: "boolean",
                         description:
                             'Automatically import certain components from `"solid-js"` if they are undefined.',
-                        default: true,
+                        default: true
                     },
                     typescriptEnabled: {
                         type: "boolean",
                         description:
                             "Adjusts behavior not to conflict with TypeScript's type checking.",
-                        default: false,
-                    },
+                        default: false
+                    }
                 },
-                additionalProperties: false,
-            },
+                additionalProperties: false
+            }
         ],
         messages: {
             undefined: "'{{identifier}}' is not defined.",
             customDirectiveUndefined:
                 "Custom directive '{{identifier}}' is not defined.",
-            autoImport: "{{imports}} should be imported from '{{source}}'.",
-        },
+            autoImport: "{{imports}} should be imported from '{{source}}'."
+        }
     },
     defaultOptions: [],
     create(context) {
@@ -76,7 +76,7 @@ export default {
          */
         function checkIdentifierInJSX(
             node,
-            { isComponent, isCustomDirective } = {},
+            { isComponent, isCustomDirective } = {}
         ) {
             let scope = getScope(context, node);
             const sourceCode = getSourceCode(context);
@@ -101,7 +101,7 @@ export default {
                 // Temporary fix for babel-eslint
                 if (scope.childScopes[0].childScopes.length) {
                     variables.push(
-                        ...scope.childScopes[0].childScopes[0].variables,
+                        ...scope.childScopes[0].childScopes[0].variables
                     );
                 }
             }
@@ -121,16 +121,16 @@ export default {
                     node,
                     messageId: "customDirectiveUndefined",
                     data: {
-                        identifier: node.name,
-                    },
+                        identifier: node.name
+                    }
                 });
             } else if (!isTypeScriptEnabled) {
                 context.report({
                     node,
                     messageId: "undefined",
                     data: {
-                        identifier: node.name,
-                    },
+                        identifier: node.name
+                    }
                 });
             }
         }
@@ -141,7 +141,7 @@ export default {
                     case "JSXIdentifier":
                         if (!isDOMElementName(node.name.name)) {
                             checkIdentifierInJSX(node.name, {
-                                isComponent: true,
+                                isComponent: true
                             });
                         }
                         break;
@@ -166,14 +166,14 @@ export default {
                     node.name?.type === "JSXIdentifier"
                 ) {
                     checkIdentifierInJSX(node.name, {
-                        isCustomDirective: true,
+                        isCustomDirective: true
                     });
                 }
             },
             "Program:exit": (programNode) => {
                 // add in any auto import components used in the program
                 const missingComponents = Array.from(
-                    missingComponentsSet.values(),
+                    missingComponentsSet.values()
                 );
                 if (autoImport && missingComponents.length) {
                     const importNode = programNode.body.find(
@@ -181,7 +181,7 @@ export default {
                             n.type === "ImportDeclaration" &&
                             n.importKind !== "type" &&
                             n.source.type === "Literal" &&
-                            n.source.value === SOURCE_MODULE,
+                            n.source.value === SOURCE_MODULE
                     );
                     if (importNode) {
                         context.report({
@@ -189,16 +189,16 @@ export default {
                             messageId: "autoImport",
                             data: {
                                 imports: formatList(missingComponents), // "Show, For, and Switch"
-                                source: SOURCE_MODULE,
+                                source: SOURCE_MODULE
                             },
                             fix: (fixer) => {
                                 return appendImports(
                                     fixer,
                                     getSourceCode(context),
                                     importNode,
-                                    missingComponents,
+                                    missingComponents
                                 );
-                            },
+                            }
                         });
                     } else {
                         context.report({
@@ -206,7 +206,7 @@ export default {
                             messageId: "autoImport",
                             data: {
                                 imports: formatList(missingComponents),
-                                source: SOURCE_MODULE,
+                                source: SOURCE_MODULE
                             },
                             fix: (fixer) => {
                                 // insert `import { missing, identifiers } from "solid-js"` at top of module
@@ -214,13 +214,13 @@ export default {
                                     fixer,
                                     getSourceCode(context),
                                     "solid-js",
-                                    missingComponents,
+                                    missingComponents
                                 );
-                            },
+                            }
                         });
                     }
                 }
-            },
+            }
         };
-    },
+    }
 };

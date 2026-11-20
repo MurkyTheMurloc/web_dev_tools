@@ -18,7 +18,7 @@ import {
     ignoreTransparentWrappers,
     getFunctionName,
     isJSXElementOrFragment,
-    trace,
+    trace
 } from "../utils.mjs";
 // Solid 2.0 removed `createResource`, `createMutable`, `indexArray` and
 // `<Index>`. Their branches below are kept structurally but matched against
@@ -49,10 +49,10 @@ class ScopeStack extends Array {
     pushSignal(variable, declarationScope = this.currentScope().node) {
         this.signals.push({
             references: variable.references.filter(
-                (reference) => !reference.init,
+                (reference) => !reference.init
             ),
             variable,
-            declarationScope,
+            declarationScope
         });
     }
     /**
@@ -68,7 +68,7 @@ class ScopeStack extends Array {
         } else {
             foundSignal.declarationScope = this.findDeepestDeclarationScope(
                 foundSignal.declarationScope,
-                declarationScope,
+                declarationScope
             );
         }
     }
@@ -76,10 +76,10 @@ class ScopeStack extends Array {
     pushProps(variable, declarationScope = this.currentScope().node) {
         this.props.push({
             references: variable.references.filter(
-                (reference) => !reference.init,
+                (reference) => !reference.init
             ),
             variable,
-            declarationScope,
+            declarationScope
         });
     }
     /** Function callbacks that run synchronously and don't create a new scope. */
@@ -92,14 +92,14 @@ class ScopeStack extends Array {
     *consumeSignalReferencesInScope() {
         yield* this.consumeReferencesInScope(this.signals);
         this.signals = this.signals.filter(
-            (variable) => variable.references.length !== 0,
+            (variable) => variable.references.length !== 0
         );
     }
     /** Iterate through and remove the props references in the current scope. */
     *consumePropsReferencesInScope() {
         yield* this.consumeReferencesInScope(this.props);
         this.props = this.props.filter(
-            (variable) => variable.references.length !== 0,
+            (variable) => variable.references.length !== 0
         );
     }
     *consumeReferencesInScope(variables) {
@@ -116,7 +116,7 @@ class ScopeStack extends Array {
             });
             yield* inScope.map((reference) => ({
                 reference,
-                declarationScope: variable.declarationScope,
+                declarationScope: variable.declarationScope
             }));
             // I don't think this is needed! Just a perf optimization
             variable.references = notInScope;
@@ -143,7 +143,7 @@ class ScopeStack extends Array {
     isReferenceInCurrentScope(reference) {
         let parentFunction = findParent(
             reference.identifier,
-            isProgramOrFunctionNode,
+            isProgramOrFunctionNode
         );
         while (
             isFunctionNode(parentFunction) &&
@@ -151,7 +151,7 @@ class ScopeStack extends Array {
         ) {
             parentFunction = findParent(
                 parentFunction,
-                isProgramOrFunctionNode,
+                isProgramOrFunctionNode
             );
         }
         return parentFunction === this.currentScope().node;
@@ -185,7 +185,7 @@ export default {
         docs: {
             description:
                 "Enforce that reactivity (props, signals, memos, etc.) is properly used, so changes in those values will be tracked and update the view as expected.",
-            url: "https://github.com/solidjs-community/eslint-plugin-solid/blob/main/packages/eslint-plugin-solid/docs/reactivity.md",
+            url: "https://github.com/solidjs-community/eslint-plugin-solid/blob/main/packages/eslint-plugin-solid/docs/reactivity.md"
         },
         schema: [
             {
@@ -196,13 +196,13 @@ export default {
                             "List of function names to consider as reactive functions (allow signals to be safely passed as arguments). In addition, any create* or use* functions are automatically included.",
                         type: "array",
                         items: {
-                            type: "string",
+                            type: "string"
                         },
-                        default: [],
-                    },
+                        default: []
+                    }
                 },
-                additionalProperties: false,
-            },
+                additionalProperties: false
+            }
         ],
         messages: {
             noWrite:
@@ -220,13 +220,13 @@ export default {
             shouldAssign:
                 "For proper analysis, a variable should be used to capture the result of this function call.",
             noAsyncTrackedScope:
-                "The reactive variable '{{name}}' is read after an await, so it registers no dependency and this computation will not re-run when it changes. Read every reactive input before the first async gap.",
-        },
+                "The reactive variable '{{name}}' is read after an await, so it registers no dependency and this computation will not re-run when it changes. Read every reactive input before the first async gap."
+        }
     },
     defaultOptions: [
         {
-            customReactiveFunctions: [],
-        },
+            customReactiveFunctions: []
+        }
     ],
     create(context) {
         // `RuleCreator` used to merge `defaultOptions` into `context.options`
@@ -238,7 +238,7 @@ export default {
             context.report({
                 node,
                 messageId: "shouldDestructure",
-                data: nth ? { nth: nth + " " } : undefined,
+                data: nth ? { nth: nth + " " } : undefined
             });
         const warnShouldAssign = (node) =>
             context.report({ node, messageId: "shouldAssign" });
@@ -275,7 +275,7 @@ export default {
                     return;
                 }
                 markPropsOnCondition(node, (props) =>
-                    isPropsByName(props.name),
+                    isPropsByName(props.name)
                 );
             }
             scopeStack.push(new ScopeStackItem(node));
@@ -294,8 +294,8 @@ export default {
                         findInScope(
                             node,
                             currentScope().node,
-                            (node) => node === trackedScope.node,
-                        ),
+                            (node) => node === trackedScope.node
+                        )
                     );
             }
         };
@@ -308,15 +308,15 @@ export default {
             // Check if the call falls outside any tracked scopes in the current scope
             if (
                 !currentScope().trackedScopes.find((trackedScope) =>
-                    matchTrackedScope(trackedScope, identifier),
+                    matchTrackedScope(trackedScope, identifier)
                 )
             ) {
                 const matchedExpression = currentScope().trackedScopes.find(
                     (trackedScope) =>
                         matchTrackedScope(
                             { ...trackedScope, expect: "expression" },
-                            identifier,
-                        ),
+                            identifier
+                        )
                 );
                 if (declarationScope === currentScopeNode) {
                     // If the reactivity is not contained in a tracked scope, and any of
@@ -350,8 +350,8 @@ export default {
                         data: {
                             name: parentMemberExpression
                                 ? sourceCode.getText(parentMemberExpression)
-                                : identifier.name,
-                        },
+                                : identifier.name
+                        }
                     });
                 } else {
                     // If all of the reactive variables were declared above the current
@@ -367,18 +367,18 @@ export default {
                     // of the tracked scopes, as we can't easily find references.
                     const pushUnnamedDerivedSignal = () =>
                         (parentScope().unnamedDerivedSignals ??= new Set()).add(
-                            currentScopeNode,
+                            currentScopeNode
                         );
                     if (currentScopeNode.type === "FunctionDeclaration") {
                         // get variable representing function, function node only defines one variable
                         const functionVariable =
                             sourceCode.scopeManager?.getDeclaredVariables(
-                                currentScopeNode,
+                                currentScopeNode
                             )?.[0];
                         if (functionVariable) {
                             scopeStack.pushUniqueSignal(
                                 functionVariable,
-                                declarationScope, // use declaration scope of a signal contained in this function
+                                declarationScope // use declaration scope of a signal contained in this function
                             );
                         } else {
                             pushUnnamedDerivedSignal();
@@ -390,13 +390,13 @@ export default {
                         // for nameless or arrow function expressions, use the declared variable it's assigned to
                         const functionVariable =
                             sourceCode.scopeManager?.getDeclaredVariables(
-                                declarator,
+                                declarator
                             )?.[0];
                         if (functionVariable) {
                             // use declaration scope of a signal contained in this scope, not the function itself
                             scopeStack.pushUniqueSignal(
                                 functionVariable,
-                                declarationScope,
+                                declarationScope
                             );
                         } else {
                             pushUnnamedDerivedSignal();
@@ -513,7 +513,7 @@ export default {
             // Iterate through all usages of (derived) signals in the current scope
             for (const {
                 reference,
-                declarationScope,
+                declarationScope
             } of scopeStack.consumeSignalReferencesInScope()) {
                 const identifier = reference.identifier;
                 if (
@@ -524,7 +524,7 @@ export default {
                     context.report({
                         node: identifier,
                         messageId: "noAsyncTrackedScope",
-                        data: { name: identifier.name },
+                        data: { name: identifier.name }
                     });
                 }
                 if (reference.isWrite()) {
@@ -533,15 +533,15 @@ export default {
                         node: identifier,
                         messageId: "noWrite",
                         data: {
-                            name: identifier.name,
-                        },
+                            name: identifier.name
+                        }
                     });
                 } else if (identifier.type === "Identifier") {
                     const reportBadSignal = (where) =>
                         context.report({
                             node: identifier,
                             messageId: "badSignal",
-                            data: { name: identifier.name, where },
+                            data: { name: identifier.name, where }
                         });
                     if (
                         // This allows both calling a signal and calling a function with a signal.
@@ -573,7 +573,7 @@ export default {
                             "|",
                             "^",
                             "&",
-                            "in",
+                            "in"
                         ].includes(identifier.parent.operator)
                     ) {
                         // We're in an arithmetic/comparison expression where using an uncalled signal wouldn't make sense
@@ -597,7 +597,7 @@ export default {
                             (trackedScope) =>
                                 trackedScope.node === identifier &&
                                 (trackedScope.expect === "function" ||
-                                    trackedScope.expect === "called-function"),
+                                    trackedScope.expect === "called-function")
                         )
                     ) {
                         // If the signal is in a JSXExpressionContainer that's also marked as a "function" or "called-function" tracked scope,
@@ -615,7 +615,7 @@ export default {
                                 elementOrAttribute.parent.name.type ===
                                     "JSXIdentifier" &&
                                 isDOMElementName(
-                                    elementOrAttribute.parent.name.name,
+                                    elementOrAttribute.parent.name.name
                                 ))
                         ) {
                             reportBadSignal("JSX");
@@ -629,7 +629,7 @@ export default {
             // Do a similar thing with all usages of props in the current function
             for (const {
                 reference,
-                declarationScope,
+                declarationScope
             } of scopeStack.consumePropsReferencesInScope()) {
                 const identifier = reference.identifier;
                 if (reference.isWrite()) {
@@ -638,8 +638,8 @@ export default {
                         node: identifier,
                         messageId: "noWrite",
                         data: {
-                            name: identifier.name,
-                        },
+                            name: identifier.name
+                        }
                     });
                 } else if (
                     identifier.parent?.type === "MemberExpression" &&
@@ -655,13 +655,13 @@ export default {
                             node: identifier,
                             messageId: "noWrite",
                             data: {
-                                name: identifier.name,
-                            },
+                                name: identifier.name
+                            }
                         });
                     } else if (
                         parent.property.type === "Identifier" &&
                         /^(?:initial|default|static[A-Z])/.test(
-                            parent.property.name,
+                            parent.property.name
                         )
                     ) {
                         // We're using a prop with a name that starts with `initial` or
@@ -682,7 +682,7 @@ export default {
                     context.report({
                         node: identifier,
                         messageId: "untrackedReactive",
-                        data: { name: identifier.name },
+                        data: { name: identifier.name }
                     });
                 }
                 // The props are being read, but not in a MemberExpression. Since
@@ -697,12 +697,12 @@ export default {
                 for (const node of unnamedDerivedSignals) {
                     if (
                         !currentScope().trackedScopes.find((trackedScope) =>
-                            matchTrackedScope(trackedScope, node),
+                            matchTrackedScope(trackedScope, node)
                         )
                     ) {
                         context.report({
                             loc: getFunctionHeadLocation(node, sourceCode),
-                            messageId: "badUnnamedDerivedSignal",
+                            messageId: "badUnnamedDerivedSignal"
                         });
                     }
                 }
@@ -743,7 +743,7 @@ export default {
                     !node.callee.computed &&
                     node.callee.object.type !== "ObjectExpression" &&
                     /^(?:forEach|map|flatMap|reduce|reduceRight|find|findIndex|filter|every|some)$/.test(
-                        node.callee.property.name,
+                        node.callee.property.name
                     )
                 ) {
                     // These common array methods (or likely array methods) take synchronous callbacks
@@ -754,7 +754,7 @@ export default {
                 if (
                     matchImport(
                         ["createSignal", "createStore"],
-                        node.callee.name,
+                        node.callee.name
                     ) &&
                     node.parent?.type === "VariableDeclarator"
                 ) {
@@ -764,7 +764,7 @@ export default {
                     const setter = getNthDestructuredVar(
                         node.parent.id,
                         1,
-                        context,
+                        context
                     );
                     if (setter) {
                         for (const reference of setter.references) {
@@ -818,7 +818,7 @@ export default {
                 } else if (
                     matchImport(
                         ["createMemo", "createDeferred", "createProjection"],
-                        callee.name,
+                        callee.name
                     )
                 ) {
                     const memo = id && getReturnedVar(id, context);
@@ -848,7 +848,7 @@ export default {
                     if (id?.type === "ArrayPattern") {
                         const vars = id.elements
                             .map((_, i) =>
-                                getNthDestructuredVar(id, i, context),
+                                getNthDestructuredVar(id, i, context)
                             )
                             .filter(Boolean);
                         if (vars.length === 0) {
@@ -857,7 +857,7 @@ export default {
                             vars.forEach((variable) => {
                                 scopeStack.pushProps(
                                     variable,
-                                    currentScope().node,
+                                    currentScope().node
                                 );
                             });
                         }
@@ -877,7 +877,7 @@ export default {
                     if (resourceReturn) {
                         scopeStack.pushProps(
                             resourceReturn,
-                            currentScope().node,
+                            currentScope().node
                         );
                     }
                 } else if (
@@ -896,7 +896,7 @@ export default {
                     ) {
                         const indexSignal = findVariable(
                             context,
-                            arg1.params[1],
+                            arg1.params[1]
                         );
                         if (indexSignal) {
                             scopeStack.pushSignal(indexSignal);
@@ -911,7 +911,7 @@ export default {
                     ) {
                         const valueSignal = findVariable(
                             context,
-                            arg1.params[0],
+                            arg1.params[0]
                         );
                         if (valueSignal) {
                             scopeStack.pushSignal(valueSignal);
@@ -945,7 +945,7 @@ export default {
                             this.skip(); // poor-man's `findInScope`: don't enter child scopes
                         }
                     },
-                    fallback: "iteration", // Don't crash when encounter unknown node.
+                    fallback: "iteration" // Don't crash when encounter unknown node.
                 });
             };
             if (node.type === "JSXExpressionContainer") {
@@ -1030,7 +1030,7 @@ export default {
             } else if (node.type === "NewExpression") {
                 const {
                     callee,
-                    arguments: { 0: arg0 },
+                    arguments: { 0: arg0 }
                 } = node;
                 if (
                     callee.type === "Identifier" &&
@@ -1041,7 +1041,7 @@ export default {
                         "MutationObserver",
                         "PerformanceObserver",
                         "ReportingObserver",
-                        "ResizeObserver",
+                        "ResizeObserver"
                     ].includes(callee.name)
                 ) {
                     // Observers callbacks are NOT tracked scopes. However, they
@@ -1054,7 +1054,7 @@ export default {
                 if (node.callee.type === "Identifier") {
                     const {
                         callee,
-                        arguments: { 0: arg0, 1: arg1 },
+                        arguments: { 0: arg0, 1: arg1 }
                     } = node;
                     if (
                         matchImport(
@@ -1071,9 +1071,9 @@ export default {
                                 "latest",
                                 "resolve",
                                 // The predicate is re-evaluated reactively until it is truthy.
-                                "until",
+                                "until"
                             ],
-                            callee.name,
+                            callee.name
                         ) ||
                         false /* Solid 2.0 removed createResource */
                     ) {
@@ -1082,7 +1082,7 @@ export default {
                     } else if (
                         matchImport(
                             ["createEffect", "createRenderEffect"],
-                            callee.name,
+                            callee.name
                         )
                     ) {
                         // Solid 2.0 split these into `(compute, apply)`. The
@@ -1100,7 +1100,7 @@ export default {
                                     ) {
                                         pushTrackedScope(
                                             property.value,
-                                            "called-function",
+                                            "called-function"
                                         );
                                     }
                                 }
@@ -1115,7 +1115,7 @@ export default {
                     } else if (
                         matchImport(
                             ["onSettled", "onFlush", "onCleanup"],
-                            callee.name,
+                            callee.name
                         ) ||
                         [
                             // Timers
@@ -1123,7 +1123,7 @@ export default {
                             "setTimeout",
                             "setImmediate",
                             "requestAnimationFrame",
-                            "requestIdleCallback",
+                            "requestIdleCallback"
                         ].includes(callee.name)
                     ) {
                         // on* and timers are NOT tracked scopes. However, they
@@ -1185,19 +1185,18 @@ export default {
                                         "Identifier" &&
                                     matchImport(
                                         "getOwner",
-                                        decl.node.init.callee.name,
+                                        decl.node.init.callee.name
                                     )
                                 ) {
                                     // Check if the function in which getOwner() is called is a tracked scope. If the scopeStack
                                     // has moved on from that scope already, assume it's tracked, since that's less intrusive.
                                     const ownerFunction = findParent(
                                         decl.node,
-                                        isProgramOrFunctionNode,
+                                        isProgramOrFunctionNode
                                     );
                                     const scopeStackIndex =
                                         scopeStack.findIndex(
-                                            ({ node }) =>
-                                                ownerFunction === node,
+                                            ({ node }) => ownerFunction === node
                                         );
                                     if (
                                         (scopeStackIndex >= 1 &&
@@ -1208,7 +1207,7 @@ export default {
                                                     trackedScope.expect ===
                                                         "function" &&
                                                     trackedScope.node ===
-                                                        ownerFunction,
+                                                        ownerFunction
                                             )) ||
                                         scopeStackIndex === 0
                                     ) {
@@ -1244,7 +1243,7 @@ export default {
                         property.type === "Identifier" &&
                         (/^(?:use|create)[A-Z]/.test(property.name) ||
                             options.customReactiveFunctions.includes(
-                                property.name,
+                                property.name
                             ))
                     ) {
                         // Handle custom hook parameters for property access custom hooks
@@ -1264,7 +1263,7 @@ export default {
                     if (
                         matchImport(
                             ["createReactive", "createReaction"],
-                            node.init.callee.name,
+                            node.init.callee.name
                         )
                     ) {
                         const track = getReturnedVar(node.id, context);
@@ -1290,7 +1289,7 @@ export default {
                         if (isFunctionNode(node.init.arguments[0])) {
                             pushTrackedScope(
                                 node.init.arguments[0],
-                                "called-function",
+                                "called-function"
                             );
                         }
                     }
@@ -1327,7 +1326,7 @@ export default {
                                 if (variable)
                                     scopeStack.pushProps(
                                         variable,
-                                        currentScope().node,
+                                        currentScope().node
                                     );
                             }
                         }
@@ -1393,7 +1392,7 @@ export default {
                             if (index) {
                                 scopeStack.pushSignal(
                                     index,
-                                    currentScope().node,
+                                    currentScope().node
                                 );
                             }
                         } else if (
@@ -1406,7 +1405,7 @@ export default {
                             if (item) {
                                 scopeStack.pushSignal(
                                     item,
-                                    currentScope().node,
+                                    currentScope().node
                                 );
                             }
                         }
@@ -1432,7 +1431,7 @@ export default {
                 if (scopeStack.length) {
                     currentScope().hasJSX = true;
                 }
-            },
+            }
         };
-    },
+    }
 };

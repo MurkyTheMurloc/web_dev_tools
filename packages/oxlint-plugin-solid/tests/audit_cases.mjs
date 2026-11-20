@@ -11,36 +11,36 @@ const scriptUrlReports = Object.freeze([
     Object.freeze({
         name: "a tab inside the scheme",
         code: String.raw`export const View = () => <a href={"java\tscript:alert(1)"}>x</a>;
-`,
+`
     }),
     Object.freeze({
         name: "a newline in front of the scheme",
         code: String.raw`export const View = () => <a href={"\njavascript:alert(1)"}>x</a>;
-`,
+`
     }),
     Object.freeze({
         name: "a control character in front of the scheme",
         code: String.raw`export const View = () => <a href={"\u0001javascript:alert(1)"}>x</a>;
-`,
+`
     }),
     Object.freeze({
         name: "spaces in front of an upper-case scheme",
         code: String.raw`export const View = () => <a href={"  JavaScript:alert(1)"}>x</a>;
-`,
-    }),
+`
+    })
 ]);
 
 const scriptUrlSilent = Object.freeze([
     Object.freeze({
         name: "javascript: that does not start the value",
         code: `export const View = () => <a href="ABCjavascript:void(0)">x</a>;
-`,
+`
     }),
     Object.freeze({
         name: "an https URL",
         code: `export const View = () => <a href="https://example.com">x</a>;
-`,
-    }),
+`
+    })
 ]);
 
 const PROPS_TYPE = `import type { JSX } from "@solidjs/web";
@@ -59,9 +59,9 @@ export default function Page(props: Props): JSX.Element {
         expectedFragments: [
             "const Page: Component<Props> = (props) => {",
             "export default Page;",
-            'import type { Component } from "solid-js";',
+            'import type { Component } from "solid-js";'
         ],
-        forbiddenFragments: ["export default const", "function Page"],
+        forbiddenFragments: ["export default const", "function Page"]
     }),
     Object.freeze({
         name: "two components without a solid-js import share one import at the top",
@@ -77,11 +77,11 @@ export function Second(props: Props): JSX.Element {
         expectedFragments: [
             'import type { Component, ParentComponent } from "solid-js";',
             "export const First: Component<Props> = (props) => {",
-            "export const Second: ParentComponent<Props> = (props) => {",
+            "export const Second: ParentComponent<Props> = (props) => {"
         ],
         forbiddenFragments: ["function First", "function Second"],
         singleFragments: ['from "solid-js"'],
-        stable: true,
+        stable: true
     }),
     Object.freeze({
         name: "a nested component gets the import at the top of the file",
@@ -97,7 +97,7 @@ export const make = () => {
         expectedFragments: ["const Inner: Component<Props> = (props) => {"],
         singleFragments: ['import type { Component } from "solid-js";'],
         // The import comes before every other statement.
-        importBefore: "export const make",
+        importBefore: "export const make"
     }),
     Object.freeze({
         name: "an import goes after a use client directive",
@@ -109,9 +109,9 @@ export function Leaf(): JSX.Element {
 `,
         expectedFragments: [
             '"use client";\n\nimport type { Component } from "solid-js";',
-            "export const Leaf: Component = () => {",
-        ],
-    }),
+            "export const Leaf: Component = () => {"
+        ]
+    })
 ]);
 
 // Reported, but a fix would break the module: the report stays and the source
@@ -126,7 +126,7 @@ export function Home(props: Props): JSX.Element {
     return <div>{props.name}</div>;
 }
 `,
-        ruleId: "prefer-arrow-components",
+        ruleId: "prefer-arrow-components"
     }),
     Object.freeze({
         name: "a function used in JSX before its declaration",
@@ -139,8 +139,8 @@ export function Home(props: Props): JSX.Element {
     return <div>{props.name}</div>;
 }
 `,
-        ruleId: "prefer-arrow-components",
-    }),
+        ruleId: "prefer-arrow-components"
+    })
 ]);
 
 const noDestructureFixes = Object.freeze([
@@ -153,7 +153,7 @@ export const Panel = ({ title, data }) => {
 };
 `,
         expectedFragments: ["{ title: props.title, data: props.data }"],
-        forbiddenFragments: ["{ props.title", "= ({ title"],
+        forbiddenFragments: ["{ props.title", "= ({ title"]
     }),
     Object.freeze({
         name: "a shorthand property next to a default",
@@ -163,7 +163,7 @@ export const Panel = ({ title = "x" }) => {
     return <div>{use({ title })}</div>;
 };
 `,
-        expectedFragments: ["{ title: props.title }", "merge({ title:"],
+        expectedFragments: ["{ title: props.title }", "merge({ title:"]
     }),
     Object.freeze({
         name: "an inner component does not shadow the props of the outer one",
@@ -174,7 +174,7 @@ export const Panel = ({ title = "x" }) => {
 };
 `,
         expectedFragments: ["(props2) =>", "props.id", "props2.label"],
-        forbiddenFragments: ["props.label", "({ label"],
+        forbiddenFragments: ["props.label", "({ label"]
     }),
     Object.freeze({
         name: "an inner component picks a name that its body does not read from outside",
@@ -184,7 +184,7 @@ export const Panel = ({ label }) => {
     return <b>{props.id}{label}</b>;
 };
 `,
-        expectedFragments: ["(props2) =>", "props.id", "props2.label"],
+        expectedFragments: ["(props2) =>", "props.id", "props2.label"]
     }),
     Object.freeze({
         name: "a callback inside the component with its own props parameter keeps its reads",
@@ -201,9 +201,9 @@ export const Panel = ({ label }) => {
             "each={props2.items}",
             "{props2.title}",
             "{props.x}",
-            "{(props) =>",
+            "{(props) =>"
         ],
-        forbiddenFragments: ["{props.title}", "props.items"],
+        forbiddenFragments: ["{props.title}", "props.items"]
     }),
     Object.freeze({
         name: "a callback inside the component with its own props variable keeps its reads",
@@ -224,10 +224,10 @@ export const Panel = ({ label }) => {
             "props2.items.map",
             "{props2.title}",
             "{props.x}",
-            "const props = { x: item }",
+            "const props = { x: item }"
         ],
-        forbiddenFragments: ["{props.title}", "props.items"],
-    }),
+        forbiddenFragments: ["{props.title}", "props.items"]
+    })
 ]);
 
 // A nested pattern, a computed key that is not a literal and a write to a
@@ -239,7 +239,7 @@ const noDestructureUnfixed = Object.freeze([
     return <p>{name}{id}</p>;
 };
 `,
-        ruleId: "no-destructure",
+        ruleId: "no-destructure"
     }),
     Object.freeze({
         name: "a computed key that is not a literal",
@@ -249,7 +249,7 @@ export const Row = ({ [key]: label, ...rest }) => {
     return <p {...rest}>{label}</p>;
 };
 `,
-        ruleId: "no-destructure",
+        ruleId: "no-destructure"
     }),
     Object.freeze({
         name: "a write to a destructured name",
@@ -259,8 +259,8 @@ export const Row = ({ [key]: label, ...rest }) => {
     return <p>{count}</p>;
 };
 `,
-        ruleId: "no-destructure",
-    }),
+        ruleId: "no-destructure"
+    })
 ]);
 
 const importsFixes = Object.freeze([
@@ -273,7 +273,7 @@ export const rendered = [render];
 export type Node = JSX.Element;
 `,
         expectedFragments: ['import { render, type JSX } from "@solidjs/web";'],
-        forbiddenFragments: ['import type { JSX } from "solid-js"'],
+        forbiddenFragments: ['import type { JSX } from "solid-js"']
     }),
     Object.freeze({
         name: "a value does not join a type import",
@@ -285,10 +285,10 @@ export type Node = JSX.Element;
 `,
         expectedFragments: [
             'import type { JSX } from "@solidjs/web";',
-            'import { render } from "@solidjs/web";',
+            'import { render } from "@solidjs/web";'
         ],
         forbiddenFragments: ["JSX, render", "render, JSX"],
-        stable: true,
+        stable: true
     }),
     Object.freeze({
         name: "an inline type does not keep its modifier in a type import",
@@ -301,10 +301,10 @@ export type Event = RequestEvent;
 `,
         expectedFragments: [
             'import type { RequestEvent, JSX } from "@solidjs/web";',
-            'import { createSignal } from "solid-js";',
+            'import { createSignal } from "solid-js";'
         ],
         forbiddenFragments: ["type JSX }", "type JSX,"],
-        stable: true,
+        stable: true
     }),
     Object.freeze({
         name: "a value with an alias keeps the alias in a new declaration",
@@ -316,9 +316,9 @@ export type Node = JSX.Element;
 `,
         expectedFragments: [
             'import type { JSX } from "@solidjs/web";',
-            'import { render as draw } from "@solidjs/web";',
+            'import { render as draw } from "@solidjs/web";'
         ],
-        stable: true,
+        stable: true
     }),
     Object.freeze({
         name: "the last specifier of an import leaves no dangling comma",
@@ -328,10 +328,10 @@ export const rendered = [createSignal, render];
 `,
         expectedFragments: [
             'import { createSignal } from "solid-js";',
-            'import { render } from "@solidjs/web";',
+            'import { render } from "@solidjs/web";'
         ],
-        forbiddenFragments: ["createSignal, }", "createSignal,  }"],
-    }),
+        forbiddenFragments: ["createSignal, }", "createSignal,  }"]
+    })
 ]);
 
 const preferClassObjectUnfixed = Object.freeze([
@@ -341,8 +341,8 @@ const preferClassObjectUnfixed = Object.freeze([
     return <div class="btn" classList={{ on: props.on }} />;
 };
 `,
-        ruleId: "prefer-class-object",
-    }),
+        ruleId: "prefer-class-object"
+    })
 ]);
 
 const preferClassObjectFixes = Object.freeze([
@@ -353,8 +353,8 @@ const preferClassObjectFixes = Object.freeze([
 };
 `,
         expectedFragments: ["<div class={{ on: props.on }} />"],
-        forbiddenFragments: ["classList"],
-    }),
+        forbiddenFragments: ["classList"]
+    })
 ]);
 
 const serverModule = `"use server";
@@ -372,52 +372,52 @@ const serverImportReports = Object.freeze([
         fileName: "src/routes/nested/page.tsx",
         files: {
             "src/routes/nested/package.json": '{ "name": "nested" }\n',
-            "src/server/db.ts": plainServerModule,
+            "src/server/db.ts": plainServerModule
         },
         code: `import { db } from "~/server/db";
 
 export const View = () => <p>{db.rows.length}</p>;
-`,
+`
     }),
     Object.freeze({
         name: "a no-substitution template literal in import()",
         fileName: "src/lib/template.ts",
         files: { "src/server/db.ts": plainServerModule },
-        code: "export const load = () => import(`~/server/db`);\n",
+        code: "export const load = () => import(`~/server/db`);\n"
     }),
     Object.freeze({
         name: "require() with a string",
         fileName: "src/lib/required.ts",
         files: { "src/server/db.ts": plainServerModule },
-        code: `export const db = require("~/server/db");\n`,
+        code: `export const db = require("~/server/db");\n`
     }),
     Object.freeze({
         name: "require() with a template literal",
         fileName: "src/lib/required_template.ts",
         files: { "src/server/db.ts": plainServerModule },
-        code: "export const db = require(`../server/db`);\n",
+        code: "export const db = require(`../server/db`);\n"
     }),
     Object.freeze({
         name: "a member access on the string, which is not a directive",
         fileName: "src/routes/member.tsx",
         files: {
-            "src/server/member.ts": `"use server".length;\n\nexport const x = 1;\n`,
+            "src/server/member.ts": `"use server".length;\n\nexport const x = 1;\n`
         },
         code: `import { x } from "~/server/member";
 
 export const View = () => <p>{x}</p>;
-`,
+`
     }),
     Object.freeze({
         name: "a parenthesized string, which is not a directive",
         fileName: "src/routes/paren.tsx",
         files: {
-            "src/server/paren.ts": `("use server");\n\nexport const x = 1;\n`,
+            "src/server/paren.ts": `("use server");\n\nexport const x = 1;\n`
         },
         code: `import { x } from "~/server/paren";
 
 export const View = () => <p>{x}</p>;
-`,
+`
     }),
     Object.freeze({
         name: "an escaped directive, which is not the directive",
@@ -426,24 +426,24 @@ export const View = () => <p>{x}</p>;
             "src/server/escaped.ts": String.raw`"use\x20server";
 
 export const x = 1;
-`,
+`
         },
         code: `import { x } from "~/server/escaped";
 
 export const View = () => <p>{x}</p>;
-`,
+`
     }),
     Object.freeze({
         name: "a use server that follows a statement after a use strict",
         fileName: "src/routes/after.tsx",
         files: {
-            "src/server/after.ts": `"use strict";\nexport const x = 1;\n"use server";\n`,
+            "src/server/after.ts": `"use strict";\nexport const x = 1;\n"use server";\n`
         },
         code: `import { x } from "~/server/after";
 
 export const View = () => <p>{x}</p>;
-`,
-    }),
+`
+    })
 ]);
 
 // The outer folder holds `src/server` (the plain module of the other cases);
@@ -458,8 +458,8 @@ const serverImportBoundaryReports = Object.freeze([
         name: "an outer src/server when no repository or workspace ends the walk",
         fileName: "inner_plain/src/routes/page.tsx",
         files: { "src/server/db.ts": plainServerModule },
-        code: outerServerImport,
-    }),
+        code: outerServerImport
+    })
 ]);
 
 const serverImportBoundarySilent = Object.freeze([
@@ -468,19 +468,19 @@ const serverImportBoundarySilent = Object.freeze([
         fileName: "inner_git/src/routes/page.tsx",
         files: {
             "inner_git/.git/HEAD": "ref: refs/heads/main\n",
-            "src/server/db.ts": plainServerModule,
+            "src/server/db.ts": plainServerModule
         },
-        code: outerServerImport,
+        code: outerServerImport
     }),
     Object.freeze({
         name: "an outer src/server behind a workspace root",
         fileName: "inner_ws/src/routes/page.tsx",
         files: {
             "inner_ws/package.json": '{ "workspaces": ["packages/*"] }\n',
-            "src/server/db.ts": plainServerModule,
+            "src/server/db.ts": plainServerModule
         },
-        code: outerServerImport,
-    }),
+        code: outerServerImport
+    })
 ]);
 
 const serverImportSilent = Object.freeze([
@@ -488,57 +488,57 @@ const serverImportSilent = Object.freeze([
         name: "a directive followed by a line that starts with an identifier beginning with in",
         fileName: "src/routes/in_progress.tsx",
         files: {
-            "src/server/in_progress.ts": `"use server"\nin_progress()\nexport const x = 1\n`,
+            "src/server/in_progress.ts": `"use server"\nin_progress()\nexport const x = 1\n`
         },
         code: `import { x } from "~/server/in_progress";
 
 export const View = () => <p>{x}</p>;
-`,
+`
     }),
     Object.freeze({
         name: "a directive after Unicode space characters",
         fileName: "src/routes/unicode_space.tsx",
         files: {
-            "src/server/unicode_space.ts": `${String.fromCodePoint(0x3000, 0xa0)}"use server";\n\nexport const x = 1;\n`,
+            "src/server/unicode_space.ts": `${String.fromCodePoint(0x3000, 0xa0)}"use server";\n\nexport const x = 1;\n`
         },
         code: `import { x } from "~/server/unicode_space";
 
 export const View = () => <p>{x}</p>;
-`,
+`
     }),
     Object.freeze({
         name: "a use server module behind a use strict directive",
         fileName: "src/routes/strict.tsx",
         files: {
-            "src/server/strict.ts": `"use strict"; "use server";\n\nexport const x = 1;\n`,
+            "src/server/strict.ts": `"use strict"; "use server";\n\nexport const x = 1;\n`
         },
         code: `import { x } from "~/server/strict";
 
 export const View = () => <p>{x}</p>;
-`,
+`
     }),
     Object.freeze({
         name: "a use server directive without a semicolon",
         fileName: "src/routes/asi.tsx",
         files: {
-            "src/server/asi.ts": `"use strict"\n"use server"\nexport const x = 1\n`,
+            "src/server/asi.ts": `"use strict"\n"use server"\nexport const x = 1\n`
         },
         code: `import { x } from "~/server/asi";
 
 export const View = () => <p>{x}</p>;
-`,
+`
     }),
     Object.freeze({
         name: "a use server module required from client code",
         fileName: "src/lib/required_ok.ts",
         files: { "src/server/rows.ts": serverModule },
-        code: `export const rows = require("~/server/rows");\n`,
+        code: `export const rows = require("~/server/rows");\n`
     }),
     Object.freeze({
         name: "a require of a package",
         fileName: "src/lib/required_package.ts",
-        code: `export const solid = require("solid-js");\n`,
-    }),
+        code: `export const solid = require("solid-js");\n`
+    })
 ]);
 
 const view = (jsx) => `export const View = (props) => {
@@ -563,35 +563,35 @@ const nestingReports = Object.freeze(
         ["a paragraph in an svg", "<svg><p /></svg>"],
         [
             "a div in a column group",
-            "<table><colgroup><div /></colgroup></table>",
+            "<table><colgroup><div /></colgroup></table>"
         ],
         ["a figcaption in a paragraph", "<p><figcaption /></p>"],
         ["an input without a type in a table", "<table><input /></table>"],
         ["a text input in a table", `<table><input type="text" /></table>`],
         [
             "a hidden input in a column group, which the parser moves out",
-            `<table><colgroup><input type="hidden" /></colgroup></table>`,
-        ],
+            `<table><colgroup><input type="hidden" /></colgroup></table>`
+        ]
     ].map(([name, jsx]) =>
         Object.freeze({
             name,
             code: view(jsx),
-            message: "Invalid HTML nesting",
-        }),
-    ),
+            message: "Invalid HTML nesting"
+        })
+    )
 );
 
 const nestingInsertedReports = Object.freeze([
     Object.freeze({
         name: "a div in a paragraph behind a condition",
         code: view("<p>{props.on && <div />}</p>"),
-        message: "hydration won't match",
+        message: "hydration won't match"
     }),
     Object.freeze({
         name: "a div in a paragraph through a conditional expression",
         code: view("<p>{props.on ? <div /> : <span />}</p>"),
-        message: "hydration won't match",
-    }),
+        message: "hydration won't match"
+    })
 ]);
 
 const nestingSilent = Object.freeze(
@@ -601,20 +601,20 @@ const nestingSilent = Object.freeze(
         ["a list item in a list", "<ul><li /></ul>"],
         [
             "a full table",
-            "<table><thead><tr><th /></tr></thead><tbody><tr><td /></tr></tbody></table>",
+            "<table><thead><tr><th /></tr></thead><tbody><tr><td /></tr></tbody></table>"
         ],
         ["a hidden input in a table", `<table><input type="hidden" /></table>`],
         [
             "a hidden input in a table, written as an expression",
-            `<table><input type={"hidden"} /></table>`,
+            `<table><input type={"hidden"} /></table>`
         ],
         [
             "a hidden input in a table body",
-            `<table><tbody><input type="hidden" /></tbody></table>`,
+            `<table><tbody><input type="hidden" /></tbody></table>`
         ],
         [
             "a hidden input in a table row",
-            `<table><tbody><tr><input type="hidden" /></tr></tbody></table>`,
+            `<table><tbody><tr><input type="hidden" /></tr></tbody></table>`
         ],
         ["a script in a table", "<table><script /></table>"],
         ["a definition in a list, which the parser keeps", "<ul><dd /></ul>"],
@@ -625,18 +625,18 @@ const nestingSilent = Object.freeze(
         ["a cell in a template", "<template><td /></template>"],
         [
             "a div in a foreignObject",
-            "<svg><foreignObject><div /></foreignObject></svg>",
+            "<svg><foreignObject><div /></foreignObject></svg>"
         ],
         [
             "children of a component",
-            "<p><Show when={props.on}><b /></Show></p>",
+            "<p><Show when={props.on}><b /></Show></p>"
         ],
         [
             "elements made in a callback",
-            "<p>{props.items.map(() => <div />)}</p>",
+            "<p>{props.items.map(() => <div />)}</p>"
         ],
-        ["a component in a paragraph", "<p><Card /></p>"],
-    ].map(([name, jsx]) => Object.freeze({ name, code: view(jsx) })),
+        ["a component in a paragraph", "<p><Card /></p>"]
+    ].map(([name, jsx]) => Object.freeze({ name, code: view(jsx) }))
 );
 
 // The cases of eslint-plugin-solid 0.20 for `validate-jsx-nesting`. The rule
@@ -646,7 +646,7 @@ const NESTING_MESSAGES = Object.freeze({
     plain: (parent, child) =>
         `Invalid HTML nesting: \`<${child}>\` cannot be a child of \`<${parent}>\`. The HTML parser restructures this, so the rendered DOM won't match this markup.`,
     inserted: (parent, child) =>
-        `Invalid HTML nesting: \`<${child}>\` cannot be a child of \`<${parent}>\`. The client inserts it as written, but the HTML parser restructures it in server-rendered HTML, so hydration won't match this markup.`,
+        `Invalid HTML nesting: \`<${child}>\` cannot be a child of \`<${parent}>\`. The client inserts it as written, but the HTML parser restructures it in server-rendered HTML, so hydration won't match this markup.`
 });
 // `reports` are the messages of the rule, one per report and in source order:
 // the case fails on a missing, an extra or a wrong kind of report.
@@ -655,8 +655,8 @@ const nestingCase = (jsx, ...errors) =>
         name: jsx,
         code: view(jsx),
         reports: errors.map(([kind, parent, child]) =>
-            NESTING_MESSAGES[kind](parent, child),
-        ),
+            NESTING_MESSAGES[kind](parent, child)
+        )
     });
 
 const nestingUpstreamSilent = Object.freeze(
@@ -748,8 +748,8 @@ const nestingUpstreamSilent = Object.freeze(
         // sibling, not nested
         `<><p>Hello world!</p><hr /></>`,
         // no JSX parent at all
-        `<hr />`,
-    ].map((jsx) => Object.freeze({ name: jsx, code: view(jsx) })),
+        `<hr />`
+    ].map((jsx) => Object.freeze({ name: jsx, code: view(jsx) }))
 );
 
 const nestingUpstreamReports = Object.freeze([
@@ -761,89 +761,89 @@ const nestingUpstreamReports = Object.freeze([
     nestingCase(`<table><div>Hello world!</div></table>`, [
         "plain",
         "table",
-        "div",
+        "div"
     ]),
     nestingCase(`<tr><div>Hello world!</div></tr>`, ["plain", "tr", "div"]),
     nestingCase(`<table><tbody><tr><td><tr /></td></tr></tbody></table>`, [
         "plain",
         "td",
-        "tr",
+        "tr"
     ]),
     nestingCase(`<a href="/one"><a href="/two">Hello world!</a></a>`, [
         "plain",
         "a",
-        "a",
+        "a"
     ]),
     nestingCase(`<button><button>Hello world!</button></button>`, [
         "plain",
         "button",
-        "button",
+        "button"
     ]),
     nestingCase(`<form><form>Hello world!</form></form>`, [
         "plain",
         "form",
-        "form",
+        "form"
     ]),
     nestingCase(`<svg><div>Hello world!</div></svg>`, ["plain", "svg", "div"]),
     // integration points hand their children back to the HTML parser
     nestingCase(
         `<svg><foreignObject><p><div>Hello world!</div></p></foreignObject></svg>`,
-        ["plain", "p", "div"],
+        ["plain", "p", "div"]
     ),
     nestingCase(
         `<math><mi><a href="/one"><a href="/two">x</a></a></mi></math>`,
-        ["plain", "a", "a"],
+        ["plain", "a", "a"]
     ),
     // the parser lowercases tag and attribute names first
     nestingCase(
         `<svg><foreignobject><a href="/one"><a href="/two" /></a></foreignobject></svg>`,
-        ["plain", "a", "a"],
+        ["plain", "a", "a"]
     ),
     nestingCase(
         `<math><annotation-xml Encoding="text/html"><a href="/one"><a href="/two" /></a></annotation-xml></math>`,
-        ["plain", "a", "a"],
+        ["plain", "a", "a"]
     ),
     // one level down, <mglyph> is HTML like the rest
     nestingCase(
         `<math><mi><span><mglyph><caption /></mglyph></span></mi></math>`,
-        ["plain", "mglyph", "caption"],
+        ["plain", "mglyph", "caption"]
     ),
     // so do HTML tags that make the parser leave foreign content
     nestingCase(
         `<svg><g><p><a href="/one"><a href="/two" /></a></p></g></svg>`,
-        ["plain", "a", "a"],
+        ["plain", "a", "a"]
     ),
     nestingCase(
         `<svg><font color="red"><a href="/one"><a href="/two" /></a></font></svg>`,
-        ["plain", "a", "a"],
+        ["plain", "a", "a"]
     ),
     nestingCase(
         `<math><annotation-xml encoding="text/html"><a href="/one"><a href="/two" /></a></annotation-xml></math>`,
-        ["plain", "a", "a"],
+        ["plain", "a", "a"]
     ),
     // below a nested <svg> or <math>, integration points are those of the namespace around it
     nestingCase(`<math><svg><title><b>Hello world!</b></title></svg></math>`, [
         "plain",
         "title",
-        "b",
+        "b"
     ]),
     nestingCase(
         `<svg><math><title><a href="/one"><a href="/two" /></a></title></math></svg>`,
-        ["plain", "a", "a"],
+        ["plain", "a", "a"]
     ),
     nestingCase(
         `<svg>{ok && <math><mi><a href="/one"><a href="/two" /></a></mi></math>}</svg>`,
-        ["plain", "a", "a"],
+        ["plain", "a", "a"]
     ),
     // only <svg> right inside <annotation-xml> starts SVG within MathML
     nestingCase(
         `<math><annotation-xml><svg><title><a href="/one"><a href="/two" /></a></title></svg></annotation-xml></math>`,
-        ["plain", "a", "a"],
+        ["plain", "a", "a"]
     ),
     nestingCase(`<table><thead><th>1</th></thead></table>`, [
         "plain",
         "thead",
-        "th",
+        "th"
     ]),
     nestingCase(`<table><col /></table>`, ["plain", "table", "col"]),
     nestingCase(`<div><tr><td>1</td></tr></div>`, ["plain", "div", "tr"]),
@@ -852,7 +852,7 @@ const nestingUpstreamReports = Object.freeze([
     nestingCase(`<textarea><div>Hello world!</div></textarea>`, [
         "plain",
         "textarea",
-        "div",
+        "div"
     ]),
     // a custom element doesn't make table markup legal
     nestingCase(`<x-row><td>1</td></x-row>`, ["plain", "x-row", "td"]),
@@ -863,7 +863,7 @@ const nestingUpstreamReports = Object.freeze([
     nestingCase(
         `<p>{condition ? <hr /> : <div />}</p>`,
         ["inserted", "p", "hr"],
-        ["inserted", "p", "div"],
+        ["inserted", "p", "div"]
     ),
     nestingCase(`<p>{[<hr />]}</p>`, ["inserted", "p", "hr"]),
     nestingCase(`<p children={<hr />} />`, ["inserted", "p", "hr"]),
@@ -871,13 +871,13 @@ const nestingUpstreamReports = Object.freeze([
     nestingCase(
         `<p><div><p><hr /></p></div></p>`,
         ["plain", "p", "div"],
-        ["plain", "p", "hr"],
+        ["plain", "p", "hr"]
     ),
     nestingCase(
         `<p><div /><div /></p>`,
         ["plain", "p", "div"],
-        ["plain", "p", "div"],
-    ),
+        ["plain", "p", "div"]
+    )
 ]);
 
 export {
@@ -898,5 +898,5 @@ export {
     serverImportBoundaryReports,
     serverImportBoundarySilent,
     serverImportReports,
-    serverImportSilent,
+    serverImportSilent
 };

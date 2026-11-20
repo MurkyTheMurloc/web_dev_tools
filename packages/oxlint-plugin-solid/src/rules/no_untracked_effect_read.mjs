@@ -81,13 +81,13 @@ export default {
         docs: {
             description:
                 "Disallow reading reactive values in the untracked apply phase of an effect.",
-            url: "https://docs.solidjs.com/",
+            url: "https://docs.solidjs.com/"
         },
         schema: [],
         messages: {
             untrackedEffectRead:
-                "'{{name}}' is read in the effect's apply phase, which runs untracked — changes to it will not re-run this effect. Read it in the compute phase and take it as an argument instead.",
-        },
+                "'{{name}}' is read in the effect's apply phase, which runs untracked — changes to it will not re-run this effect. Read it in the compute phase and take it as an argument instead."
+        }
     },
     defaultOptions: [],
     create(context) {
@@ -115,7 +115,7 @@ export default {
                     node.callee.type !== "Identifier" ||
                     !matchImport(
                         ["createEffect", "createRenderEffect"],
-                        node.callee.name,
+                        node.callee.name
                     )
                 ) {
                     return;
@@ -145,7 +145,7 @@ export default {
                         context.report({
                             node: candidate,
                             messageId: "untrackedEffectRead",
-                            data: { name: candidate.callee.name },
+                            data: { name: candidate.callee.name }
                         });
                         return;
                     }
@@ -164,12 +164,12 @@ export default {
                             node: candidate,
                             messageId: "untrackedEffectRead",
                             data: {
-                                name: `${candidate.object.name}.${candidate.property.name}`,
-                            },
+                                name: `${candidate.object.name}.${candidate.property.name}`
+                            }
                         });
                     }
                 });
-            },
+            }
         };
-    },
+    }
 };

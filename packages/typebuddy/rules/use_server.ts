@@ -9,7 +9,7 @@ const USE_SERVER = "use server";
 const FUNCTION_TYPES = new Set([
     "ArrowFunctionExpression",
     "FunctionDeclaration",
-    "FunctionExpression",
+    "FunctionExpression"
 ]);
 
 function isUseServerNode(value: unknown): value is UseServerNode {
@@ -101,7 +101,7 @@ function createUseServerGuard() {
             serverModule = startsWithUseServer(node.body);
         },
         guard<Node extends UseServerNode>(
-            visitor: (node: Node) => void,
+            visitor: (node: Node) => void
         ): (node: Node) => void {
             return (node) => {
                 if (serverModule || isInsideUseServerFunction(node)) {
@@ -110,7 +110,7 @@ function createUseServerGuard() {
 
                 visitor(node);
             };
-        },
+        }
     };
 }
 

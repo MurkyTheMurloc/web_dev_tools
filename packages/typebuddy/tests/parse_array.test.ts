@@ -10,7 +10,7 @@ describe(parseArray, () => {
 
     it("should keep the default for objects that are not plain", () => {
         expect(parseArray(new Date(0), ["fallback"])).toStrictEqual([
-            "fallback",
+            "fallback"
         ]);
         expect(parseArray(new Map(), ["fallback"])).toStrictEqual(["fallback"]);
     });

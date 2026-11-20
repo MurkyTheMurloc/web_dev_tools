@@ -26,7 +26,7 @@ const rule = {
                 if (node.types.length !== 2) return;
 
                 const undefinedType = node.types.find(
-                    (typeNode) => typeNode.type === "TSUndefinedKeyword",
+                    (typeNode) => typeNode.type === "TSUndefinedKeyword"
                 );
                 // `null | undefined` has no non-nullish member to name, and
                 // rewriting it to `Optional<null>` only restated it with more
@@ -34,7 +34,7 @@ const rule = {
                 const otherType = node.types.find(
                     (typeNode) =>
                         typeNode.type !== "TSUndefinedKeyword" &&
-                        typeNode.type !== "TSNullKeyword",
+                        typeNode.type !== "TSNullKeyword"
                 );
 
                 if (undefinedType && otherType) {
@@ -52,36 +52,33 @@ const rule = {
                                 node,
                                 fixer,
                                 "Optional",
-                                "type",
+                                "type"
                             );
                             if (importFixes === null) return null;
 
                             return [
                                 ...importFixes,
-                                fixer.replaceText(
-                                    node,
-                                    `Optional<${typeText}>`,
-                                ),
+                                fixer.replaceText(node, `Optional<${typeText}>`)
                             ];
-                        },
+                        }
                     });
                 }
-            },
+            }
         };
     },
     defaultOptions: [],
     meta: {
         type: "suggestion",
         docs: {
-            description: "Enforce using Optional<T> instead of T | undefined",
+            description: "Enforce using Optional<T> instead of T | undefined"
         },
         fixable: "code",
         schema: [],
         messages: {
             preferOptional:
-                "Use Optional<{{type}}> instead of {{type}} | undefined",
-        },
-    },
+                "Use Optional<{{type}}> instead of {{type}} | undefined"
+        }
+    }
 };
 
 export { rule as optionalRule };

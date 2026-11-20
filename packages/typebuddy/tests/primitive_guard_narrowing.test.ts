@@ -5,7 +5,7 @@ import {
     isNumber,
     isObject,
     isPromise,
-    isString,
+    isString
 } from "../src/type_helper.js";
 import type { Nullable, Optional } from "../src/types/index.js";
 

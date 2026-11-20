@@ -10,7 +10,7 @@ import { defineConfig } from "tsdown";
 const SHARED_ENTRIES = {
     console_text: "./src/console_text.ts",
     logger_factory: "./src/logger_factory.ts",
-    serialize_value: "./src/serialize_value.ts",
+    serialize_value: "./src/serialize_value.ts"
 };
 
 export default defineConfig([
@@ -20,7 +20,7 @@ export default defineConfig([
             ...SHARED_ENTRIES,
             bun_logger: "./src/bun_logger.ts",
             logger: "./src/logger.ts",
-            otel: "./src/otel.ts",
+            otel: "./src/otel.ts"
         },
         // tsdown defaults `fixedExtension` to true for platform "node", which emits
         // .mjs/.d.mts. The package is "type": "module", so .js is already ESM and
@@ -29,7 +29,7 @@ export default defineConfig([
         format: "esm",
         outDir: "dist",
         platform: "node",
-        unbundle: true,
+        unbundle: true
     },
     {
         dts: true,
@@ -37,11 +37,11 @@ export default defineConfig([
             ...SHARED_ENTRIES,
             browser_logger: "./src/browser_logger.ts",
             hono_middleware: "./src/hono_middleware.ts",
-            web_logger: "./src/web_logger.ts",
+            web_logger: "./src/web_logger.ts"
         },
         format: "esm",
         outDir: "dist",
         platform: "neutral",
-        unbundle: true,
-    },
+        unbundle: true
+    }
 ]);

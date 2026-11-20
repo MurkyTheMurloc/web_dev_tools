@@ -7,7 +7,7 @@ import type {
     Optional,
     ResolveMaybe,
     ResolveNullable,
-    ResolveOptional,
+    ResolveOptional
 } from "../src/types/index.js";
 
 describe("type-system guards", () => {

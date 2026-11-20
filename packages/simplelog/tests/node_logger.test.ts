@@ -15,13 +15,13 @@ async function cleanupTemporaryDirectories(): Promise<void> {
         [...temporaryDirectories].map(async (directoryPath) => {
             await rm(directoryPath, { force: true, recursive: true });
             temporaryDirectories.delete(directoryPath);
-        }),
+        })
     );
 }
 
 function createTemporaryLogPath(): string {
     const temporaryDirectoryPath = mkdtempSync(
-        join(tmpdir(), "simplelog-node-test-"),
+        join(tmpdir(), "simplelog-node-test-")
     );
 
     temporaryDirectories.add(temporaryDirectoryPath);
@@ -38,7 +38,7 @@ describe("Node Logger", () => {
         const logFilePath = createTemporaryLogPath();
         const logger = new Logger("node-file", undefined, {
             logFilePath,
-            writeToFile: true,
+            writeToFile: true
         });
 
         logger.info("persisted");
@@ -52,7 +52,7 @@ describe("Node Logger", () => {
         const logFilePath = createTemporaryLogPath();
         const logger = new Logger("append-check", undefined, {
             logFilePath,
-            writeToFile: true,
+            writeToFile: true
         });
 
         logger.info("first");
@@ -69,7 +69,7 @@ describe("Node Logger", () => {
         const logger = new Logger("plain-file", undefined, {
             logFilePath,
             valueColorMode: "syntax",
-            writeToFile: true,
+            writeToFile: true
         });
 
         logger.info("hello", "world");
@@ -90,14 +90,14 @@ const TIME_PREFIX =
 describe("Node Logger console defaults", () => {
     const originalIsTTY = Object.getOwnPropertyDescriptor(
         process.stdout,
-        "isTTY",
+        "isTTY"
     );
 
     function setStdoutIsTerminal(isTerminal: boolean): void {
         Object.defineProperty(process.stdout, "isTTY", {
             configurable: true,
             value: isTerminal,
-            writable: true,
+            writable: true
         });
     }
 
@@ -186,8 +186,8 @@ describe("Node Logger console defaults", () => {
         const line = captureFirstConsoleLine(
             new Logger("explicit", undefined, {
                 timestampFormat: "iso",
-                valueColorMode: "level",
-            }),
+                valueColorMode: "level"
+            })
         );
 
         expect(line).toContain(ANSI_ESCAPE);
@@ -200,7 +200,7 @@ describe("Node Logger console defaults", () => {
         const logFilePath = createTemporaryLogPath();
         const logger = new Logger("file-iso", undefined, {
             logFilePath,
-            writeToFile: true,
+            writeToFile: true
         });
 
         logger.info("persisted");

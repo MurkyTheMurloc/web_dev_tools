@@ -1,38 +1,38 @@
 {
-  "$schema": "https://json.schemastore.org/tsconfig",
-  "compilerOptions": {
-    "target": "ESNext",
-    "lib": ["ESNext"],
-    "module": "preserve",
-    "moduleDetection": "force",
-    "types": [],
-    "allowImportingTsExtensions": true,
-    // Inert without .tsx files, so it can live in the shared base. Solid 2.0
-    // moved JSX ownership out of `solid-js` into the renderer packages, and
-    // server-side rendering of Solid components uses the same renderer as the
-    // client -- so this belongs in the base rather than the client leaf.
-    "jsx": "preserve",
-    "jsxImportSource": "@solidjs/web",
-    "strict": true,
-    "exactOptionalPropertyTypes": true,
-    "noUncheckedIndexedAccess": true,
-    "noPropertyAccessFromIndexSignature": true,
-    "noImplicitOverride": true,
-    "noImplicitReturns": true,
-    "noFallthroughCasesInSwitch": true,
-    "noUnusedLocals": true,
-    "noUnusedParameters": true,
-    "noUncheckedSideEffectImports": true,
-    "allowUnreachableCode": false,
-    "allowUnusedLabels": false,
+    "$schema": "https://json.schemastore.org/tsconfig",
+    "compilerOptions": {
+        "target": "ESNext",
+        "lib": ["ESNext"],
+        "module": "preserve",
+        "moduleDetection": "force",
+        "types": [],
+        "allowImportingTsExtensions": true,
+        // Inert without .tsx files, so it can live in the shared base. Solid 2.0
+        // moved JSX ownership out of `solid-js` into the renderer packages, and
+        // server-side rendering of Solid components uses the same renderer as the
+        // client -- so this belongs in the base rather than the client leaf.
+        "jsx": "preserve",
+        "jsxImportSource": "@solidjs/web",
+        "strict": true,
+        "exactOptionalPropertyTypes": true,
+        "noUncheckedIndexedAccess": true,
+        "noPropertyAccessFromIndexSignature": true,
+        "noImplicitOverride": true,
+        "noImplicitReturns": true,
+        "noFallthroughCasesInSwitch": true,
+        "noUnusedLocals": true,
+        "noUnusedParameters": true,
+        "noUncheckedSideEffectImports": true,
+        "allowUnreachableCode": false,
+        "allowUnusedLabels": false,
 
-    "erasableSyntaxOnly": true,
-    "resolveJsonModule": true,
+        "erasableSyntaxOnly": true,
+        "resolveJsonModule": true,
 
-    "noEmit": true,
-    "isolatedModules": true,
-    "esModuleInterop": true,
-    "skipLibCheck": true,
-    "verbatimModuleSyntax": true,
-  },
+        "noEmit": true,
+        "isolatedModules": true,
+        "esModuleInterop": true,
+        "skipLibCheck": true,
+        "verbatimModuleSyntax": true
+    }
 }

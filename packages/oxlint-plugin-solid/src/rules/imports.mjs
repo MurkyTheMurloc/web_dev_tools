@@ -3,7 +3,7 @@ import {
     appendImports,
     canTakeSpecifier,
     insertImports,
-    removeSpecifier,
+    removeSpecifier
 } from "../utils.mjs";
 // Solid 2.0 moved the renderers into `@solidjs/*` packages and pulled the store
 // APIs into the core. Symbols that are legitimately exported from more than one
@@ -53,7 +53,7 @@ for (const primitive of [
     "snapshot",
     "untrack",
     "until",
-    "useContext",
+    "useContext"
 ]) {
     primitiveMap.set(primitive, "solid-js");
 }
@@ -74,7 +74,7 @@ for (const primitive of [
     "reload",
     "render",
     "renderToStream",
-    "renderToString",
+    "renderToString"
 ]) {
     primitiveMap.set(primitive, "@solidjs/web");
 }
@@ -95,7 +95,7 @@ for (const type of [
     "ResolvedChildren",
     "Signal",
     "VoidComponent",
-    "VoidProps",
+    "VoidProps"
 ]) {
     typeMap.set(type, "solid-js");
 }
@@ -123,7 +123,7 @@ const findTarget = (program, source, isType) => {
         (node) =>
             node.type === "ImportDeclaration" &&
             node.source.value === source &&
-            canTakeSpecifier(node, isType),
+            canTakeSpecifier(node, isType)
     );
     return (
         (isType ? candidates.find(isTypeDeclaration) : undefined) ??
@@ -136,13 +136,13 @@ export default {
         docs: {
             description:
                 'Enforce consistent imports from "solid-js" and the `@solidjs/*` renderer packages.',
-            url: "https://github.com/solidjs-community/eslint-plugin-solid/blob/main/packages/eslint-plugin-solid/docs/imports.md",
+            url: "https://github.com/solidjs-community/eslint-plugin-solid/blob/main/packages/eslint-plugin-solid/docs/imports.md"
         },
         fixable: "code",
         schema: [],
         messages: {
-            "prefer-source": 'Prefer importing {{name}} from "{{source}}".',
-        },
+            "prefer-source": 'Prefer importing {{name}} from "{{source}}".'
+        }
     },
     defaultOptions: [],
     create(context) {
@@ -163,7 +163,7 @@ export default {
                                 messageId: "prefer-source",
                                 data: {
                                     name: specifier.imported.name,
-                                    source: correctSource,
+                                    source: correctSource
                                 },
                                 fix(fixer) {
                                     const sourceCode = getSourceCode(context);
@@ -176,14 +176,14 @@ export default {
                                     const correctDeclaration = findTarget(
                                         program,
                                         correctSource,
-                                        isType,
+                                        isType
                                     );
                                     if (correctDeclaration) {
                                         return [
                                             removeSpecifier(
                                                 fixer,
                                                 sourceCode,
-                                                specifier,
+                                                specifier
                                             ),
                                             appendImports(
                                                 fixer,
@@ -194,10 +194,10 @@ export default {
                                                         specifier,
                                                         isType &&
                                                             correctDeclaration.importKind !==
-                                                                "type",
-                                                    ),
-                                                ],
-                                            ),
+                                                                "type"
+                                                    )
+                                                ]
+                                            )
                                         ].filter(Boolean);
                                     }
                                     const firstSolidDeclaration =
@@ -205,13 +205,13 @@ export default {
                                             (node) =>
                                                 node.type ===
                                                     "ImportDeclaration" &&
-                                                isSource(node.source.value),
+                                                isSource(node.source.value)
                                         );
                                     return [
                                         removeSpecifier(
                                             fixer,
                                             sourceCode,
-                                            specifier,
+                                            specifier
                                         ),
                                         insertImports(
                                             fixer,
@@ -219,15 +219,15 @@ export default {
                                             correctSource,
                                             [specifierText(specifier, false)],
                                             firstSolidDeclaration,
-                                            isType,
-                                        ),
+                                            isType
+                                        )
                                     ];
-                                },
+                                }
                             });
                         }
                     }
                 }
-            },
+            }
         };
-    },
+    }
 };

@@ -1,6 +1,6 @@
 import {
     getPropertyName,
-    getStaticValue,
+    getStaticValue
 } from "@eslint-community/eslint-utils";
 import kebabCase from "kebab-case";
 import { all as allCssProperties } from "known-css-properties";
@@ -17,7 +17,7 @@ export default {
             description:
                 "Require CSS properties in the `style` prop to be valid and kebab-cased (ex. 'font-size'), not camel-cased (ex. 'fontSize') like in React, " +
                 "and that property values with dimensions are strings, not numbers with implicit 'px' units.",
-            url: "https://github.com/solidjs-community/eslint-plugin-solid/blob/main/packages/eslint-plugin-solid/docs/style-prop.md",
+            url: "https://github.com/solidjs-community/eslint-plugin-solid/blob/main/packages/eslint-plugin-solid/docs/style-prop.md"
         },
         fixable: "code",
         schema: [
@@ -30,29 +30,28 @@ export default {
                         default: ["style"],
                         type: "array",
                         items: {
-                            type: "string",
+                            type: "string"
                         },
                         minItems: 1,
-                        uniqueItems: true,
+                        uniqueItems: true
                     },
                     allowString: {
                         description:
                             "if allowString is set to true, this rule will not convert a style string literal into a style object (not recommended for performance)",
                         type: "boolean",
-                        default: false,
-                    },
+                        default: false
+                    }
                 },
-                additionalProperties: false,
-            },
+                additionalProperties: false
+            }
         ],
         messages: {
             kebabStyleProp: "Use {{ kebabName }} instead of {{ name }}.",
             invalidStyleProp: "{{ name }} is not a valid CSS property.",
             numericStyleValue:
                 'This CSS property value should be a string with a unit; Solid does not automatically append a "px" unit.',
-            stringStyle:
-                "Use an object for the style prop instead of a string.",
-        },
+            stringStyle: "Use an object for the style prop instead of a string."
+        }
     },
     defaultOptions: [],
     create(context) {
@@ -91,22 +90,22 @@ export default {
                             ((fixer) =>
                                 fixer.replaceText(
                                     node.value,
-                                    `{${JSON.stringify(objectStyles)}}`,
-                                )),
+                                    `{${JSON.stringify(objectStyles)}}`
+                                ))
                     });
                 } else if (style.type === "TemplateLiteral" && !allowString) {
                     context.report({
                         node: style,
-                        messageId: "stringStyle",
+                        messageId: "stringStyle"
                     });
                 } else if (style.type === "ObjectExpression") {
                     const properties = style.properties.filter(
-                        (prop) => prop.type === "Property",
+                        (prop) => prop.type === "Property"
                     );
                     properties.forEach((prop) => {
                         const name = getPropertyName(
                             prop,
-                            getScope(context, prop),
+                            getScope(context, prop)
                         );
                         if (
                             name &&
@@ -123,14 +122,14 @@ export default {
                                     fix: (fixer) =>
                                         fixer.replaceText(
                                             prop.key,
-                                            `"${kebabName}"`,
-                                        ), // wrap kebab name in quotes to be a valid object key
+                                            `"${kebabName}"`
+                                        ) // wrap kebab name in quotes to be a valid object key
                                 });
                             } else {
                                 context.report({
                                     node: prop.key,
                                     messageId: "invalidStyleProp",
-                                    data: { name },
+                                    data: { name }
                                 });
                             }
                         } else if (
@@ -144,13 +143,13 @@ export default {
                             if (typeof value === "number" && value !== 0) {
                                 context.report({
                                     node: prop.value,
-                                    messageId: "numericStyleValue",
+                                    messageId: "numericStyleValue"
                                 });
                             }
                         }
                     });
                 }
-            },
+            }
         };
-    },
+    }
 };

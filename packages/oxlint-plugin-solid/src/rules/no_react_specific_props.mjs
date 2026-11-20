@@ -2,7 +2,7 @@ import { isDOMElementName, jsxGetProp, jsxHasProp } from "../utils.mjs";
 
 const REACT_SPECIFIC_PROPS = [
     { from: "className", to: "class" },
-    { from: "htmlFor", to: "for" },
+    { from: "htmlFor", to: "for" }
 ];
 
 export const noReactSpecificPropsRule = {
@@ -10,16 +10,16 @@ export const noReactSpecificPropsRule = {
         docs: {
             description:
                 "Disallow usage of React-specific className/htmlFor props.",
-            url: "https://github.com/solidjs-community/eslint-plugin-solid/blob/main/packages/eslint-plugin-solid/docs/no-react-specific-props.md",
+            url: "https://github.com/solidjs-community/eslint-plugin-solid/blob/main/packages/eslint-plugin-solid/docs/no-react-specific-props.md"
         },
         fixable: "code",
         messages: {
             noUselessKey:
                 "Elements in a <For> or <Index> list do not need a key prop.",
-            prefer: "Prefer the `{{ to }}` prop over the deprecated `{{ from }}` prop.",
+            prefer: "Prefer the `{{ to }}` prop over the deprecated `{{ from }}` prop."
         },
         schema: [],
-        type: "problem",
+        type: "problem"
     },
     defaultOptions: [],
     create(context) {
@@ -41,7 +41,7 @@ export const noReactSpecificPropsRule = {
                         data: { from, to },
                         fix,
                         messageId: "prefer",
-                        node: attribute,
+                        node: attribute
                     });
                 }
 
@@ -59,10 +59,10 @@ export const noReactSpecificPropsRule = {
                             return fixer.remove(keyProp);
                         },
                         messageId: "noUselessKey",
-                        node: keyProp,
+                        node: keyProp
                     });
                 }
-            },
+            }
         };
-    },
+    }
 };

@@ -5,12 +5,12 @@ export const preferRuntimeEntryRule = {
         type: "suggestion",
         docs: {
             description:
-                "Prefer explicit SimpleLog runtime entries over the package root import.",
+                "Prefer explicit SimpleLog runtime entries over the package root import."
         },
         schema: [],
         messages: {
-            preferRuntimeEntry: `Prefer an explicit runtime entry over "${SIMPLELOG_PACKAGE}". Use a runtime-specific import like "@murky-web/simplelog/node", "@murky-web/simplelog/web", "@murky-web/simplelog/bun", or "@murky-web/simplelog/hono".`,
-        },
+            preferRuntimeEntry: `Prefer an explicit runtime entry over "${SIMPLELOG_PACKAGE}". Use a runtime-specific import like "@murky-web/simplelog/node", "@murky-web/simplelog/web", "@murky-web/simplelog/bun", or "@murky-web/simplelog/hono".`
+        }
     },
     create(context) {
         function reportSourceNode(node) {
@@ -21,7 +21,7 @@ export const preferRuntimeEntryRule = {
             ) {
                 context.report({
                     messageId: "preferRuntimeEntry",
-                    node,
+                    node
                 });
             }
         }
@@ -44,7 +44,7 @@ export const preferRuntimeEntryRule = {
                 ) {
                     reportSourceNode(node.arguments[0]);
                 }
-            },
+            }
         };
-    },
+    }
 };

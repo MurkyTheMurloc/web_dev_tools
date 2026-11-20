@@ -18,5 +18,5 @@ export type {
     ResolveOptional,
     Result,
     Stringified,
-    Success,
+    Success
 } from "./types/index.js";

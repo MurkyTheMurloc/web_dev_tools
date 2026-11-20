@@ -4,14 +4,14 @@ export const noArrayHandlersRule = {
     meta: {
         docs: {
             description: "Disallow usage of type-unsafe event handlers.",
-            url: "https://github.com/solidjs-community/eslint-plugin-solid/blob/main/packages/eslint-plugin-solid/docs/no-array-handlers.md",
+            url: "https://github.com/solidjs-community/eslint-plugin-solid/blob/main/packages/eslint-plugin-solid/docs/no-array-handlers.md"
         },
         messages: {
             noArrayHandlers:
-                "Passing an array as an event handler is potentially type-unsafe.",
+                "Passing an array as an event handler is potentially type-unsafe."
         },
         schema: [],
-        type: "problem",
+        type: "problem"
     },
     defaultOptions: [],
     create(context) {
@@ -40,10 +40,10 @@ export const noArrayHandlersRule = {
                 ) {
                     context.report({
                         messageId: "noArrayHandlers",
-                        node,
+                        node
                     });
                 }
-            },
+            }
         };
-    },
+    }
 };

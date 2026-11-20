@@ -8,13 +8,13 @@ const importFixCases = Object.freeze([
     Object.freeze({
         expectedFragments: [
             'import { omit } from "solid-js";',
-            'const rest = omit(props, "name");',
+            'const rest = omit(props, "name");'
         ],
         name: "no-destructure imports omit when it takes the rest",
         source: `export const OnlyRest = ({ name, ...rest }) => {
     return <div {...rest}>{name}</div>;
 };
-`,
+`
     }),
     Object.freeze({
         expectedFragments: ['import { merge, omit } from "solid-js";'],
@@ -22,7 +22,7 @@ const importFixCases = Object.freeze([
         source: `export const Both = ({ name = "x", ...rest }) => {
     return <div {...rest}>{name}</div>;
 };
-`,
+`
     }),
     Object.freeze({
         expectedFragments: ['import { merge } from "solid-js";'],
@@ -30,7 +30,7 @@ const importFixCases = Object.freeze([
         source: `export const OnlyDefaults = ({ name = "x" }) => {
     return <div>{name}</div>;
 };
-`,
+`
     }),
     Object.freeze({
         expectedFragments: ['import { createSignal, omit } from "solid-js";'],
@@ -42,7 +42,7 @@ export const WithImport = ({ name, ...rest }) => {
 
     return <div {...rest}>{name}{count()}</div>;
 };
-`,
+`
     }),
     Object.freeze({
         singleFragments: ['import { omit } from "solid-js";'],
@@ -52,7 +52,7 @@ export const WithImport = ({ name, ...rest }) => {
 export const AlreadyImported = ({ name, ...rest }) => {
     return <div {...rest}>{name}</div>;
 };
-`,
+`
     }),
     Object.freeze({
         expectedFragments: ['const rest = pick(props, "name");'],
@@ -63,7 +63,7 @@ export const AlreadyImported = ({ name, ...rest }) => {
 export const Aliased = ({ name, ...rest }) => {
     return <div {...rest}>{name}{String(pick)}</div>;
 };
-`,
+`
     }),
     Object.freeze({
         expectedFragments: ['import { omit } from "solid-js";'],
@@ -74,13 +74,13 @@ export const Aliased = ({ name, ...rest }) => {
 export const Typed: Component = ({ name, ...rest }) => {
     return <div {...rest}>{name}</div>;
 };
-`,
+`
     }),
     Object.freeze({
         expectedFragments: [
             'import { merge } from "lodash";',
             'import { merge as solidMerge } from "solid-js";',
-            'const props = solidMerge({ name: "x" }, _props);',
+            'const props = solidMerge({ name: "x" }, _props);'
         ],
         forbiddenFragments: ['= merge({ name: "x" }'],
         singleFragments: ['import { merge } from "lodash";'],
@@ -90,13 +90,13 @@ export const Typed: Component = ({ name, ...rest }) => {
 export const Defaulted = ({ name = "x" }) => {
     return <div>{name}{String(merge)}</div>;
 };
-`,
+`
     }),
     Object.freeze({
         expectedFragments: [
             "const omit = 1;",
             'import { omit as solidOmit } from "solid-js";',
-            'const rest = solidOmit(props, "name");',
+            'const rest = solidOmit(props, "name");'
         ],
         forbiddenFragments: ['= omit(props, "name")', "import { omit }"],
         name: "no-destructure imports omit under an alias next to a local omit",
@@ -105,12 +105,12 @@ export const Defaulted = ({ name = "x" }) => {
 export const OnlyRest = ({ name, ...rest }) => {
     return <div {...rest}>{name}{omit}</div>;
 };
-`,
+`
     }),
     Object.freeze({
         expectedFragments: [
             'import { merge as solidMerge2 } from "solid-js";',
-            'const props = solidMerge2({ name: "x" }, _props);',
+            'const props = solidMerge2({ name: "x" }, _props);'
         ],
         forbiddenFragments: ["= solidMerge({", "= merge({"],
         name: "no-destructure picks the next free alias when the first alias is taken too",
@@ -121,7 +121,7 @@ const solidMerge = 1;
 export const Defaulted = ({ name = "x" }) => {
     return <div>{name}{String(merge)}{solidMerge}</div>;
 };
-`,
+`
     }),
     Object.freeze({
         expectedFragments: ['const props = merge({ name: "x" }, _props);'],
@@ -133,14 +133,14 @@ export const Defaulted = ({ name = "x" }) => {
 export const Defaulted = ({ name = "x" }) => {
     return <div>{name}{String(merge)}</div>;
 };
-`,
+`
     }),
     Object.freeze({
         expectedFragments: [
             'import { merge, omit } from "solid-js";',
             'const props = merge({ name: "a" }, _props);',
             'const props = merge({ title: "b" }, _props);',
-            'const rest = omit(props, "title");',
+            'const rest = omit(props, "title");'
         ],
         forbiddenFragments: ["= ({ name", "= ({ title"],
         singleFragments: ['from "solid-js"'],
@@ -152,14 +152,14 @@ export const Defaulted = ({ name = "x" }) => {
 export const Second = ({ title = "b", ...rest }) => {
     return <div {...rest}>{title}</div>;
 };
-`,
+`
     }),
     Object.freeze({
         expectedFragments: [
             'import { createSignal, merge as solidMerge, omit } from "solid-js";',
             'const props = solidMerge({ title: "b" }, _props);',
             'const rest = omit(props, "title");',
-            "props.name",
+            "props.name"
         ],
         forbiddenFragments: ["= ({ name", "= ({ title"],
         singleFragments: ['from "solid-js"', 'import { merge } from "lodash";'],
@@ -174,12 +174,12 @@ export const First = ({ name }) => {
 export const Second = ({ title = "b", ...rest }) => {
     return <div {...rest}>{title}</div>;
 };
-`,
+`
     }),
     Object.freeze({
         expectedFragments: [
             'import { merge, merge as solidMerge } from "solid-js";',
-            'const props = solidMerge({ name: "x" }, _props);',
+            'const props = solidMerge({ name: "x" }, _props);'
         ],
         forbiddenFragments: ['= merge({ name: "x" }'],
         singleFragments: ['from "solid-js"'],
@@ -191,7 +191,7 @@ export const Defaulted = ({ name = "x" }) => {
 
     return <div>{name}{merge}</div>;
 };
-`,
+`
     }),
     // A fix that is dropped (here by prefer-arrow-components, which rewrites
     // the same function) can leave a call without its import. Further runs
@@ -199,7 +199,7 @@ export const Defaulted = ({ name = "x" }) => {
     Object.freeze({
         expectedFragments: [
             'import { merge, omit, type Component } from "solid-js";',
-            "export const First: Component<Props> = (_props) =>",
+            "export const First: Component<Props> = (_props) =>"
         ],
         forbiddenFragments: ["= ({ title", "function First", "= ({ name"],
         runs: 2,
@@ -218,7 +218,7 @@ export function First({ name = "a" }: Props): JSX.Element {
 export const Second = ({ title = "b", ...rest }) => {
     return <div {...rest}>{title}</div>;
 };
-`,
+`
     }),
     // What a run leaves when the fix of the first component was dropped: the
     // second component already calls merge and omit, the first still
@@ -226,7 +226,7 @@ export const Second = ({ title = "b", ...rest }) => {
     Object.freeze({
         expectedFragments: [
             'import { merge, omit } from "solid-js";',
-            'const props = merge({ name: "a" }, _props);',
+            'const props = merge({ name: "a" }, _props);'
         ],
         forbiddenFragments: ["= ({ name"],
         singleFragments: ['from "solid-js"'],
@@ -241,7 +241,7 @@ export const Second = (_props) => {
 
     return <div {...rest}>{props.title}</div>;
 };
-`,
+`
     }),
     // The parameter on its own line, as a formatter lays out a long signature.
     Object.freeze({
@@ -249,7 +249,7 @@ export const Second = (_props) => {
             'import { merge, omit } from "solid-js";',
             'const props = merge({ title: "a" }, _props);',
             'const rest = omit(props, "title");',
-            'const props = merge({ name: "b" }, _props);',
+            'const props = merge({ name: "b" }, _props);'
         ],
         forbiddenFragments: ["({ title =", "({ name ="],
         singleFragments: ['from "solid-js"'],
@@ -263,21 +263,21 @@ export const Second = (_props) => {
 export const Second = ({ name = "b" }) => {
     return <div>{name}</div>;
 };
-`,
+`
     }),
     // A destructured prop called merge goes away with the fix, so merge is
     // free for the call.
     Object.freeze({
         expectedFragments: [
             'import { merge } from "solid-js";',
-            'const props = merge({ merge: 1, name: "x" }, _props);',
+            'const props = merge({ merge: 1, name: "x" }, _props);'
         ],
         forbiddenFragments: ["solidMerge"],
         name: "no-destructure calls merge when the only merge is a prop the fix removes",
         source: `export const Panel = ({ merge = 1, name = "x" }) => {
     return <div>{merge}{name}</div>;
 };
-`,
+`
     }),
     Object.freeze({
         expectedFragments: ['const props = solidMerge({ name: "x" }, _props);'],
@@ -291,7 +291,7 @@ export const Defaulted = ({ name = "x" }) => {
 
     return <div>{name}{merge}{String(solidMerge)}</div>;
 };
-`,
+`
     }),
     Object.freeze({
         expectedFragments: ['import { merge } from "solid-js";'],
@@ -302,7 +302,7 @@ export const Defaulted = ({ name = "x" }) => {
 
     return <div>{merged.a}</div>;
 };
-`,
+`
     }),
     Object.freeze({
         expectedFragments: ['import { merge as solidMerge2 } from "solid-js";'],
@@ -313,11 +313,11 @@ export const Defaulted = ({ name = "x" }) => {
 
     return <div>{merged.a}</div>;
 };
-`,
+`
     }),
     Object.freeze({
         expectedFragments: [
-            'import { createSignal, merge, omit } from "solid-js";',
+            'import { createSignal, merge, omit } from "solid-js";'
         ],
         singleFragments: ['from "solid-js"'],
         name: "no-destructure adds the names of dangling calls to the existing solid-js import",
@@ -330,7 +330,7 @@ export const Panel = (props) => {
 
     return <div {...rest}>{count()}</div>;
 };
-`,
+`
     }),
     Object.freeze({
         expectedFragments: ['import { Show } from "solid-js";'],
@@ -341,7 +341,7 @@ export const Panel = (props) => {
 export const View = () => {
     return <Show when={Solid.DEV}>Visible</Show>;
 };
-`,
+`
     }),
     Object.freeze({
         expectedFragments: ['import { render } from "@solidjs/web";'],
@@ -351,8 +351,8 @@ export const View = () => {
 import { render } from "solid-js";
 
 export const exported = [Web, render];
-`,
-    }),
+`
+    })
 ]);
 
 // `merge`/`omit` calls that no-destructure must not report: some binding
@@ -365,7 +365,7 @@ const noDestructureSilentCases = Object.freeze([
 export const Panel = (props) => {
     return <div>{String(merge({ a: 1 }, props))}</div>;
 };
-`,
+`
     }),
     Object.freeze({
         name: "a merge call with two identifiers, which this rule never writes",
@@ -374,7 +374,7 @@ export const Panel = (props) => {
 };
 
 export const joined = (a: object, b: object) => merge(a, b);
-`,
+`
     }),
     Object.freeze({
         name: "an omit call with a key that is not a literal",
@@ -383,19 +383,19 @@ export const joined = (a: object, b: object) => merge(a, b);
 
     return <div>{String(omit(props, key))}</div>;
 };
-`,
+`
     }),
     Object.freeze({
         name: "a merge call in a module with no JSX and no solid-js import",
         source: `export const run = (x: object) => merge({}, x);
-`,
+`
     }),
     Object.freeze({
         name: "a JSX element called merge",
         source: `export const Panel = () => {
     return <merge>text</merge>;
 };
-`,
+`
     }),
     Object.freeze({
         name: "a merge method call and an object key",
@@ -404,7 +404,7 @@ export const joined = (a: object, b: object) => merge(a, b);
 export const Panel = () => {
     return <div>{tools.merge(1)}{tools.omit(2)}</div>;
 };
-`,
+`
     }),
     Object.freeze({
         name: "class members called merge and omit",
@@ -421,7 +421,7 @@ export const Panel = () => {
 export const Panel = () => {
     return <div>{new Tools().merge()}{new Tools().omit()}</div>;
 };
-`,
+`
     }),
     Object.freeze({
         name: "a function parameter called merge",
@@ -430,7 +430,7 @@ export const Panel = () => {
 export const Panel = () => {
     return <div>{apply((a) => a)}</div>;
 };
-`,
+`
     }),
     Object.freeze({
         name: "a type position and a bare read that are not calls",
@@ -439,7 +439,7 @@ export const Panel = () => {
 export const Panel = (props: { join: Joiner }) => {
     return <div>{String(props.join)}{String(typeof omit)}</div>;
 };
-`,
+`
     }),
     Object.freeze({
         name: "an omit declared in the file",
@@ -448,8 +448,8 @@ export const Panel = (props: { join: Joiner }) => {
 export const Panel = (props: object) => {
     return <div>{String(omit(props))}</div>;
 };
-`,
-    }),
+`
+    })
 ]);
 
 // Names that `solid-js` 2.0.2 exports and that must be imported from it, not
@@ -459,7 +459,7 @@ const importsSolidJsNames = Object.freeze([
     "createTrackedEffect",
     "from",
     "onFlush",
-    "repeat",
+    "repeat"
 ]);
 
 // Imports that the rule must leave alone: not exported by the package the
@@ -478,48 +478,48 @@ export const boundaries = [
     createLoadingBoundary,
     createRevealOrder,
 ];
-`,
+`
     }),
     Object.freeze({
         name: "createOwner, which solid-js 2.0.2 marks @internal and strips from its types",
         source: `import { createOwner } from "@solidjs/web";
 
 export const owner = createOwner;
-`,
+`
     }),
     Object.freeze({
         name: "storePath, which solid-js no longer exports",
         source: `import { storePath } from "@solidjs/web";
 
 export const path = storePath;
-`,
+`
     }),
     Object.freeze({
         name: "ClassValue, which only exists as JSX.ClassValue",
         source: `import type { ClassValue } from "solid-js";
 
 export type Classes = ClassValue;
-`,
+`
     }),
     Object.freeze({
         name: "ValidComponent from @solidjs/web, which declares its own",
         source: `import type { ValidComponent } from "@solidjs/web";
 
 export type Tag = ValidComponent;
-`,
+`
     }),
     Object.freeze({
         name: "dynamicComponent from @solidjs/web, which re-exports it",
         source: `import { dynamicComponent } from "@solidjs/web";
 
 export const tag = dynamicComponent;
-`,
-    }),
+`
+    })
 ]);
 
 export {
     importFixCases,
     importsSilentCases,
     importsSolidJsNames,
-    noDestructureSilentCases,
+    noDestructureSilentCases
 };

@@ -7,7 +7,7 @@ export default {
         docs: {
             description:
                 "Enforce using Solid's `<For />` component for mapping an array to JSX elements.",
-            url: "https://github.com/solidjs-community/eslint-plugin-solid/blob/main/packages/eslint-plugin-solid/docs/prefer-for.md",
+            url: "https://github.com/solidjs-community/eslint-plugin-solid/blob/main/packages/eslint-plugin-solid/docs/prefer-for.md"
         },
         fixable: "code",
         schema: [],
@@ -15,8 +15,8 @@ export default {
             preferFor:
                 "Use Solid's `<For />` component for efficiently rendering lists. Array#map causes DOM elements to be recreated.",
             preferForOrIndex:
-                "Use Solid's `<For />` component for rendering lists (`keyed={false}` for the index-based form). Array#map causes DOM elements to be recreated.",
-        },
+                "Use Solid's `<For />` component for rendering lists (`keyed={false}` for the index-based form). Array#map causes DOM elements to be recreated."
+        }
     },
     defaultOptions: [],
     create(context) {
@@ -30,23 +30,23 @@ export default {
                 fix: (fixer) => {
                     const beforeArray = [
                         jsxExpressionContainerNode.range[0],
-                        arrayNode.range[0],
+                        arrayNode.range[0]
                     ];
                     const betweenArrayAndMapFn = [
                         arrayNode.range[1],
-                        mapFnNode.range[0],
+                        mapFnNode.range[0]
                     ];
                     const afterMapFn = [
                         mapFnNode.range[1],
-                        jsxExpressionContainerNode.range[1],
+                        jsxExpressionContainerNode.range[1]
                     ];
                     // We can insert the <For /> component
                     return [
                         fixer.replaceTextRange(beforeArray, "<For each={"),
                         fixer.replaceTextRange(betweenArrayAndMapFn, "}>{"),
-                        fixer.replaceTextRange(afterMapFn, "}</For>"),
+                        fixer.replaceTextRange(afterMapFn, "}</For>")
                     ];
-                },
+                }
             });
         };
         return {
@@ -79,12 +79,12 @@ export default {
                             // Too many possible solutions to make a suggestion or fix
                             context.report({
                                 node,
-                                messageId: "preferForOrIndex",
+                                messageId: "preferForOrIndex"
                             });
                         }
                     }
                 }
-            },
+            }
         };
-    },
+    }
 };

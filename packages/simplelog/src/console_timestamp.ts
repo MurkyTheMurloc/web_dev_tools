@@ -18,7 +18,7 @@ function padTimePart(value: number, width = TIME_PART_WIDTH): string {
  */
 function formatConsoleTimestamp(
     epochMilliseconds: number,
-    format: TimestampFormat,
+    format: TimestampFormat
 ): string {
     const date = new Date(epochMilliseconds);
 

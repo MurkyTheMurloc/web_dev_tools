@@ -1,7 +1,7 @@
 import {
     SIMPLELOG_LOG_METHODS,
     functionHasContextParam,
-    getEnclosingFunction,
+    getEnclosingFunction
 } from "./utils.mjs";
 
 export const preferHonoContextLoggerRule = {
@@ -9,13 +9,13 @@ export const preferHonoContextLoggerRule = {
         type: "suggestion",
         docs: {
             description:
-                "Prefer c.var.logger over a root logger inside Hono request handlers.",
+                "Prefer c.var.logger over a root logger inside Hono request handlers."
         },
         schema: [],
         messages: {
             preferHonoContextLogger:
-                "Prefer c.var.logger inside Hono handlers instead of calling a root logger directly.",
-        },
+                "Prefer c.var.logger inside Hono handlers instead of calling a root logger directly."
+        }
     },
     create(context) {
         let honoImported = false;
@@ -105,9 +105,9 @@ export const preferHonoContextLoggerRule = {
 
                 context.report({
                     messageId: "preferHonoContextLogger",
-                    node: node.callee.object,
+                    node: node.callee.object
                 });
-            },
+            }
         };
-    },
+    }
 };

@@ -9,7 +9,7 @@ import path from "node:path";
  */
 const packageRoot = path.resolve(import.meta.dir, "../..");
 const pkg = JSON.parse(
-    readFileSync(path.join(packageRoot, "package.json"), "utf8"),
+    readFileSync(path.join(packageRoot, "package.json"), "utf8")
 ) as { exports: Record<string, string | { import?: string; types?: string }> };
 
 // `./globals` is declarations only: no runtime file to emit or check.
@@ -25,7 +25,7 @@ const subpaths = Object.entries(pkg.exports).filter(([key, target]) => {
 });
 
 function resolveImportTarget(
-    target: string | { import?: string; types?: string },
+    target: string | { import?: string; types?: string }
 ): string | undefined {
     if (typeof target === "string") {
         return target;
@@ -39,7 +39,7 @@ function readEmittedFile(resolved: string, key: string, file: string): string {
         return readFileSync(resolved, "utf8");
     } catch {
         throw new Error(
-            `exports["${key}"] points at ${file}, which the build did not emit — add it to tsdown.config.ts`,
+            `exports["${key}"] points at ${file}, which the build did not emit — add it to tsdown.config.ts`
         );
     }
 }
@@ -60,7 +60,7 @@ for (const [key, target] of subpaths) {
         !source.includes("export")
     ) {
         throw new Error(
-            `exports["${key}"] resolved to ${file}, which exports nothing`,
+            `exports["${key}"] resolved to ${file}, which exports nothing`
         );
     }
 }
@@ -71,11 +71,11 @@ for (const absent of [
     "parseDomainName",
     "isEmptyLike",
     "uuidRegex",
-    "arrayContainsCommonValue",
+    "arrayContainsCommonValue"
 ]) {
     if (guards.includes(absent)) {
         throw new Error(
-            `dist/guards.js pulled in ${absent} — the groups are no longer independent`,
+            `dist/guards.js pulled in ${absent} — the groups are no longer independent`
         );
     }
 }
@@ -83,7 +83,7 @@ for (const absent of [
 const result = readFileSync(path.join(packageRoot, "dist/result.js"), "utf8");
 if (result.includes("import")) {
     throw new Error(
-        "dist/result.js gained a dependency; ok/err are meant to stand alone",
+        "dist/result.js gained a dependency; ok/err are meant to stand alone"
     );
 }
 

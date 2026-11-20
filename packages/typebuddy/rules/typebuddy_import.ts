@@ -114,7 +114,7 @@ const MODULE_STATEMENTS = new Set([
     "ExportDefaultDeclaration",
     "ExportNamedDeclaration",
     "ImportDeclaration",
-    "TSExportAssignment",
+    "TSExportAssignment"
 ]);
 
 function isModuleStatement(statement: AstNode): boolean {
@@ -179,7 +179,7 @@ function getUpperScope(scope: ScopeLike): ScopeLike | null {
 function findBinding(
     sourceCode: ImportSourceCode,
     node: unknown,
-    name: string,
+    name: string
 ): unknown {
     const start: unknown = sourceCode.getScope(node);
     let scope: ScopeLike | null = isScopeLike(start) ? start : null;
@@ -222,7 +222,7 @@ function sourcesFor(kind: ImportKind): ReadonlySet<string> {
 function isPackageImport(
     definition: unknown,
     name: string,
-    kind: ImportKind,
+    kind: ImportKind
 ): boolean {
     if (
         typeof definition !== "object" ||
@@ -287,7 +287,7 @@ type MergeTarget = {
  */
 function findMergeTarget(
     imports: readonly AstNode[],
-    kind: ImportKind,
+    kind: ImportKind
 ): MergeTarget | null {
     const sources = sourcesFor(kind);
     let inlineTarget: MergeTarget | null = null;
@@ -363,7 +363,7 @@ function planTypeBuddyImport(
     sourceCode: ImportSourceCode,
     node: unknown,
     name: string,
-    kind: ImportKind,
+    kind: ImportKind
 ): ImportPlan {
     const program = getProgram(node);
     if (!program || !isNode(node)) {
@@ -394,7 +394,7 @@ function planTypeBuddyImport(
         return {
             kind: "insert",
             range: [merge.at, merge.at],
-            text: `, ${merge.inlineType ? "type " : ""}${name}`,
+            text: `, ${merge.inlineType ? "type " : ""}${name}`
         };
     }
 
@@ -502,7 +502,7 @@ function createImportPlanner(sourceCode: ImportSourceCode) {
             node: unknown,
             fixer: ImportFixer,
             name: string,
-            kind: ImportKind,
+            kind: ImportKind
         ): unknown[] | null {
             const plan = planTypeBuddyImport(sourceCode, node, name, kind);
             if (plan.kind === "conflict") {
@@ -513,7 +513,7 @@ function createImportPlanner(sourceCode: ImportSourceCode) {
             }
 
             return [];
-        },
+        }
     };
 }
 
@@ -521,6 +521,6 @@ export {
     canAddImport,
     createImportPlanner,
     getBodyStartAfterDirectives,
-    planTypeBuddyImport,
+    planTypeBuddyImport
 };
 export type { ImportFixer, ImportKind, ImportPlan, ImportSourceCode };

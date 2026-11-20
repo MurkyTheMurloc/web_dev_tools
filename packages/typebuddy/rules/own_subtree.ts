@@ -6,7 +6,7 @@ type AstNode = {
 const FUNCTION_TYPES = new Set([
     "ArrowFunctionExpression",
     "FunctionDeclaration",
-    "FunctionExpression",
+    "FunctionExpression"
 ]);
 
 function isNode(value: unknown): value is AstNode {
@@ -32,7 +32,7 @@ function isNode(value: unknown): value is AstNode {
  */
 function walkOwnSubtree(
     root: unknown,
-    visit: (node: AstNode) => boolean | void,
+    visit: (node: AstNode) => boolean | void
 ): void {
     if (!isNode(root)) {
         return;

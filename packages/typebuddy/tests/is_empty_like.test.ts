@@ -20,34 +20,34 @@ describe(isEmptyLike, () => {
         expect(
             isEmptyLike([
                 {
-                    test: null,
-                },
-            ]),
+                    test: null
+                }
+            ])
         ).toBeTruthy();
         expect(
             isEmptyLike([
                 {
-                    test: undefined,
-                },
-            ]),
+                    test: undefined
+                }
+            ])
         ).toBeTruthy();
         expect(
             isEmptyLike([
                 {
-                    test: [],
-                },
-            ]),
+                    test: []
+                }
+            ])
         ).toBeTruthy();
         expect(
             isEmptyLike([
                 {
                     test: [
                         {
-                            test: null,
-                        },
-                    ],
-                },
-            ]),
+                            test: null
+                        }
+                    ]
+                }
+            ])
         ).toBeTruthy();
     });
 

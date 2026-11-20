@@ -169,7 +169,7 @@ function fastIsArray(value: unknown): value is readonly unknown[] {
  * @returns {boolean} True if the value is a finite number.
  */
 function isNumber<T extends number>(
-    value: Nullable<T>,
+    value: Nullable<T>
 ): value is FiniteNumber<T>;
 function isNumber(value: unknown): value is FiniteNumber;
 function isNumber(value: unknown): value is FiniteNumber {
@@ -190,7 +190,7 @@ function isNumber(value: unknown): value is FiniteNumber {
  * @returns {boolean} True if the value is an object.
  */
 function isObject<T extends Record<string, unknown>>(
-    value: Nullable<T>,
+    value: Nullable<T>
 ): value is T;
 function isObject(value: unknown): value is Record<string, unknown>;
 function isObject(value: unknown): value is Record<string, unknown> {
@@ -242,7 +242,7 @@ function isFunction(value: unknown): value is UnknownFunction {
  * @returns {boolean} True if the value is a promise.
  */
 function isPromise<T>(
-    value: Nullable<Readonly<PromiseLike<T>>>,
+    value: Nullable<Readonly<PromiseLike<T>>>
 ): value is PromiseLike<T>;
 function isPromise(value: unknown): value is PromiseLike<unknown>;
 function isPromise(value: unknown): value is PromiseLike<unknown> {
@@ -345,7 +345,7 @@ function isEmptyObject(value: unknown): value is EmptyObject {
  */
 function isInstanceOf<T>(
     value: unknown,
-    constructor: new (...args: unknown[]) => T,
+    constructor: new (...args: unknown[]) => T
 ): value is T {
     return value instanceof constructor;
 }
@@ -403,5 +403,5 @@ export {
     isRegExp,
     isString,
     isSymbol,
-    isUndefined,
+    isUndefined
 };

@@ -12,7 +12,7 @@ import {
     isNull,
     isObject,
     isString,
-    isUndefined,
+    isUndefined
 } from "./guards.js";
 
 type Container = {

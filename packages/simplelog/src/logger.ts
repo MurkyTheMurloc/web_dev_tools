@@ -6,7 +6,7 @@ class Logger extends LoggerBase {
     constructor(
         name: string,
         parent?: LoggerParent,
-        options: LoggerOptions = {},
+        options: LoggerOptions = {}
     ) {
         super(Logger, nodeRuntime, name, parent, options);
     }

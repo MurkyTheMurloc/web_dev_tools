@@ -24,7 +24,7 @@ const reactiveAsyncReports = Object.freeze([
 export const user = createMemo(async () => {
     const first = await load(0);
     return first + id();
-});`),
+});`)
     }),
     Object.freeze({
         name: "memo read after await in createMemo",
@@ -34,7 +34,7 @@ const next = createMemo(() => id() + 1);
 export const user = createMemo(async () => {
     await save("x");
     return load(next());
-});`),
+});`)
     }),
     Object.freeze({
         name: "props read after await",
@@ -46,7 +46,7 @@ export const user = createMemo(async () => {
     });
 
     return user;
-};`),
+};`)
     }),
     Object.freeze({
         name: "store read after await",
@@ -55,7 +55,7 @@ export const user = createMemo(async () => {
 export const user = createMemo(async () => {
     await save("x");
     return load(filters.id);
-});`),
+});`)
     }),
     Object.freeze({
         name: "read after await in the compute phase of createEffect",
@@ -69,7 +69,7 @@ createEffect(
     (value) => {
         console.log(value);
     },
-);`),
+);`)
     }),
     Object.freeze({
         name: "read after await in a createProjection",
@@ -78,7 +78,7 @@ createEffect(
 export const rows = createProjection(async () => {
     await save("x");
     return [id()];
-}, []);`),
+}, []);`)
     }),
     Object.freeze({
         name: "read after await in a function createStore",
@@ -87,7 +87,7 @@ export const rows = createProjection(async () => {
 export const [rows] = createStore(async () => {
     await save("x");
     return [id()];
-}, []);`),
+}, []);`)
     }),
     Object.freeze({
         name: "read after await in createOptimistic",
@@ -96,7 +96,7 @@ export const [rows] = createStore(async () => {
 export const [name] = createOptimistic(async () => {
     await save("x");
     return load(id());
-});`),
+});`)
     }),
     Object.freeze({
         name: "async callback that only does return await",
@@ -104,21 +104,21 @@ export const [name] = createOptimistic(async () => {
         code: withImports(`const [id] = createSignal(1);
 export const user = createMemo(async () => {
     return await load(id());
-});`),
+});`)
     }),
     Object.freeze({
         name: "async expression body that is only an await",
         message: "only does `return await",
         code: withImports(`const [id] = createSignal(1);
-export const user = createMemo(async () => await load(id()));`),
-    }),
+export const user = createMemo(async () => await load(id()));`)
+    })
 ]);
 
 const reactiveAsyncSilent = Object.freeze([
     Object.freeze({
         name: "returning the promise without async",
         code: withImports(`const [id] = createSignal(1);
-export const user = createMemo(() => load(id()));`),
+export const user = createMemo(() => load(id()));`)
     }),
     Object.freeze({
         name: "reads before the await",
@@ -127,7 +127,7 @@ export const user = createMemo(async () => {
     const current = id();
     const first = await load(current);
     return first + current;
-});`),
+});`)
     }),
     Object.freeze({
         name: "a read inside the awaited expression",
@@ -135,7 +135,7 @@ export const user = createMemo(async () => {
 export const user = createMemo(async () => {
     const first = await load(id());
     return first;
-});`),
+});`)
     }),
     Object.freeze({
         name: "props read before the await",
@@ -147,7 +147,7 @@ export const user = createMemo(async () => {
     });
 
     return user;
-};`),
+};`)
     }),
     Object.freeze({
         name: "return await inside try keeps the catch working",
@@ -158,7 +158,7 @@ export const user = createMemo(async () => {
     } catch {
         return "failed";
     }
-});`),
+});`)
     }),
     Object.freeze({
         name: "a read inside a nested function",
@@ -166,7 +166,7 @@ export const user = createMemo(async () => {
 export const user = createMemo(async () => {
     await save("x");
     return () => id();
-});`),
+});`)
     }),
     Object.freeze({
         name: "a local that shadows the signal",
@@ -175,7 +175,7 @@ export const user = createMemo(async () => {
     const id = () => 2;
     await save("x");
     return load(id());
-});`),
+});`)
     }),
     Object.freeze({
         name: "reads in the apply phase belong to another rule",
@@ -186,7 +186,7 @@ createEffect(
         await save("x");
         console.log(value, id());
     },
-);`),
+);`)
     }),
     Object.freeze({
         name: "an async function that is not a computation",
@@ -194,8 +194,8 @@ createEffect(
 export async function run() {
     await save("x");
     return id();
-}`),
-    }),
+}`)
+    })
 ]);
 
 const SERVER_MODULE = `"use server";
@@ -218,7 +218,7 @@ const serverImportReports = Object.freeze([
         code: `import { db } from "~/server/db";
 
 export const View = () => <p>{db.rows.length}</p>;
-`,
+`
     }),
     Object.freeze({
         name: "relative import of a plain module under src/server",
@@ -227,18 +227,18 @@ export const View = () => <p>{db.rows.length}</p>;
         code: `import { db } from "../server/db";
 
 export const View = () => <p>{db.rows.length}</p>;
-`,
+`
     }),
     Object.freeze({
         name: "a directive that is not the first statement",
         fileName: "src/routes/late.tsx",
         files: {
-            "src/server/late.ts": `export const x = 1;\n"use server";\n`,
+            "src/server/late.ts": `export const x = 1;\n"use server";\n`
         },
         code: `import { x } from "~/server/late";
 
 export const View = () => <p>{x}</p>;
-`,
+`
     }),
     Object.freeze({
         name: "import from a client .ts module",
@@ -247,7 +247,7 @@ export const View = () => <p>{x}</p>;
         code: `import { db } from "~/server/db";
 
 export const count = db.rows.length;
-`,
+`
     }),
     Object.freeze({
         name: "index file in a directory under src/server",
@@ -256,22 +256,22 @@ export const count = db.rows.length;
         code: `import { db } from "~/server/data";
 
 export const View = () => <p>{db.rows.length}</p>;
-`,
+`
     }),
     Object.freeze({
         name: "re-export",
         fileName: "src/lib/reexport.ts",
         files: { "src/server/db.ts": PLAIN_SERVER_MODULE },
         code: `export { db } from "~/server/db";
-`,
+`
     }),
     Object.freeze({
         name: "dynamic import",
         fileName: "src/lib/lazy.ts",
         files: { "src/server/db.ts": PLAIN_SERVER_MODULE },
         code: `export const load = () => import("~/server/db");
-`,
-    }),
+`
+    })
 ]);
 
 const serverImportSilent = Object.freeze([
@@ -282,18 +282,18 @@ const serverImportSilent = Object.freeze([
         code: `import { listRows } from "~/server/rows";
 
 export const View = () => <p>{String(listRows)}</p>;
-`,
+`
     }),
     Object.freeze({
         name: "a use server module with a comment before the directive",
         fileName: "src/routes/commented.tsx",
         files: {
-            "src/server/commented.ts": `// server only\n/* really */\n'use server';\n\nexport async function a(): Promise<void> {}\n`,
+            "src/server/commented.ts": `// server only\n/* really */\n'use server';\n\nexport async function a(): Promise<void> {}\n`
         },
         code: `import { a } from "../server/commented";
 
 export const View = () => <p>{String(a)}</p>;
-`,
+`
     }),
     Object.freeze({
         name: "an import written inside src/server",
@@ -302,7 +302,7 @@ export const View = () => <p>{String(a)}</p>;
         code: `import { db } from "./db";
 
 export const count = db.rows.length;
-`,
+`
     }),
     Object.freeze({
         name: "a target that does not exist",
@@ -310,7 +310,7 @@ export const count = db.rows.length;
         code: `import { nothing } from "~/server/not-there";
 
 export const View = () => <p>{String(nothing)}</p>;
-`,
+`
     }),
     Object.freeze({
         name: "a type-only import",
@@ -319,7 +319,7 @@ export const View = () => <p>{String(nothing)}</p>;
         code: `import type { db } from "~/server/db";
 
 export type Db = typeof db;
-`,
+`
     }),
     Object.freeze({
         name: "a module outside src/server",
@@ -328,7 +328,7 @@ export type Db = typeof db;
         code: `import { db } from "~/lib/db";
 
 export const View = () => <p>{db.rows.length}</p>;
-`,
+`
     }),
     Object.freeze({
         name: "a package import",
@@ -336,8 +336,8 @@ export const View = () => <p>{db.rows.length}</p>;
         code: `import { createSignal } from "solid-js";
 
 export const [value] = createSignal(1);
-`,
-    }),
+`
+    })
 ]);
 
 const strictVoidReports = Object.freeze([
@@ -345,32 +345,32 @@ const strictVoidReports = Object.freeze([
         name: "expression-bodied onClick",
         message: "expression-bodied arrow",
         code: withImports(`const [count, setCount] = createSignal(0);
-export const View = () => <button onClick={() => setCount(count() + 1)}>+</button>;`),
+export const View = () => <button onClick={() => setCount(count() + 1)}>+</button>;`)
     }),
     Object.freeze({
         name: "expression-bodied onInput returning an assignment",
         message: "expression-bodied arrow",
         code: withImports(`let value = "";
-export const View = () => <input onInput={(event) => (value = event.currentTarget.value)} />;`),
+export const View = () => <input onInput={(event) => (value = event.currentTarget.value)} />;`)
     }),
     Object.freeze({
         name: "namespaced on:click",
         message: "expression-bodied arrow",
         code: withImports(
-            `export const View = () => <button on:click={() => save("x")}>Save</button>;`,
-        ),
+            `export const View = () => <button on:click={() => save("x")}>Save</button>;`
+        )
     }),
     Object.freeze({
         name: "ref callback that assigns",
         message: "expression-bodied arrow",
         code: withImports(`let input: HTMLInputElement | undefined;
-export const View = () => <input ref={(el) => (input = el)} />;`),
+export const View = () => <input ref={(el) => (input = el)} />;`)
     }),
     Object.freeze({
         name: "ref callback inside a ref array",
         message: "expression-bodied arrow",
         code: withImports(`let input: HTMLInputElement | undefined;
-export const View = () => <input ref={[(el) => (input = el)]} />;`),
+export const View = () => <input ref={[(el) => (input = el)]} />;`)
     }),
     Object.freeze({
         name: "onCleanup returning a value",
@@ -379,7 +379,7 @@ export const View = () => <input ref={[(el) => (input = el)]} />;`),
     onCleanup(() => {
         return 1;
     });
-};`),
+};`)
     }),
     Object.freeze({
         name: "onCleanup expression body that assigns",
@@ -387,55 +387,55 @@ export const View = () => <input ref={[(el) => (input = el)]} />;`),
         code: withImports(`let active = true;
 export const stop = () => {
     onCleanup(() => (active = false));
-};`),
+};`)
     }),
     Object.freeze({
         name: "onSettled returning something that is not a function",
         message: "not a function",
         code: withImports(`export const start = () => {
     onSettled(() => "ready");
-};`),
-    }),
+};`)
+    })
 ]);
 
 const strictVoidSilent = Object.freeze([
     Object.freeze({
         name: "block-bodied handler",
         code: withImports(`const [count, setCount] = createSignal(0);
-export const View = () => <button onClick={() => { setCount(count() + 1); }}>+</button>;`),
+export const View = () => <button onClick={() => { setCount(count() + 1); }}>+</button>;`)
     }),
     Object.freeze({
         name: "void-prefixed expression",
         code: withImports(
-            `export const View = () => <button onClick={() => void save("x")}>Save</button>;`,
-        ),
+            `export const View = () => <button onClick={() => void save("x")}>Save</button>;`
+        )
     }),
     Object.freeze({
         name: "handler passed by name",
         code: withImports(`const onSave = () => { void save("x"); };
-export const View = () => <button onClick={onSave}>Save</button>;`),
+export const View = () => <button onClick={onSave}>Save</button>;`)
     }),
     Object.freeze({
         name: "a signal setter passed directly to ref",
         code: withImports(`const [, setInput] = createSignal<HTMLInputElement>();
-export const View = () => <input ref={setInput} />;`),
+export const View = () => <input ref={setInput} />;`)
     }),
     Object.freeze({
         name: "block-bodied ref callback",
         code: withImports(`let input: HTMLInputElement | undefined;
-export const View = () => <input ref={(el) => { input = el; }} />;`),
+export const View = () => <input ref={(el) => { input = el; }} />;`)
     }),
     Object.freeze({
         name: "an attribute that is not a handler",
         code: withImports(
-            `export const View = () => <input value={(() => "x")()} class={"a"} />;`,
-        ),
+            `export const View = () => <input value={(() => "x")()} class={"a"} />;`
+        )
     }),
     Object.freeze({
         name: "onCleanup calling a function",
         code: withImports(`export const stop = (id: number) => {
     onCleanup(() => clearInterval(id));
-};`),
+};`)
     }),
     Object.freeze({
         name: "onSettled returning a cleanup function",
@@ -444,7 +444,7 @@ export const View = () => <input ref={(el) => { input = el; }} />;`),
         const id = setInterval(() => {}, 1000);
         return () => clearInterval(id);
     });
-};`),
+};`)
     }),
     Object.freeze({
         name: "onSettled with a block that returns nothing",
@@ -452,8 +452,8 @@ export const View = () => <input ref={(el) => { input = el; }} />;`),
     onSettled(() => {
         element.focus();
     });
-};`),
-    }),
+};`)
+    })
 ]);
 
 export {
@@ -462,5 +462,5 @@ export {
     serverImportReports,
     serverImportSilent,
     strictVoidReports,
-    strictVoidSilent,
+    strictVoidSilent
 };

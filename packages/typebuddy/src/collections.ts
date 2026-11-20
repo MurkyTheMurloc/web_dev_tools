@@ -21,7 +21,7 @@ function getKeys<T extends Record<string, unknown>>(object: T): (keyof T)[] {
  */
 function arrayContainsCommonValue<T>(
     array1: readonly T[],
-    array2: readonly T[],
+    array2: readonly T[]
 ): boolean {
     if (!isArray(array1) || !isArray(array2)) {
         return false;

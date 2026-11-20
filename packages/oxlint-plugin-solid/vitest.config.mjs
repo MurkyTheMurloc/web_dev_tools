@@ -9,6 +9,6 @@ export default defineConfig({
     test: {
         hookTimeout: TEST_TIMEOUT_MS,
         include: ["tests/**/*.test.mjs"],
-        testTimeout: TEST_TIMEOUT_MS,
-    },
+        testTimeout: TEST_TIMEOUT_MS
+    }
 });

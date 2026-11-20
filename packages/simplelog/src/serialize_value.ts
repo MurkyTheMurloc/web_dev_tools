@@ -1,12 +1,12 @@
 const ANONYMOUS_FUNCTION_LABEL = "[Function anonymous]";
 const BINARY_BUFFER_TAGS: ReadonlySet<string> = new Set([
     "[object ArrayBuffer]",
-    "[object SharedArrayBuffer]",
+    "[object SharedArrayBuffer]"
 ]);
 const BOXED_PRIMITIVE_TAGS: ReadonlySet<string> = new Set([
     "[object Boolean]",
     "[object Number]",
-    "[object String]",
+    "[object String]"
 ]);
 const CIRCULAR_REFERENCE_LABEL = "[Circular]";
 const EMPTY_FUNCTION_NAME_LENGTH = 0;
@@ -39,7 +39,7 @@ const FILE_UNSAFE_CHARACTER_PATTERN =
     /(?!\t)[\p{Cc}\p{Zl}\p{Zp}\u{061C}\u{200E}\u{200F}\u{202A}-\u{202E}\u{2066}-\u{2069}\u{FEFF}]/gu;
 const FILE_CHARACTER_ESCAPES: Readonly<Record<string, string>> = {
     "\n": String.raw`\n`,
-    "\r": String.raw`\r`,
+    "\r": String.raw`\r`
 };
 
 type Serialize = (value: unknown) => unknown;
@@ -100,7 +100,7 @@ function createBudget(): Budget {
             remaining -= ONE;
 
             return true;
-        },
+        }
     };
 }
 
@@ -119,7 +119,7 @@ function takeArrayItems(array: readonly unknown[]): TakenItems<unknown> {
         items: Array.from({ length: count }, (_unused, index) => {
             return array[index];
         }),
-        omitted: array.length - count,
+        omitted: array.length - count
     };
 }
 
@@ -133,7 +133,7 @@ function takeArrayItems(array: readonly unknown[]): TakenItems<unknown> {
  */
 function takeFirstItems<Item>(
     source: Readonly<Iterable<Item>>,
-    size: number,
+    size: number
 ): TakenItems<Item> {
     const items: Item[] = [];
 
@@ -150,7 +150,7 @@ function takeFirstItems<Item>(
 
 function withTruncationMarker(
     items: readonly unknown[],
-    omitted: number,
+    omitted: number
 ): readonly unknown[] {
     if (omitted > NOTHING) {
         return [...items, TRUNCATED_LABEL];
@@ -166,7 +166,7 @@ function readProperty(value: Readonly<object>, key: string): unknown {
 function readString(
     value: Readonly<object>,
     key: string,
-    fallback: string,
+    fallback: string
 ): string {
     const property = readProperty(value, key);
 
@@ -210,7 +210,7 @@ function isError(value: Readonly<object>): boolean {
  *   or `undefined` when `value` is not a boxed primitive.
  */
 function unboxPrimitive(
-    value: Readonly<object>,
+    value: Readonly<object>
 ): readonly [unknown] | undefined {
     if (!BOXED_PRIMITIVE_TAGS.has(readTag(value))) {
         return undefined;
@@ -219,7 +219,7 @@ function unboxPrimitive(
     for (const prototype of [
         Number.prototype,
         String.prototype,
-        Boolean.prototype,
+        Boolean.prototype
     ]) {
         try {
             const valueOf: unknown = Reflect.get(prototype, "valueOf");
@@ -287,7 +287,7 @@ function serializeErrorChild(value: unknown, serialize: Serialize): unknown {
 
 function serializeAggregatedErrors(
     errors: readonly unknown[],
-    serialize: Serialize,
+    serialize: Serialize
 ): readonly unknown[] {
     const { items, omitted } = takeArrayItems(errors);
 
@@ -295,7 +295,7 @@ function serializeAggregatedErrors(
         items.map((entry) => {
             return serializeErrorChild(entry, serialize);
         }),
-        omitted,
+        omitted
     );
 }
 
@@ -314,13 +314,13 @@ function serializeAggregatedErrors(
  */
 function serializeError(
     error: Readonly<object>,
-    serialize: Serialize,
+    serialize: Serialize
 ): unknown {
     const name = readString(error, "name", "Error");
     const entries: [string, unknown][] = [
         ["name", name],
         ["message", readString(error, "message", "")],
-        ["stack", readString(error, "stack", "")],
+        ["stack", readString(error, "stack", "")]
     ];
     const cause = readProperty(error, "cause");
     const code = readProperty(error, "code");
@@ -346,7 +346,7 @@ function serializeError(
 
 function serializeMap(
     map: Readonly<ReadonlyMap<unknown, unknown>>,
-    serialize: Serialize,
+    serialize: Serialize
 ): unknown {
     const { items, omitted } = takeFirstItems(map, map.size);
 
@@ -355,14 +355,14 @@ function serializeMap(
             items.map(([key, entry]: readonly [unknown, unknown]) => {
                 return [serialize(key), serialize(entry)];
             }),
-            omitted,
-        ),
+            omitted
+        )
     };
 }
 
 function serializeSet(
     set: Readonly<ReadonlySet<unknown>>,
-    serialize: Serialize,
+    serialize: Serialize
 ): unknown {
     const { items, omitted } = takeFirstItems(set, set.size);
 
@@ -371,8 +371,8 @@ function serializeSet(
             items.map((entry: unknown) => {
                 return serialize(entry);
             }),
-            omitted,
-        ),
+            omitted
+        )
     };
 }
 
@@ -391,7 +391,7 @@ function serializeSet(
  */
 function serializePlainObject(
     value: Readonly<object>,
-    serialize: Serialize,
+    serialize: Serialize
 ): unknown {
     const allKeys = Object.keys(value);
     const entries: [string, unknown][] = allKeys
@@ -409,7 +409,7 @@ function serializePlainObject(
 
 function serializeCollection(
     value: Readonly<object>,
-    serialize: Serialize,
+    serialize: Serialize
 ): unknown {
     if (value instanceof Map) {
         return serializeMap(value, serialize);
@@ -426,7 +426,7 @@ function serializeCollection(
             items.map((entry) => {
                 return serialize(entry);
             }),
-            omitted,
+            omitted
         );
     }
 
@@ -435,7 +435,7 @@ function serializeCollection(
 
 function serializeObject(
     value: Readonly<object>,
-    serialize: Serialize,
+    serialize: Serialize
 ): unknown {
     if (isError(value)) {
         return serializeError(value, serialize);
@@ -471,7 +471,7 @@ function serializeObject(
 function serializeAtPath(
     value: unknown,
     path: readonly Readonly<object>[],
-    budget: Budget,
+    budget: Budget
 ): unknown {
     if (!budget.take()) {
         return TRUNCATED_LABEL;

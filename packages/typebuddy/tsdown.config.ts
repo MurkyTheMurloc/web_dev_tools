@@ -14,19 +14,19 @@ const config = [
             ids: "./src/ids.ts",
             index: "./src/index.ts",
             parse: "./src/parse.ts",
-            result: "./src/result.ts",
+            result: "./src/result.ts"
         },
         format: "esm",
         outDir: "dist",
         platform: "neutral",
         treeshake: true,
-        unbundle: true,
+        unbundle: true
     },
     {
         clean: false,
         dts: false,
         entry: {
-            oxlint: "./oxlint/index.ts",
+            oxlint: "./oxlint/index.ts"
         },
         // tsdown defaults `fixedExtension` to true for platform "node", which emits
         // .mjs. The package is "type": "module", so .js is already ESM and matches
@@ -36,8 +36,8 @@ const config = [
         outDir: "dist",
         platform: "node",
         treeshake: true,
-        unbundle: true,
-    },
+        unbundle: true
+    }
 ] satisfies UserConfig[];
 
 export default config;

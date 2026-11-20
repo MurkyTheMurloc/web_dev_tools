@@ -1,11 +1,11 @@
 {
-  "$schema": "https://json.schemastore.org/tsconfig",
-  "extends": "../../../../config/typescript/tsconfig.base.jsonc",
-  // No `rootDir`: it does nothing under `noEmit` and only made TS6059 fire,
-  // because the smoke file imports the package and pulls `src/` into the
-  // program from outside the smoke directory.
-  "compilerOptions": {
-    "types": ["node"]
-  },
-  "include": ["./global-types.d.ts", "./usage.ts"]
+    "$schema": "https://json.schemastore.org/tsconfig",
+    "extends": "../../../../config/typescript/tsconfig.base.jsonc",
+    // No `rootDir`: it does nothing under `noEmit` and only made TS6059 fire,
+    // because the smoke file imports the package and pulls `src/` into the
+    // program from outside the smoke directory.
+    "compilerOptions": {
+        "types": ["node"]
+    },
+    "include": ["./global-types.d.ts", "./usage.ts"]
 }

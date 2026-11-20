@@ -30,7 +30,7 @@ import validateJsxNestingRule from "./rules/validate_jsx_nesting.mjs";
 const extendedPlugin = {
     meta: {
         name: "solid",
-        version: "0.14.5",
+        version: "0.14.5"
     },
     rules: {
         "components-return-once": componentsReturnOnceRule,
@@ -60,8 +60,8 @@ const extendedPlugin = {
         "self-closing-comp": selfClosingCompRule,
         "strict-void-return": strictVoidReturnRule,
         "style-prop": stylePropRule,
-        "validate-jsx-nesting": validateJsxNestingRule,
-    },
+        "validate-jsx-nesting": validateJsxNestingRule
+    }
 };
 
 // oxlint-disable-next-line import/no-default-export -- Oxlint JS plugins require a default export surface.

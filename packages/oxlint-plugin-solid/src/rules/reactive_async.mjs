@@ -3,7 +3,7 @@ import {
     isFunctionNode,
     isPropsByName,
     trackImports,
-    walkOwnBody,
+    walkOwnBody
 } from "../utils.mjs";
 
 /**
@@ -18,7 +18,7 @@ const COMPUTATION_PRIMITIVES = [
     "createOptimisticStore",
     "createProjection",
     "createSignal",
-    "createStore",
+    "createStore"
 ];
 
 /** The two-argument effects: the first function is the tracked compute phase. */
@@ -29,14 +29,14 @@ const ACCESSOR_PRIMITIVES = [
     "createDeferred",
     "createMemo",
     "createOptimistic",
-    "createSignal",
+    "createSignal"
 ];
 
 /** Primitives whose result is read by property access: `store.items`. */
 const STORE_PRIMITIVES = [
     "createOptimisticStore",
     "createProjection",
-    "createStore",
+    "createStore"
 ];
 
 const FIRST_ELEMENT = 0;
@@ -96,15 +96,15 @@ export const reactiveAsyncRule = {
         docs: {
             description:
                 "Keep reads before the first await in async reactive computations and return promises without async.",
-            url: "https://docs.solidjs.com/",
+            url: "https://docs.solidjs.com/"
         },
         schema: [],
         messages: {
             untrackedReadAfterAwait:
                 "'{{name}}' is read after an `await` in this `{{primitive}}` callback. Solid reports this as UNTRACKED_READ_AFTER_AWAIT: only reads before the first `await` are dependencies, so the result goes stale when it changes. Read it before the `await` and use the local afterwards: `const current = {{name}}; … await …`.",
             redundantAsync:
-                "This `async` `{{primitive}}` callback only does `return await …`. Solid reads a returned promise like a value, so remove `async` and `await` and return the promise: `{{primitive}}(() => load(id()))`.",
-        },
+                "This `async` `{{primitive}}` callback only does `return await …`. Solid reads a returned promise like a value, so remove `async` and `await` and return the promise: `{{primitive}}(() => load(id()))`."
+        }
     },
     defaultOptions: [],
     create(context) {
@@ -178,7 +178,7 @@ export const reactiveAsyncRule = {
                 context.report({
                     node: callback,
                     messageId: "redundantAsync",
-                    data: { primitive },
+                    data: { primitive }
                 });
             }
 
@@ -190,7 +190,7 @@ export const reactiveAsyncRule = {
                     context.report({
                         node: read.node,
                         messageId: "untrackedReadAfterAwait",
-                        data: { name: read.name, primitive },
+                        data: { name: read.name, primitive }
                     });
                 }
             }
@@ -230,7 +230,7 @@ export const reactiveAsyncRule = {
 
                 const computation = matchImport(
                     COMPUTATION_PRIMITIVES,
-                    node.callee.name,
+                    node.callee.name
                 );
                 if (computation) {
                     checkCallback(first, computation);
@@ -242,7 +242,7 @@ export const reactiveAsyncRule = {
                 if (effect && isFunctionNode(second)) {
                     checkCallback(first, effect);
                 }
-            },
+            }
         };
-    },
+    }
 };
