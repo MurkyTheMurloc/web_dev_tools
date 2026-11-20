@@ -6,7 +6,7 @@ export default {
         docs: {
             description:
                 "Enforce the `class` object/array form over the removed `classList` prop or a classnames helper. Solid 2.0 accepts `{ [class: string]: boolean }` on `class` directly.",
-            url: "https://docs.solidjs.com/",
+            url: "https://docs.solidjs.com/"
         },
         fixable: "code",
         schema: [
@@ -19,21 +19,21 @@ export default {
                             "An array of names to treat as `classnames` functions",
                         default: DEFAULT_CLASSNAMES,
                         items: {
-                            type: "string",
+                            type: "string"
                         },
                         minItems: 1,
-                        uniqueItems: true,
-                    },
+                        uniqueItems: true
+                    }
                 },
-                additionalProperties: false,
-            },
+                additionalProperties: false
+            }
         ],
         messages: {
             classlistRemoved:
                 "The `classList` prop was removed in Solid 2.0. Pass the object to `class` instead.",
             preferClassObject:
-                "Pass the object to `class` directly instead of through {{ classnames }}.",
-        },
+                "Pass the object to `class` directly instead of through {{ classnames }}."
+        }
     },
     defaultOptions: [],
     create(context) {
@@ -53,14 +53,14 @@ export default {
                     const hasClassAttribute = node.parent.attributes.some(
                         (attribute) =>
                             attribute.type === "JSXAttribute" &&
-                            jsxPropName(attribute) === "class",
+                            jsxPropName(attribute) === "class"
                     );
                     context.report({
                         node,
                         messageId: "classlistRemoved",
                         fix: hasClassAttribute
                             ? null
-                            : (fixer) => fixer.replaceText(node.name, "class"),
+                            : (fixer) => fixer.replaceText(node.name, "class")
                     });
                     return;
                 }
@@ -90,17 +90,17 @@ export default {
                             return [
                                 fixer.replaceTextRange(
                                     [node.range[0], objectRange[0]],
-                                    "class={",
+                                    "class={"
                                 ),
                                 fixer.replaceTextRange(
                                     [objectRange[1], node.range[1]],
-                                    "}",
-                                ),
+                                    "}"
+                                )
                             ];
-                        },
+                        }
                     });
                 }
-            },
+            }
         };
-    },
+    }
 };

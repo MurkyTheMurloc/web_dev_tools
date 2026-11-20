@@ -42,8 +42,8 @@ describe(isEmptyObject, () => {
             {
                 ownKeys(): never {
                     throw new Error("ownKeys trap blew up");
-                },
-            },
+                }
+            }
         );
 
         expect(isEmptyObject(hostile)).toBeFalsy();
@@ -56,7 +56,7 @@ describe(isEmptyObject, () => {
     it("should not call an object empty when it has a non-enumerable key", () => {
         const hidden = Object.defineProperty({}, "hidden", {
             enumerable: false,
-            value: 1,
+            value: 1
         });
 
         expect(isEmptyObject(hidden)).toBeFalsy();

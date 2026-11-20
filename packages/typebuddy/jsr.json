@@ -1,26 +1,26 @@
 {
-  "$schema": "https://jsr.io/schema/config-file.v1.json",
-  "name": "@murky-web/typebuddy",
-  "version": "3.0.0",
-  "license": "ISC",
-  "exports": {
-    ".": "./src/public_api.ts",
-    "./oxlint": "./oxlint/index.ts"
-  },
-  "publish": {
-    "include": [
-      "README.md",
-      "src/**/*.ts",
-      "oxlint/**/*.ts",
-      "rules/**/*.ts"
-    ],
-    "exclude": [
-      "tests/**",
-      "smoke/**",
-      "globals.d.ts",
-      "src/index.ts",
-      "dist/**",
-      "node_modules/**"
-    ]
-  }
+    "$schema": "https://jsr.io/schema/config-file.v1.json",
+    "name": "@murky-web/typebuddy",
+    "version": "3.0.0",
+    "license": "ISC",
+    "exports": {
+        ".": "./src/public_api.ts",
+        "./oxlint": "./oxlint/index.ts"
+    },
+    "publish": {
+        "include": [
+            "README.md",
+            "src/**/*.ts",
+            "oxlint/**/*.ts",
+            "rules/**/*.ts"
+        ],
+        "exclude": [
+            "tests/**",
+            "smoke/**",
+            "globals.d.ts",
+            "src/index.ts",
+            "dist/**",
+            "node_modules/**"
+        ]
+    }
 }

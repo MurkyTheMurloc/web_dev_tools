@@ -6,6 +6,6 @@
         "simplelog/prefer-hono-context-logger": "error",
         "simplelog/prefer-runtime-entry": "error",
         "simplelog/prefer-simplelog": "error",
-        "simplelog/require-logger-name": "error",
-    },
+        "simplelog/require-logger-name": "error"
+    }
 }

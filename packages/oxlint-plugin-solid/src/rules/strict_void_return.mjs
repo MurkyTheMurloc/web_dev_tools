@@ -14,7 +14,7 @@ const PLAIN_VALUE_TYPES = new Set([
     "Literal",
     "ObjectExpression",
     "TemplateLiteral",
-    "UpdateExpression",
+    "UpdateExpression"
 ]);
 
 function isVoidExpression(expression) {
@@ -79,7 +79,7 @@ export const strictVoidReturnRule = {
         docs: {
             description:
                 "Disallow returning a value from callbacks Solid ignores the return of (event handlers, ref callbacks, onCleanup, onSettled).",
-            url: "https://docs.solidjs.com/",
+            url: "https://docs.solidjs.com/"
         },
         schema: [],
         messages: {
@@ -88,8 +88,8 @@ export const strictVoidReturnRule = {
             cleanupReturnsValue:
                 "This `{{primitive}}` callback returns a value, which is ignored. Remove the `return`, or use a block body that does not return.",
             settledReturnsValue:
-                "This `onSettled` callback returns a value that is not a function. Only a returned cleanup function is used; remove the `return` or return `() => { … }`.",
-        },
+                "This `onSettled` callback returns a value that is not a function. Only a returned cleanup function is used; remove the `return` or return `() => { … }`."
+        }
     },
     defaultOptions: [],
     create(context) {
@@ -109,8 +109,8 @@ export const strictVoidReturnRule = {
                 messageId: "handlerReturnsValue",
                 data: {
                     attribute,
-                    what: describe(callback.body),
-                },
+                    what: describe(callback.body)
+                }
             });
         }
 
@@ -128,7 +128,7 @@ export const strictVoidReturnRule = {
                 values.some(
                     (value) =>
                         PLAIN_VALUE_TYPES.has(value.type) &&
-                        !isVoidExpression(value),
+                        !isVoidExpression(value)
                 )
             ) {
                 context.report({
@@ -137,7 +137,7 @@ export const strictVoidReturnRule = {
                         primitive === "onSettled"
                             ? "settledReturnsValue"
                             : "cleanupReturnsValue",
-                    data: { primitive },
+                    data: { primitive }
                 });
             }
         }
@@ -163,7 +163,7 @@ export const strictVoidReturnRule = {
 
                 if (name === "ref") {
                     for (const callback of getRefCallbacks(
-                        node.value.expression,
+                        node.value.expression
                     )) {
                         checkHandler(callback, "ref");
                     }
@@ -190,12 +190,12 @@ export const strictVoidReturnRule = {
 
                 const primitive = matchImport(
                     [...CLEANUP_PRIMITIVES, ...SETTLED_PRIMITIVES],
-                    node.callee.name,
+                    node.callee.name
                 );
                 if (primitive) {
                     checkCleanup(callback, primitive);
                 }
-            },
+            }
         };
-    },
+    }
 };

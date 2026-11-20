@@ -1,7 +1,7 @@
 import { err, ok } from "@murky-web/typebuddy";
 import type {
     Optional as ImportedOptionalType,
-    ResolveOptional as ImportedResolveOptionalType,
+    ResolveOptional as ImportedResolveOptionalType
 } from "@murky-web/typebuddy";
 
 type ImportedOptional = ImportedOptionalType<string>;
@@ -23,7 +23,7 @@ const maybeValue: MaybeCase = null;
 const nullableValue: NullableCase = null;
 const promiseValue: PromiseCase = Promise.resolve({
     isError: false,
-    value: "x",
+    value: "x"
 });
 const okValue = ok("x");
 const okVoid = ok();
@@ -41,5 +41,5 @@ export {
     okVoid,
     optionalValue,
     parsed,
-    promiseValue,
+    promiseValue
 };

@@ -26,7 +26,7 @@ const expectedRuleIds = Object.freeze([
     "self-closing-comp",
     "strict-void-return",
     "style-prop",
-    "validate-jsx-nesting",
+    "validate-jsx-nesting"
 ]);
 
 const ruleCases = Object.freeze([
@@ -39,56 +39,56 @@ const ruleCases = Object.freeze([
     return <span>Hidden</span>;
 };
 `,
-        ruleId: "components-return-once",
+        ruleId: "components-return-once"
     }),
     Object.freeze({
         code: `export const View = () => {
     return <button onclick={() => true}>Save</button>;
 };
 `,
-        ruleId: "event-handlers",
+        ruleId: "event-handlers"
     }),
     Object.freeze({
         code: `import { render } from "solid-js";
 
 render(() => <div />, document.body);
 `,
-        ruleId: "imports",
+        ruleId: "imports"
     }),
     Object.freeze({
         code: `export const View = () => {
     return <div class="blue" class="green" />;
 };
 `,
-        ruleId: "jsx-no-duplicate-props",
+        ruleId: "jsx-no-duplicate-props"
     }),
     Object.freeze({
         code: `export const View = () => {
     return <a href="javascript:alert('x')">Unsafe</a>;
 };
 `,
-        ruleId: "jsx-no-script-url",
+        ruleId: "jsx-no-script-url"
     }),
     Object.freeze({
         code: `export const View = () => {
     return <MissingComponent />;
 };
 `,
-        ruleId: "jsx-no-undef",
+        ruleId: "jsx-no-undef"
     }),
     Object.freeze({
         code: `export const View = () => {
     return <button onClick={[(value) => value, "hello"]}>Hello</button>;
 };
 `,
-        ruleId: "no-array-handlers",
+        ruleId: "no-array-handlers"
     }),
     Object.freeze({
         code: `export const View = ({ name }) => {
     return <div>{name}</div>;
 };
 `,
-        ruleId: "no-destructure",
+        ruleId: "no-destructure"
     }),
     Object.freeze({
         code: `const getHtml = () => {
@@ -99,7 +99,7 @@ export const View = () => {
     return <div innerHTML={getHtml()} />;
 };
 `,
-        ruleId: "no-innerhtml",
+        ruleId: "no-innerhtml"
     }),
     Object.freeze({
         code: `const target = { value: "ready" };
@@ -109,7 +109,7 @@ export const View = () => {
     return <div>{proxy.value}</div>;
 };
 `,
-        ruleId: "no-proxy-apis",
+        ruleId: "no-proxy-apis"
     }),
     Object.freeze({
         code: `import { createEffect, createSignal } from "solid-js";
@@ -120,14 +120,14 @@ createEffect(() => {
     return count();
 }, [count()]);
 `,
-        ruleId: "no-react-deps",
+        ruleId: "no-react-deps"
     }),
     Object.freeze({
         code: `export const View = () => {
     return <div className="card">Hello</div>;
 };
 `,
-        ruleId: "no-react-specific-props",
+        ruleId: "no-react-specific-props"
     }),
     Object.freeze({
         code: `import { createEffect, createSignal } from "solid-js";
@@ -142,7 +142,7 @@ createEffect(
     },
 );
 `,
-        ruleId: "no-setter-in-effect",
+        ruleId: "no-setter-in-effect"
     }),
     Object.freeze({
         code: `import { createEffect, createSignal } from "solid-js";
@@ -158,7 +158,7 @@ createEffect(
     },
 );
 `,
-        ruleId: "no-setter-in-effect",
+        ruleId: "no-setter-in-effect"
     }),
     Object.freeze({
         code: `import { createEffect, createSignal } from "solid-js";
@@ -173,14 +173,14 @@ createEffect(
     },
 );
 `,
-        ruleId: "no-untracked-effect-read",
+        ruleId: "no-untracked-effect-read"
     }),
     Object.freeze({
         code: `export const View = () => {
     return <div foo:bar={null}>Hello</div>;
 };
 `,
-        ruleId: "no-unknown-namespaces",
+        ruleId: "no-unknown-namespaces"
     }),
     Object.freeze({
         code: `import type { JSX } from "@solidjs/web";
@@ -193,21 +193,21 @@ export function View(props: Props): JSX.Element {
     return <section>{props.children}</section>;
 }
 `,
-        ruleId: "prefer-arrow-components",
+        ruleId: "prefer-arrow-components"
     }),
     Object.freeze({
         code: `export const View = (props) => {
     return <div classList={{ active: props.on }}>Hello</div>;
 };
 `,
-        ruleId: "prefer-class-object",
+        ruleId: "prefer-class-object"
     }),
     Object.freeze({
         code: `import { createContext, createRoot, createSignal } from "@solidjs/web";
 
 export const primitives = [createContext, createRoot, createSignal];
 `,
-        ruleId: "imports",
+        ruleId: "imports"
     }),
     Object.freeze({
         code: `import { createEffect, createSignal, onCleanup } from "solid-js";
@@ -230,7 +230,7 @@ export const View = () => {
     );
 };
 `,
-        ruleId: "no-owned-primitives-in-ref",
+        ruleId: "no-owned-primitives-in-ref"
     }),
     Object.freeze({
         code: `const cn = (classes) => {
@@ -241,21 +241,21 @@ export const View = () => {
     return <div class={cn({ red: true })}>Hello</div>;
 };
 `,
-        ruleId: "prefer-class-object",
+        ruleId: "prefer-class-object"
     }),
     Object.freeze({
         code: `export const View = (props) => {
     return <ol>{props.items.map((item) => <li>{item}</li>)}</ol>;
 };
 `,
-        ruleId: "prefer-for",
+        ruleId: "prefer-for"
     }),
     Object.freeze({
         code: `export const View = (props) => {
     return <div>{props.visible && <span>Visible</span>}</div>;
 };
 `,
-        ruleId: "prefer-show",
+        ruleId: "prefer-show"
     }),
     Object.freeze({
         code: `export const View = (props) => {
@@ -264,7 +264,7 @@ export const View = () => {
     return <span>{text}</span>;
 };
 `,
-        ruleId: "reactivity",
+        ruleId: "reactivity"
     }),
     Object.freeze({
         code: `import { createMemo, createSignal } from "solid-js";
@@ -281,7 +281,7 @@ export const createUser = (): unknown => {
     return first;
 };
 `,
-        ruleId: "reactive-async",
+        ruleId: "reactive-async"
     }),
     Object.freeze({
         code: `import { createDeferred, createSignal } from "solid-js";
@@ -298,7 +298,7 @@ export const createUser = (): unknown => {
     return first;
 };
 `,
-        ruleId: "reactive-async",
+        ruleId: "reactive-async"
     }),
     Object.freeze({
         code: `import { db } from "~/server/db";
@@ -307,38 +307,38 @@ export const rows = db.rows;
 `,
         fileName: "src/routes/index.tsx",
         files: {
-            "src/server/db.ts": "export const db = { rows: [] };\n",
+            "src/server/db.ts": "export const db = { rows: [] };\n"
         },
-        ruleId: "no-server-import-in-client",
+        ruleId: "no-server-import-in-client"
     }),
     Object.freeze({
         code: `export const View = () => {
     return <button onClick={() => console.log("x")}>Save</button>;
 };
 `,
-        ruleId: "strict-void-return",
+        ruleId: "strict-void-return"
     }),
     Object.freeze({
         code: `export const View = () => {
     return <div></div>;
 };
 `,
-        ruleId: "self-closing-comp",
+        ruleId: "self-closing-comp"
     }),
     Object.freeze({
         code: `export const View = () => {
     return <div style={{ fontSize: "10px" }}>Hello</div>;
 };
 `,
-        ruleId: "style-prop",
+        ruleId: "style-prop"
     }),
     Object.freeze({
         code: `export const View = () => {
     return <p><div>Hello</div></p>;
 };
 `,
-        ruleId: "validate-jsx-nesting",
-    }),
+        ruleId: "validate-jsx-nesting"
+    })
 ]);
 
 const jsxUsesVarsCase = Object.freeze({
@@ -351,7 +351,7 @@ const UsedComponent = (): JSX.Element => {
 export const View = (): JSX.Element => {
     return <UsedComponent />;
 };
-`,
+`
 });
 
 const noDestructureFixCases = Object.freeze([
@@ -361,7 +361,7 @@ const noDestructureFixCases = Object.freeze([
         source: `export const OnlyRest = ({ name, ...rest }) => {
     return <div {...rest}>{name}</div>;
 };
-`,
+`
     }),
     Object.freeze({
         expectedFragment: 'const props = merge({ name: "x" }, _props);',
@@ -369,8 +369,8 @@ const noDestructureFixCases = Object.freeze([
         source: `export const OnlyDefaults = ({ name = "x" }) => {
     return <div>{name}</div>;
 };
-`,
-    }),
+`
+    })
 ]);
 
 const preferArrowFixCases = Object.freeze([
@@ -386,7 +386,7 @@ type Props = {
 export function Leaf(props: Props): JSX.Element {
     return <div>{props.name}</div>;
 }
-`,
+`
     }),
     Object.freeze({
         expectedFragment:
@@ -401,7 +401,7 @@ type Props = {
 export function Panel(props: Props): JSX.Element {
     return <section>{props.children}{props.title}</section>;
 }
-`,
+`
     }),
     Object.freeze({
         expectedFragment:
@@ -416,7 +416,7 @@ type Props = {
 export function Card({ title }: Props): JSX.Element {
     return <div>{title}</div>;
 }
-`,
+`
     }),
     Object.freeze({
         expectedFragment: "export const Icon: Component = () => {",
@@ -426,7 +426,7 @@ export function Card({ title }: Props): JSX.Element {
 export function Icon(): JSX.Element {
     return <svg />;
 }
-`,
+`
     }),
     Object.freeze({
         expectedFragment: "const Test: Component<Props> = (props) => {",
@@ -438,7 +438,7 @@ type Props = { name: string };
 function Test(props: Props): JSX.Element {
     return <div>{props.name}</div>;
 }
-`,
+`
     }),
     Object.freeze({
         expectedFragment: "const test: Component<Props> = (props) => {",
@@ -450,8 +450,8 @@ type Props = { name: string };
 function test(props: Props): JSX.Element {
     return <div>{props.name}</div>;
 }
-`,
-    }),
+`
+    })
 ]);
 
 const preferArrowDiagnosticCases = Object.freeze([
@@ -462,7 +462,7 @@ type Props = { name: string };
 export function Leaf(props: Props): JSX.Element {
     return <div>{props.name}</div>;
 }
-`,
+`
     }),
     Object.freeze({
         name: "triggers on exported PascalCase function with destructured props",
@@ -471,7 +471,7 @@ type Props = { title: string };
 export function Card({ title }: Props): JSX.Element {
     return <div>{title}</div>;
 }
-`,
+`
     }),
     Object.freeze({
         name: "triggers on exported PascalCase function with no props",
@@ -479,7 +479,7 @@ export function Card({ title }: Props): JSX.Element {
 export function Icon(): JSX.Element {
     return <svg />;
 }
-`,
+`
     }),
     Object.freeze({
         name: "triggers on non-exported function with JSX.Element return type",
@@ -488,7 +488,7 @@ type Props = { name: string };
 function Test(props: Props): JSX.Element {
     return <div>{props.name}</div>;
 }
-`,
+`
     }),
     Object.freeze({
         name: "triggers on lowercase function with JSX.Element return type",
@@ -497,8 +497,8 @@ type Props = { name: string };
 function test(props: Props): JSX.Element {
     return <div>{props.name}</div>;
 }
-`,
-    }),
+`
+    })
 ]);
 
 // no-unknown-namespaces with and without `allowedNamespaces`. `report` is the
@@ -517,7 +517,7 @@ export const View: Component = () => {
 };
 `;
 const ALLOW_CLIENT = Object.freeze({
-    "solid/no-unknown-namespaces": ["error", { allowedNamespaces: ["client"] }],
+    "solid/no-unknown-namespaces": ["error", { allowedNamespaces: ["client"] }]
 });
 const COMPONENT_MESSAGE = "Namespaced props have no effect on components.";
 // soferno's island directives: the six strategies its runtime implements.
@@ -531,10 +531,10 @@ const ALLOW_ISLAND_DIRECTIVES = Object.freeze({
                 "client:idle",
                 "client:load",
                 "client:media",
-                "client:visible",
-            ],
-        },
-    ],
+                "client:visible"
+            ]
+        }
+    ]
 });
 
 function islandView(prop) {
@@ -556,12 +556,12 @@ const namespaceCases = Object.freeze([
         code: ISLAND_VIEW,
         name: "an allowed namespace on a component",
         report: null,
-        rules: ALLOW_CLIENT,
+        rules: ALLOW_CLIENT
     }),
     Object.freeze({
         code: ISLAND_VIEW,
         name: "a namespace on a component without the option",
-        report: COMPONENT_MESSAGE,
+        report: COMPONENT_MESSAGE
     }),
     Object.freeze({
         code: `import type { Component } from "solid-js";
@@ -572,7 +572,7 @@ export const View: Component = () => {
 `,
         name: "an allowed namespace on a DOM element",
         report: null,
-        rules: ALLOW_CLIENT,
+        rules: ALLOW_CLIENT
     }),
     Object.freeze({
         code: `import type { Component } from "solid-js";
@@ -585,31 +585,31 @@ export const View: Component = () => {
 `,
         name: "a removed namespace the option does not cover",
         report: "'on:' was removed in Solid 2.0.",
-        rules: ALLOW_CLIENT,
+        rules: ALLOW_CLIENT
     }),
     Object.freeze({
         code: islandView("client:visible"),
         name: "an allowed namespaced prop on a component",
         report: null,
-        rules: ALLOW_ISLAND_DIRECTIVES,
+        rules: ALLOW_ISLAND_DIRECTIVES
     }),
     Object.freeze({
-        code: islandView("client:media=\"(min-width: 40rem)\""),
+        code: islandView('client:media="(min-width: 40rem)"'),
         name: "another allowed namespaced prop on a component",
         report: null,
-        rules: ALLOW_ISLAND_DIRECTIVES,
+        rules: ALLOW_ISLAND_DIRECTIVES
     }),
     Object.freeze({
-        code: islandView("client:network=\"4g\""),
+        code: islandView('client:network="4g"'),
         name: "a prop of an allowed namespace that is not in the list",
         report: COMPONENT_MESSAGE,
-        rules: ALLOW_ISLAND_DIRECTIVES,
+        rules: ALLOW_ISLAND_DIRECTIVES
     }),
     Object.freeze({
         code: islandView("client:visble"),
         name: "a misspelled directive",
         report: COMPONENT_MESSAGE,
-        rules: ALLOW_ISLAND_DIRECTIVES,
+        rules: ALLOW_ISLAND_DIRECTIVES
     }),
     Object.freeze({
         code: `import type { Component } from "solid-js";
@@ -620,7 +620,7 @@ export const View: Component = () => {
 `,
         name: "an allowed namespaced prop on a DOM element",
         report: null,
-        rules: ALLOW_ISLAND_DIRECTIVES,
+        rules: ALLOW_ISLAND_DIRECTIVES
     }),
     Object.freeze({
         code: `import type { Component } from "solid-js";
@@ -634,8 +634,8 @@ export const View: Component = () => {
 };
 `,
         name: "xlink on an SVG element",
-        report: null,
-    }),
+        report: null
+    })
 ]);
 
 // Fix-on-save in editors applies suggestions, including the ones marked as
@@ -643,13 +643,13 @@ export const View: Component = () => {
 const namespaceFixCases = Object.freeze([
     Object.freeze({
         code: ISLAND_VIEW,
-        name: "a namespace on a component without the option",
+        name: "a namespace on a component without the option"
     }),
     Object.freeze({
         code: ISLAND_VIEW,
         name: "an allowed namespace on a component",
-        rules: ALLOW_CLIENT,
-    }),
+        rules: ALLOW_CLIENT
+    })
 ]);
 
 export {
@@ -660,5 +660,5 @@ export {
     noDestructureFixCases,
     preferArrowDiagnosticCases,
     preferArrowFixCases,
-    ruleCases,
+    ruleCases
 };

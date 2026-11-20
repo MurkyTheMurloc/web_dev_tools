@@ -18,7 +18,7 @@ import {
     serverImportBoundaryReports,
     serverImportBoundarySilent,
     serverImportReports,
-    serverImportSilent,
+    serverImportSilent
 } from "./audit_cases.mjs";
 import { createLintHarness } from "./helpers.mjs";
 
@@ -32,14 +32,14 @@ function countOccurrences(text, fragment) {
 // The messages of the reports of one rule, in the order of the output.
 function reportMessages(output, ruleId) {
     return [
-        ...output.matchAll(new RegExp(`solid\\(${ruleId}\\): (.+)`, "gu")),
+        ...output.matchAll(new RegExp(`solid\\(${ruleId}\\): (.+)`, "gu"))
     ].map((match) => match[1]);
 }
 
 function lintCase(auditCase) {
     return harness.lint(auditCase.code, {
         fileName: auditCase.fileName,
-        files: auditCase.files,
+        files: auditCase.files
     });
 }
 
@@ -66,7 +66,7 @@ function registerReports(ruleId, reports, silent) {
                 }
                 if (auditCase.reports !== undefined) {
                     expect(reportMessages(result.output, ruleId)).toEqual(
-                        auditCase.reports,
+                        auditCase.reports
                     );
                 }
             });
@@ -100,8 +100,8 @@ function registerFixes(label, fixes) {
                 if (fixCase.importBefore !== undefined) {
                     expect(
                         result.source.indexOf(
-                            'import type { Component } from "solid-js";',
-                        ),
+                            'import type { Component } from "solid-js";'
+                        )
                     ).toBeLessThan(result.source.indexOf(fixCase.importBefore));
                 }
                 // The written code parses and is valid TS under
@@ -113,13 +113,13 @@ function registerFixes(label, fixes) {
                 const checked = await harness.lint(result.source);
 
                 expect(checked.output).not.toMatch(
-                    /TS(?:1109|1361|1363|1484|2206|17001)|consistent-type-imports|Unexpected token/u,
+                    /TS(?:1109|1361|1363|1484|2206|17001)|consistent-type-imports|Unexpected token/u
                 );
                 if (fixCase.stable) {
                     // Nothing left to fix: one more run changes nothing and
                     // leaves no report of the rule behind.
                     const again = await harness.lint(result.source, {
-                        fix: true,
+                        fix: true
                     });
 
                     expect(again.source).toBe(result.source);
@@ -136,7 +136,7 @@ function registerUnfixed(label, cases) {
         cases.forEach((unfixedCase) => {
             test(unfixedCase.name, async () => {
                 const result = await harness.lint(unfixedCase.source, {
-                    fix: true,
+                    fix: true
                 });
 
                 expect(result.source).toBe(unfixedCase.source);
@@ -161,9 +161,9 @@ describe("oxlint-plugin-solid audit fixes", () => {
         [
             ...nestingReports,
             ...nestingInsertedReports,
-            ...nestingUpstreamReports,
+            ...nestingUpstreamReports
         ],
-        [...nestingSilent, ...nestingUpstreamSilent],
+        [...nestingSilent, ...nestingUpstreamSilent]
     );
     registerFixes("solid/prefer-arrow-components", preferArrowFixes);
     registerUnfixed("solid/prefer-arrow-components", preferArrowUnfixed);
@@ -175,13 +175,13 @@ describe("oxlint-plugin-solid audit fixes", () => {
     registerReports(
         "no-server-import-in-client",
         [...serverImportReports, ...serverImportBoundaryReports],
-        [...serverImportSilent, ...serverImportBoundarySilent],
+        [...serverImportSilent, ...serverImportBoundarySilent]
     );
 
     describe("solid/event-handlers", () => {
         test("does not suggest the removed attr: namespace", async () => {
             const result = await harness.lint(
-                `export const View = () => <div onfoobar={() => {}} />;\n`,
+                `export const View = () => <div onfoobar={() => {}} />;\n`
             );
 
             expect(result.output).toContain("solid(event-handlers)");

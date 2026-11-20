@@ -8,7 +8,7 @@ import { requireLoggerNameRule } from "./require-logger-name.mjs";
 
 const plugin = {
     meta: {
-        name: "simplelog",
+        name: "simplelog"
     },
     rules: {
         "no-ad-hoc-console-fallback": noAdHocConsoleFallbackRule,
@@ -17,8 +17,8 @@ const plugin = {
         "prefer-hono-context-logger": preferHonoContextLoggerRule,
         "prefer-runtime-entry": preferRuntimeEntryRule,
         "prefer-simplelog": preferSimplelogRule,
-        "require-logger-name": requireLoggerNameRule,
-    },
+        "require-logger-name": requireLoggerNameRule
+    }
 };
 
 // oxlint-disable-next-line import/no-default-export -- Oxlint JS plugins require a default export surface.

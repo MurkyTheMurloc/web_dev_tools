@@ -5,12 +5,12 @@ import {
     isFloat,
     isInteger,
     isNumber,
-    isPromise,
+    isPromise
 } from "../src/type_helper.js";
 import type {
     FiniteNumber,
     FloatNumber,
-    IntegerNumber,
+    IntegerNumber
 } from "../src/type_helper.js";
 
 describe("the brand in inferred types", () => {
@@ -154,8 +154,8 @@ describe("isPromise edge cases", () => {
                 // intentionally empty
             },
             {
-                then: () => undefined,
-            },
+                then: () => undefined
+            }
         );
 
         expect(isPromise(thenable)).toBeTruthy();
@@ -165,7 +165,7 @@ describe("isPromise edge cases", () => {
         expect(
             isPromise(() => {
                 // intentionally empty
-            }),
+            })
         ).toBeFalsy();
     });
 
@@ -173,7 +173,7 @@ describe("isPromise edge cases", () => {
         const hostile = {
             get then(): never {
                 throw new Error("then getter blew up");
-            },
+            }
         };
 
         expect(isPromise(hostile)).toBeFalsy();

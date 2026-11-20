@@ -4,7 +4,7 @@ import type {
     LoggerOptions,
     LoggerParent,
     LoggerRuntime,
-    LogLevel,
+    LogLevel
 } from "./logger_factory";
 
 /**
@@ -13,14 +13,14 @@ import type {
  * the output differs.
  */
 const browserRuntime = {
-    write: createBrowserLogWriter(createLoggerConsole()),
+    write: createBrowserLogWriter(createLoggerConsole())
 } satisfies LoggerRuntime;
 
 class Logger extends LoggerBase {
     constructor(
         name: string,
         parent?: LoggerParent,
-        options: LoggerOptions = {},
+        options: LoggerOptions = {}
     ) {
         super(Logger, browserRuntime, name, parent, options);
     }

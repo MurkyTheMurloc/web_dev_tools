@@ -1,7 +1,7 @@
 import { formatConsoleTimestamp } from "./console_timestamp";
 import {
     buildLogMessage,
-    formatOpenTelemetryContextLabel,
+    formatOpenTelemetryContextLabel
 } from "./logger_factory";
 import type { LoggerConsole, LogLevel, LogWriter } from "./logger_factory";
 import { isError } from "./serialize_value";
@@ -21,7 +21,7 @@ const LEVEL_STYLES: Readonly<Record<LogLevel, string>> = {
     DEBUG: "color: #0891b2",
     ERROR: "color: #dc2626",
     INFO: "color: #16a34a",
-    WARN: "color: #ca8a04",
+    WARN: "color: #ca8a04"
 };
 
 function readString(value: object, key: string, fallback: string): string {
@@ -90,7 +90,7 @@ function copyError(error: object, depth: number): unknown {
                 .slice(FIRST_INDEX, MAX_AGGREGATED_ERRORS)
                 .map((entry: unknown) => {
                     return copyChild(entry);
-                }),
+                })
         );
     }
 
@@ -130,12 +130,12 @@ function createBrowserLogWriter(loggerConsole: LoggerConsole): LogWriter {
         const header = buildLogMessage(
             formatConsoleTimestamp(
                 entry.epochMilliseconds,
-                output.timestampFormat,
+                output.timestampFormat
             ),
             `[${entry.level}]`,
             entry.loggerName,
             formatOpenTelemetryContextLabel(entry.openTelemetryContext),
-            entry.message,
+            entry.message
         );
         const args = entry.args.map(toConsoleArgument);
 
@@ -146,7 +146,7 @@ function createBrowserLogWriter(loggerConsole: LoggerConsole): LogWriter {
                 "%c%s",
                 LEVEL_STYLES[entry.level],
                 header,
-                ...args,
+                ...args
             );
         }
 

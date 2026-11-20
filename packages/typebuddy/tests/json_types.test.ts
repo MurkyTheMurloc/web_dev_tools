@@ -16,7 +16,7 @@ describe("JSON.parse(JSON.stringify(...)) types", () => {
         expectTypeOf(parsed.tags).toEqualTypeOf<string[]>();
         expect(parsed.tags.map((tag) => tag.toUpperCase())).toStrictEqual([
             "A",
-            "B",
+            "B"
         ]);
     });
 
@@ -42,7 +42,7 @@ describe("JSON.parse(JSON.stringify(...)) types", () => {
         >();
         expect(JSON.parse(JSON.stringify([undefined, "a"]))).toStrictEqual([
             null,
-            "a",
+            "a"
         ]);
     });
 
@@ -54,7 +54,7 @@ describe("JSON.parse(JSON.stringify(...)) types", () => {
             Record<string, never>
         >();
         expect(JSON.parse(JSON.stringify(new Map([["a", 1]])))).toStrictEqual(
-            {},
+            {}
         );
     });
 

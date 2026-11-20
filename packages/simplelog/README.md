@@ -33,7 +33,7 @@ const logger = new Logger("MyLogger", undefined, {
     writeToFile: true,
     logFilePath: "logs/mylogger.log",
     logLevelThreshold: "DEBUG",
-    valueColorMode: "syntax",
+    valueColorMode: "syntax"
 });
 ```
 
@@ -150,8 +150,8 @@ differently:
 Server runtimes keep the text logger: the `workerd`, `worker`, `edge-light`,
 `deno`, `bun` and `node` conditions come before `browser`, and Vite's SSR build
 resolves `node`. A bundler that builds server code with only the `browser`
-condition gets the browser logger: `Error` arguments are still cut down, but
-an Error inside another object, `Map` or `Set` keeps all its properties, and
+condition gets the browser logger: `Error` arguments are still cut down, but an
+Error inside another object, `Map` or `Set` keeps all its properties, and
 nothing is truncated. Vite does that with `ssr.target: "webworker"` unless
 `ssr.resolve.conditions` names one of the server conditions, for example
 `["workerd", "worker"]`.
@@ -252,7 +252,7 @@ type AppVariables = {
 const app = new Hono<{ Variables: AppVariables }>();
 const logger = new Logger("server", undefined, {
     includeOpenTelemetryContext: true,
-    valueColorMode: "off",
+    valueColorMode: "off"
 });
 
 app.use(createHonoLoggerMiddleware({ logger }));
@@ -293,8 +293,8 @@ app.use(
         logger,
         requestLoggerName(context) {
             return `${context.runtime}:${context.path}`;
-        },
-    }),
+        }
+    })
 );
 ```
 
@@ -330,8 +330,8 @@ Enable the plugin and the rules in your `.oxlintrc.jsonc`:
         "simplelog/no-console-alias": "error",
         "simplelog/prefer-hono-context-logger": "error",
         "simplelog/prefer-runtime-entry": "error",
-        "simplelog/require-logger-name": "error",
-    },
+        "simplelog/require-logger-name": "error"
+    }
 }
 ```
 
@@ -354,7 +354,7 @@ import { Logger } from "@murky-web/simplelog/web";
 
 const logger = new Logger("server", undefined, {
     includeOpenTelemetryContext: true,
-    valueColorMode: "off",
+    valueColorMode: "off"
 });
 ```
 
@@ -399,12 +399,12 @@ import { Logger } from "@murky-web/simplelog";
 const logger = new Logger("AppLogger", undefined, {
     writeToFile: true,
     logFilePath: "logs/app.log",
-    logLevelThreshold: "INFO",
+    logLevelThreshold: "INFO"
 });
 
 logger.info("Application started");
 logger.debug(
-    "This debug message will not be logged because the threshold is INFO",
+    "This debug message will not be logged because the threshold is INFO"
 );
 logger.warn("This is a warning");
 logger.error("This is an error");

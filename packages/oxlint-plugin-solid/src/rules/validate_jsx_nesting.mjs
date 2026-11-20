@@ -36,7 +36,7 @@ import { isDOMElementName, jsxGetProp, jsxPropName } from "../utils.mjs";
 // `<body>` from a parsed document, used as the parsing context so fragments are
 // interpreted the way `innerHTML` would interpret them.
 const htmlElement = parse(
-    "<!DOCTYPE html><html><head></head><body></body></html>",
+    "<!DOCTYPE html><html><head></head><body></body></html>"
 ).childNodes[1];
 const bodyContext = htmlElement.childNodes[1];
 
@@ -49,7 +49,7 @@ const tableWrappers = {
     tfoot: ["table"],
     tr: ["table", "tbody"],
     td: ["table", "tbody", "tr"],
-    th: ["table", "tbody", "tr"],
+    th: ["table", "tbody", "tr"]
 };
 
 // Rows, row groups and the table itself keep a hidden input as a child, any
@@ -72,7 +72,7 @@ const voidElements = new Set([
     "param",
     "source",
     "track",
-    "wbr",
+    "wbr"
 ]);
 
 // parse5 lowercases tag names outside SVG, so `<foreignObject>` comes back as
@@ -111,7 +111,7 @@ const parserRewrites = (parent, child, namespace) => {
         : `<${child}></${child}>`;
     const markup = wrappers.reduceRight(
         (content, tag) => `<${tag}>${content}</${tag}>`,
-        `<${parent}>${childMarkup}</${parent}>`,
+        `<${parent}>${childMarkup}</${parent}>`
     );
     let fragment = documentParent
         ? parse(markup).childNodes.find((node) => node.nodeName === "html")
@@ -120,7 +120,7 @@ const parserRewrites = (parent, child, namespace) => {
         fragment = fragment?.childNodes.find((node) => node.nodeName === tag);
     }
     const roots = (fragment?.childNodes ?? []).filter(
-        (node) => node.nodeName !== "#text",
+        (node) => node.nodeName !== "#text"
     );
     const root = documentParent
         ? roots.find((node) => node.nodeName === parent)
@@ -130,7 +130,7 @@ const parserRewrites = (parent, child, namespace) => {
     // `<template>` parks its children in `content`, not `childNodes`.
     const container = root && "content" in root ? root.content : root;
     const kids = (container?.childNodes ?? []).filter(
-        (node) => node.nodeName !== "#text",
+        (node) => node.nodeName !== "#text"
     );
 
     // Foreign content can only clear a report the HTML reading makes, since
@@ -296,7 +296,7 @@ const foreignContentExits = new Set([
     "tt",
     "u",
     "ul",
-    "var",
+    "var"
 ]);
 
 // `<font>` leaves foreign content when it has one of these attributes.
@@ -319,7 +319,7 @@ const switchesToHTML = (element, tag, namespace) => {
         return attributes.some(
             (attr) =>
                 attr.type === "JSXAttribute" &&
-                fontExitAttributes.has(jsxPropName(attr).toLowerCase()),
+                fontExitAttributes.has(jsxPropName(attr).toLowerCase())
         );
     }
     if (namespace === "svg") {
@@ -331,7 +331,7 @@ const switchesToHTML = (element, tag, namespace) => {
         const encoding = attributes.find(
             (attr) =>
                 attr.type === "JSXAttribute" &&
-                jsxPropName(attr).toLowerCase() === "encoding",
+                jsxPropName(attr).toLowerCase() === "encoding"
         )?.value;
         return (
             encoding?.type === "Literal" &&
@@ -427,15 +427,15 @@ export default {
         docs: {
             description:
                 "Disallow HTML nesting the browser refuses to keep, like `<p><div /></p>`, which silently renders a different DOM than the JSX describes.",
-            url: "https://github.com/solidjs-community/eslint-plugin-solid/blob/main/packages/eslint-plugin-solid/docs/validate-jsx-nesting.md",
+            url: "https://github.com/solidjs-community/eslint-plugin-solid/blob/main/packages/eslint-plugin-solid/docs/validate-jsx-nesting.md"
         },
         messages: {
             invalidNesting:
                 "Invalid HTML nesting: `<{{child}}>` cannot be a child of `<{{parent}}>`. The HTML parser restructures this, so the rendered DOM won't match this markup.",
             invalidNestingInserted:
-                "Invalid HTML nesting: `<{{child}}>` cannot be a child of `<{{parent}}>`. The client inserts it as written, but the HTML parser restructures it in server-rendered HTML, so hydration won't match this markup.",
+                "Invalid HTML nesting: `<{{child}}>` cannot be a child of `<{{parent}}>`. The client inserts it as written, but the HTML parser restructures it in server-rendered HTML, so hydration won't match this markup."
         },
-        schema: [],
+        schema: []
     },
     defaultOptions: [],
     create(context) {
@@ -468,7 +468,7 @@ export default {
                 messageId: isInserted(node, parentNode)
                     ? "invalidNestingInserted"
                     : "invalidNesting",
-                data: { parent, child },
+                data: { parent, child }
             });
         };
 
@@ -483,7 +483,7 @@ export default {
                 if (parentNode) {
                     check(node, child, parentNode);
                 }
-            },
+            }
         };
-    },
+    }
 };

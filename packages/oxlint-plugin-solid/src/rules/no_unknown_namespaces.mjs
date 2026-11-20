@@ -12,7 +12,7 @@ const replacements = {
         "a camel-case event prop, or a ref callback with `addEventListener` when capture is needed",
     prop: "the standard property",
     style: "the `style` prop with an object value",
-    use: "a ref callback or directive factory, composing with a ref array",
+    use: "a ref callback or directive factory, composing with a ref array"
 };
 export default {
     meta: {
@@ -20,7 +20,7 @@ export default {
         docs: {
             description:
                 "Disallow Solid's removed JSX attribute namespaces. Solid 2.0 dropped `on:`, `oncapture:`, `use:`, `prop:`, `attr:`, `bool:`, `class:` and `style:`.",
-            url: "https://docs.solidjs.com/",
+            url: "https://docs.solidjs.com/"
         },
         schema: [
             {
@@ -31,10 +31,10 @@ export default {
                             "an array of additional namespace names to allow",
                         type: "array",
                         items: {
-                            type: "string",
+                            type: "string"
                         },
                         minItems: 1,
-                        uniqueItems: true,
+                        uniqueItems: true
                     },
                     allowedNamespacedProps: {
                         description:
@@ -42,22 +42,22 @@ export default {
                         type: "array",
                         items: {
                             type: "string",
-                            pattern: "^[^:]+:[^:]+$",
+                            pattern: "^[^:]+:[^:]+$"
                         },
                         minItems: 1,
-                        uniqueItems: true,
-                    },
+                        uniqueItems: true
+                    }
                 },
-                additionalProperties: false,
-            },
+                additionalProperties: false
+            }
         ],
         messages: {
             removed:
                 "'{{namespace}}:' was removed in Solid 2.0. Use {{replacement}} instead.",
             unknown:
                 "'{{namespace}}:' is not a namespace Solid understands. Solid 2.0 has no special JSX prefixes.",
-            component: "Namespaced props have no effect on components.",
-        },
+            component: "Namespaced props have no effect on components."
+        }
     },
     defaultOptions: [],
     create(context) {
@@ -75,7 +75,7 @@ export default {
                 if (
                     explicitlyAllowedNamespaces?.includes(namespace) ||
                     explicitlyAllowedProps?.includes(
-                        `${namespace}:${node.name?.name}`,
+                        `${namespace}:${node.name?.name}`
                     )
                 ) {
                     return;
@@ -99,16 +99,16 @@ export default {
                     context.report({
                         node,
                         messageId: "removed",
-                        data: { namespace, replacement },
+                        data: { namespace, replacement }
                     });
                     return;
                 }
                 context.report({
                     node,
                     messageId: "unknown",
-                    data: { namespace },
+                    data: { namespace }
                 });
-            },
+            }
         };
-    },
+    }
 };

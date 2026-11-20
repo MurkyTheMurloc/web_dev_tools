@@ -2,13 +2,13 @@ import {
     isFunctionNode,
     trackImports,
     isPropsByName,
-    trace,
+    trace
 } from "../utils.mjs";
 // Store APIs that hand back a Proxy. Solid 2.0 exports these from `solid-js`.
 const PROXY_BACKED_STORE_APIS = new Set([
     "createStore",
     "createProjection",
-    "createOptimisticStore",
+    "createOptimisticStore"
 ]);
 export default {
     meta: {
@@ -16,7 +16,7 @@ export default {
         docs: {
             description:
                 "Disallow usage of APIs that use ES6 Proxies, only to target environments that don't support them.",
-            url: "https://github.com/solidjs-community/eslint-plugin-solid/blob/main/packages/eslint-plugin-solid/docs/no-proxy-apis.md",
+            url: "https://github.com/solidjs-community/eslint-plugin-solid/blob/main/packages/eslint-plugin-solid/docs/no-proxy-apis.md"
         },
         schema: [],
         messages: {
@@ -29,8 +29,8 @@ export default {
             proxyLiteral:
                 "Proxies are incompatible with your target environment.",
             mergeProps:
-                "If you pass a function to `mergeProps`, it will create a Proxy, which are incompatible with your target environment.",
-        },
+                "If you pass a function to `mergeProps`, it will create a Proxy, which are incompatible with your target environment."
+        }
     },
     defaultOptions: [],
     create(context) {
@@ -57,7 +57,7 @@ export default {
                     ) {
                         context.report({
                             node: specifier,
-                            messageId: "noStore",
+                            messageId: "noStore"
                         });
                     }
                 }
@@ -86,7 +86,7 @@ export default {
                             .forEach((badArg) => {
                                 context.report({
                                     node: badArg,
-                                    messageId: "mergeProps",
+                                    messageId: "mergeProps"
                                 });
                             });
                     }
@@ -99,7 +99,7 @@ export default {
                     ) {
                         context.report({
                             node,
-                            messageId: "proxyLiteral",
+                            messageId: "proxyLiteral"
                         });
                     }
                 }
@@ -111,7 +111,7 @@ export default {
                 ) {
                     context.report({ node, messageId: "proxyLiteral" });
                 }
-            },
+            }
         };
-    },
+    }
 };

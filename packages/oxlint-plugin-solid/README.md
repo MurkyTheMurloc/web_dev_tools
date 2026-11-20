@@ -39,8 +39,8 @@ Oxlint-Konfiguration als JS-Plugin geladen:
     "jsPlugins": ["@murky-web/oxlint-plugin-solid"],
     "rules": {
         "solid/reactivity": "error",
-        "solid/prefer-arrow-components": "error",
-    },
+        "solid/prefer-arrow-components": "error"
+    }
 }
 ```
 

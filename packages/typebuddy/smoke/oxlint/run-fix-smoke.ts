@@ -6,7 +6,7 @@ const smokeDir = new URL("./", import.meta.url);
 const configPath = new URL("./.oxlintrc.jsonc", smokeDir);
 const formatConfigPath = new URL(
     "../../../../config/oxc/.oxfmtrc.jsonc",
-    smokeDir,
+    smokeDir
 );
 
 // Two shapes, because the import insertion behaves differently in each: a file
@@ -14,7 +14,7 @@ const formatConfigPath = new URL(
 // import, one that does not gets it prepended before the first statement.
 const cases = [
     { input: "./fix-input.ts", expected: "./fix-expected.ts" },
-    { input: "./fix-input-bare.ts", expected: "./fix-expected-bare.ts" },
+    { input: "./fix-input-bare.ts", expected: "./fix-expected-bare.ts" }
 ] as const;
 
 async function runCase(input: string, expected: string): Promise<void> {
@@ -38,7 +38,7 @@ async function runCase(input: string, expected: string): Promise<void> {
 
             if (![0, 1].includes(result.exitCode)) {
                 console.error(
-                    `Oxlint fix smoke test failed unexpectedly on ${input}.`,
+                    `Oxlint fix smoke test failed unexpectedly on ${input}.`
                 );
                 process.exit(result.exitCode);
             }
@@ -55,12 +55,12 @@ async function runCase(input: string, expected: string): Promise<void> {
 
         const [actual, want] = await Promise.all([
             readFile(tempFilePath, "utf8"),
-            readFile(expectedPath, "utf8"),
+            readFile(expectedPath, "utf8")
         ]);
 
         if (actual !== want) {
             console.error(
-                `Oxlint fix smoke test did not produce the expected output for ${input}.`,
+                `Oxlint fix smoke test did not produce the expected output for ${input}.`
             );
             console.error("\n--- Expected ---\n");
             console.error(want);

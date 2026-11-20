@@ -36,7 +36,7 @@ describe("number parsing, second round", () => {
 
     it("should refuse numbers past the safe integer range, like strings", () => {
         expect(parseInteger(Number.MAX_SAFE_INTEGER)).toBe(
-            Number.MAX_SAFE_INTEGER,
+            Number.MAX_SAFE_INTEGER
         );
         expect(parseInteger(2 ** 53, FALLBACK)).toBe(FALLBACK);
         expect(parseInteger(1e21, FALLBACK)).toBe(FALLBACK);

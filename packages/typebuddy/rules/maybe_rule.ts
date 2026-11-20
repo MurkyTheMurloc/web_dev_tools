@@ -26,15 +26,15 @@ const rule = {
                 const types = node.types;
 
                 const nullType = types.find(
-                    (typeNode) => typeNode.type === "TSNullKeyword",
+                    (typeNode) => typeNode.type === "TSNullKeyword"
                 );
                 const undefinedType = types.find(
-                    (typeNode) => typeNode.type === "TSUndefinedKeyword",
+                    (typeNode) => typeNode.type === "TSUndefinedKeyword"
                 );
                 const otherTypes = types.filter(
                     (typeNode) =>
                         typeNode.type !== "TSNullKeyword" &&
-                        typeNode.type !== "TSUndefinedKeyword",
+                        typeNode.type !== "TSUndefinedKeyword"
                 );
 
                 if (nullType && !undefinedType && otherTypes.length === 1) {
@@ -53,32 +53,32 @@ const rule = {
                                 node,
                                 fixer,
                                 "Maybe",
-                                "type",
+                                "type"
                             );
                             if (importFixes === null) return null;
 
                             return [
                                 ...importFixes,
-                                fixer.replaceText(node, `Maybe<${typeText}>`),
+                                fixer.replaceText(node, `Maybe<${typeText}>`)
                             ];
-                        },
+                        }
                     });
                 }
-            },
+            }
         };
     },
     defaultOptions: [],
     meta: {
         type: "suggestion",
         docs: {
-            description: "Use Maybe<T> for T | null",
+            description: "Use Maybe<T> for T | null"
         },
         fixable: "code",
         schema: [],
         messages: {
-            useMaybe: "Use Maybe<{{type}}> instead of {{type}} | null",
-        },
-    },
+            useMaybe: "Use Maybe<{{type}}> instead of {{type}} | null"
+        }
+    }
 };
 
 export { rule as maybeRule };

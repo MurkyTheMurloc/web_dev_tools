@@ -1,7 +1,6 @@
 {
     "name": "@murky-web/workspace",
     "private": true,
-    "packageManager": "bun@1.4.4",
     "workspaces": [
         "packages/*",
         "packages/shadcn-lint/packages/lint"
@@ -39,5 +38,6 @@
         "typescript": "^7.0.2",
         "vite": "^8.3.8",
         "vitest": "5.1.1"
-    }
+    },
+    "packageManager": "bun@1.4.4"
 }

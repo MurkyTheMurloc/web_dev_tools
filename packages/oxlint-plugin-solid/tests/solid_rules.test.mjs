@@ -7,16 +7,16 @@ import {
     importFixCases,
     importsSilentCases,
     importsSolidJsNames,
-    noDestructureSilentCases,
+    noDestructureSilentCases
 } from "./import_cases.mjs";
 import {
     READ_AFTER_GAP_MESSAGE,
     reactivityAsyncReportingCases,
-    reactivityAsyncSilentCases,
+    reactivityAsyncSilentCases
 } from "./reactivity_async_cases.mjs";
 import {
     reactivityScopeReportingCases,
-    reactivityScopeSilentCases,
+    reactivityScopeSilentCases
 } from "./reactivity_scope_cases.mjs";
 import {
     expectedRuleIds,
@@ -26,7 +26,7 @@ import {
     noDestructureFixCases,
     preferArrowDiagnosticCases,
     preferArrowFixCases,
-    ruleCases,
+    ruleCases
 } from "./rule_cases.mjs";
 
 const EXIT_SUCCESS = 0;
@@ -88,11 +88,11 @@ function registerImportsRuleTests() {
     importsSolidJsNames.forEach((name) => {
         test(`imports: ${name} comes from solid-js`, async () => {
             const result = await harness.lint(
-                `import { ${name} } from "@solidjs/web";\n\nexport const used = ${name};\n`,
+                `import { ${name} } from "@solidjs/web";\n\nexport const used = ${name};\n`
             );
 
             expect(result.output).toContain(
-                `Prefer importing ${name} from "solid-js".`,
+                `Prefer importing ${name} from "solid-js".`
             );
         });
     });
@@ -132,7 +132,7 @@ function registerRuleDiagnosticsTests() {
         test(`reports ${ruleCase.ruleId}`, async () => {
             const result = await harness.lint(ruleCase.code, {
                 fileName: ruleCase.fileName,
-                files: ruleCase.files,
+                files: ruleCase.files
             });
 
             expect(result.exitCode).toBeGreaterThan(EXIT_SUCCESS);
@@ -147,14 +147,14 @@ function registerNamespaceTests() {
     namespaceCases.forEach((namespaceCase) => {
         test(`no-unknown-namespaces: ${namespaceCase.name}`, async () => {
             const result = await harness.lint(namespaceCase.code, {
-                rules: namespaceCase.rules,
+                rules: namespaceCase.rules
             });
 
             if (namespaceCase.report === null) {
                 expect(result.output).not.toContain(NAMESPACE_RULE);
             } else {
                 expect(result.output).toContain(
-                    `${NAMESPACE_RULE}: ${namespaceCase.report}`,
+                    `${NAMESPACE_RULE}: ${namespaceCase.report}`
                 );
             }
         });
@@ -165,7 +165,7 @@ function registerNamespaceTests() {
             const result = await harness.lint(fixCase.code, {
                 fix: true,
                 flags: ["--fix-suggestions", "--fix-dangerously"],
-                rules: fixCase.rules,
+                rules: fixCase.rules
             });
 
             expect(result.source).toContain("<Island client:visible />");
@@ -222,7 +222,7 @@ describe("oxlint-plugin-solid", () => {
 
     test("exports every ported solid rule", () => {
         expect(Object.keys(solidPlugin.rules).toSorted()).toEqual(
-            expectedRuleIds,
+            expectedRuleIds
         );
     });
 

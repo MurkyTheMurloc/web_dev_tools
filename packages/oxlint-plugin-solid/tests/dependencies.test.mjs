@@ -22,12 +22,12 @@ const kebabCases = Object.freeze([
     ['fontFamily: "serif"', "Use font-family instead of fontFamily."],
     [
         'WebkitTransition: "none"',
-        "Use -webkit-transition instead of WebkitTransition.",
+        "Use -webkit-transition instead of WebkitTransition."
     ],
     [
         'borderTopLeftRadius: "1px"',
-        "Use border-top-left-radius instead of borderTopLeftRadius.",
-    ],
+        "Use border-top-left-radius instead of borderTopLeftRadius."
+    ]
 ]);
 
 describe("runtime dependencies reach the rules", () => {
@@ -50,7 +50,7 @@ describe("runtime dependencies reach the rules", () => {
 
         test("fixes the key of a camel-cased property", async () => {
             const result = await harness.lint(styled('fontFamily: "serif"'), {
-                fix: true,
+                fix: true
             });
 
             expect(result.source).toContain('"font-family": "serif"');
@@ -62,7 +62,7 @@ describe("runtime dependencies reach the rules", () => {
             const result = await harness.lint(styled('fooBar: "x"'));
 
             expect(result.output).toContain(
-                "fooBar is not a valid CSS property.",
+                "fooBar is not a valid CSS property."
             );
         });
 
@@ -88,11 +88,11 @@ describe("runtime dependencies reach the rules", () => {
 
         test("no longer knows a property that was dropped in 0.37", async () => {
             const result = await harness.lint(
-                styled('"anchor-default": "--a"'),
+                styled('"anchor-default": "--a"')
             );
 
             expect(result.output).toContain(
-                "anchor-default is not a valid CSS property.",
+                "anchor-default is not a valid CSS property."
             );
         });
     });
@@ -101,11 +101,11 @@ describe("runtime dependencies reach the rules", () => {
         test("turns a style string into an object", async () => {
             const result = await harness.lint(
                 view(`<div style="font-size: 10px; color: red" />`),
-                { fix: true },
+                { fix: true }
             );
 
             expect(result.source).toContain(
-                'style={{"font-size":"10px","color":"red"}}',
+                'style={{"font-size":"10px","color":"red"}}'
             );
         });
 
@@ -114,7 +114,7 @@ describe("runtime dependencies reach the rules", () => {
             const result = await harness.lint(source, { fix: true });
 
             expect(result.output).toContain(
-                "Use an object for the style prop instead of a string.",
+                "Use an object for the style prop instead of a string."
             );
             expect(result.source).toBe(source);
         });
@@ -123,27 +123,27 @@ describe("runtime dependencies reach the rules", () => {
     describe("is-html", () => {
         test("takes a string with a tag for HTML", async () => {
             const result = await harness.lint(
-                view(`<div innerHTML="<b>bold</b>">child</div>`),
+                view(`<div innerHTML="<b>bold</b>">child</div>`)
             );
 
             expect(result.output).toContain(
-                "The innerHTML attribute should not be used on an element with child elements",
+                "The innerHTML attribute should not be used on an element with child elements"
             );
         });
 
         test("takes a string without a tag for text", async () => {
             const result = await harness.lint(
-                view(`<div innerHTML="just text" />`),
+                view(`<div innerHTML="just text" />`)
             );
 
             expect(result.output).toContain(
-                "The string passed to innerHTML does not appear to be valid HTML.",
+                "The string passed to innerHTML does not appear to be valid HTML."
             );
         });
 
         test("allows static HTML without children", async () => {
             const result = await harness.lint(
-                view(`<div innerHTML="<b>bold</b>" />`),
+                view(`<div innerHTML="<b>bold</b>" />`)
             );
 
             expect(result.output).not.toContain("solid(no-innerhtml)");

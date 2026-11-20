@@ -4,7 +4,7 @@ const CONSOLE_METHOD_TO_LOGGER_METHOD = {
     info: "info",
     log: "info",
     trace: "debug",
-    warn: "warn",
+    warn: "warn"
 };
 
 export const preferSimplelogRule = {
@@ -12,13 +12,13 @@ export const preferSimplelogRule = {
         type: "suggestion",
         docs: {
             description:
-                "Prefer @murky-web/simplelog over direct console method calls.",
+                "Prefer @murky-web/simplelog over direct console method calls."
         },
         schema: [],
         messages: {
             preferSimplelog:
-                "Prefer a SimpleLog logger over direct console.{{consoleMethod}}(). Use logger.{{loggerMethod}}(...) instead.",
-        },
+                "Prefer a SimpleLog logger over direct console.{{consoleMethod}}(). Use logger.{{loggerMethod}}(...) instead."
+        }
     },
     create(context) {
         return {
@@ -54,11 +54,11 @@ export const preferSimplelogRule = {
                     messageId: "preferSimplelog",
                     data: {
                         consoleMethod,
-                        loggerMethod,
+                        loggerMethod
                     },
-                    node: node.callee.property,
+                    node: node.callee.property
                 });
-            },
+            }
         };
-    },
+    }
 };

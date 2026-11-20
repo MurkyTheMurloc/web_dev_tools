@@ -15,7 +15,7 @@ const expectedRuleIds = [
     "typebuddy(prefer-maybe)",
     "typebuddy(prefer-nullable)",
     "typebuddy(prefer-maybe-promise)",
-    "typebuddy(require-try-catch)",
+    "typebuddy(require-try-catch)"
 ] as const;
 
 const result =
@@ -33,7 +33,7 @@ const diagnostics: readonly Diagnostic[] = (
 
 if (result.exitCode !== 1) {
     console.error(
-        `Expected oxlint to exit with code 1, got ${result.exitCode}.`,
+        `Expected oxlint to exit with code 1, got ${result.exitCode}.`
     );
     console.error(output);
     process.exit(1);
@@ -52,7 +52,7 @@ function countDiagnostics(fileName: string): number {
     return diagnostics.filter(
         (d) =>
             d.filename.endsWith(`/${fileName}`) &&
-            d.code.startsWith("typebuddy("),
+            d.code.startsWith("typebuddy(")
     ).length;
 }
 
@@ -65,13 +65,13 @@ const silent = {
         "framework callbacks are ignored by the async rules",
     "violations.bench.ts":
         "typebuddy does not apply to test files (*.bench.ts)",
-    "async-helper.ts": "typebuddy does not apply to files under __tests__/",
+    "async-helper.ts": "typebuddy does not apply to files under __tests__/"
 } as const;
 
 for (const [fileName, reason] of Object.entries(silent)) {
     if (countDiagnostics(fileName) !== 0) {
         console.error(
-            `Expected no typebuddy diagnostics in ${fileName}: ${reason}.`,
+            `Expected no typebuddy diagnostics in ${fileName}: ${reason}.`
         );
         console.error(output);
         process.exit(1);
@@ -81,19 +81,19 @@ for (const [fileName, reason] of Object.entries(silent)) {
 // The counter itself must see the violations, or every check above passes vacuously.
 if (countDiagnostics("violations.ts") === 0) {
     console.error(
-        "Expected typebuddy diagnostics in violations.ts; the smoke check cannot see oxlint's output.",
+        "Expected typebuddy diagnostics in violations.ts; the smoke check cannot see oxlint's output."
     );
     console.error(output);
     process.exit(1);
 }
 
 const detectedRuleHits = expectedRuleIds.filter((ruleId) =>
-    diagnostics.some((d) => d.code === ruleId),
+    diagnostics.some((d) => d.code === ruleId)
 ).length;
 
 if (detectedRuleHits !== expectedRuleIds.length) {
     console.error(
-        `Expected oxlint smoke to report exactly ${expectedRuleIds.length} tracked rule hits, got ${detectedRuleHits}.`,
+        `Expected oxlint smoke to report exactly ${expectedRuleIds.length} tracked rule hits, got ${detectedRuleHits}.`
     );
     console.error(output);
     process.exit(1);
@@ -102,7 +102,7 @@ if (detectedRuleHits !== expectedRuleIds.length) {
 for (const fileName of ["use-server-module.ts", "use-server-function.ts"]) {
     if (countDiagnostics(fileName) !== 0) {
         console.error(
-            `Expected ${fileName} to be ignored by async typebuddy rules: "use server" code logs and throws instead of returning results.`,
+            `Expected ${fileName} to be ignored by async typebuddy rules: "use server" code logs and throws instead of returning results.`
         );
         console.error(output);
         process.exit(1);
@@ -114,7 +114,7 @@ for (const fileName of ["use-server-module.ts", "use-server-function.ts"]) {
 const siblingHits = countDiagnostics("use-server-sibling.ts");
 if (siblingHits !== 2) {
     console.error(
-        `Expected exactly 2 diagnostics for the function without "use server" next to one with it, got ${siblingHits}.`,
+        `Expected exactly 2 diagnostics for the function without "use server" next to one with it, got ${siblingHits}.`
     );
     console.error(output);
     process.exit(1);

@@ -1,7 +1,7 @@
 import type {
     ConsoleDefaults,
     TimestampFormat,
-    ValueColorMode,
+    ValueColorMode
 } from "./logger_factory";
 
 /**
@@ -28,7 +28,7 @@ const FORCE_COLOR_DISABLED = new Set(["0", "false"]);
  * @returns {ValueColorMode} `"level"` for colors, `"off"` for plain text.
  */
 function resolveDefaultValueColorMode(
-    environment: ConsoleEnvironment,
+    environment: ConsoleEnvironment
 ): ValueColorMode {
     if (typeof environment.noColor === "string" && environment.noColor !== "") {
         return "off";
@@ -50,7 +50,7 @@ function resolveDefaultValueColorMode(
 }
 
 function parseTimestampFormat(
-    value: string | undefined,
+    value: string | undefined
 ): TimestampFormat | undefined {
     if (value === "iso" || value === "time") {
         return value;
@@ -68,7 +68,7 @@ function parseTimestampFormat(
  * @returns {TimestampFormat} The console timestamp format.
  */
 function resolveDefaultTimestampFormat(
-    environment: ConsoleEnvironment,
+    environment: ConsoleEnvironment
 ): TimestampFormat {
     const override = parseTimestampFormat(environment.simplelogTimestamp);
 
@@ -84,11 +84,11 @@ function resolveDefaultTimestampFormat(
 }
 
 function resolveConsoleDefaults(
-    environment: ConsoleEnvironment,
+    environment: ConsoleEnvironment
 ): ConsoleDefaults {
     return {
         timestampFormat: resolveDefaultTimestampFormat(environment),
-        valueColorMode: resolveDefaultValueColorMode(environment),
+        valueColorMode: resolveDefaultValueColorMode(environment)
     };
 }
 

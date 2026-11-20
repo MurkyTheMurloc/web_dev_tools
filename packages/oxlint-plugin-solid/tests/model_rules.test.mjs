@@ -7,7 +7,7 @@ import {
     serverImportReports,
     serverImportSilent,
     strictVoidReports,
-    strictVoidSilent,
+    strictVoidSilent
 } from "./model_rule_cases.mjs";
 
 const DEFAULT_FIXTURE = "src/model_case.tsx";
@@ -16,7 +16,7 @@ let harness = null;
 function lintCase(modelCase) {
     return harness.lint(modelCase.code, {
         fileName: modelCase.fileName ?? DEFAULT_FIXTURE,
-        files: modelCase.files,
+        files: modelCase.files
     });
 }
 
@@ -54,18 +54,18 @@ describe("model rules", () => {
         "reactive-async",
         reactiveAsyncReports,
         reactiveAsyncSilent,
-        "async",
+        "async"
     );
     registerRule(
         "no-server-import-in-client",
         serverImportReports,
         serverImportSilent,
-        "Import a server function module instead",
+        "Import a server function module instead"
     );
     registerRule(
         "strict-void-return",
         strictVoidReports,
         strictVoidSilent,
-        "Solid ignores",
+        "Solid ignores"
     );
 });

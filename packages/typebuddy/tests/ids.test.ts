@@ -13,7 +13,7 @@ describe(isUuidString, () => {
         ["upper case", "550E8400-E29B-41D4-A716-446655440000"],
         ["the nil UUID", "00000000-0000-0000-0000-000000000000"],
         ["the max UUID", "ffffffff-ffff-ffff-ffff-ffffffffffff"],
-        ["the max UUID in upper case", "FFFFFFFF-FFFF-FFFF-FFFF-FFFFFFFFFFFF"],
+        ["the max UUID in upper case", "FFFFFFFF-FFFF-FFFF-FFFF-FFFFFFFFFFFF"]
     ])("accepts %s", (_name, input) => {
         expect(isUuidString(input)).toBeTruthy();
     });
@@ -26,7 +26,7 @@ describe(isUuidString, () => {
         ["a short input", "550e8400-e29b-41d4-a716-44665544000"],
         ["trailing text", "550e8400-e29b-41d4-a716-446655440000x"],
         ["a near-nil UUID", "00000000-0000-0000-0000-000000000001"],
-        ["a near-max UUID", "ffffffff-ffff-ffff-ffff-fffffffffffe"],
+        ["a near-max UUID", "ffffffff-ffff-ffff-ffff-fffffffffffe"]
     ])("rejects %s", (_name, input) => {
         expect(isUuidString(input)).toBeFalsy();
     });
@@ -43,7 +43,7 @@ describe(isUlidString, () => {
         ["lower case", "01arz3ndektsv4rrffq69g5fav"],
         ["mixed case", "01ArZ3NdEkTsV4RrFfQ69g5FaV"],
         ["the smallest ULID", "00000000000000000000000000"],
-        ["the largest ULID", "7ZZZZZZZZZZZZZZZZZZZZZZZZZ"],
+        ["the largest ULID", "7ZZZZZZZZZZZZZZZZZZZZZZZZZ"]
     ])("accepts %s", (_name, input) => {
         expect(isUlidString(input)).toBeTruthy();
     });
@@ -54,7 +54,7 @@ describe(isUlidString, () => {
         ["a character outside the alphabet (I)", "01ARZ3NDEKTSV4RRFFQ69G5FAI"],
         ["a character outside the alphabet (U)", "01ARZ3NDEKTSV4RRFFQ69G5FAU"],
         ["too short", "01ARZ3NDEKTSV4RRFFQ69G5FA"],
-        ["too long", "01ARZ3NDEKTSV4RRFFQ69G5FAVV"],
+        ["too long", "01ARZ3NDEKTSV4RRFFQ69G5FAVV"]
     ])("rejects %s", (_name, input) => {
         expect(isUlidString(input)).toBeFalsy();
     });

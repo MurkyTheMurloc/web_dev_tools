@@ -8,7 +8,7 @@ import {
     isObject,
     parseFloat,
     parseInteger,
-    parseNumber,
+    parseNumber
 } from "../src/type_helper.js";
 
 const NUM_0_1 = 0.1;

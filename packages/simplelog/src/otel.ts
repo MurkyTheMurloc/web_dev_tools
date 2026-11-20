@@ -32,7 +32,7 @@ function enableOpenTelemetryContext(): void {
 
         return {
             spanId: spanContext.spanId,
-            traceId: spanContext.traceId,
+            traceId: spanContext.traceId
         };
     });
 }

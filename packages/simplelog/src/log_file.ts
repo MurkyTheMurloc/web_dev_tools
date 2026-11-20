@@ -1,7 +1,7 @@
 import type { StringifiedArgument } from "./console_text";
 import {
     buildLogMessage,
-    formatOpenTelemetryContextLabel,
+    formatOpenTelemetryContextLabel
 } from "./logger_factory";
 import type { LogEntry } from "./logger_factory";
 import { escapeFileCharacters } from "./serialize_value";
@@ -47,12 +47,12 @@ function buildFileLine(entry: LogFileEntry): string {
             `[${entry.level}]`,
             entry.loggerName,
             formatOpenTelemetryContextLabel(entry.openTelemetryContext),
-            entry.message,
-        ),
+            entry.message
+        )
     );
 
     return [header, ...entry.args.map(formatFileArgument)].join(
-        ARGUMENT_SEPARATOR,
+        ARGUMENT_SEPARATOR
     );
 }
 
@@ -82,7 +82,7 @@ function formatFileStackTrace(stackTrace: string): string {
  * @returns {LogFileWriter} Writes one entry, then its stack trace, if any.
  */
 function createLogFileWriter(
-    appendTextFileSync: (filePath: string, content: string) => void,
+    appendTextFileSync: (filePath: string, content: string) => void
 ): LogFileWriter {
     return (filePath, entry) => {
         appendTextFileSync(filePath, `${buildFileLine(entry)}${LINE_BREAK}`);
@@ -90,7 +90,7 @@ function createLogFileWriter(
         if (entry.stackTrace.length > EMPTY_LENGTH) {
             appendTextFileSync(
                 filePath,
-                `${formatFileStackTrace(entry.stackTrace)}${LINE_BREAK}`,
+                `${formatFileStackTrace(entry.stackTrace)}${LINE_BREAK}`
             );
         }
     };

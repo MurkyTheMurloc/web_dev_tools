@@ -27,15 +27,15 @@ const rule = {
                 if (types.length !== 3) return;
 
                 const nullType = types.find(
-                    (typeNode) => typeNode.type === "TSNullKeyword",
+                    (typeNode) => typeNode.type === "TSNullKeyword"
                 );
                 const undefinedType = types.find(
-                    (typeNode) => typeNode.type === "TSUndefinedKeyword",
+                    (typeNode) => typeNode.type === "TSUndefinedKeyword"
                 );
                 const otherType = types.find(
                     (typeNode) =>
                         typeNode.type !== "TSNullKeyword" &&
-                        typeNode.type !== "TSUndefinedKeyword",
+                        typeNode.type !== "TSUndefinedKeyword"
                 );
 
                 if (nullType && undefinedType && otherType) {
@@ -52,36 +52,33 @@ const rule = {
                                 node,
                                 fixer,
                                 "Nullable",
-                                "type",
+                                "type"
                             );
                             if (importFixes === null) return null;
 
                             return [
                                 ...importFixes,
-                                fixer.replaceText(
-                                    node,
-                                    `Nullable<${typeText}>`,
-                                ),
+                                fixer.replaceText(node, `Nullable<${typeText}>`)
                             ];
-                        },
+                        }
                     });
                 }
-            },
+            }
         };
     },
     defaultOptions: [],
     meta: {
         type: "suggestion",
         docs: {
-            description: "Use Nullable<T> instead of T | null | undefined",
+            description: "Use Nullable<T> instead of T | null | undefined"
         },
         fixable: "code",
         schema: [],
         messages: {
             useNullable:
-                "Use Nullable<{{type}}> instead of {{type}} | null | undefined",
-        },
-    },
+                "Use Nullable<{{type}}> instead of {{type}} | null | undefined"
+        }
+    }
 };
 
 export { rule as nullableRule };

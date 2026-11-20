@@ -51,7 +51,12 @@
             }
         },
         {
-            "files": ["rules/**/*.ts", "oxlint/**/*.ts", "smoke/oxlint/**/*.ts", "smoke/globals/**/*.d.ts"],
+            "files": [
+                "rules/**/*.ts",
+                "oxlint/**/*.ts",
+                "smoke/oxlint/**/*.ts",
+                "smoke/globals/**/*.d.ts"
+            ],
             "rules": {
                 "complexity": "off",
                 "consistent-type-definitions": "off",

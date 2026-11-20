@@ -13,7 +13,7 @@ const OWNED_PRIMITIVES = [
     "createReaction",
     "createRenderEffect",
     "onCleanup",
-    "onSettled",
+    "onSettled"
 ];
 
 /** The callbacks a `ref` prop applies, including the ones in a ref array. */
@@ -27,7 +27,7 @@ function getRefCallbacks(expression) {
     // callback like any other.
     if (expression?.type === "ArrayExpression") {
         return expression.elements.flatMap((element) =>
-            element !== null && isFunctionNode(element) ? [element] : [],
+            element !== null && isFunctionNode(element) ? [element] : []
         );
     }
 
@@ -73,13 +73,13 @@ export default {
         docs: {
             description:
                 "Disallow creating owner-bound primitives inside a ref callback.",
-            url: "https://docs.solidjs.com/",
+            url: "https://docs.solidjs.com/"
         },
         schema: [],
         messages: {
             ownedPrimitiveInRef:
-                "`{{name}}` is called inside a ref callback, which runs without an owner — nothing will ever dispose it. Create it in the directive factory instead, and let the returned callback only store the element.",
-        },
+                "`{{name}}` is called inside a ref callback, which runs without an owner — nothing will ever dispose it. Create it in the directive factory instead, and let the returned callback only store the element."
+        }
     },
     defaultOptions: [],
     create(context) {
@@ -103,7 +103,7 @@ export default {
                             candidate.callee.type !== "Identifier" ||
                             !matchImport(
                                 OWNED_PRIMITIVES,
-                                candidate.callee.name,
+                                candidate.callee.name
                             )
                         ) {
                             return;
@@ -112,11 +112,11 @@ export default {
                         context.report({
                             node: candidate,
                             messageId: "ownedPrimitiveInRef",
-                            data: { name: candidate.callee.name },
+                            data: { name: candidate.callee.name }
                         });
                     });
                 }
-            },
+            }
         };
-    },
+    }
 };

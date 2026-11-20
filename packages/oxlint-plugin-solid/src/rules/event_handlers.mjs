@@ -60,17 +60,17 @@ const COMMON_EVENTS = [
     "onTouchMove",
     "onTouchStart",
     "onTransitionEnd",
-    "onWheel",
+    "onWheel"
 ];
 const COMMON_EVENTS_MAP = new Map(
     (function* () {
         for (const event of COMMON_EVENTS) {
             yield [event.toLowerCase(), event];
         }
-    })(),
+    })()
 );
 const NONSTANDARD_EVENTS_MAP = {
-    ondoubleclick: "onDblClick",
+    ondoubleclick: "onDblClick"
 };
 const isCommonHandlerName = (lowercaseHandlerName) =>
     COMMON_EVENTS_MAP.has(lowercaseHandlerName);
@@ -86,7 +86,7 @@ export default {
         docs: {
             description:
                 "Enforce naming DOM element event handlers consistently and prevent Solid's analysis from misunderstanding whether a prop should be an event handler.",
-            url: "https://github.com/solidjs-community/eslint-plugin-solid/blob/main/packages/eslint-plugin-solid/docs/event-handlers.md",
+            url: "https://github.com/solidjs-community/eslint-plugin-solid/blob/main/packages/eslint-plugin-solid/docs/event-handlers.md"
         },
         fixable: "code",
         hasSuggestions: true,
@@ -98,17 +98,17 @@ export default {
                         type: "boolean",
                         description:
                             "if true, don't warn on ambiguously named event handlers like `onclick` or `onchange`",
-                        default: false,
+                        default: false
                     },
                     warnOnSpread: {
                         type: "boolean",
                         description:
                             "if true, warn when spreading event handlers onto JSX. Enable for Solid < v1.6.",
-                        default: false,
-                    },
+                        default: false
+                    }
                 },
-                additionalProperties: false,
-            },
+                additionalProperties: false
+            }
         ],
         messages: {
             "detected-attr":
@@ -120,8 +120,8 @@ export default {
                 "The {{name}} prop should be renamed to {{fixedName}}, because it's not a standard event handler.",
             "make-handler": "Change the {{name}} prop to {{handlerName}}.",
             "spread-handler":
-                "The {{name}} prop should be added as a JSX attribute, not spread in. Solid doesn't add listeners when spreading into JSX.",
-        },
+                "The {{name}} prop should be added as a JSX attribute, not spread in. Solid doesn't add listeners when spreading into JSX."
+        }
     },
     defaultOptions: [],
     create(context) {
@@ -150,7 +150,7 @@ export default {
                     node.value.expression.type !== "ArrayExpression" && // array syntax prevents inlining
                     (staticValue = getStaticValue(
                         node.value.expression,
-                        getScope(context, node),
+                        getScope(context, node)
                     )) !== null &&
                     (typeof staticValue.value === "string" ||
                         typeof staticValue.value === "number")
@@ -170,8 +170,8 @@ export default {
                         messageId: "detected-attr",
                         data: {
                             name,
-                            staticValue: staticValue.value,
-                        },
+                            staticValue: staticValue.value
+                        }
                     });
                 } else if (
                     node.value === null ||
@@ -184,8 +184,8 @@ export default {
                         data: {
                             name,
                             staticValue:
-                                node.value !== null ? node.value.value : true,
-                        },
+                                node.value !== null ? node.value.value : true
+                        }
                     });
                 } else if (!context.options[0]?.ignoreCase) {
                     const lowercaseHandlerName = name.toLowerCase();
@@ -197,7 +197,7 @@ export default {
                             messageId: "nonstandard",
                             data: { name, fixedName },
                             fix: (fixer) =>
-                                fixer.replaceText(node.name, fixedName),
+                                fixer.replaceText(node.name, fixedName)
                         });
                     } else if (isCommonHandlerName(lowercaseHandlerName)) {
                         const fixedName =
@@ -210,7 +210,7 @@ export default {
                                 messageId: "capitalization",
                                 data: { name, fixedName },
                                 fix: (fixer) =>
-                                    fixer.replaceText(node.name, fixedName),
+                                    fixer.replaceText(node.name, fixedName)
                             });
                         }
                     } else if (name[2] === name[2].toLowerCase()) {
@@ -231,10 +231,10 @@ export default {
                                     fix: (fixer) =>
                                         fixer.replaceText(
                                             node.name,
-                                            handlerName,
-                                        ),
-                                },
-                            ],
+                                            handlerName
+                                        )
+                                }
+                            ]
                         });
                     }
                 }
@@ -262,7 +262,7 @@ export default {
                                 node,
                                 messageId: "spread-handler",
                                 data: {
-                                    name: node.key.name,
+                                    name: node.key.name
                                 },
                                 *fix(fixer) {
                                     const commaAfter =
@@ -270,21 +270,21 @@ export default {
                                     yield fixer.remove(
                                         node.parent.properties.length === 1
                                             ? node.parent.parent
-                                            : node,
+                                            : node
                                     );
                                     if (commaAfter?.value === ",") {
                                         yield fixer.remove(commaAfter);
                                     }
                                     yield fixer.insertTextAfter(
                                         node.parent.parent,
-                                        ` ${handlerName}={${sourceCode.getText(node.value)}}`,
+                                        ` ${handlerName}={${sourceCode.getText(node.value)}}`
                                     );
-                                },
+                                }
                             });
                         }
                     }
                 }
-            },
+            }
         };
-    },
+    }
 };

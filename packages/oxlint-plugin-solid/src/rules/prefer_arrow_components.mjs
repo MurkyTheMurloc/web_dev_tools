@@ -105,7 +105,7 @@ function getPropsParam(functionNode, sourceCode) {
     if (functionNode.params.length === NO_PARAMETERS) {
         return {
             name: "",
-            text: "",
+            text: ""
         };
     }
 
@@ -117,14 +117,14 @@ function getPropsParam(functionNode, sourceCode) {
     if (param.type === "Identifier") {
         return {
             name: param.name,
-            text: param.name,
+            text: param.name
         };
     }
 
     if (param.type === "ObjectPattern") {
         return {
             name: "",
-            text: sourceCode.getText(param),
+            text: sourceCode.getText(param)
         };
     }
 
@@ -307,11 +307,11 @@ export const preferArrowComponentsRule = {
         docs: {
             description:
                 "Prefer Solid components written as arrow consts typed with Component or ParentComponent.",
-            recommended: false,
+            recommended: false
         },
         fixable: "code",
         schema: [],
-        type: "suggestion",
+        type: "suggestion"
     },
     create(context) {
         const sourceCode = context.sourceCode;
@@ -361,20 +361,20 @@ export const preferArrowComponentsRule = {
             const plans = candidates.map((candidate) => {
                 const localTypeName = findLocalTypeName(
                     solidImports,
-                    candidate.desiredTypeName,
+                    candidate.desiredTypeName
                 );
 
                 return {
                     ...candidate,
                     fixable: !isUsedBeforeDeclaration(
                         candidate.node,
-                        firstJsxUse,
+                        firstJsxUse
                     ),
                     resolvedTypeName:
                         localTypeName === ""
                             ? candidate.desiredTypeName
                             : localTypeName,
-                    needsImport: localTypeName === "",
+                    needsImport: localTypeName === ""
                 };
             });
 
@@ -397,7 +397,7 @@ export const preferArrowComponentsRule = {
                         referencedTypes.has(name) &&
                         findLocalTypeName(solidImports, name) === ""
                     );
-                }),
+                })
             ]) {
                 if (!namesToImport.includes(name)) {
                     namesToImport.push(name);
@@ -419,7 +419,7 @@ export const preferArrowComponentsRule = {
                         fixer,
                         sourceCode,
                         target,
-                        namesToImport.map((name) => `${typeKeyword}${name}`),
+                        namesToImport.map((name) => `${typeKeyword}${name}`)
                     );
                 }
 
@@ -429,7 +429,7 @@ export const preferArrowComponentsRule = {
                     SOLID_IMPORT_SOURCE,
                     namesToImport,
                     undefined,
-                    true,
+                    true
                 );
             };
 
@@ -459,7 +459,7 @@ export const preferArrowComponentsRule = {
                         }
 
                         const edits = [
-                            fixer.replaceText(nodeToReplace, replacement),
+                            fixer.replaceText(nodeToReplace, replacement)
                         ];
                         if (
                             plan === carrier &&
@@ -474,7 +474,7 @@ export const preferArrowComponentsRule = {
                         return edits;
                     },
                     message,
-                    node,
+                    node
                 });
             }
         };
@@ -489,7 +489,7 @@ export const preferArrowComponentsRule = {
                 const propsParam = getPropsParam(node, sourceCode);
                 const typeReference = getTypeReferenceForProps(
                     node,
-                    sourceCode,
+                    sourceCode
                 );
                 if (
                     propsParam === FALSE_SENTINEL ||
@@ -506,9 +506,9 @@ export const preferArrowComponentsRule = {
                     desiredTypeName: getDesiredSolidTypeName(usesChildren),
                     node,
                     propsParam,
-                    typeReference,
+                    typeReference
                 });
-            },
+            }
         };
-    },
+    }
 };

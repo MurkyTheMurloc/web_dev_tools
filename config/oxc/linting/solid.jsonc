@@ -29,7 +29,7 @@
         "solid/self-closing-comp": "error",
         "solid/strict-void-return": "error",
         "solid/style-prop": "error",
-        "solid/validate-jsx-nesting": "error",
+        "solid/validate-jsx-nesting": "error"
     },
     "overrides": [
         {
@@ -48,8 +48,8 @@
                 // The typed rule needs types for what handlers return; the
                 // syntax-only `solid/strict-void-return` covers handlers,
                 // `ref` and `onCleanup`/`onSettled` callbacks.
-                "typescript/strict-void-return": "off",
-            },
-        },
-    ],
+                "typescript/strict-void-return": "off"
+            }
+        }
+    ]
 }

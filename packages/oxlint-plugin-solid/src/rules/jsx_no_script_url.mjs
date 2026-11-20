@@ -14,14 +14,14 @@ export const jsxNoScriptUrlRule = {
     meta: {
         docs: {
             description: "Disallow javascript: URLs.",
-            url: "https://github.com/solidjs-community/eslint-plugin-solid/blob/main/packages/eslint-plugin-solid/docs/jsx-no-script-url.md",
+            url: "https://github.com/solidjs-community/eslint-plugin-solid/blob/main/packages/eslint-plugin-solid/docs/jsx-no-script-url.md"
         },
         messages: {
             noJSURL:
-                "For security, don't use javascript: URLs. Use event handlers instead if you can.",
+                "For security, don't use javascript: URLs. Use event handlers instead if you can."
         },
         schema: [],
-        type: "problem",
+        type: "problem"
     },
     defaultOptions: [],
     create(context) {
@@ -37,7 +37,7 @@ export const jsxNoScriptUrlRule = {
                         : node.value;
                 const staticValue = getStaticValue(
                     expression,
-                    getScope(context, node),
+                    getScope(context, node)
                 );
 
                 if (
@@ -47,10 +47,10 @@ export const jsxNoScriptUrlRule = {
                 ) {
                     context.report({
                         messageId: "noJSURL",
-                        node: node.value,
+                        node: node.value
                     });
                 }
-            },
+            }
         };
-    },
+    }
 };
