@@ -42,7 +42,7 @@ const CONTINUING_CHARACTERS = new Set([
     "|",
     "^",
     "/",
-    "`",
+    "`"
 ]);
 
 function isDirectory(path) {
@@ -118,7 +118,7 @@ function findModuleFile(basePath) {
         basePath,
         ...EXTENSIONS.map((extension) => `${basePath}${extension}`),
         ...EXTENSIONS.map((extension) => `${withoutJsExtension}${extension}`),
-        ...EXTENSIONS.map((extension) => join(basePath, `index${extension}`)),
+        ...EXTENSIONS.map((extension) => join(basePath, `index${extension}`))
     ];
 
     return candidates.find(isFile) ?? null;
@@ -260,7 +260,7 @@ function resolveImport(specifier, filename, projectRoot) {
         return resolve(
             projectRoot,
             "src",
-            specifier.slice(ALIAS_PREFIX.length),
+            specifier.slice(ALIAS_PREFIX.length)
         );
     }
 
@@ -298,13 +298,13 @@ export const noServerImportInClientRule = {
         docs: {
             description:
                 "Disallow importing modules from src/server/ into client code unless they are use-server modules.",
-            url: "https://docs.solidjs.com/",
+            url: "https://docs.solidjs.com/"
         },
         schema: [],
         messages: {
             serverImportInClient:
-                '\'{{specifier}}\' lives under src/server/ but does not have the "use server" directive, so importing it into client code ships server-only code to the browser. Import a server function module instead (a `"use server";` directive at the top, async exports only), and keep database clients and secrets inside it.',
-        },
+                '\'{{specifier}}\' lives under src/server/ but does not have the "use server" directive, so importing it into client code ships server-only code to the browser. Import a server function module instead (a `"use server";` directive at the top, async exports only), and keep database clients and secrets inside it.'
+        }
     },
     defaultOptions: [],
     create(context) {
@@ -347,7 +347,7 @@ export const noServerImportInClientRule = {
             context.report({
                 node: sourceNode,
                 messageId: "serverImportInClient",
-                data: { specifier },
+                data: { specifier }
             });
         }
 
@@ -379,7 +379,7 @@ export const noServerImportInClientRule = {
                 ) {
                     check(node.arguments[0]);
                 }
-            },
+            }
         };
-    },
+    }
 };

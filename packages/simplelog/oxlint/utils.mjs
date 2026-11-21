@@ -6,7 +6,7 @@ const SIMPLELOG_LOG_METHODS = new Set([
     "warn",
     "startPerformanceBenchmark",
     "endPerformanceBenchmark",
-    "assert",
+    "assert"
 ]);
 
 function isSimplelogSource(source) {
@@ -185,7 +185,7 @@ function functionHasContextParam(node) {
 
     return (node.params ?? []).some((param) => {
         return collectAssignedNames(param).some(
-            (name) => name === "c" || name === "ctx" || name === "context",
+            (name) => name === "c" || name === "ctx" || name === "context"
         );
     });
 }
@@ -207,5 +207,5 @@ export {
     isTopLevelNode,
     isSimplelogSource,
     SIMPLELOG_LOG_METHODS,
-    SIMPLELOG_PACKAGE,
+    SIMPLELOG_PACKAGE
 };

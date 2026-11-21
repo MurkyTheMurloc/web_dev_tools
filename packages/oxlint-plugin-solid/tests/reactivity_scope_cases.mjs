@@ -18,7 +18,7 @@ const [ready] = createSignal(false);
 export const waitUntilReady = async (): Promise<void> => {
     await until(() => ready());
 };
-`,
+`
 });
 
 const onFlushCallback = Object.freeze({
@@ -32,7 +32,7 @@ export const logOnFlush = (): void => {
         console.log(count());
     });
 };
-`,
+`
 });
 
 const deferredReadsBeforeTheGap = Object.freeze({
@@ -49,7 +49,7 @@ export const rows = createDeferred(async () => {
 
     return loaded;
 });
-`,
+`
 });
 
 const deferredReadAfterTheGap = Object.freeze({
@@ -66,7 +66,7 @@ export const rows = createDeferred(async () => {
 
     return loaded[period()];
 });
-`,
+`
 });
 
 const deferredAccessorOutsideScope = Object.freeze({
@@ -78,7 +78,7 @@ const [period] = createSignal(1);
 const rows = createDeferred(() => period() * 2);
 
 export const current = rows();
-`,
+`
 });
 
 // `reactive-async` reports under its own rule id, so the message carries the
@@ -98,18 +98,18 @@ export const detail = createMemo(async () => {
 
     return first + rows();
 });
-`,
+`
 });
 
 const reactivityScopeSilentCases = Object.freeze([
     untilPredicate,
     onFlushCallback,
-    deferredReadsBeforeTheGap,
+    deferredReadsBeforeTheGap
 ]);
 const reactivityScopeReportingCases = Object.freeze([
     deferredReadAfterTheGap,
     deferredAccessorOutsideScope,
-    deferredReadAfterAwaitInMemo,
+    deferredReadAfterAwaitInMemo
 ]);
 
 export { reactivityScopeReportingCases, reactivityScopeSilentCases };

@@ -11,11 +11,11 @@ import type {
     ConsoleDefaults,
     LoggerOptions,
     LoggerParent,
-    LoggerRuntime,
+    LoggerRuntime
 } from "../src/logger_factory";
 import {
     disableOpenTelemetryContext,
-    enableOpenTelemetryContext,
+    enableOpenTelemetryContext
 } from "../src/otel";
 
 const NUM_0 = 0;
@@ -43,7 +43,7 @@ class TestLogger extends LoggerBase {
         runtime: LoggerRuntime,
         name: string,
         parent?: LoggerParent,
-        options: LoggerOptions = {},
+        options: LoggerOptions = {}
     ) {
         super(TestLogger.bind(null, runtime), runtime, name, parent, options);
     }
@@ -79,12 +79,12 @@ function createTestRuntime(): TestRuntime {
                 },
                 log(...args: readonly unknown[]): void {
                     consoleCalls.push({ args, type: "log" });
-                },
+                }
             },
             createLogFileWriter((filePath, content) => {
                 fileCalls.push({ content, filePath });
-            }),
-        ),
+            })
+        )
     } satisfies LoggerRuntime;
 
     return { consoleCalls, fileCalls, runtime };
@@ -94,7 +94,7 @@ function createTestSpan(): Span {
     return trace.wrapSpanContext({
         spanId: "0123456789abcdef",
         traceFlags: NUM_1,
-        traceId: "0123456789abcdef0123456789abcdef",
+        traceId: "0123456789abcdef0123456789abcdef"
     });
 }
 
@@ -116,7 +116,7 @@ describe(LoggerBase, () => {
     it("suppresses messages below the configured threshold", () => {
         const { consoleCalls, runtime } = createTestRuntime();
         const logger = new TestLogger(runtime, "audit", undefined, {
-            logLevelThreshold: "WARN",
+            logLevelThreshold: "WARN"
         });
 
         logger.info("not visible");
@@ -125,7 +125,7 @@ describe(LoggerBase, () => {
         expect(consoleCalls).toHaveLength(NUM_1);
         expect(consoleCalls[NUM_0]?.type).toBe("log");
         expect(argumentText(consoleCalls[NUM_0]?.args[NUM_0])).toContain(
-            "[WARN]",
+            "[WARN]"
         );
     });
 
@@ -134,7 +134,7 @@ describe(LoggerBase, () => {
         const logger = new TestLogger(runtime, "parent", undefined, {
             logFilePath: "/tmp/simplelog/parent.log",
             logLevelThreshold: "WARN",
-            writeToFile: true,
+            writeToFile: true
         });
         const childLogger = logger.createChildLogger("child");
 
@@ -154,10 +154,10 @@ describe(LoggerBase, () => {
 
         expect(consoleCalls).toHaveLength(NUM_1);
         expect(argumentText(consoleCalls[NUM_0]?.args[NUM_0])).toContain(
-            "[WARN]",
+            "[WARN]"
         );
         expect(argumentText(consoleCalls[NUM_0]?.args[NUM_0])).toContain(
-            "No start time found",
+            "No start time found"
         );
     });
 });
@@ -169,20 +169,20 @@ describe("LoggerBase console colors", () => {
         const { consoleCalls, fileCalls, runtime } = createTestRuntime();
         const logger = new TestLogger(runtime, "colors", undefined, {
             logFilePath: "/tmp/simplelog/colors.log",
-            writeToFile: true,
+            writeToFile: true
         });
 
         logger.info("headline", "part-one", "part-two");
 
         expect(consoleCalls).toHaveLength(NUM_1);
         expect(argumentText(consoleCalls[NUM_0]?.args[NUM_0])).toContain(
-            "\u001B[32m",
+            "\u001B[32m"
         );
         expect(argumentText(consoleCalls[NUM_0]?.args[NUM_1])).toContain(
-            "\u001B[32m",
+            "\u001B[32m"
         );
         expect(argumentText(consoleCalls[NUM_0]?.args[NUM_2])).toContain(
-            "\u001B[32m",
+            "\u001B[32m"
         );
         expect(fileCalls).toHaveLength(NUM_1);
         expect(fileCalls[NUM_0]?.content).toContain("[INFO]");
@@ -192,48 +192,48 @@ describe("LoggerBase console colors", () => {
     it("supports syntax highlighting for different value kinds", () => {
         const { consoleCalls, runtime } = createTestRuntime();
         const logger = new TestLogger(runtime, "syntax", undefined, {
-            valueColorMode: "syntax",
+            valueColorMode: "syntax"
         });
 
         logger.info("typed", "text", NUM_42, false, null, Symbol("token"), {
-            ok: true,
+            ok: true
         });
 
         expect(consoleCalls).toHaveLength(NUM_1);
         expect(argumentText(consoleCalls[NUM_0]?.args[NUM_1])).toContain(
-            "\u001B[32m",
+            "\u001B[32m"
         );
         expect(argumentText(consoleCalls[NUM_0]?.args[NUM_2])).toContain(
-            "\u001B[36m",
+            "\u001B[36m"
         );
         expect(argumentText(consoleCalls[NUM_0]?.args[NUM_3])).toContain(
-            "\u001B[33m",
+            "\u001B[33m"
         );
         expect(argumentText(consoleCalls[NUM_0]?.args[NUM_4])).toContain(
-            "\u001B[90m",
+            "\u001B[90m"
         );
         expect(argumentText(consoleCalls[NUM_0]?.args[NUM_5])).toContain(
-            "\u001B[35m",
+            "\u001B[35m"
         );
         expect(argumentText(consoleCalls[NUM_0]?.args[NUM_6])).toContain(
-            "\u001B[34m",
+            "\u001B[34m"
         );
     });
 
     it("supports fully plain console output", () => {
         const { consoleCalls, runtime } = createTestRuntime();
         const logger = new TestLogger(runtime, "plain", undefined, {
-            valueColorMode: "off",
+            valueColorMode: "off"
         });
 
         logger.info("headline", "part-one");
 
         expect(consoleCalls).toHaveLength(NUM_1);
         expect(argumentText(consoleCalls[NUM_0]?.args[NUM_0])).not.toContain(
-            "\u001B[",
+            "\u001B["
         );
         expect(argumentText(consoleCalls[NUM_0]?.args[NUM_1])).not.toContain(
-            "\u001B[",
+            "\u001B["
         );
     });
 });
@@ -243,33 +243,33 @@ describe("LoggerBase console defaults from the runtime", () => {
 
     const pipeDefaults: ConsoleDefaults = {
         timestampFormat: "iso",
-        valueColorMode: "off",
+        valueColorMode: "off"
     };
 
     function withConsoleDefaults(
-        readConsoleDefaults: () => ConsoleDefaults,
+        readConsoleDefaults: () => ConsoleDefaults
     ): TestRuntime {
         const testRuntime = createTestRuntime();
 
         return {
             ...testRuntime,
-            runtime: { ...testRuntime.runtime, readConsoleDefaults },
+            runtime: { ...testRuntime.runtime, readConsoleDefaults }
         };
     }
 
     it("uses the runtime defaults when the options leave them out", () => {
         const { consoleCalls, runtime } = withConsoleDefaults(
-            () => pipeDefaults,
+            () => pipeDefaults
         );
         const logger = new TestLogger(runtime, "pipe");
 
         logger.info("headline", "part");
 
         expect(argumentText(consoleCalls[NUM_0]?.args[NUM_0])).not.toContain(
-            "\u001B[",
+            "\u001B["
         );
         expect(argumentText(consoleCalls[NUM_0]?.args[NUM_1])).not.toContain(
-            "\u001B[",
+            "\u001B["
         );
     });
 
@@ -291,26 +291,26 @@ describe("LoggerBase console defaults from the runtime", () => {
             withConsoleDefaults(readConsoleDefaults);
         const logger = new TestLogger(runtime, "explicit", undefined, {
             timestampFormat: "iso",
-            valueColorMode: "syntax",
+            valueColorMode: "syntax"
         });
 
         logger.info("headline", NUM_42);
 
         expect(readConsoleDefaults).not.toHaveBeenCalled();
         expect(argumentText(consoleCalls[NUM_0]?.args[NUM_1])).toContain(
-            "\u001B[36m",
+            "\u001B[36m"
         );
     });
 
     it("defaults only the option the caller left out", () => {
         const { runtime } = withConsoleDefaults(() => pipeDefaults);
         const logger = new TestLogger(runtime, "half", undefined, {
-            valueColorMode: "syntax",
+            valueColorMode: "syntax"
         });
 
         expect(logger.getInheritedOptions()).toMatchObject({
             timestampFormat: "iso",
-            valueColorMode: "syntax",
+            valueColorMode: "syntax"
         });
     });
 
@@ -319,7 +319,7 @@ describe("LoggerBase console defaults from the runtime", () => {
         const logger = new TestLogger(runtime, "parent");
 
         expect(
-            logger.createChildLogger("child").getInheritedOptions(),
+            logger.createChildLogger("child").getInheritedOptions()
         ).toMatchObject(pipeDefaults);
     });
 
@@ -330,20 +330,20 @@ describe("LoggerBase console defaults from the runtime", () => {
         const { consoleCalls, fileCalls, runtime } = withConsoleDefaults(
             () => ({
                 timestampFormat: "time",
-                valueColorMode: "off",
-            }),
+                valueColorMode: "off"
+            })
         );
         const logger = new TestLogger(runtime, "clock", undefined, {
-            writeToFile: true,
+            writeToFile: true
         });
 
         logger.info("tick");
 
         expect(argumentText(consoleCalls[NUM_0]?.args[NUM_0])).toBe(
-            "16:59:23.745 [INFO] [clock] - tick",
+            "16:59:23.745 [INFO] [clock] - tick"
         );
         expect(fileCalls[NUM_0]?.content).toBe(
-            `${moment.toISOString()} [INFO] [clock] - tick\n`,
+            `${moment.toISOString()} [INFO] [clock] - tick\n`
         );
     });
 });
@@ -354,19 +354,19 @@ describe("LoggerBase structured output and assertions", () => {
     it("serializes functions nested inside structured log arguments", () => {
         const { consoleCalls, runtime } = createTestRuntime();
         const logger = new TestLogger(runtime, "structured", undefined, {
-            valueColorMode: "off",
+            valueColorMode: "off"
         });
 
         logger.info("payload", {
             callback: namedHelper,
             nested: {
-                inner: namedHelper,
+                inner: namedHelper
             },
             values: [
                 (): string => {
                     return "anonymous";
-                },
-            ],
+                }
+            ]
         });
 
         const payload = argumentText(consoleCalls[NUM_0]?.args[NUM_1]);
@@ -385,11 +385,11 @@ describe("LoggerBase structured output and assertions", () => {
         expect(consoleCalls).toHaveLength(NUM_2);
         expect(consoleCalls[NUM_0]?.type).toBe("log");
         expect(argumentText(consoleCalls[NUM_0]?.args[NUM_0])).toContain(
-            "[ERROR]",
+            "[ERROR]"
         );
         expect(consoleCalls[NUM_1]?.type).toBe("error");
         expect(argumentText(consoleCalls[NUM_1]?.args[NUM_0])).toContain(
-            "Assertion failed",
+            "Assertion failed"
         );
     });
 });
@@ -403,7 +403,7 @@ function createFileLogger(name: string): Readonly<{
     const logger = new TestLogger(runtime, name, undefined, {
         logFilePath: `/tmp/simplelog/${name}.log`,
         valueColorMode: "off",
-        writeToFile: true,
+        writeToFile: true
     });
 
     return { consoleCalls, fileCalls, logger };
@@ -423,7 +423,7 @@ describe("LoggerBase file output arguments", () => {
 
         expect(fileCalls).toHaveLength(NUM_1);
         expect(fileCalls[NUM_0]?.content).toContain(
-            '- user login {"userId":42} extra 5 null\n',
+            '- user login {"userId":42} extra 5 null\n'
         );
         expect(fileCalls[NUM_0]?.content).not.toContain("\u001B[");
     });
@@ -456,7 +456,7 @@ describe("LoggerBase structured argument serialization", () => {
     it("serializes Error arguments with name, message, stack and cause", () => {
         const { consoleCalls, logger } = createFileLogger("errors");
         const failure = new Error("boom", {
-            cause: new TypeError("inner failure"),
+            cause: new TypeError("inner failure")
         });
 
         logger.info("failed", failure);
@@ -478,17 +478,17 @@ describe("LoggerBase structured argument serialization", () => {
             Object.assign(new Error("denied"), { code: "E_DENIED" }),
             Object.assign(new Error("exit"), { code: NUM_42 }),
             Object.assign(new Error("odd"), {
-                code: { nested: "secret-code" },
-            }),
+                code: { nested: "secret-code" }
+            })
         );
 
         expect(loggedArgument(consoleCalls, NUM_1)).toContain(
-            '"code": "E_DENIED"',
+            '"code": "E_DENIED"'
         );
         expect(loggedArgument(consoleCalls, NUM_2)).toContain('"code": 42');
         expect(loggedArgument(consoleCalls, NUM_3)).not.toContain("code");
         expect(loggedArgument(consoleCalls, NUM_3)).not.toContain(
-            "secret-code",
+            "secret-code"
         );
     });
 
@@ -502,18 +502,18 @@ describe("LoggerBase structured argument serialization", () => {
                 config: {
                     auth: { password: "pw-s3cret" },
                     data: "body-s3cret",
-                    headers: { Authorization: "Bearer token-s3cret" },
+                    headers: { Authorization: "Bearer token-s3cret" }
                 },
                 options: { headers: { cookie: "cookie-s3cret" } },
                 request: {
                     _header:
-                        "GET / HTTP/1.1\r\nAuthorization: Bearer token-s3cret\r\n",
+                        "GET / HTTP/1.1\r\nAuthorization: Bearer token-s3cret\r\n"
                 },
                 response: {
                     data: "response-s3cret",
-                    headers: { "set-cookie": ["sid=set-cookie-s3cret"] },
-                },
-            },
+                    headers: { "set-cookie": ["sid=set-cookie-s3cret"] }
+                }
+            }
         );
 
         logger.error("upstream failed", failure);
@@ -540,12 +540,12 @@ describe("LoggerBase structured argument serialization", () => {
                 [
                     new TypeError("first failure"),
                     Object.assign(new Error("second failure"), {
-                        config: { token: "token-s3cret" },
-                    }),
+                        config: { token: "token-s3cret" }
+                    })
                 ],
-                "several failed",
+                "several failed"
             ),
-            { extra: "extra-s3cret" },
+            { extra: "extra-s3cret" }
         );
 
         logger.info("failed", failure);
@@ -568,16 +568,16 @@ describe("LoggerBase structured argument serialization", () => {
             new Error("upstream", {
                 cause: {
                     config: {
-                        headers: { Authorization: "Bearer cause-s3cret" },
-                    },
-                },
+                        headers: { Authorization: "Bearer cause-s3cret" }
+                    }
+                }
             }),
             new Error("wrapped", {
                 cause: Object.assign(new Error("inner"), {
-                    config: { token: "t-s3cret" },
-                }),
+                    config: { token: "t-s3cret" }
+                })
             }),
-            new Error("text cause", { cause: "plain reason" }),
+            new Error("text cause", { cause: "plain reason" })
         );
 
         const everything = `${JSON.stringify(consoleCalls)}${fileCalls[NUM_0]?.content}`;
@@ -585,13 +585,13 @@ describe("LoggerBase structured argument serialization", () => {
         expect(everything).not.toContain("s3cret");
         expect(everything).not.toContain("Authorization");
         expect(loggedArgument(consoleCalls, NUM_1)).toContain(
-            '"cause": "[Object]"',
+            '"cause": "[Object]"'
         );
         expect(loggedArgument(consoleCalls, NUM_2)).toContain(
-            '"message": "inner"',
+            '"message": "inner"'
         );
         expect(loggedArgument(consoleCalls, NUM_3)).toContain(
-            '"cause": "plain reason"',
+            '"cause": "plain reason"'
         );
     });
 
@@ -605,10 +605,10 @@ describe("LoggerBase structured argument serialization", () => {
                 [
                     { headers: { Authorization: "Bearer agg-s3cret" } },
                     new TypeError("real error"),
-                    "just text",
+                    "just text"
                 ],
-                "several",
-            ),
+                "several"
+            )
         );
 
         const text = loggedArgument(consoleCalls, NUM_1);
@@ -622,7 +622,7 @@ describe("LoggerBase structured argument serialization", () => {
     it("recognises an Error from another realm", () => {
         const { consoleCalls, logger } = createFileLogger("realm");
         const foreign: unknown = runInNewContext(
-            "Object.assign(new Error('from elsewhere'), { secret: 'realm-s3cret' })",
+            "Object.assign(new Error('from elsewhere'), { secret: 'realm-s3cret' })"
         );
 
         logger.info("failed", foreign);
@@ -640,7 +640,7 @@ describe("LoggerBase structured argument serialization", () => {
 
         logger.info("fake", {
             [Symbol.toStringTag]: "Number",
-            kept: "visible",
+            kept: "visible"
         });
 
         const text = loggedArgument(consoleCalls, NUM_1);
@@ -655,7 +655,7 @@ describe("LoggerBase structured argument serialization", () => {
         logger.info("boxed", {
             flag: Object(true),
             number: Object(NUM_42),
-            text: Object("hello"),
+            text: Object("hello")
         });
 
         const text = loggedArgument(consoleCalls, NUM_1);
@@ -740,7 +740,7 @@ describe("LoggerBase structured argument serialization", () => {
         logger.info(
             "collections",
             new Map([["alpha", { beta: NUM_1 }]]),
-            new Set([NUM_1, "two"]),
+            new Set([NUM_1, "two"])
         );
 
         const mapText = loggedArgument(consoleCalls, NUM_1);
@@ -761,8 +761,8 @@ describe("LoggerBase structured argument serialization", () => {
             custom: {
                 toJSON(): string {
                     return "custom-json";
-                },
-            },
+                }
+            }
         });
 
         const text = loggedArgument(consoleCalls, NUM_1);
@@ -823,7 +823,7 @@ describe("LoggerBase serialization limits", () => {
         logger.info(
             "wide",
             wide,
-            Array.from({ length: 80 }, (_, index) => index),
+            Array.from({ length: 80 }, (_, index) => index)
         );
 
         const objectText = loggedArgument(consoleCalls, NUM_1);
@@ -863,24 +863,24 @@ describe("LoggerBase serialization limits", () => {
             bytes.buffer,
             new DataView(new ArrayBuffer(NUM_6)),
             Buffer.from("secret-token"),
-            { inside: new Float64Array(NUM_4) },
+            { inside: new Float64Array(NUM_4) }
         );
 
         expect(performance.now() - started).toBeLessThan(200);
         expect(loggedArgument(consoleCalls, NUM_1)).toBe(
-            '"[Uint8Array 5000000 bytes]"',
+            '"[Uint8Array 5000000 bytes]"'
         );
         expect(loggedArgument(consoleCalls, NUM_2)).toBe(
-            '"[ArrayBuffer 5000000 bytes]"',
+            '"[ArrayBuffer 5000000 bytes]"'
         );
         expect(loggedArgument(consoleCalls, NUM_3)).toBe(
-            '"[DataView 6 bytes]"',
+            '"[DataView 6 bytes]"'
         );
         expect(loggedArgument(consoleCalls, NUM_4)).toBe(
-            '"[Uint8Array 12 bytes]"',
+            '"[Uint8Array 12 bytes]"'
         );
         expect(loggedArgument(consoleCalls, NUM_5)).toContain(
-            '"[Float64Array 32 bytes]"',
+            '"[Float64Array 32 bytes]"'
         );
         expect(fileCalls[NUM_0]?.content).not.toContain("secret-token");
     });
@@ -928,7 +928,7 @@ describe("LoggerBase file output escaping", () => {
         const { consoleCalls, fileCalls, logger } = createFileLogger("forge");
 
         logger.info(
-            "first\n2026-01-01T00:00:00.000Z [INFO] [fake] - forged\r\nmore",
+            "first\n2026-01-01T00:00:00.000Z [INFO] [fake] - forged\r\nmore"
         );
 
         const content = fileCalls[NUM_0]?.content ?? "";
@@ -946,7 +946,7 @@ describe("LoggerBase file output escaping", () => {
         logger.info("hello");
 
         expect((fileCalls[NUM_0]?.content ?? "").split("\n")).toHaveLength(
-            NUM_2,
+            NUM_2
         );
         expect(fileCalls[NUM_0]?.content).toContain("[name\\nforged]");
     });
@@ -968,7 +968,7 @@ describe("LoggerBase file output escaping", () => {
         const { fileCalls, logger } = createFileLogger("unicode-controls");
         const separators = [
             0x2028, 0x2029, 0x85, 0x7f, 0x202a, 0x202e, 0x2066, 0x2069, 0x200e,
-            0x200f, 0x61c, 0xfeff,
+            0x200f, 0x61c, 0xfeff
         ]
             .map((codePoint) => {
                 return String.fromCodePoint(codePoint);
@@ -980,7 +980,7 @@ describe("LoggerBase file output escaping", () => {
         const content = fileCalls[NUM_0]?.content ?? "";
 
         expect(content).toContain(
-            String.raw`a\u2028|\u2029|\u0085|\u007f|\u202a|\u202e|\u2066|\u2069|\u200e|\u200f|\u061c|\ufeffb`,
+            String.raw`a\u2028|\u2029|\u0085|\u007f|\u202a|\u202e|\u2066|\u2069|\u200e|\u200f|\u061c|\ufeffb`
         );
         expect(content.split("\n")).toHaveLength(NUM_2);
         expect(content).not.toContain(String.fromCodePoint(0x2028));
@@ -996,7 +996,7 @@ describe("LoggerBase file output escaping", () => {
 
         logger.info("object", {
             [`key${bidiOverride}`]: `x${lineSeparator}y${deleteCharacter}z`,
-            nested: ["line1\nline2", `${bidiOverride}rtl`],
+            nested: ["line1\nline2", `${bidiOverride}rtl`]
         });
 
         const content = fileCalls[NUM_0]?.content ?? "";
@@ -1016,7 +1016,7 @@ describe("LoggerBase file output escaping", () => {
         logger.info("path", String.raw`C:\temp\new`, "a\tb");
 
         expect(fileCalls[NUM_0]?.content).toContain(
-            String.raw`C:\temp\new a	b`,
+            String.raw`C:\temp\new a	b`
         );
     });
 
@@ -1035,14 +1035,14 @@ describe("LoggerBase file output escaping", () => {
         expect(
             stackLines.every((line) => {
                 return line.startsWith("\t");
-            }),
+            })
         ).toBeTruthy();
         expect(stackLines[NUM_0]).toContain("boom");
         expect(stackLines[NUM_1]).toContain("2026-01-01T00:00:00.000Z [INFO]");
         expect(
             stackLines.some((line) => {
                 return line.trimStart().startsWith("at ");
-            }),
+            })
         ).toBeTruthy();
     });
 });
@@ -1055,7 +1055,7 @@ describe("LoggerBase OpenTelemetry context", () => {
         const logger = new TestLogger(runtime, "otel", undefined, {
             includeOpenTelemetryContext: true,
             logFilePath: "/tmp/simplelog/otel.log",
-            writeToFile: true,
+            writeToFile: true
         });
         const activeSpan = createTestSpan();
         vi.spyOn(trace, "getActiveSpan").mockReturnValue(activeSpan);
@@ -1067,10 +1067,10 @@ describe("LoggerBase OpenTelemetry context", () => {
 
         expect(consoleCalls).toHaveLength(NUM_1);
         expect(argumentText(consoleCalls[NUM_0]?.args[NUM_0])).toContain(
-            "trace_id=",
+            "trace_id="
         );
         expect(argumentText(consoleCalls[NUM_0]?.args[NUM_0])).toContain(
-            "span_id=",
+            "span_id="
         );
         expect(fileCalls).toHaveLength(NUM_1);
         expect(fileCalls[NUM_0]?.content).toContain("trace_id=");
@@ -1083,7 +1083,7 @@ describe("LoggerBase OpenTelemetry context", () => {
             .mockImplementation(noop);
         const { consoleCalls, runtime } = createTestRuntime();
         const logger = new TestLogger(runtime, "otel-unwired", undefined, {
-            includeOpenTelemetryContext: true,
+            includeOpenTelemetryContext: true
         });
         vi.spyOn(trace, "getActiveSpan").mockReturnValue(createTestSpan());
 
@@ -1091,11 +1091,11 @@ describe("LoggerBase OpenTelemetry context", () => {
 
         // Silently logging empty ids would look like working span correlation.
         expect(argumentText(consoleCalls[NUM_0]?.args[NUM_0])).not.toContain(
-            "trace_id=",
+            "trace_id="
         );
         expect(warn).toHaveBeenCalledTimes(NUM_1);
         expect(argumentText(warn.mock.calls[NUM_0]?.[NUM_0])).toContain(
-            "@murky-web/simplelog/otel",
+            "@murky-web/simplelog/otel"
         );
     });
 
@@ -1111,10 +1111,10 @@ describe("LoggerBase OpenTelemetry context", () => {
 
         expect(consoleCalls).toHaveLength(NUM_1);
         expect(argumentText(consoleCalls[NUM_0]?.args[NUM_0])).not.toContain(
-            "trace_id=",
+            "trace_id="
         );
         expect(argumentText(consoleCalls[NUM_0]?.args[NUM_0])).not.toContain(
-            "span_id=",
+            "span_id="
         );
         expect(getActiveSpanSpy).not.toHaveBeenCalled();
     });

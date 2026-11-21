@@ -34,7 +34,7 @@ export default {
         docs: {
             description:
                 "Disallow extra closing tags for components without children.",
-            url: "https://github.com/solidjs-community/eslint-plugin-solid/blob/main/packages/eslint-plugin-solid/docs/self-closing-comp.md",
+            url: "https://github.com/solidjs-community/eslint-plugin-solid/blob/main/packages/eslint-plugin-solid/docs/self-closing-comp.md"
         },
         fixable: "code",
         schema: [
@@ -46,23 +46,23 @@ export default {
                         description:
                             "which Solid components should be self-closing when possible",
                         enum: ["all", "none"],
-                        default: "all",
+                        default: "all"
                     },
                     html: {
                         type: "string",
                         description:
                             "which native elements should be self-closing when possible",
                         enum: ["all", "void", "none"],
-                        default: "all",
-                    },
+                        default: "all"
+                    }
                 },
-                additionalProperties: false,
-            },
+                additionalProperties: false
+            }
         ],
         messages: {
             selfClose: "Empty components are self-closing.",
-            dontSelfClose: "This element should not be self-closing.",
-        },
+            dontSelfClose: "This element should not be self-closing."
+        }
     },
     defaultOptions: [],
     create(context) {
@@ -106,10 +106,10 @@ export default {
                                 // Replace />.*<\/.*>/ with '/>'
                                 const range = [
                                     openingElementEnding,
-                                    closingElementEnding,
+                                    closingElementEnding
                                 ];
                                 return fixer.replaceTextRange(range, " />");
-                            },
+                            }
                         });
                     } else if (!shouldSelfClose && node.selfClosing) {
                         context.report({
@@ -123,28 +123,28 @@ export default {
                                 // Replace ' />' or '/>' with '></${tagName}>'
                                 const lastTokens = sourceCode.getLastTokens(
                                     node,
-                                    { count: 3 },
+                                    { count: 3 }
                                 ); // JSXIdentifier, '/', '>'
                                 const isSpaceBeforeSelfClose =
                                     sourceCode.isSpaceBetween?.(
                                         lastTokens[0],
-                                        lastTokens[1],
+                                        lastTokens[1]
                                     );
                                 const range = [
                                     isSpaceBeforeSelfClose
                                         ? selfCloseEnding - 3
                                         : selfCloseEnding - 2,
-                                    selfCloseEnding,
+                                    selfCloseEnding
                                 ];
                                 return fixer.replaceTextRange(
                                     range,
-                                    `></${tagName}>`,
+                                    `></${tagName}>`
                                 );
-                            },
+                            }
                         });
                     }
                 }
-            },
+            }
         };
-    },
+    }
 };

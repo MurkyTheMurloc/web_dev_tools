@@ -4,20 +4,20 @@ import type {
     LoggerOptions,
     LoggerParent,
     LoggerRuntime,
-    LogLevel,
+    LogLevel
 } from "./logger_factory";
 
 // Servers and edge runtimes (Cloudflare, Netlify, Deno): text output with the
 // serializer's safety rules. Browsers resolve `browser_logger` instead.
 const webRuntime = {
-    write: createTextLogWriter(createLoggerConsole()),
+    write: createTextLogWriter(createLoggerConsole())
 } satisfies LoggerRuntime;
 
 class Logger extends LoggerBase {
     constructor(
         name: string,
         parent?: LoggerParent,
-        options: LoggerOptions = {},
+        options: LoggerOptions = {}
     ) {
         super(Logger, webRuntime, name, parent, options);
     }

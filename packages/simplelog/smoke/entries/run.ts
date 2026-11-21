@@ -18,7 +18,7 @@ import path from "node:path";
  */
 const packageRoot = path.resolve(import.meta.dir, "../..");
 const pkg = JSON.parse(
-    readFileSync(path.join(packageRoot, "package.json"), "utf8"),
+    readFileSync(path.join(packageRoot, "package.json"), "utf8")
 ) as { name: string; exports: Record<string, string | { import?: string }> };
 
 const NO_EXPORTS = 0;
@@ -28,7 +28,7 @@ const SUBPATH_COLUMN_WIDTH = 12;
 const FAILURE_EXIT_CODE = 1;
 
 function resolveImportTarget(
-    target: string | { import?: string },
+    target: string | { import?: string }
 ): string | undefined {
     if (typeof target === "string") {
         return target;
@@ -71,12 +71,12 @@ for (const [subpath, target] of Object.entries(pkg.exports)) {
         }
         loaded += ONE_ENTRY;
         console.log(
-            `  ok  ${subpath.padEnd(SUBPATH_COLUMN_WIDTH)} ${names.join(", ")}`,
+            `  ok  ${subpath.padEnd(SUBPATH_COLUMN_WIDTH)} ${names.join(", ")}`
         );
     } catch (error) {
         // An unresolved import between two built files surfaces here and nowhere else.
         failures.push(
-            `${subpath} -> ${file} failed to load: ${describeError(error)}`,
+            `${subpath} -> ${file} failed to load: ${describeError(error)}`
         );
     }
 }

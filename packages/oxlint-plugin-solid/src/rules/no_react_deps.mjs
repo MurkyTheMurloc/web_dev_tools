@@ -5,14 +5,14 @@ export default {
         docs: {
             description:
                 "Disallow usage of dependency arrays in `createEffect` and `createMemo`.",
-            url: "https://github.com/solidjs-community/eslint-plugin-solid/blob/main/packages/eslint-plugin-solid/docs/no-react-deps.md",
+            url: "https://github.com/solidjs-community/eslint-plugin-solid/blob/main/packages/eslint-plugin-solid/docs/no-react-deps.md"
         },
         fixable: "code",
         schema: [],
         messages: {
             noUselessDep:
-                "In Solid, `{{name}}` doesn't accept a dependency array because it automatically tracks its dependencies. To narrow what is tracked, read only those values in the compute phase.",
-        },
+                "In Solid, `{{name}}` doesn't accept a dependency array because it automatically tracks its dependencies. To narrow what is tracked, read only those values in the compute phase."
+        }
     },
     defaultOptions: [],
     create(context) {
@@ -25,14 +25,14 @@ export default {
                     node.callee.type === "Identifier" &&
                     matchImport(
                         ["createEffect", "createMemo"],
-                        node.callee.name,
+                        node.callee.name
                     ) &&
                     node.arguments.length === 2 &&
                     node.arguments.every((arg) => arg.type !== "SpreadElement")
                 ) {
                     // grab both arguments, tracing any variables to their actual values if possible
                     const [arg0, arg1] = node.arguments.map((arg) =>
-                        trace(arg, context),
+                        trace(arg, context)
                     );
                     if (
                         isFunctionNode(arg0) &&
@@ -46,17 +46,17 @@ export default {
                             node: node.arguments[1], // if this is a variable, highlight the usage, not the initialization
                             messageId: "noUselessDep",
                             data: {
-                                name: node.callee.name,
+                                name: node.callee.name
                             },
                             // remove dep array if it's given inline, otherwise don't fix
                             fix:
                                 arg1 === node.arguments[1]
                                     ? (fixer) => fixer.remove(arg1)
-                                    : undefined,
+                                    : undefined
                         });
                     }
                 }
-            },
+            }
         };
-    },
+    }
 };

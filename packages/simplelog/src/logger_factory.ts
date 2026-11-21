@@ -5,7 +5,7 @@ const DEFAULT_STACK_TRACE = "";
 const EMPTY_LENGTH = 0;
 const EMPTY_OPEN_TELEMETRY_CONTEXT: OpenTelemetryContext = {
     spanId: "",
-    traceId: "",
+    traceId: ""
 };
 const CAPTURE_STACK_TRACE_MESSAGE = "simplelog";
 const LOGGER_NAME_SEPARATOR = " -> ";
@@ -90,14 +90,14 @@ type LoggerParent = Readonly<{
 type LoggerConstructor = new (
     name: string,
     parent?: LoggerParent,
-    options?: LoggerOptions,
+    options?: LoggerOptions
 ) => LoggerBase;
 
 const LOG_LEVEL_PRIORITY: Readonly<Record<LogLevel, number>> = {
     DEBUG: 1,
     ERROR: 4,
     INFO: 2,
-    WARN: 3,
+    WARN: 3
 };
 
 function createLoggerConsole(): LoggerConsole {
@@ -107,7 +107,7 @@ function createLoggerConsole(): LoggerConsole {
         },
         log(...args: readonly unknown[]): void {
             globalThis.console.log(...args);
-        },
+        }
     };
 }
 
@@ -118,12 +118,12 @@ function buildDefaultLogFilePath(loggerName: string): string {
 // The browser console renders ANSI codes, and there is no terminal to ask.
 const FALLBACK_CONSOLE_DEFAULTS: ConsoleDefaults = {
     timestampFormat: "iso",
-    valueColorMode: "level",
+    valueColorMode: "level"
 };
 
 function readConsoleDefaults(
     runtime: LoggerRuntime,
-    options: LoggerOptions,
+    options: LoggerOptions
 ): ConsoleDefaults {
     // Child loggers pass both, so they never read the environment again.
     if (
@@ -139,7 +139,7 @@ function readConsoleDefaults(
 function resolveLogOutput(
     loggerName: string,
     options: LoggerOptions,
-    runtime: LoggerRuntime,
+    runtime: LoggerRuntime
 ): LogOutput {
     const consoleDefaults = readConsoleDefaults(runtime, options);
 
@@ -149,7 +149,7 @@ function resolveLogOutput(
             options.timestampFormat ?? consoleDefaults.timestampFormat,
         valueColorMode:
             options.valueColorMode ?? consoleDefaults.valueColorMode,
-        writeToFile: options.writeToFile ?? false,
+        writeToFile: options.writeToFile ?? false
     };
 }
 
@@ -188,13 +188,13 @@ function buildLogMessage(
     levelLabel: string,
     loggerName: string,
     openTelemetryContextLabel: string,
-    message: string,
+    message: string
 ): string {
     return `${timestamp} ${levelLabel} [${loggerName}]${openTelemetryContextLabel} - ${message}`;
 }
 
 function formatOpenTelemetryContextLabel(
-    openTelemetryContext?: OpenTelemetryContext,
+    openTelemetryContext?: OpenTelemetryContext
 ): string {
     if (
         typeof openTelemetryContext !== "object" ||
@@ -241,7 +241,7 @@ function setSpanContextReader(reader?: SpanContextReader): void {
 }
 
 function resolveOpenTelemetryContext(
-    includeOpenTelemetryContext: boolean,
+    includeOpenTelemetryContext: boolean
 ): OpenTelemetryContext {
     if (!includeOpenTelemetryContext) {
         return EMPTY_OPEN_TELEMETRY_CONTEXT;
@@ -254,7 +254,7 @@ function resolveOpenTelemetryContext(
             missingReaderWarned = true;
             globalThis.console.warn(
                 "[simplelog] includeOpenTelemetryContext is on but no reader is registered. " +
-                    'Call enableOpenTelemetryContext() from "@murky-web/simplelog/otel" once at startup.',
+                    'Call enableOpenTelemetryContext() from "@murky-web/simplelog/otel" once at startup.'
             );
         }
         return EMPTY_OPEN_TELEMETRY_CONTEXT;
@@ -282,7 +282,7 @@ class LoggerBase {
         runtime: LoggerRuntime,
         name: string,
         parent?: LoggerParent,
-        options: LoggerOptions = {},
+        options: LoggerOptions = {}
     ) {
         this.LoggerConstructor = LoggerConstructor;
         this.includeOpenTelemetryContext =
@@ -309,26 +309,26 @@ class LoggerBase {
             "ERROR",
             assertionMessage,
             args,
-            captureStackTrace(assertionMessage),
+            captureStackTrace(assertionMessage)
         );
     }
 
     public createChildLogger(
         name: string,
-        otherLogger?: LoggerParent,
+        otherLogger?: LoggerParent
     ): LoggerBase {
         if (typeof otherLogger === "object") {
             return new this.LoggerConstructor(
                 name,
                 this.mergeLoggers(otherLogger),
-                this.getInheritedOptions(),
+                this.getInheritedOptions()
             );
         }
 
         return new this.LoggerConstructor(
             name,
             this,
-            this.getInheritedOptions(),
+            this.getInheritedOptions()
         );
     }
 
@@ -341,7 +341,7 @@ class LoggerBase {
 
         if (typeof startTime !== "number") {
             this.warn(
-                `No start time found for performance test with label "${label}"`,
+                `No start time found for performance test with label "${label}"`
             );
             return;
         }
@@ -368,7 +368,7 @@ class LoggerBase {
         return {
             includeOpenTelemetryContext: this.includeOpenTelemetryContext,
             logLevelThreshold: this.logLevelThreshold,
-            ...this.output,
+            ...this.output
         };
     }
 
@@ -388,7 +388,7 @@ class LoggerBase {
         level: LogLevel,
         message: string,
         args: readonly unknown[],
-        stackTrace?: string,
+        stackTrace?: string
     ): void {
         if (!shouldLog(level, this.logLevelThreshold)) {
             return;
@@ -402,11 +402,11 @@ class LoggerBase {
                 loggerName: this.getFullLoggerName(),
                 message,
                 openTelemetryContext: resolveOpenTelemetryContext(
-                    this.includeOpenTelemetryContext,
+                    this.includeOpenTelemetryContext
                 ),
-                stackTrace: resolveStackTrace(stackTrace),
+                stackTrace: resolveStackTrace(stackTrace)
             },
-            this.output,
+            this.output
         );
     }
 
@@ -414,7 +414,7 @@ class LoggerBase {
         return new this.LoggerConstructor(
             this.name,
             otherLogger,
-            this.getInheritedOptions(),
+            this.getInheritedOptions()
         );
     }
 }
@@ -424,7 +424,7 @@ export {
     buildLogMessage,
     createLoggerConsole,
     formatOpenTelemetryContextLabel,
-    setSpanContextReader,
+    setSpanContextReader
 };
 export type {
     ConsoleDefaults,
@@ -440,5 +440,5 @@ export type {
     OpenTelemetryContext,
     SpanContextReader,
     TimestampFormat,
-    ValueColorMode,
+    ValueColorMode
 };

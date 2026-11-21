@@ -8,7 +8,7 @@ export default {
         docs: {
             description:
                 "Disallow usage of the innerHTML attribute, which can often lead to security vulnerabilities.",
-            url: "https://github.com/solidjs-community/eslint-plugin-solid/blob/main/packages/eslint-plugin-solid/docs/no-innerhtml.md",
+            url: "https://github.com/solidjs-community/eslint-plugin-solid/blob/main/packages/eslint-plugin-solid/docs/no-innerhtml.md"
         },
         fixable: "code",
         hasSuggestions: true,
@@ -20,11 +20,11 @@ export default {
                         description:
                             "if the innerHTML value is guaranteed to be a static HTML string (i.e. no user input), allow it",
                         type: "boolean",
-                        default: true,
-                    },
+                        default: true
+                    }
                 },
-                additionalProperties: false,
-            },
+                additionalProperties: false
+            }
         ],
         messages: {
             dangerous:
@@ -36,8 +36,8 @@ export default {
             useInnerText:
                 "For text content, using innerText is clearer and safer.",
             dangerouslySetInnerHTML:
-                "The dangerouslySetInnerHTML prop is not supported; use innerHTML instead.",
-        },
+                "The dangerouslySetInnerHTML prop is not supported; use innerHTML instead."
+        }
     },
     defaultOptions: [{ allowStatic: true }],
     create(context) {
@@ -65,25 +65,25 @@ export default {
                                     return [
                                         fixer.replaceTextRange(
                                             [propRange[0], valueRange[0]],
-                                            "innerHTML={",
+                                            "innerHTML={"
                                         ),
                                         fixer.replaceTextRange(
                                             [valueRange[1], propRange[1]],
-                                            "}",
-                                        ),
+                                            "}"
+                                        )
                                     ];
-                                },
+                                }
                             });
                         } else {
                             context.report({
                                 node,
-                                messageId: "dangerouslySetInnerHTML",
+                                messageId: "dangerouslySetInnerHTML"
                             });
                         }
                     } else {
                         context.report({
                             node,
-                            messageId: "dangerouslySetInnerHTML",
+                            messageId: "dangerouslySetInnerHTML"
                         });
                     }
                     return;
@@ -106,7 +106,7 @@ export default {
                             ) {
                                 context.report({
                                     node: node.parent.parent, // report error on JSXElement instead of JSXAttribute
-                                    messageId: "conflict",
+                                    messageId: "conflict"
                                 });
                             }
                         } else {
@@ -118,26 +118,26 @@ export default {
                                         fix: (fixer) =>
                                             fixer.replaceText(
                                                 node.name,
-                                                "innerText",
+                                                "innerText"
                                             ),
-                                        messageId: "useInnerText",
-                                    },
-                                ],
+                                        messageId: "useInnerText"
+                                    }
+                                ]
                             });
                         }
                     } else {
                         context.report({
                             node,
-                            messageId: "dangerous",
+                            messageId: "dangerous"
                         });
                     }
                 } else {
                     context.report({
                         node,
-                        messageId: "dangerous",
+                        messageId: "dangerous"
                     });
                 }
-            },
+            }
         };
-    },
+    }
 };

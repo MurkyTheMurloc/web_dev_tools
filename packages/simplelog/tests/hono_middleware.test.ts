@@ -40,7 +40,7 @@ function argumentText(call: LoggedCall, index: number): string {
 
 function createApp(): Hono<{ Variables: HonoLoggerVariables }> {
     const logger = new WebLogger("server", undefined, {
-        valueColorMode: "off",
+        valueColorMode: "off"
     });
     const app = new Hono<{
         Variables: HonoLoggerVariables;
@@ -79,21 +79,21 @@ describe("Hono logger middleware completion", () => {
         expect(
             loggedMessages.some((message) => {
                 return message.includes("handler reached");
-            }),
+            })
         ).toBeTruthy();
         expect(
             loggedMessages.some((message) => {
                 return message.includes("Request completed");
-            }),
+            })
         ).toBeTruthy();
         expect(argumentText(requestCompletedCall, NUM_1)).toContain(
-            '"path": "/health"',
+            '"path": "/health"'
         );
         expect(argumentText(requestCompletedCall, NUM_1)).toContain(
-            '"runtime": "node"',
+            '"runtime": "node"'
         );
         expect(argumentText(requestCompletedCall, NUM_1)).toContain(
-            '"status": 200',
+            '"status": 200'
         );
     });
 });
@@ -107,7 +107,7 @@ describe("Hono logger middleware failures", () => {
             Variables: HonoLoggerVariables;
         }>();
         const logger = new WebLogger("server", undefined, {
-            valueColorMode: "off",
+            valueColorMode: "off"
         });
 
         app.onError((_error, c) => {
@@ -120,8 +120,8 @@ describe("Hono logger middleware failures", () => {
 
         const response = await app.request("http://localhost/boom", {
             headers: {
-                "x-request-id": "req-123",
-            },
+                "x-request-id": "req-123"
+            }
         });
         const requestFailedCall = loggedCalls().find((call) => {
             return argumentText(call, NUM_0).includes("Request failed");
@@ -129,13 +129,13 @@ describe("Hono logger middleware failures", () => {
 
         expect(response.status).toBe(NUM_500);
         expect(argumentText(requestFailedCall, NUM_1)).toContain(
-            '"requestId": "req-123"',
+            '"requestId": "req-123"'
         );
         expect(argumentText(requestFailedCall, NUM_1)).toContain(
-            '"status": 500',
+            '"status": 500'
         );
         expect(argumentText(requestFailedCall, NUM_2)).toContain(
-            '"message": "kaputt"',
+            '"message": "kaputt"'
         );
     });
 });
@@ -149,10 +149,10 @@ function requestCompletedMetadata(): string {
 }
 
 function createQueryApp(
-    includeQuery: boolean,
+    includeQuery: boolean
 ): Hono<{ Variables: HonoLoggerVariables }> {
     const logger = new WebLogger("server", undefined, {
-        valueColorMode: "off",
+        valueColorMode: "off"
     });
     const app = new Hono<{ Variables: HonoLoggerVariables }>();
 

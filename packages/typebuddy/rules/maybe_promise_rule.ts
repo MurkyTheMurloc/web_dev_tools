@@ -115,7 +115,7 @@ function hasIsErrorFlag(node: unknown, expected: boolean): boolean {
 
 function getObjectPropertyValue(
     node: unknown,
-    propertyName: string,
+    propertyName: string
 ): AstNode | null {
     if (
         !isNode(node) ||
@@ -229,7 +229,7 @@ const rule = {
             at: AstNode,
             fixer: RuleFixer,
             helperName: "ok" | "err",
-            rewrite: unknown,
+            rewrite: unknown
         ): unknown[] | null {
             const importFixes = imports.fixes(at, fixer, helperName, "value");
             if (importFixes === null) return null;
@@ -245,7 +245,7 @@ const rule = {
             at: AstNode,
             messageId: string,
             helperName: "ok" | "err",
-            rewrite: (fixer: RuleFixer) => unknown,
+            rewrite: (fixer: RuleFixer) => unknown
         ): RuleSuggestion[] {
             return [
                 {
@@ -255,10 +255,10 @@ const rule = {
                             at,
                             fixer,
                             helperName,
-                            rewrite(fixer),
+                            rewrite(fixer)
                         );
-                    },
-                },
+                    }
+                }
             ];
         }
 
@@ -284,13 +284,13 @@ const rule = {
                     typeName,
                     fixer,
                     "MaybePromise",
-                    "type",
+                    "type"
                 );
                 if (typeImport === null) return null;
 
                 return [
                     ...typeImport,
-                    fixer.replaceText(typeName, "MaybePromise"),
+                    fixer.replaceText(typeName, "MaybePromise")
                 ];
             };
 
@@ -305,7 +305,7 @@ const rule = {
                     messageId: "replaceWithMaybePromise",
                     fix(fixer) {
                         return rewrite(fixer);
-                    },
+                    }
                 });
                 return;
             }
@@ -318,9 +318,9 @@ const rule = {
                         messageId: "suggestMaybePromise",
                         fix(fixer) {
                             return rewrite(fixer);
-                        },
-                    },
-                ],
+                        }
+                    }
+                ]
             });
         }
 
@@ -359,7 +359,7 @@ const rule = {
         function wrapReturnValue(
             node: AstNode,
             isAsync: boolean,
-            returnType: AstNode | null,
+            returnType: AstNode | null
         ) {
             if (!isAsync) return;
 
@@ -374,9 +374,9 @@ const rule = {
                                 node,
                                 fixer,
                                 "ok",
-                                fixer.replaceText(node, "return ok();"),
+                                fixer.replaceText(node, "return ok();")
                             );
-                        },
+                        }
                     });
                 }
                 return;
@@ -417,9 +417,9 @@ const rule = {
                             node,
                             fixer,
                             "ok",
-                            fixer.replaceText(argument, `ok(${valueText})`),
+                            fixer.replaceText(argument, `ok(${valueText})`)
                         );
-                    },
+                    }
                 });
                 return;
             }
@@ -437,9 +437,9 @@ const rule = {
                             node,
                             fixer,
                             "err",
-                            fixer.replaceText(argument, "err()"),
+                            fixer.replaceText(argument, "err()")
                         );
-                    },
+                    }
                 });
                 return;
             }
@@ -464,10 +464,10 @@ const rule = {
                             const argumentText = sourceCode.getText(argument);
                             return fixer.replaceText(
                                 argument,
-                                `ok(${argumentText})`,
+                                `ok(${argumentText})`
                             );
-                        },
-                    ),
+                        }
+                    )
                 });
             }
         }
@@ -526,9 +526,9 @@ const rule = {
                             statement,
                             fixer,
                             "err",
-                            fixer.replaceText(statement, "return err();"),
+                            fixer.replaceText(statement, "return err();")
                         );
-                    },
+                    }
                 });
                 return;
             }
@@ -548,9 +548,9 @@ const rule = {
                                 statement,
                                 fixer,
                                 "err",
-                                fixer.replaceText(argument, "err()"),
+                                fixer.replaceText(argument, "err()")
                             );
-                        },
+                        }
                     });
                 }
                 return;
@@ -558,7 +558,7 @@ const rule = {
 
             context.report({
                 node: statement,
-                messageId: "returnFailedPromise",
+                messageId: "returnFailedPromise"
             });
         }
 
@@ -658,15 +658,15 @@ const rule = {
                         fixer.insertTextBeforeRange(
                             [
                                 handlerBody["range"][1] - 1,
-                                handlerBody["range"][1] - 1,
+                                handlerBody["range"][1] - 1
                             ],
                             // The newline matters: `catch { log() }` would
                             // otherwise become `catch { log() return err(); }`,
                             // which does not parse.
-                            "\nreturn err();\n",
-                        ),
+                            "\nreturn err();\n"
+                        )
                     );
-                },
+                }
             });
         }
 
@@ -680,7 +680,7 @@ const rule = {
             TSDeclareFunction: guard(checkSignatureReturnType),
             TSFunctionType: guard(checkSignatureReturnType),
             TSMethodSignature: guard(checkSignatureReturnType),
-            TryStatement: guard(processTryCatch),
+            TryStatement: guard(processTryCatch)
         };
     },
     defaultOptions: [],
@@ -688,7 +688,7 @@ const rule = {
         type: "suggestion",
         docs: {
             description:
-                "Ensure async functions' return values follow the MaybePromise pattern.",
+                "Ensure async functions' return values follow the MaybePromise pattern."
         },
         fixable: "code",
         hasSuggestions: true,
@@ -706,9 +706,9 @@ const rule = {
             returnVoidPromise:
                 "Return ok() for async functions with Promise<void> return type.",
             returnFailedPromise:
-                "Return err() in the catch block of async functions.",
-        },
-    },
+                "Return err() in the catch block of async functions."
+        }
+    }
 };
 
 export { rule as errorSafeAsyncRule };

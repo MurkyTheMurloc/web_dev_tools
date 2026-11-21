@@ -5,13 +5,13 @@ export const preferChildLoggerRule = {
         type: "suggestion",
         docs: {
             description:
-                "Prefer deriving child loggers from an existing SimpleLog logger inside functions and request handlers.",
+                "Prefer deriving child loggers from an existing SimpleLog logger inside functions and request handlers."
         },
         schema: [],
         messages: {
             preferChildLogger:
-                "Prefer logger.createChildLogger(...) over creating a new root Logger inside a nested function scope.",
-        },
+                "Prefer logger.createChildLogger(...) over creating a new root Logger inside a nested function scope."
+        }
     },
     create(context) {
         const loggerConstructors = new Set();
@@ -53,7 +53,7 @@ export const preferChildLoggerRule = {
                 ) {
                     context.report({
                         messageId: "preferChildLogger",
-                        node: node.callee,
+                        node: node.callee
                     });
                     return;
                 }
@@ -68,10 +68,10 @@ export const preferChildLoggerRule = {
                 ) {
                     context.report({
                         messageId: "preferChildLogger",
-                        node: node.callee.property,
+                        node: node.callee.property
                     });
                 }
-            },
+            }
         };
-    },
+    }
 };

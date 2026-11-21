@@ -30,7 +30,7 @@ export const createProfile = (): unknown => {
 
     return profile;
 };
-`,
+`
 });
 
 const readsAfterTheGap = Object.freeze({
@@ -48,7 +48,7 @@ export const createProfile = (): unknown => {
 
     return profile;
 };
-`,
+`
 });
 
 // A generator driven by `action` suspends at `yield`, and a read afterwards is
@@ -68,17 +68,17 @@ export const createSaver = (): unknown => {
 
     return saver;
 };
-`,
+`
 });
 
 const reactivityAsyncSilentCases = Object.freeze([readsBeforeTheGap]);
 const reactivityAsyncReportingCases = Object.freeze([
     readsAfterTheGap,
-    readsAfterAYield,
+    readsAfterAYield
 ]);
 
 export {
     READ_AFTER_GAP_MESSAGE,
     reactivityAsyncReportingCases,
-    reactivityAsyncSilentCases,
+    reactivityAsyncSilentCases
 };

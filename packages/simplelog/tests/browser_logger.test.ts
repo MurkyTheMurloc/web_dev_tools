@@ -5,7 +5,7 @@ import { LoggerBase } from "../src/logger_factory";
 import type {
     LoggerOptions,
     LoggerParent,
-    LoggerRuntime,
+    LoggerRuntime
 } from "../src/logger_factory";
 
 type ConsoleCall = Readonly<{
@@ -18,14 +18,14 @@ class BrowserTestLogger extends LoggerBase {
         runtime: LoggerRuntime,
         name: string,
         parent?: LoggerParent,
-        options: LoggerOptions = {},
+        options: LoggerOptions = {}
     ) {
         super(
             BrowserTestLogger.bind(null, runtime),
             runtime,
             name,
             parent,
-            options,
+            options
         );
     }
 }
@@ -42,13 +42,13 @@ function createLogger(options: LoggerOptions = {}): {
             },
             log(...args: readonly unknown[]): void {
                 calls.push({ args, type: "log" });
-            },
-        }),
+            }
+        })
     } satisfies LoggerRuntime;
 
     return {
         calls,
-        logger: new BrowserTestLogger(runtime, "app", undefined, options),
+        logger: new BrowserTestLogger(runtime, "app", undefined, options)
     };
 }
 
@@ -71,21 +71,21 @@ describe(createBrowserLogWriter, () => {
     it("copies an Error with the allow-list only", () => {
         const { calls, logger } = createLogger();
         const rootCause = Object.assign(new Error("socket hang up"), {
-            config: { headers: { authorization: "Bearer secret" } },
+            config: { headers: { authorization: "Bearer secret" } }
         });
         const error = Object.assign(
             new Error("request failed", { cause: rootCause }),
             {
                 code: "ECONNRESET",
                 config: { headers: { authorization: "Bearer secret" } },
-                response: { status: 500 },
-            },
+                response: { status: 500 }
+            }
         );
 
         logger.warn(
             "upstream",
             error,
-            new Error("plain cause", { cause: { token: "x" } }),
+            new Error("plain cause", { cause: { token: "x" } })
         );
 
         const [logged, plain] = calls[0]?.args.slice(3) ?? [];
@@ -95,7 +95,7 @@ describe(createBrowserLogWriter, () => {
             code: "ECONNRESET",
             message: "request failed",
             name: "Error",
-            stack: error.stack,
+            stack: error.stack
         });
         expect(Object.keys(logged ?? {})).not.toContain("config");
         expect(Object.keys(logged ?? {})).not.toContain("response");
@@ -111,7 +111,7 @@ describe(createBrowserLogWriter, () => {
 
         logger.error(
             "all failed",
-            new AggregateError([inner, { token: "y" }], "all"),
+            new AggregateError([inner, { token: "y" }], "all")
         );
 
         const errors: unknown = Reflect.get(calls[0]?.args[3] ?? {}, "errors");

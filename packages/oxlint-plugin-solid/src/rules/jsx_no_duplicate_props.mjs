@@ -4,7 +4,7 @@ export default {
         type: "problem",
         docs: {
             description: "Disallow passing the same prop twice in JSX.",
-            url: "https://github.com/solidjs-community/eslint-plugin-solid/blob/main/packages/eslint-plugin-solid/docs/jsx-no-duplicate-props.md",
+            url: "https://github.com/solidjs-community/eslint-plugin-solid/blob/main/packages/eslint-plugin-solid/docs/jsx-no-duplicate-props.md"
         },
         schema: [
             {
@@ -14,19 +14,19 @@ export default {
                         type: "boolean",
                         description:
                             "Consider two prop names differing only by case to be the same.",
-                        default: false,
-                    },
+                        default: false
+                    }
                 },
-                additionalProperties: false,
-            },
+                additionalProperties: false
+            }
         ],
         messages: {
             noDuplicateProps: "Duplicate props are not allowed.",
             noDuplicateClass:
                 "Duplicate `class` props are not allowed; while it might seem to work, it can break unexpectedly. Pass one `class` with the object or array form instead.",
             noDuplicateChildren:
-                "Using {{used}} at the same time is not allowed.",
-        },
+                "Using {{used}} at the same time is not allowed."
+        }
     },
     defaultOptions: [],
     create(context) {
@@ -47,13 +47,13 @@ export default {
                             messageId:
                                 name === "class"
                                     ? "noDuplicateClass"
-                                    : "noDuplicateProps",
+                                    : "noDuplicateProps"
                         });
                     }
                     props.add(name);
                 };
                 for (const [name, propNode] of jsxGetAllProps(
-                    node.attributes,
+                    node.attributes
                 )) {
                     checkPropName(name, propNode);
                 }
@@ -67,18 +67,18 @@ export default {
                     hasChildrenProp && "`props.children`",
                     hasChildren && "JSX children",
                     hasInnerHTML && "`props.innerHTML`",
-                    hasTextContent && "`props.textContent`",
+                    hasTextContent && "`props.textContent`"
                 ].filter(Boolean);
                 if (used.length > 1) {
                     context.report({
                         node,
                         messageId: "noDuplicateChildren",
                         data: {
-                            used: used.join(", "),
-                        },
+                            used: used.join(", ")
+                        }
                     });
                 }
-            },
+            }
         };
-    },
+    }
 };

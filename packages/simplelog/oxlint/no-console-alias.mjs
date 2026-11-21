@@ -1,7 +1,7 @@
 import {
     isConsoleBindCall,
     isConsoleMethodReference,
-    isConsoleObjectExpression,
+    isConsoleObjectExpression
 } from "./utils.mjs";
 
 export const noConsoleAliasRule = {
@@ -9,19 +9,19 @@ export const noConsoleAliasRule = {
         type: "problem",
         docs: {
             description:
-                "Disallow aliasing console or console methods in codebases that standardize on SimpleLog.",
+                "Disallow aliasing console or console methods in codebases that standardize on SimpleLog."
         },
         schema: [],
         messages: {
             noConsoleAlias:
-                "Do not alias console or console methods. Use a SimpleLog logger instead.",
-        },
+                "Do not alias console or console methods. Use a SimpleLog logger instead."
+        }
     },
     create(context) {
         function report(node) {
             context.report({
                 messageId: "noConsoleAlias",
-                node,
+                node
             });
         }
 
@@ -63,7 +63,7 @@ export const noConsoleAliasRule = {
                 if (isConsoleBindCall(node.right)) {
                     report(node.right);
                 }
-            },
+            }
         };
-    },
+    }
 };

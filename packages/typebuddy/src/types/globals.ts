@@ -9,5 +9,5 @@ export type {
     ResolveNullable,
     ResolveOptional,
     Stringified,
-    Success,
+    Success
 } from "./index.js";

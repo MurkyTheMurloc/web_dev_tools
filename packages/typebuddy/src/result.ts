@@ -27,7 +27,7 @@ import type { Failed, Result, Success } from "./types/maybe_promise.js";
  *   `Success` member when the condition is met.
  */
 function isSuccess<R extends Readonly<Result<unknown>>>(
-    result: R,
+    result: R
 ): result is Extract<R, { isError: false }> {
     return !result.isError;
 }
@@ -40,7 +40,7 @@ function ok<T>(...args: readonly [T] | []): Success<T | void> {
     const [value] = args;
     return {
         isError: false,
-        value,
+        value
     };
 }
 
@@ -52,7 +52,7 @@ function err<T extends null>(...args: readonly [T] | []): Failed {
     const [value] = args;
     return {
         isError: true,
-        value: value ?? null,
+        value: value ?? null
     };
 }
 

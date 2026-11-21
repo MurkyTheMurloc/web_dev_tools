@@ -73,8 +73,8 @@ type RequestLoggerNameResolver = (context: RequestLoggerContext) => string;
 type HonoLoggerMiddlewareOptions = Readonly<{
     /**
      * Adds the request's query string (`?a=1&b=2`) to the logged metadata as
-     * `query`. Off by default: query strings often carry tokens, OAuth codes and
-     * e-mail addresses, and the log keeps only the path.
+     * `query`. Off by default: query strings often carry tokens, OAuth codes
+     * and e-mail addresses, and the log keeps only the path.
      */
     includeQuery?: boolean;
     logCompletedRequests?: boolean;
@@ -111,7 +111,7 @@ function extractQuery(url: string): string {
 }
 
 function createRequestLoggerContext(
-    c: RequestOnlyReader,
+    c: RequestOnlyReader
 ): RequestLoggerContext {
     return {
         method: c.req.method,
@@ -119,13 +119,13 @@ function createRequestLoggerContext(
         query: extractQuery(c.req.url),
         requestId: resolveRequestId(c),
         runtime: getRuntimeKey(),
-        url: c.req.url,
+        url: c.req.url
     };
 }
 
 function resolveRequestLoggerName(
     requestLoggerContext: RequestLoggerContext,
-    requestLoggerName: HonoLoggerMiddlewareOptions["requestLoggerName"],
+    requestLoggerName: HonoLoggerMiddlewareOptions["requestLoggerName"]
 ): string {
     if (typeof requestLoggerName === "function") {
         return requestLoggerName(requestLoggerContext);
@@ -141,10 +141,10 @@ function resolveRequestLoggerName(
 function createRequestLogger(
     logger: Readonly<LoggerBase>,
     requestLoggerContext: RequestLoggerContext,
-    requestLoggerName: HonoLoggerMiddlewareOptions["requestLoggerName"],
+    requestLoggerName: HonoLoggerMiddlewareOptions["requestLoggerName"]
 ): Readonly<LoggerBase> {
     return logger.createChildLogger(
-        resolveRequestLoggerName(requestLoggerContext, requestLoggerName),
+        resolveRequestLoggerName(requestLoggerContext, requestLoggerName)
     );
 }
 
@@ -156,8 +156,8 @@ function createRequestOnlyReader(c: MiddlewareContext): RequestOnlyReader {
             },
             method: c.req.method,
             path: c.req.path,
-            url: c.req.url,
-        },
+            url: c.req.url
+        }
     };
 }
 
@@ -176,27 +176,27 @@ function createRequestReader(c: MiddlewareContext): RequestContextReader {
         ...createRequestOnlyReader(c),
         error: c.error,
         res: {
-            status: c.res.status,
-        },
+            status: c.res.status
+        }
     };
 }
 
 function createRequestLoggingState(
     c: MiddlewareContext,
-    options: HonoLoggerMiddlewareOptions,
+    options: HonoLoggerMiddlewareOptions
 ): RequestLoggingState {
     const requestLoggerContext = createRequestLoggerContext(
-        createRequestOnlyReader(c),
+        createRequestOnlyReader(c)
     );
 
     return {
         requestLogger: createRequestLogger(
             options.logger,
             requestLoggerContext,
-            options.requestLoggerName,
+            options.requestLoggerName
         ),
         requestLoggerContext,
-        startTime: Date.now(),
+        startTime: Date.now()
     };
 }
 
@@ -204,14 +204,14 @@ function buildRequestMetadata(
     requestLoggerContext: RequestLoggerContext,
     includeQuery: boolean,
     durationMs: number,
-    status: number,
+    status: number
 ): Readonly<Record<string, RequestMetadataValue>> {
     const requestMetadata: Record<string, RequestMetadataValue> = {
         durationMs,
         method: requestLoggerContext.method,
         path: requestLoggerContext.path,
         runtime: requestLoggerContext.runtime,
-        status,
+        status
     };
 
     if (
@@ -229,20 +229,20 @@ function buildRequestMetadata(
 }
 
 function serializeThrownError(
-    error: unknown,
+    error: unknown
 ): Readonly<Record<string, string>> {
     if (error instanceof Error) {
         return {
             message: error.message,
             name: error.name,
-            stack: error.stack ?? "",
+            stack: error.stack ?? ""
         };
     }
 
     return {
         message: String(error),
         name: "UnknownError",
-        stack: "",
+        stack: ""
     };
 }
 
@@ -251,7 +251,7 @@ function getElapsedMilliseconds(startTime: number): number {
 }
 
 function shouldLogCompletedRequests(
-    logCompletedRequests: boolean | undefined,
+    logCompletedRequests: boolean | undefined
 ): boolean {
     return logCompletedRequests ?? true;
 }
@@ -265,7 +265,7 @@ function logCompletedRequest(
     requestLogger: Readonly<LoggerBase>,
     requestLoggerContext: RequestLoggerContext,
     includeQuery: boolean,
-    startTime: number,
+    startTime: number
 ): void {
     requestLogger.info(
         REQUEST_COMPLETED_MESSAGE,
@@ -273,8 +273,8 @@ function logCompletedRequest(
             requestLoggerContext,
             includeQuery,
             getElapsedMilliseconds(startTime),
-            c.res.status,
-        ),
+            c.res.status
+        )
     );
 }
 
@@ -283,7 +283,7 @@ function logFailedRequest(
     requestLogger: Readonly<LoggerBase>,
     requestLoggerContext: RequestLoggerContext,
     includeQuery: boolean,
-    startTime: number,
+    startTime: number
 ): void {
     requestLogger.error(
         FAILED_REQUEST_MESSAGE,
@@ -291,16 +291,16 @@ function logFailedRequest(
             requestLoggerContext,
             includeQuery,
             getElapsedMilliseconds(startTime),
-            c.res.status || DEFAULT_ERROR_STATUS,
+            c.res.status || DEFAULT_ERROR_STATUS
         ),
-        serializeThrownError(c.error),
+        serializeThrownError(c.error)
     );
 }
 
 function finalizeRequestLogging(
     c: MiddlewareContext,
     options: HonoLoggerMiddlewareOptions,
-    requestLoggingState: RequestLoggingState,
+    requestLoggingState: RequestLoggingState
 ): void {
     const requestReader = createRequestReader(c);
     const includeQuery = shouldIncludeQuery(options.includeQuery);
@@ -311,7 +311,7 @@ function finalizeRequestLogging(
             requestLoggingState.requestLogger,
             requestLoggingState.requestLoggerContext,
             includeQuery,
-            requestLoggingState.startTime,
+            requestLoggingState.startTime
         );
         return;
     }
@@ -325,12 +325,12 @@ function finalizeRequestLogging(
         requestLoggingState.requestLogger,
         requestLoggingState.requestLoggerContext,
         includeQuery,
-        requestLoggingState.startTime,
+        requestLoggingState.startTime
     );
 }
 
 function createHonoLoggerMiddleware(
-    options: HonoLoggerMiddlewareOptions,
+    options: HonoLoggerMiddlewareOptions
 ): HonoLoggerMiddleware {
     return createMiddleware<{
         Variables: HonoLoggerVariables;
@@ -348,5 +348,5 @@ export { createHonoLoggerMiddleware };
 export type {
     HonoLoggerMiddlewareOptions,
     HonoLoggerVariables,
-    RequestLoggerContext,
+    RequestLoggerContext
 };

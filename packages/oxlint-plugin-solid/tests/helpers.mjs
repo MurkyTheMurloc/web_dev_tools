@@ -5,7 +5,7 @@ import {
     existsSync,
     mkdirSync,
     readFileSync,
-    writeFileSync,
+    writeFileSync
 } from "node:fs";
 import { tmpdir } from "node:os";
 import { dirname } from "node:path";
@@ -42,7 +42,7 @@ const PACKAGE_RUNTIME_DEPENDENCIES = [
     "parse5",
     "solid-js",
     "style-to-object",
-    "validate-html-nesting",
+    "validate-html-nesting"
 ];
 
 function getRepoRoot() {
@@ -66,14 +66,14 @@ function runCommand([command, ...args], cwd) {
     const result = spawnSync(command, args, {
         cwd,
         encoding: "utf8",
-        env: commandEnvironment(),
+        env: commandEnvironment()
     });
 
     return {
         // A command that did not start has no status; that is a failure.
         exitCode: result.status ?? 1,
         stderr: result.error?.message ?? result.stderr,
-        stdout: result.stdout,
+        stdout: result.stdout
     };
 }
 
@@ -89,7 +89,7 @@ function runCommandOrThrow(cmd, cwd) {
 function createTempDirectory(repoRoot) {
     const result = runCommandOrThrow(
         ["mktemp", "-d", TEMP_DIRECTORY_PATTERN],
-        repoRoot,
+        repoRoot
     );
 
     return joinOutput(result);
@@ -98,7 +98,7 @@ function createTempDirectory(repoRoot) {
 function resolveDependencySourcePath({
     dependencyName,
     packageNodeModulesPath,
-    rootNodeModulesPath,
+    rootNodeModulesPath
 }) {
     const packageScopedPath = `${packageNodeModulesPath}/${dependencyName}`;
     if (existsSync(packageScopedPath)) {
@@ -111,14 +111,14 @@ function resolveDependencySourcePath({
     }
 
     throw new Error(
-        `Could not resolve dependency '${dependencyName}' from either ${packageNodeModulesPath} or ${rootNodeModulesPath}.`,
+        `Could not resolve dependency '${dependencyName}' from either ${packageNodeModulesPath} or ${rootNodeModulesPath}.`
     );
 }
 
 function createTempPackageManifest(tempDirectoryPath) {
     writeFileSync(
         `${tempDirectoryPath}/package.json`,
-        `${JSON.stringify({ name: "solid-oxlint-test", private: true }, null, 2)}\n`,
+        `${JSON.stringify({ name: "solid-oxlint-test", private: true }, null, 2)}\n`
     );
 }
 
@@ -129,40 +129,40 @@ function initializeTempProject(repoRoot, tempDirectoryPath) {
     const dependencyLinkPairs = [
         [
             `${rootNodeModulesPath}/.bin`,
-            `${tempDirectoryPath}/node_modules/.bin`,
+            `${tempDirectoryPath}/node_modules/.bin`
         ],
         [
             solidPluginPackagePath,
-            `${tempDirectoryPath}/node_modules/@murky-web/oxlint-plugin-solid`,
+            `${tempDirectoryPath}/node_modules/@murky-web/oxlint-plugin-solid`
         ],
         [
             `${rootNodeModulesPath}/@typescript`,
-            `${tempDirectoryPath}/node_modules/@typescript`,
+            `${tempDirectoryPath}/node_modules/@typescript`
         ],
         [
             `${rootNodeModulesPath}/oxlint-tsgolint`,
-            `${tempDirectoryPath}/node_modules/oxlint-tsgolint`,
-        ],
+            `${tempDirectoryPath}/node_modules/oxlint-tsgolint`
+        ]
     ];
     for (const dependencyName of PACKAGE_RUNTIME_DEPENDENCIES) {
         dependencyLinkPairs.push([
             resolveDependencySourcePath({
                 dependencyName,
                 packageNodeModulesPath,
-                rootNodeModulesPath,
+                rootNodeModulesPath
             }),
-            `${tempDirectoryPath}/node_modules/${dependencyName}`,
+            `${tempDirectoryPath}/node_modules/${dependencyName}`
         ]);
     }
 
     writeSolidProjectConfig(repoRoot, tempDirectoryPath);
     runCommandOrThrow(
         ["mkdir", "-p", `${tempDirectoryPath}/node_modules`],
-        repoRoot,
+        repoRoot
     );
     runCommandOrThrow(
         ["mkdir", "-p", `${tempDirectoryPath}/node_modules/@murky-web`],
-        repoRoot,
+        repoRoot
     );
     for (const [sourcePath, targetPath] of dependencyLinkPairs) {
         runCommandOrThrow(["ln", "-s", sourcePath, targetPath], repoRoot);
@@ -186,7 +186,7 @@ const LINTING_FILES = [
     "promise",
     "node",
     "jsdoc",
-    "solid",
+    "solid"
 ];
 
 // `rules` overrides single rules on top of the shared configs, for cases that
@@ -205,28 +205,28 @@ function solidProjectConfig(rules = {}) {
             "vitest",
             "promise",
             "node",
-            "jsdoc",
+            "jsdoc"
         ],
-        rules,
+        rules
     };
 }
 
 function writeSolidProjectConfig(repoRoot, tempDirectoryPath) {
     const configRoot = `${repoRoot}/config`;
     cpSync(`${configRoot}/oxc/linting`, `${tempDirectoryPath}/oxc/linting`, {
-        recursive: true,
+        recursive: true
     });
     writeFileSync(
         `${tempDirectoryPath}/${OXLINT_CONFIG_PATH}`,
-        JSON.stringify(solidProjectConfig()),
+        JSON.stringify(solidProjectConfig())
     );
     copyFileSync(
         `${configRoot}/typescript/tsconfig.base.jsonc`,
-        `${tempDirectoryPath}/tsconfig.base.jsonc`,
+        `${tempDirectoryPath}/tsconfig.base.jsonc`
     );
     copyFileSync(
         `${configRoot}/typescript/tsconfig.client.jsonc`,
-        `${tempDirectoryPath}/tsconfig.json`,
+        `${tempDirectoryPath}/tsconfig.json`
     );
 }
 
@@ -245,8 +245,8 @@ function neutralizeUnresolvableTypes(tempDirectoryPath) {
         tsconfigPath,
         readFileSync(tsconfigPath, "utf8").replace(
             /"types"\s*:\s*\[[^\]]*\]/,
-            '"types": []',
-        ),
+            '"types": []'
+        )
     );
 }
 
@@ -280,8 +280,8 @@ export async function createLintHarness() {
                 fileName = FIXTURE_FILE_PATH,
                 files = {},
                 flags = [],
-                rules,
-            } = {},
+                rules
+            } = {}
         ) {
             const fixturePath = `${tempDirectoryPath}/${fileName}`;
             for (const [path, content] of Object.entries(files)) {
@@ -295,7 +295,7 @@ export async function createLintHarness() {
                 configPath = CASE_CONFIG_PATH;
                 writeFileSync(
                     `${tempDirectoryPath}/${configPath}`,
-                    JSON.stringify(solidProjectConfig(rules)),
+                    JSON.stringify(solidProjectConfig(rules))
                 );
             }
 
@@ -304,7 +304,7 @@ export async function createLintHarness() {
                 "-c",
                 configPath,
                 "--format=default",
-                ...flags,
+                ...flags
             ];
             if (fix) {
                 cmd.push("--fix");
@@ -326,8 +326,8 @@ export async function createLintHarness() {
             return {
                 exitCode: result.exitCode,
                 output,
-                source: readFileSync(fixturePath, "utf8"),
+                source: readFileSync(fixturePath, "utf8")
             };
-        },
+        }
     };
 }

@@ -12,7 +12,7 @@ RuleTester.itOnly = it.only;
 // `output` is the file after the autofix (`null` means "no autofix is
 // offered"); `suggestions` are the fixes the user has to pick.
 const tester = new RuleTester({
-    languageOptions: { parserOptions: { lang: "ts" } },
+    languageOptions: { parserOptions: { lang: "ts" } }
 });
 
 type TesterRule = Parameters<RuleTester["run"]>[1];
@@ -54,8 +54,8 @@ describe("prefer-maybe-promise", () => {
                     "    } catch {",
                     "        return 3;",
                     "    }",
-                    "}",
-                ),
+                    "}"
+                )
             },
             {
                 name: "does not touch an inline result object with more than isError and value",
@@ -66,9 +66,9 @@ describe("prefer-maybe-promise", () => {
                     "    } catch {",
                     "        return err();",
                     "    }",
-                    "}",
-                ),
-            },
+                    "}"
+                )
+            }
         ],
         invalid: [
             {
@@ -80,10 +80,10 @@ describe("prefer-maybe-promise", () => {
                     "    } catch (err) {",
                     "        console.error(err);",
                     "    }",
-                    "}",
+                    "}"
                 ),
                 errors: [{ messageId: "returnFailedPromise" }],
-                output: null,
+                output: null
             },
             {
                 name: "does not call a catch parameter in a catch that returns nothing",
@@ -94,10 +94,10 @@ describe("prefer-maybe-promise", () => {
                     "    } catch (err) {",
                     "        return;",
                     "    }",
-                    "}",
+                    "}"
                 ),
                 errors: [{ messageId: "returnFailedPromise" }],
-                output: null,
+                output: null
             },
             {
                 name: "does not add a second err import when ok and err come from the result entry",
@@ -109,7 +109,7 @@ describe("prefer-maybe-promise", () => {
                     "    } catch {",
                     "        log();",
                     "    }",
-                    "}",
+                    "}"
                 ),
                 errors: [{ messageId: "returnFailedPromise" }],
                 output: lines(
@@ -122,8 +122,8 @@ describe("prefer-maybe-promise", () => {
                     "    ",
                     "return err();",
                     "}",
-                    "}",
-                ),
+                    "}"
+                )
             },
             {
                 name: "adds the err import after a use client directive, not above it",
@@ -135,7 +135,7 @@ describe("prefer-maybe-promise", () => {
                     "    } catch {",
                     "        log();",
                     "    }",
-                    "}",
+                    "}"
                 ),
                 errors: [{ messageId: "returnFailedPromise" }],
                 output: lines(
@@ -149,8 +149,8 @@ describe("prefer-maybe-promise", () => {
                     "    ",
                     "return err();",
                     "}",
-                    "}",
-                ),
+                    "}"
+                )
             },
             {
                 name: "only suggests ok() for a returned value that may already be a failed result",
@@ -162,7 +162,7 @@ describe("prefer-maybe-promise", () => {
                     "    } catch {",
                     "        return err();",
                     "    }",
-                    "}",
+                    "}"
                 ),
                 errors: [
                     {
@@ -179,13 +179,13 @@ describe("prefer-maybe-promise", () => {
                                     "    } catch {",
                                     "        return err();",
                                     "    }",
-                                    "}",
-                                ),
-                            },
-                        ],
-                    },
+                                    "}"
+                                )
+                            }
+                        ]
+                    }
                 ],
-                output: null,
+                output: null
             },
             {
                 name: "only suggests ok() for a call that already returns a MaybePromise",
@@ -196,7 +196,7 @@ describe("prefer-maybe-promise", () => {
                     "    } catch {",
                     "        return err();",
                     "    }",
-                    "}",
+                    "}"
                 ),
                 errors: [
                     {
@@ -212,13 +212,13 @@ describe("prefer-maybe-promise", () => {
                                     "    } catch {",
                                     "        return err();",
                                     "    }",
-                                    "}",
-                                ),
-                            },
-                        ],
-                    },
+                                    "}"
+                                )
+                            }
+                        ]
+                    }
                 ],
-                output: null,
+                output: null
             },
             {
                 name: "offers no ok() suggestion where ok is a local variable",
@@ -230,10 +230,10 @@ describe("prefer-maybe-promise", () => {
                     "    } catch {",
                     "        return err();",
                     "    }",
-                    "}",
+                    "}"
                 ),
                 errors: [{ messageId: "wrapReturn", suggestions: [] }],
-                output: null,
+                output: null
             },
             {
                 name: "rewrites a bare return in a void function and imports ok",
@@ -244,7 +244,7 @@ describe("prefer-maybe-promise", () => {
                     "    } catch {",
                     "        return err();",
                     "    }",
-                    "}",
+                    "}"
                 ),
                 errors: [{ messageId: "returnVoidPromise" }],
                 output: lines(
@@ -255,8 +255,8 @@ describe("prefer-maybe-promise", () => {
                     "    } catch {",
                     "        return err();",
                     "    }",
-                    "}",
-                ),
+                    "}"
+                )
             },
             {
                 name: "does not rewrite a bare return where ok is a parameter",
@@ -267,25 +267,25 @@ describe("prefer-maybe-promise", () => {
                     "    } catch {",
                     "        return err();",
                     "    }",
-                    "}",
+                    "}"
                 ),
                 errors: [{ messageId: "returnVoidPromise" }],
-                output: null,
+                output: null
             },
             {
                 name: "rewrites the Promise return type of the file's own async function and imports MaybePromise",
                 code: lines(
                     "export async function load(): Promise<string> {",
                     '    return ok("x");',
-                    "}",
+                    "}"
                 ),
                 errors: [{ messageId: "replaceWithMaybePromise" }],
                 output: lines(
                     `import type { MaybePromise } from "${PACKAGE}";`,
                     "export async function load(): MaybePromise<string> {",
                     '    return ok("x");',
-                    "}",
-                ),
+                    "}"
+                )
             },
             {
                 name: "does not import MaybePromise a second time",
@@ -293,15 +293,15 @@ describe("prefer-maybe-promise", () => {
                     `import type { MaybePromise } from "${PACKAGE}";`,
                     "export async function load(): Promise<string> {",
                     '    return ok("x");',
-                    "}",
+                    "}"
                 ),
                 errors: [{ messageId: "replaceWithMaybePromise" }],
                 output: lines(
                     `import type { MaybePromise } from "${PACKAGE}";`,
                     "export async function load(): MaybePromise<string> {",
                     '    return ok("x");',
-                    "}",
-                ),
+                    "}"
+                )
             },
             {
                 name: "does not rewrite to another library's MaybePromise",
@@ -309,17 +309,17 @@ describe("prefer-maybe-promise", () => {
                     'import type { MaybePromise } from "some-other-library";',
                     "export async function load(): Promise<string> {",
                     '    return ok("x");',
-                    "}",
+                    "}"
                 ),
                 errors: [{ messageId: "replaceWithMaybePromise" }],
-                output: null,
+                output: null
             },
             {
                 name: "only suggests MaybePromise for an interface method",
                 code: lines(
                     "export interface Loader {",
                     "    load(): Promise<string>;",
-                    "}",
+                    "}"
                 ),
                 errors: [
                     {
@@ -331,13 +331,13 @@ describe("prefer-maybe-promise", () => {
                                     `import type { MaybePromise } from "${PACKAGE}";`,
                                     "export interface Loader {",
                                     "    load(): MaybePromise<string>;",
-                                    "}",
-                                ),
-                            },
-                        ],
-                    },
+                                    "}"
+                                )
+                            }
+                        ]
+                    }
                 ],
-                output: null,
+                output: null
             },
             {
                 name: "only suggests MaybePromise for a function type",
@@ -350,13 +350,13 @@ describe("prefer-maybe-promise", () => {
                                 messageId: "suggestMaybePromise",
                                 output: lines(
                                     `import type { MaybePromise } from "${PACKAGE}";`,
-                                    "export type LoadFn = () => MaybePromise<string>;",
-                                ),
-                            },
-                        ],
-                    },
+                                    "export type LoadFn = () => MaybePromise<string>;"
+                                )
+                            }
+                        ]
+                    }
                 ],
-                output: null,
+                output: null
             },
             {
                 name: "still rewrites an inline success object that is exactly isError and value",
@@ -368,7 +368,7 @@ describe("prefer-maybe-promise", () => {
                     "    } catch {",
                     "        return err();",
                     "    }",
-                    "}",
+                    "}"
                 ),
                 errors: [{ messageId: "preferOkResult" }],
                 output: lines(
@@ -379,10 +379,10 @@ describe("prefer-maybe-promise", () => {
                     "    } catch {",
                     "        return err();",
                     "    }",
-                    "}",
-                ),
-            },
-        ],
+                    "}"
+                )
+            }
+        ]
     });
 });
 
@@ -394,9 +394,9 @@ describe("require-try-catch", () => {
                 code: lines(
                     "export async function* stream() {",
                     "    yield 1;",
-                    "}",
-                ),
-            },
+                    "}"
+                )
+            }
         ],
         invalid: [
             {
@@ -404,7 +404,7 @@ describe("require-try-catch", () => {
                 code: lines(
                     "export async function load() {",
                     '    return "x";',
-                    "}",
+                    "}"
                 ),
                 errors: [
                     {
@@ -420,13 +420,13 @@ describe("require-try-catch", () => {
                                     "} catch {",
                                     "return err();",
                                     "}",
-                                    "}",
-                                ),
-                            },
-                        ],
-                    },
+                                    "}"
+                                )
+                            }
+                        ]
+                    }
                 ],
-                output: null,
+                output: null
             },
             {
                 name: "keeps use cache a directive by putting try after it",
@@ -434,7 +434,7 @@ describe("require-try-catch", () => {
                     "export async function load() {",
                     '    "use cache";',
                     '    return "x";',
-                    "}",
+                    "}"
                 ),
                 errors: [
                     {
@@ -451,13 +451,13 @@ describe("require-try-catch", () => {
                                     "} catch {",
                                     "return err();",
                                     "}",
-                                    "}",
-                                ),
-                            },
-                        ],
-                    },
+                                    "}"
+                                )
+                            }
+                        ]
+                    }
                 ],
-                output: null,
+                output: null
             },
             {
                 name: "puts the import after a use client directive",
@@ -465,7 +465,7 @@ describe("require-try-catch", () => {
                     '"use client";',
                     "export async function load() {",
                     '    return "x";',
-                    "}",
+                    "}"
                 ),
                 errors: [
                     {
@@ -482,13 +482,13 @@ describe("require-try-catch", () => {
                                     "} catch {",
                                     "return err();",
                                     "}",
-                                    "}",
-                                ),
-                            },
-                        ],
-                    },
+                                    "}"
+                                )
+                            }
+                        ]
+                    }
                 ],
-                output: null,
+                output: null
             },
             {
                 name: "accepts err imported from the result entry",
@@ -496,7 +496,7 @@ describe("require-try-catch", () => {
                     `import { err } from "${PACKAGE}/result";`,
                     "export async function load() {",
                     '    return "x";',
-                    "}",
+                    "}"
                 ),
                 errors: [
                     {
@@ -512,23 +512,23 @@ describe("require-try-catch", () => {
                                     "} catch {",
                                     "return err();",
                                     "}",
-                                    "}",
-                                ),
-                            },
-                        ],
-                    },
+                                    "}"
+                                )
+                            }
+                        ]
+                    }
                 ],
-                output: null,
+                output: null
             },
             {
                 name: "offers no suggestion where err is a parameter",
                 code: lines(
                     "export async function load(err: Error) {",
                     "    return err.message;",
-                    "}",
+                    "}"
                 ),
                 errors: [{ messageId: "missingTryCatch", suggestions: [] }],
-                output: null,
+                output: null
             },
             {
                 name: "suggests a block for an expression-bodied arrow",
@@ -547,15 +547,15 @@ describe("require-try-catch", () => {
                                     "} catch {",
                                     "return err();",
                                     "}",
-                                    "};",
-                                ),
-                            },
-                        ],
-                    },
+                                    "};"
+                                )
+                            }
+                        ]
+                    }
                 ],
-                output: null,
-            },
-        ],
+                output: null
+            }
+        ]
     });
 });
 
@@ -564,20 +564,20 @@ const TYPE_RULES = [
         name: "prefer-maybe",
         typeName: "Maybe",
         union: "string | null",
-        messageId: "useMaybe",
+        messageId: "useMaybe"
     },
     {
         name: "prefer-nullable",
         typeName: "Nullable",
         union: "string | null | undefined",
-        messageId: "useNullable",
+        messageId: "useNullable"
     },
     {
         name: "prefer-optional",
         typeName: "Optional",
         union: "string | undefined",
-        messageId: "preferOptional",
-    },
+        messageId: "preferOptional"
+    }
 ] as const;
 
 describe.each(TYPE_RULES)("$name imports the type it rewrites to", (entry) => {
@@ -591,9 +591,9 @@ describe.each(TYPE_RULES)("$name imports the type it rewrites to", (entry) => {
                 name: `leaves a file alone where ${typeName} is another library's type`,
                 code: lines(
                     `import type { ${typeName} } from "graphql";`,
-                    "export type Other = number;",
-                ),
-            },
+                    "export type Other = number;"
+                )
+            }
         ],
         invalid: [
             {
@@ -602,8 +602,8 @@ describe.each(TYPE_RULES)("$name imports the type it rewrites to", (entry) => {
                 errors: [{ messageId }],
                 output: lines(
                     `import type { ${typeName} } from "${PACKAGE}";`,
-                    rewritten,
-                ),
+                    rewritten
+                )
             },
             {
                 name: "adds the type import after the last import",
@@ -612,8 +612,8 @@ describe.each(TYPE_RULES)("$name imports the type it rewrites to", (entry) => {
                 output: lines(
                     'import { x } from "./x.js";',
                     `import type { ${typeName} } from "${PACKAGE}";`,
-                    rewritten,
-                ),
+                    rewritten
+                )
             },
             {
                 name: "adds the type import after a use client directive",
@@ -622,36 +622,36 @@ describe.each(TYPE_RULES)("$name imports the type it rewrites to", (entry) => {
                 output: lines(
                     '"use client";',
                     `import type { ${typeName} } from "${PACKAGE}";`,
-                    rewritten,
-                ),
+                    rewritten
+                )
             },
             {
                 name: "does not import it twice",
                 code: lines(
                     `import type { ${typeName} } from "${PACKAGE}";`,
-                    declaration,
+                    declaration
                 ),
                 errors: [{ messageId }],
                 output: lines(
                     `import type { ${typeName} } from "${PACKAGE}";`,
-                    rewritten,
-                ),
+                    rewritten
+                )
             },
             {
                 name: "does not rewrite to another library's type of the same name",
                 code: lines(
                     `import type { ${typeName} } from "graphql";`,
-                    declaration,
+                    declaration
                 ),
                 errors: [{ messageId }],
-                output: null,
+                output: null
             },
             {
                 name: "does not rewrite where the name is a local type",
                 code: lines(`type ${typeName}<T> = T[];`, declaration),
                 errors: [{ messageId }],
-                output: null,
-            },
-        ],
+                output: null
+            }
+        ]
     });
 });

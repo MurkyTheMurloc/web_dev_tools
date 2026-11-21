@@ -5,7 +5,7 @@ const PROPS_REGEX = /[pP]rops/;
 const FUNCTION_TYPES = [
     "FunctionExpression",
     "ArrowFunctionExpression",
-    "FunctionDeclaration",
+    "FunctionDeclaration"
 ];
 const PROGRAM_OR_FUNCTION_TYPES = ["Program", ...FUNCTION_TYPES];
 
@@ -162,7 +162,7 @@ export function getCommentAfter(node, sourceCode) {
 // the store APIs, while `@solidjs/web`, `@solidjs/h`, `@solidjs/html` and
 // `@solidjs/universal` own the renderers. Match both layouts.
 export function trackImports(
-    fromModule = /^(?:solid-js|@solidjs\/[a-z-]+)(?:\/|$)/,
+    fromModule = /^(?:solid-js|@solidjs\/[a-z-]+)(?:\/|$)/
 ) {
     const importMap = new Map();
 
@@ -187,7 +187,7 @@ export function trackImports(
 
     return {
         handleImportDeclaration,
-        matchImport,
+        matchImport
     };
 }
 
@@ -214,7 +214,7 @@ export function appendImports(fixer, sourceCode, importNode, identifiers) {
     ) {
         return fixer.insertTextAfter(
             importNode,
-            `\nimport ${importNode.importKind === "type" ? "type " : ""}{ ${identifiersString} } from ${sourceCode.getText(importNode.source)};`,
+            `\nimport ${importNode.importKind === "type" ? "type " : ""}{ ${identifiersString} } from ${sourceCode.getText(importNode.source)};`
         );
     }
 
@@ -225,7 +225,7 @@ export function appendImports(fixer, sourceCode, importNode, identifiers) {
     if (defaultSpecifier) {
         return fixer.insertTextAfter(
             defaultSpecifier,
-            `, { ${identifiersString} }`,
+            `, { ${identifiersString} }`
         );
     }
 
@@ -233,8 +233,8 @@ export function appendImports(fixer, sourceCode, importNode, identifiers) {
         const [importToken, maybeBrace] = sourceCode.getFirstTokens(
             importNode,
             {
-                count: 2,
-            },
+                count: 2
+            }
         );
 
         if (maybeBrace?.value === "{") {
@@ -244,7 +244,7 @@ export function appendImports(fixer, sourceCode, importNode, identifiers) {
         return importToken
             ? fixer.insertTextAfter(
                   importToken,
-                  ` { ${identifiersString} } from`,
+                  ` { ${identifiersString} } from`
               )
             : null;
     }
@@ -258,7 +258,7 @@ export function insertImports(
     source,
     identifiers,
     aboveImport,
-    isType = false,
+    isType = false
 ) {
     const identifiersString = identifiers.join(", ");
     const programNode = sourceCode.ast;
@@ -271,7 +271,7 @@ export function insertImports(
     if (firstImport) {
         return fixer.insertTextBeforeRange(
             (getCommentBefore(firstImport, sourceCode) ?? firstImport).range,
-            `import ${isType ? "type " : ""}{ ${identifiersString} } from "${source}";\n`,
+            `import ${isType ? "type " : ""}{ ${identifiersString} } from "${source}";\n`
         );
     }
 
@@ -286,7 +286,7 @@ export function insertImports(
         return fixer.insertTextBeforeRange(
             (getCommentBefore(firstStatement, sourceCode) ?? firstStatement)
                 .range,
-            importText,
+            importText
         );
     }
 
@@ -308,11 +308,11 @@ export function removeSpecifier(fixer, sourceCode, specifier, pure = true) {
     if (maybeComma?.value === ",") {
         // The space after the comma goes too, or `{ a, b }` turns into `{  b }`.
         const spaceAfter = /^\s*/u.exec(
-            sourceCode.text.slice(maybeComma.range[1]),
+            sourceCode.text.slice(maybeComma.range[1])
         );
         return fixer.removeRange([
             specifier.range[0],
-            maybeComma.range[1] + (spaceAfter?.[0].length ?? 0),
+            maybeComma.range[1] + (spaceAfter?.[0].length ?? 0)
         ]);
     }
 
@@ -322,7 +322,7 @@ export function removeSpecifier(fixer, sourceCode, specifier, pure = true) {
     if (maybeCommaBefore?.value === ",") {
         return fixer.removeRange([
             maybeCommaBefore.range[0],
-            specifier.range[1],
+            specifier.range[1]
         ]);
     }
 

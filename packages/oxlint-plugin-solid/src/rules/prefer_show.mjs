@@ -7,7 +7,7 @@ export default {
         docs: {
             description:
                 "Enforce using Solid's `<Show />` component for conditionally showing content. Solid's compiler covers this case, so it's a stylistic rule only.",
-            url: "https://github.com/solidjs-community/eslint-plugin-solid/blob/main/packages/eslint-plugin-solid/docs/prefer-show.md",
+            url: "https://github.com/solidjs-community/eslint-plugin-solid/blob/main/packages/eslint-plugin-solid/docs/prefer-show.md"
         },
         fixable: "code",
         schema: [],
@@ -15,8 +15,8 @@ export default {
             preferShowAnd:
                 "Use Solid's `<Show />` component for conditionally showing content.",
             preferShowTernary:
-                "Use Solid's `<Show />` component for conditionally showing content with a fallback.",
-        },
+                "Use Solid's `<Show />` component for conditionally showing content with a fallback."
+        }
     },
     defaultOptions: [],
     create(context) {
@@ -39,8 +39,8 @@ export default {
                                 isJSXElementOrFragment(node.parent.parent)
                                 ? node.parent
                                 : node,
-                            `<Show when={${sourceCode.getText(node.left)}}>${putIntoJSX(node.right)}</Show>`,
-                        ),
+                            `<Show when={${sourceCode.getText(node.left)}}>${putIntoJSX(node.right)}</Show>`
+                        )
                 });
             }
         };
@@ -58,8 +58,8 @@ export default {
                                 isJSXElementOrFragment(node.parent.parent)
                                 ? node.parent
                                 : node,
-                            `<Show when={${sourceCode.getText(node.test)}} fallback={${sourceCode.getText(node.alternate)}}>${putIntoJSX(node.consequent)}</Show>`,
-                        ),
+                            `<Show when={${sourceCode.getText(node.test)}} fallback={${sourceCode.getText(node.alternate)}}>${putIntoJSX(node.consequent)}</Show>`
+                        )
                 });
             }
         };
@@ -83,7 +83,7 @@ export default {
                 ) {
                     conditionalExpressionHandler(node.expression.body);
                 }
-            },
+            }
         };
-    },
+    }
 };

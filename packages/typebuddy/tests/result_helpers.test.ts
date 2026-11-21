@@ -7,21 +7,21 @@ describe("ok and err", () => {
     it("should build success objects with payloads", () => {
         expect(ok("ready")).toEqual({
             isError: false,
-            value: "ready",
+            value: "ready"
         });
     });
 
     it("should build a void success without an explicit payload", () => {
         expect(ok()).toEqual({
             isError: false,
-            value: undefined,
+            value: undefined
         });
     });
 
     it("should build the default failed result", () => {
         expect(err()).toEqual({
             isError: true,
-            value: null,
+            value: null
         });
     });
 

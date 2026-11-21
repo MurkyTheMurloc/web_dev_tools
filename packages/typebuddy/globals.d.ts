@@ -1,23 +1,23 @@
 import type {
     JsonifiedValue as JsonifiedValueImport,
-    Stringified as StringifiedImport,
+    Stringified as StringifiedImport
 } from "./src/types/json.js";
 import type {
     Maybe as MaybeImport,
-    ResolveMaybe as ResolveMaybeImport,
+    ResolveMaybe as ResolveMaybeImport
 } from "./src/types/maybe.js";
 import type {
     Failed as FailedImport,
     MaybePromise as MaybePromiseImport,
-    Success as SuccessImport,
+    Success as SuccessImport
 } from "./src/types/maybe_promise.js";
 import type {
     Nullable as NullableImport,
-    ResolveNullable as ResolveNullableImport,
+    ResolveNullable as ResolveNullableImport
 } from "./src/types/nullable.js";
 import type {
     Optional as OptionalImport,
-    ResolveOptional as ResolveOptionalImport,
+    ResolveOptional as ResolveOptionalImport
 } from "./src/types/optional.js";
 
 declare global {
@@ -43,7 +43,7 @@ declare global {
         stringify<T>(
             value: T,
             replacer?: null,
-            space?: string | number,
+            space?: string | number
         ): Stringified<T>;
 
         parse<T>(str: Stringified<T>, replacer?: null): JsonifiedValueImport<T>;
@@ -61,5 +61,5 @@ export type {
     ResolveNullableImport as ResolveNullable,
     ResolveOptionalImport as ResolveOptional,
     StringifiedImport as Stringified,
-    SuccessImport as Success,
+    SuccessImport as Success
 };

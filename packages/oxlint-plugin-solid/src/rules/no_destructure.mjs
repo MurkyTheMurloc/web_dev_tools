@@ -77,8 +77,7 @@ const isGeneratedCall = (call, callee) => {
         others.every(
             (key) =>
                 key.type === "Literal" &&
-                (typeof key.value === "string" ||
-                    typeof key.value === "number"),
+                (typeof key.value === "string" || typeof key.value === "number")
         )
     );
 };
@@ -105,7 +104,7 @@ const getPropertyInfo = (prop) => {
             init:
                 prop.value.type === "AssignmentPattern"
                     ? prop.value.right
-                    : undefined,
+                    : undefined
         };
     } else {
         return null;
@@ -117,17 +116,16 @@ export default {
         docs: {
             description:
                 "Disallow destructuring props. In Solid, props must be used with property accesses (`props.foo`) to preserve reactivity. This rule only tracks destructuring in the parameter list.",
-            url: "https://github.com/solidjs-community/eslint-plugin-solid/blob/main/packages/eslint-plugin-solid/docs/no-destructure.md",
+            url: "https://github.com/solidjs-community/eslint-plugin-solid/blob/main/packages/eslint-plugin-solid/docs/no-destructure.md"
         },
         fixable: "code",
         schema: [],
         messages: {
             noDestructure:
                 "Destructuring component props breaks Solid's reactivity; use property access instead.",
-            missingImport:
-                "`{{name}}` is used without an import from solid-js.",
+            missingImport: "`{{name}}` is used without an import from solid-js."
             // noWriteToProps: "Component props are readonly, writing to props is not supported.",
-        },
+        }
     },
     defaultOptions: [],
     create(context) {
@@ -201,7 +199,7 @@ export default {
                     (def) =>
                         def.name?.range !== undefined &&
                         def.name.range[0] >= props.range[0] &&
-                        def.name.range[1] <= props.range[1],
+                        def.name.range[1] <= props.range[1]
                 );
             if (fixable && callScope) {
                 fixable = propertyInfo.every((info) => {
@@ -216,7 +214,7 @@ export default {
                             if (isInPattern) {
                                 // The binding itself, nothing else.
                                 return variable.defs.some(
-                                    (def) => def.name === reference.identifier,
+                                    (def) => def.name === reference.identifier
                                 );
                             }
                             return reference.isReadOnly();
@@ -251,13 +249,13 @@ export default {
                 lookupVariable(callScope, name, removedByFix) !== null ||
                 rewrittenScopes.some(
                     (scope) =>
-                        lookupVariable(scope, name, removedByFix) !== null,
+                        lookupVariable(scope, name, removedByFix) !== null
                 ) ||
                 (scopeManager?.globalScope?.through ?? []).some(
                     ({ identifier }) =>
                         identifier.name === name &&
                         identifier.range[0] >= func.range[0] &&
-                        identifier.range[1] <= func.range[1],
+                        identifier.range[1] <= func.range[1]
                 );
             const hasDefaults = propertyInfo.some((info) => info.init);
             let propsName = "props";
@@ -277,7 +275,7 @@ export default {
                     .filter((info) => info.init)
                     .map(
                         (info) =>
-                            `${info.computed ? "[" : ""}${sourceCode.getText(info.real)}${info.computed ? "]" : ""}: ${sourceCode.getText(info.init)}`,
+                            `${info.computed ? "[" : ""}${sourceCode.getText(info.real)}${info.computed ? "]" : ""}: ${sourceCode.getText(info.init)}`
                     )
                     .join(", ");
             // `omit(props, "a", "b")` takes the keys as varargs, where Solid
@@ -287,7 +285,7 @@ export default {
                     .map((info) =>
                         info.real.type === "Identifier"
                             ? JSON.stringify(info.real.name)
-                            : sourceCode.getText(info.real),
+                            : sourceCode.getText(info.real)
                     )
                     .join(", ");
             const restName = () =>
@@ -309,19 +307,19 @@ export default {
                     (node) =>
                         node.type === "ImportDeclaration" &&
                         node.specifiers.some(
-                            (specifier) => specifier.local.name === name,
-                        ),
+                            (specifier) => specifier.local.name === name
+                        )
                 );
             const imports = [];
             const solidCallName = (name) => {
                 for (const specifier of findSolidImportSpecifiers(
                     program,
-                    name,
+                    name
                 )) {
                     const variable = lookupVariable(
                         callScope,
                         specifier.local.name,
-                        removedByFix,
+                        removedByFix
                     );
                     // Unless a nearer binding shadows the import here.
                     if (
@@ -358,7 +356,7 @@ export default {
                 propertyInfo,
                 origProps,
                 lineToInsert,
-                imports,
+                imports
             };
         };
         // The import edit: the names go into the file's `solid-js` value
@@ -381,7 +379,7 @@ export default {
                 propsName,
                 propertyInfo,
                 origProps,
-                lineToInsert,
+                lineToInsert
             } = plan;
             const sourceCode = getSourceCode(context);
             // Replace destructured props with a `props` identifier. Only the
@@ -407,7 +405,7 @@ export default {
                         // Inject lines handling defaults/rest params before the first statement in the block.
                         yield fixer.insertTextBefore(
                             body.body[0],
-                            lineToInsert,
+                            lineToInsert
                         );
                     }
                     // with an empty block statement body, no need to inject code
@@ -425,7 +423,7 @@ export default {
                     // Inject lines handling defaults/rest params
                     yield fixer.insertTextBefore(
                         body,
-                        `{\n${lineToInsert}  return (`,
+                        `{\n${lineToInsert}  return (`
                     );
                     yield fixer.insertTextAfter(body, `);\n}`);
                 }
@@ -435,7 +433,7 @@ export default {
                 // iterate through destructured variables, associated with real node
                 for (const [info, variable] of propertyInfo.map((info) => [
                     info,
-                    scope.set.get(info.var),
+                    scope.set.get(info.var)
                 ])) {
                     if (variable) {
                         // replace all usages of the variable with props accesses
@@ -457,7 +455,7 @@ export default {
                                     reference.identifier,
                                     isShorthand
                                         ? `${reference.identifier.name}: ${propsName}${access}`
-                                        : `${propsName}${access}`,
+                                        : `${propsName}${access}`
                                 );
                             }
                         }
@@ -496,7 +494,7 @@ export default {
                 sourceCode.ast.body.some(
                     (node) =>
                         node.type === "ImportDeclaration" &&
-                        node.source.value === SOLID_SOURCE,
+                        node.source.value === SOLID_SOURCE
                 );
             const callees = (
                 sourceCode.scopeManager?.globalScope?.through ?? []
@@ -504,7 +502,7 @@ export default {
                 .filter(
                     ({ identifier }) =>
                         isSolidFile &&
-                        isGeneratedCall(identifier.parent, identifier),
+                        isGeneratedCall(identifier.parent, identifier)
                 )
                 .sort((a, b) => a.identifier.range[0] - b.identifier.range[0]);
             const danglingImports = [];
@@ -515,17 +513,17 @@ export default {
                 }
             };
             callees.forEach(({ identifier }) =>
-                addImport(danglingImports, generatedImport(identifier.name)),
+                addImport(danglingImports, generatedImport(identifier.name))
             );
             plans.forEach((plan) =>
                 plan.imports
                     .filter(
                         (entry) =>
                             !danglingImports.some(
-                                (known) => known.local === entry.local,
-                            ),
+                                (known) => known.local === entry.local
+                            )
                     )
-                    .forEach((entry) => addImport(plannedImports, entry)),
+                    .forEach((entry) => addImport(plannedImports, entry))
             );
             if (callees.length > 0) {
                 const [{ identifier }] = callees;
@@ -533,7 +531,7 @@ export default {
                     node: identifier,
                     messageId: "missingImport",
                     data: { name: identifier.name },
-                    fix: (fixer) => importFix(fixer, danglingImports),
+                    fix: (fixer) => importFix(fixer, danglingImports)
                 });
             }
             const [carrier] = plans.filter((plan) => plan.fixable);
@@ -541,7 +539,7 @@ export default {
                 if (!plan.fixable) {
                     context.report({
                         node: plan.props,
-                        messageId: "noDestructure",
+                        messageId: "noDestructure"
                     });
                     return;
                 }
@@ -552,8 +550,8 @@ export default {
                         fixDestructure(
                             plan,
                             plan === carrier ? plannedImports : [],
-                            fixer,
-                        ),
+                            fixer
+                        )
                 });
             });
         };
@@ -576,7 +574,7 @@ export default {
                 if (functionStack.length) {
                     currentFunction().hasJSX = true;
                 }
-            },
+            }
         };
-    },
+    }
 };

@@ -3,13 +3,13 @@ export const requireLoggerNameRule = {
         type: "problem",
         docs: {
             description:
-                "Require SimpleLog Logger instances to have a non-empty name for useful log output.",
+                "Require SimpleLog Logger instances to have a non-empty name for useful log output."
         },
         schema: [],
         messages: {
             requireLoggerName:
-                "Provide a non-empty logger name when creating a SimpleLog Logger.",
-        },
+                "Provide a non-empty logger name when creating a SimpleLog Logger."
+        }
     },
     create(context) {
         const loggerConstructors = new Set();
@@ -64,7 +64,7 @@ export const requireLoggerNameRule = {
                 if (!firstArgument) {
                     context.report({
                         messageId: "requireLoggerName",
-                        node: node.callee,
+                        node: node.callee
                     });
                     return;
                 }
@@ -76,10 +76,10 @@ export const requireLoggerNameRule = {
                 ) {
                     context.report({
                         messageId: "requireLoggerName",
-                        node: firstArgument,
+                        node: firstArgument
                     });
                 }
-            },
+            }
         };
-    },
+    }
 };

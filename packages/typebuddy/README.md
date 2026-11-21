@@ -39,7 +39,7 @@ import {
     isString,
     parseNumber,
     isUuidString,
-    isEmptyObject,
+    isEmptyObject
 } from "@murky-web/typebuddy";
 
 const value: unknown = "123";
@@ -103,8 +103,8 @@ If you want the `typebuddy` utility types globally, opt in once in your project:
 // tsconfig.json
 {
     "compilerOptions": {
-        "types": ["@murky-web/typebuddy/globals"],
-    },
+        "types": ["@murky-web/typebuddy/globals"]
+    }
 }
 ```
 

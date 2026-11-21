@@ -11,7 +11,7 @@ const rules = {
     "prefer-maybe-promise": withoutTestFiles(errorSafeAsyncRule),
     "prefer-nullable": withoutTestFiles(nullableRule),
     "prefer-optional": withoutTestFiles(optionalRule),
-    "require-try-catch": withoutTestFiles(requireTryCatchAsyncRule),
+    "require-try-catch": withoutTestFiles(requireTryCatchAsyncRule)
 } as const satisfies Record<string, unknown>;
 
 type TypebuddyOxlintPlugin = {
@@ -23,9 +23,9 @@ type TypebuddyOxlintPlugin = {
 
 const plugin: TypebuddyOxlintPlugin = {
     meta: {
-        name: "typebuddy",
+        name: "typebuddy"
     },
-    rules,
+    rules
 };
 
 export default plugin;

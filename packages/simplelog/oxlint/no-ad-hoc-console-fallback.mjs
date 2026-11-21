@@ -5,19 +5,19 @@ export const noAdHocConsoleFallbackRule = {
         type: "problem",
         docs: {
             description:
-                "Disallow using console as a fallback or alias in logger-like code paths.",
+                "Disallow using console as a fallback or alias in logger-like code paths."
         },
         schema: [],
         messages: {
             noAdHocConsoleFallback:
-                "Do not use console as an ad-hoc logger fallback or alias. Pass a SimpleLog logger or create one intentionally.",
-        },
+                "Do not use console as an ad-hoc logger fallback or alias. Pass a SimpleLog logger or create one intentionally."
+        }
     },
     create(context) {
         function reportConsoleNode(node) {
             context.report({
                 messageId: "noAdHocConsoleFallback",
-                node,
+                node
             });
         }
 
@@ -59,7 +59,7 @@ export const noAdHocConsoleFallbackRule = {
                 ) {
                     reportConsoleNode(node.right);
                 }
-            },
+            }
         };
-    },
+    }
 };

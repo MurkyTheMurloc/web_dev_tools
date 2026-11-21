@@ -2,7 +2,7 @@ import type {
     Maybe,
     Nullable,
     Optional,
-    MaybePromise,
+    MaybePromise
 } from "@murky-web/typebuddy";
 import { err, ok } from "@murky-web/typebuddy";
 
@@ -140,7 +140,7 @@ export async function bareCatchReturn(): AsyncResult<void> {
 // or the `switch`. The callback's return belongs to the callback, not here.
 export async function nestedReturns(
     flag: boolean,
-    n: number,
+    n: number
 ): AsyncResult<string> {
     try {
         if (flag) return "early";

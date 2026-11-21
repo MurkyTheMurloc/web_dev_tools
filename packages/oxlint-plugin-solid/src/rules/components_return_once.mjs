@@ -20,7 +20,7 @@ export default {
         docs: {
             description:
                 "Disallow early returns in components. Solid components only run once, and so conditionals should be inside JSX.",
-            url: "https://github.com/solidjs-community/eslint-plugin-solid/blob/main/packages/eslint-plugin-solid/docs/components-return-once.md",
+            url: "https://github.com/solidjs-community/eslint-plugin-solid/blob/main/packages/eslint-plugin-solid/docs/components-return-once.md"
         },
         fixable: "code",
         schema: [],
@@ -28,8 +28,8 @@ export default {
             noEarlyReturn:
                 "Solid components run once, so an early return breaks reactivity. Move the condition inside a JSX element, such as a fragment or <Show />.",
             noConditionalReturn:
-                "Solid components run once, so a conditional return breaks reactivity. Move the condition inside a JSX element, such as a fragment or <Show />.",
-        },
+                "Solid components run once, so a conditional return breaks reactivity. Move the condition inside a JSX element, such as a fragment or <Show />."
+        }
     },
     defaultOptions: [],
     create(context) {
@@ -46,7 +46,7 @@ export default {
             if (node.body.type === "BlockStatement") {
                 // find last statement, ignoring function/class/variable declarations (hoisting)
                 const last = node.body.body.findLast(
-                    (node) => !node.type.endsWith("Declaration"),
+                    (node) => !node.type.endsWith("Declaration")
                 );
                 // if it's a return, store it
                 if (last && last.type === "ReturnStatement") {
@@ -56,7 +56,7 @@ export default {
             functionStack.push({
                 isComponent: false,
                 lastReturn,
-                earlyReturns: [],
+                earlyReturns: []
             });
         };
         const onFunctionExit = (node) => {
@@ -76,7 +76,7 @@ export default {
                 currentFunction().earlyReturns.forEach((earlyReturn) => {
                     context.report({
                         node: earlyReturn,
-                        messageId: "noEarlyReturn",
+                        messageId: "noEarlyReturn"
                     });
                 });
                 const argument = currentFunction().lastReturn?.argument;
@@ -92,7 +92,7 @@ export default {
                             while (fallback.type === "ConditionalExpression") {
                                 conditions.push({
                                     test: fallback.test,
-                                    consequent: fallback.consequent,
+                                    consequent: fallback.consequent
                                 });
                                 fallback = fallback.alternate;
                             }
@@ -106,16 +106,16 @@ export default {
                                     `<Switch${fallbackStr}>\n${conditions
                                         .map(
                                             ({ test, consequent }) =>
-                                                `<Match when={${sourceCode.getText(test)}}>${putIntoJSX(consequent)}</Match>`,
+                                                `<Match when={${sourceCode.getText(test)}}>${putIntoJSX(consequent)}</Match>`
                                         )
-                                        .join("\n")}\n</Switch>`,
+                                        .join("\n")}\n</Switch>`
                                 );
                             }
                             if (isNothing(consequent)) {
                                 // we have a single ternary and the consequent is nothing. Negate the condition and use a <Show>.
                                 return fixer.replaceText(
                                     argument,
-                                    `<Show when={!(${sourceCode.getText(test)})}>${putIntoJSX(alternate)}</Show>`,
+                                    `<Show when={!(${sourceCode.getText(test)})}>${putIntoJSX(alternate)}</Show>`
                                 );
                             }
                             if (
@@ -130,16 +130,16 @@ export default {
                                     : "";
                                 return fixer.replaceText(
                                     argument,
-                                    `<Show when={${sourceCode.getText(test)}}${fallbackStr}>${putIntoJSX(consequent)}</Show>`,
+                                    `<Show when={${sourceCode.getText(test)}}${fallbackStr}>${putIntoJSX(consequent)}</Show>`
                                 );
                             }
                             // we have a standard ternary, but no signal from the user as to which branch is the "fallback" and
                             // which is the children. Move the whole conditional inside a JSX fragment.
                             return fixer.replaceText(
                                 argument,
-                                `<>${putIntoJSX(argument)}</>`,
+                                `<>${putIntoJSX(argument)}</>`
                             );
-                        },
+                        }
                     });
                 } else if (argument?.type === "LogicalExpression") {
                     if (argument.operator === "&&") {
@@ -153,15 +153,15 @@ export default {
                                     argument;
                                 return fixer.replaceText(
                                     argument,
-                                    `<Show when={${sourceCode.getText(test)}}>${putIntoJSX(consequent)}</Show>`,
+                                    `<Show when={${sourceCode.getText(test)}}>${putIntoJSX(consequent)}</Show>`
                                 );
-                            },
+                            }
                         });
                     } else {
                         // we have some other kind of conditional, warn
                         context.report({
                             node: argument,
-                            messageId: "noConditionalReturn",
+                            messageId: "noConditionalReturn"
                         });
                     }
                 }
@@ -193,7 +193,7 @@ export default {
                 ) {
                     currentFunction().earlyReturns.push(node);
                 }
-            },
+            }
         };
-    },
+    }
 };

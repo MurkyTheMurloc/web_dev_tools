@@ -1,7 +1,7 @@
 import { throwsDeliberately } from "./deliberate_throw.js";
 import {
     createImportPlanner,
-    getBodyStartAfterDirectives,
+    getBodyStartAfterDirectives
 } from "./typebuddy_import.js";
 import { createUseServerGuard } from "./use_server.js";
 
@@ -70,7 +70,7 @@ const rule = {
         // body; inside a `try` they are plain expression statements.
         function wrapBlockFixes(
             bodyNode: AstNode,
-            fixer: RuleFixer,
+            fixer: RuleFixer
         ): unknown[] | null {
             const range = bodyNode.range;
             const tryStart = getBodyStartAfterDirectives(bodyNode);
@@ -86,8 +86,8 @@ const rule = {
                 fixer.insertTextBeforeRange([tryStart, tryStart], "\ntry {"),
                 fixer.insertTextBeforeRange(
                     [range[1] - 1, range[1] - 1],
-                    "} catch {\nreturn err();\n}\n",
-                ),
+                    "} catch {\nreturn err();\n}\n"
+                )
             ];
         }
 
@@ -103,7 +103,7 @@ const rule = {
         function wrapExpressionBodyFixes(
             node: AstNode,
             bodyNode: AstNode,
-            fixer: RuleFixer,
+            fixer: RuleFixer
         ): unknown[] | null {
             const arrowRange = node.range;
             const bodyRange = bodyNode.range;
@@ -133,12 +133,12 @@ const rule = {
             return [
                 fixer.insertTextBeforeRange(
                     [start, start],
-                    "{\ntry {\nreturn ",
+                    "{\ntry {\nreturn "
                 ),
                 fixer.insertTextBeforeRange(
                     [end, end],
-                    ";\n} catch {\nreturn err();\n}\n}",
-                ),
+                    ";\n} catch {\nreturn err();\n}\n}"
+                )
             ];
         }
 
@@ -153,7 +153,7 @@ const rule = {
          */
         function suggestWrap(
             scopeNode: AstNode,
-            wrap: (fixer: RuleFixer) => unknown[] | null,
+            wrap: (fixer: RuleFixer) => unknown[] | null
         ) {
             return [
                 {
@@ -168,15 +168,15 @@ const rule = {
                             scopeNode,
                             fixer,
                             "err",
-                            "value",
+                            "value"
                         );
                         if (importFixes === null) {
                             return null;
                         }
 
                         return [...importFixes, ...wrapFixes];
-                    },
-                },
+                    }
+                }
             ];
         }
 
@@ -203,7 +203,7 @@ const rule = {
                     messageId: "missingTryCatch",
                     suggest: suggestWrap(node, (fixer) => {
                         return wrapExpressionBodyFixes(node, bodyNode, fixer);
-                    }),
+                    })
                 });
                 return;
             }
@@ -216,7 +216,7 @@ const rule = {
                 messageId: "missingTryCatch",
                 suggest: suggestWrap(bodyNode, (fixer) => {
                     return wrapBlockFixes(bodyNode, fixer);
-                }),
+                })
             });
         }
 
@@ -226,7 +226,7 @@ const rule = {
             Program,
             FunctionDeclaration: guard(checkFunction),
             FunctionExpression: guard(checkFunction),
-            ArrowFunctionExpression: guard(checkFunction),
+            ArrowFunctionExpression: guard(checkFunction)
         };
     },
     defaultOptions: [],
@@ -235,16 +235,16 @@ const rule = {
         hasSuggestions: true,
         docs: {
             description:
-                "Async functions should have a try-catch block returning an error result.",
+                "Async functions should have a try-catch block returning an error result."
         },
         schema: [],
         messages: {
             missingTryCatch:
                 "Async functions must have a try-catch block returning an error result.",
             suggestTryCatch:
-                "Wrap the body in try/catch and return err() from the catch.",
-        },
-    },
+                "Wrap the body in try/catch and return err() from the catch."
+        }
+    }
 };
 
 export { rule as requireTryCatchAsyncRule };

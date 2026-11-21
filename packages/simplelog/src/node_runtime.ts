@@ -19,7 +19,7 @@ function readNodeConsoleDefaults(): ConsoleDefaults {
         forceColor: process.env.FORCE_COLOR,
         noColor: process.env.NO_COLOR,
         simplelogTimestamp: process.env.SIMPLELOG_TIMESTAMP,
-        stdoutIsTerminal: process.stdout.isTTY,
+        stdoutIsTerminal: process.stdout.isTTY
     });
 }
 
@@ -30,8 +30,8 @@ const nodeRuntime = {
         createLogFileWriter((filePath, content) => {
             ensureParentDirectoryExists(filePath);
             appendFileSync(filePath, content, LOG_FILE_ENCODING);
-        }),
-    ),
+        })
+    )
 } satisfies LoggerRuntime;
 
 export { nodeRuntime };

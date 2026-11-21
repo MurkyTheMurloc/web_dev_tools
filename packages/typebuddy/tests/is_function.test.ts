@@ -16,7 +16,7 @@ describe(isFunction, () => {
         expect(
             isFunction(function named(): void {
                 // intentionally empty
-            }),
+            })
         ).toBeTruthy();
     });
 

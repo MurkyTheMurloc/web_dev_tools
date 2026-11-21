@@ -32,30 +32,30 @@ const checks: readonly BundleCheck[] = [
         forbidden: [...FILE_MARKERS, "createTextLogWriter", "toJsonSafeValue"],
         name: "browser",
         required: ["createBrowserLogWriter"],
-        target: "browser",
+        target: "browser"
     },
     {
         forbidden: [...FILE_MARKERS, "createBrowserLogWriter"],
         name: "server",
         required: ["createTextLogWriter", "toJsonSafeValue"],
-        target: "node",
-    },
+        target: "node"
+    }
 ];
 
 async function bundle(
     target: BundleCheck["target"],
-    minify: boolean,
+    minify: boolean
 ): Promise<string> {
     const result = await Bun.build({
         entrypoints: [entry],
         minify,
-        target,
+        target
     });
     const [output] = result.outputs;
 
     if (!result.success || output === undefined) {
         throw new Error(
-            `Bundling for ${target} failed:\n${result.logs.join("\n")}`,
+            `Bundling for ${target} failed:\n${result.logs.join("\n")}`
         );
     }
 
@@ -80,12 +80,12 @@ for (const check of checks) {
 }
 
 const browserBytes = new TextEncoder().encode(
-    await bundle("browser", true),
+    await bundle("browser", true)
 ).byteLength;
 
 if (browserBytes > BROWSER_BUDGET_BYTES) {
     failures.push(
-        `browser: ${browserBytes} bytes minified, budget ${BROWSER_BUDGET_BYTES}`,
+        `browser: ${browserBytes} bytes minified, budget ${BROWSER_BUDGET_BYTES}`
     );
 }
 
@@ -95,5 +95,5 @@ if (failures.length > 0) {
 }
 
 console.log(
-    `Tree-shake smoke passed (browser bundle ${browserBytes} bytes minified).`,
+    `Tree-shake smoke passed (browser bundle ${browserBytes} bytes minified).`
 );

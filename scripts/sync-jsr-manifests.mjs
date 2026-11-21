@@ -17,6 +17,6 @@ for (const pkg of publicPackages.filter((publicPackage) => {
   jsrJson.name = packageJson.name;
   jsrJson.version = packageJson.version;
 
-  await writeFile(`${jsrPath}`, `${JSON.stringify(jsrJson, null, 2)}\n`, "utf8");
+  await writeFile(`${jsrPath}`, `${JSON.stringify(jsrJson, null, 4)}\n`, "utf8");
   console.log(`Synced ${jsrPath} to ${packageJson.version}.`);
 }

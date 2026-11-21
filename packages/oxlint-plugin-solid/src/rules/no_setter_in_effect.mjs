@@ -58,7 +58,7 @@ function writesSignalsAnywhere(node, setterNames) {
                 candidate !== null &&
                 typeof candidate === "object" &&
                 !isFunctionNode(candidate) &&
-                writesSignalsAnywhere(candidate, setterNames),
+                writesSignalsAnywhere(candidate, setterNames)
         );
     });
 }
@@ -76,7 +76,7 @@ function onlyWritesSignals(phase, setterNames) {
         body.every(
             (statement) =>
                 statement.type === "ExpressionStatement" &&
-                isSetterCall(statement.expression, setterNames),
+                isSetterCall(statement.expression, setterNames)
         )
     );
 }
@@ -87,15 +87,15 @@ export default {
         docs: {
             description:
                 "Disallow effects that only copy a reactive value into another signal or store.",
-            url: "https://docs.solidjs.com/",
+            url: "https://docs.solidjs.com/"
         },
         schema: [],
         messages: {
             asyncSetterInEffect:
                 "This effect awaits and then writes the result into a signal or store. Return the value from a derivation instead: `createMemo(async () => ...)`, or the function form of `createStore` for nested data. Solid coordinates readiness, error propagation, and dropping superseded runs.",
             noSetterInEffect:
-                "This effect only writes to a signal or store. Calculate the value where it is read instead: a derived function, `createMemo`, or a writable derived `createSignal(() => ...)` for a local override.",
-        },
+                "This effect only writes to a signal or store. Calculate the value where it is read instead: a derived function, `createMemo`, or a writable derived `createSignal(() => ...)` for a local override."
+        }
     },
     defaultOptions: [],
     create(context) {
@@ -110,7 +110,7 @@ export default {
                     node.init.callee.type !== "Identifier" ||
                     !matchImport(
                         ["createSignal", "createStore"],
-                        node.init.callee.name,
+                        node.init.callee.name
                     )
                 ) {
                     return;
@@ -126,7 +126,7 @@ export default {
                     node.callee.type !== "Identifier" ||
                     !matchImport(
                         ["createEffect", "createRenderEffect"],
-                        node.callee.name,
+                        node.callee.name
                     )
                 ) {
                     return;
@@ -151,7 +151,7 @@ export default {
                 ) {
                     context.report({
                         node: phase,
-                        messageId: "asyncSetterInEffect",
+                        messageId: "asyncSetterInEffect"
                     });
                     return;
                 }
@@ -159,10 +159,10 @@ export default {
                 if (onlyWritesSignals(phase, setterNames)) {
                     context.report({
                         node: phase,
-                        messageId: "noSetterInEffect",
+                        messageId: "noSetterInEffect"
                     });
                 }
-            },
+            }
         };
-    },
+    }
 };

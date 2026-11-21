@@ -12,14 +12,14 @@ const RULE_IDS = [
     "prefer-maybe-promise",
     "prefer-nullable",
     "prefer-optional",
-    "require-try-catch",
+    "require-try-catch"
 ] as const;
 
 const SOURCE_FILES = [
     "src/x.ts",
     "src/latest.ts",
     "src/contest.ts",
-    "/repo/src/attest.tsx",
+    "/repo/src/attest.tsx"
 ];
 
 const TEST_FILES = [
@@ -33,7 +33,7 @@ const TEST_FILES = [
     "src/__mocks__/x.ts",
     "vitest.setup.ts",
     "config/vitest-setup.mts",
-    "src/setupTests.ts",
+    "src/setupTests.ts"
 ];
 
 function isCreatableRule(value: unknown): value is CreatableRule {
@@ -54,7 +54,7 @@ function visitorsFor(ruleId: string, filename: string, cwd?: string): Visitors {
         cwd,
         filename,
         getSourceCode: () => ({ getText: () => "" }),
-        report: () => undefined,
+        report: () => undefined
     });
 }
 
@@ -75,56 +75,56 @@ describe("isTestFile", () => {
     describe("with the project's working directory", () => {
         it("ignores test directories above the project", () => {
             expect(isTestFile("/tmp/test/app/src/x.ts", "/tmp/test/app")).toBe(
-                false,
+                false
             );
             expect(
                 isTestFile(
                     "/work/__tests__/app/src/x.ts",
-                    "/work/__tests__/app",
-                ),
+                    "/work/__tests__/app"
+                )
             ).toBe(false);
             expect(
                 isTestFile(
                     "/repo/.worktrees/tests/app/src/x.ts",
-                    "/repo/.worktrees/tests/app/",
-                ),
+                    "/repo/.worktrees/tests/app/"
+                )
             ).toBe(false);
         });
 
         it("matches test directories inside the project", () => {
             expect(
-                isTestFile("/tmp/test/app/tests/helper.ts", "/tmp/test/app"),
+                isTestFile("/tmp/test/app/tests/helper.ts", "/tmp/test/app")
             ).toBe(true);
             expect(
-                isTestFile("/repo/packages/a/tests/deep/helper.ts", "/repo"),
+                isTestFile("/repo/packages/a/tests/deep/helper.ts", "/repo")
             ).toBe(true);
             expect(isTestFile("/repo/src/__mocks__/x.ts", "/repo/")).toBe(true);
             expect(
-                isTestFile("C:\\repo\\src\\__tests__\\x.ts", "C:\\repo"),
+                isTestFile("C:\\repo\\src\\__tests__\\x.ts", "C:\\repo")
             ).toBe(true);
         });
 
         it("still matches by basename anywhere", () => {
             expect(
-                isTestFile("/tmp/test/app/src/x.test.ts", "/tmp/test/app"),
+                isTestFile("/tmp/test/app/src/x.test.ts", "/tmp/test/app")
             ).toBe(true);
             expect(
-                isTestFile("/elsewhere/src/x.spec.ts", "/tmp/test/app"),
+                isTestFile("/elsewhere/src/x.spec.ts", "/tmp/test/app")
             ).toBe(true);
             expect(
-                isTestFile("/elsewhere/vitest.setup.ts", "/tmp/test/app"),
+                isTestFile("/elsewhere/vitest.setup.ts", "/tmp/test/app")
             ).toBe(true);
         });
 
         it("matches a file outside the project by basename only", () => {
             expect(
-                isTestFile("/elsewhere/tests/helper.ts", "/tmp/test/app"),
+                isTestFile("/elsewhere/tests/helper.ts", "/tmp/test/app")
             ).toBe(false);
             expect(
                 isTestFile(
                     "/tmp/test/app-other/tests/helper.ts",
-                    "/tmp/test/app",
-                ),
+                    "/tmp/test/app"
+                )
             ).toBe(false);
         });
 
@@ -139,14 +139,14 @@ describe("isTestFile", () => {
 describe("typebuddy oxlint rules in test files", () => {
     it("registers every rule this suite checks", () => {
         expect(
-            Object.keys(typebuddyOxlintPlugin.rules).toSorted(),
+            Object.keys(typebuddyOxlintPlugin.rules).toSorted()
         ).toStrictEqual([...RULE_IDS]);
     });
 
     describe.each(RULE_IDS)("%s", (ruleId) => {
         it.each(SOURCE_FILES)("visits nodes in %s", (filename) => {
             expect(
-                Object.keys(visitorsFor(ruleId, filename)).length,
+                Object.keys(visitorsFor(ruleId, filename)).length
             ).toBeGreaterThan(0);
         });
 
@@ -161,13 +161,13 @@ describe("typebuddy oxlint rules in test files", () => {
         it("visits nodes in a source file", () => {
             expect(
                 Object.keys(visitorsFor(ruleId, "/tmp/test/app/src/x.ts", cwd))
-                    .length,
+                    .length
             ).toBeGreaterThan(0);
         });
 
         it("returns no visitors for a test directory inside the project", () => {
             expect(
-                visitorsFor(ruleId, "/tmp/test/app/tests/helper.ts", cwd),
+                visitorsFor(ruleId, "/tmp/test/app/tests/helper.ts", cwd)
             ).toStrictEqual({});
         });
     });
@@ -175,11 +175,11 @@ describe("typebuddy oxlint rules in test files", () => {
     it("matches only by basename for an absolute file when the context has no cwd", () => {
         expect(
             Object.keys(
-                visitorsFor("prefer-maybe", "/tmp/test/app/tests/helper.ts"),
-            ).length,
+                visitorsFor("prefer-maybe", "/tmp/test/app/tests/helper.ts")
+            ).length
         ).toBeGreaterThan(0);
         expect(
-            visitorsFor("prefer-maybe", "/tmp/test/app/src/x.test.ts"),
+            visitorsFor("prefer-maybe", "/tmp/test/app/src/x.test.ts")
         ).toStrictEqual({});
     });
 });

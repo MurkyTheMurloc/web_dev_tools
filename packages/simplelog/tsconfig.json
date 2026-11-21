@@ -1,21 +1,21 @@
 {
-  "$schema": "https://json.schemastore.org/tsconfig",
-  "extends": "../../config/typescript/tsconfig.base.jsonc",
-  "compilerOptions": {
-    "types": ["node"],
-    "lib": ["DOM", "DOM.Iterable", "ESNext"],
-    "target": "ES2022",
-    "allowJs": true,
-    "allowImportingTsExtensions": false,
-    "declaration": true,
-    "declarationMap": true,
-    "noEmit": false,
-    "noFallthroughCasesInSwitch": true,
-    "noUnusedLocals": true,
-    "noUnusedParameters": true,
-    "noPropertyAccessFromIndexSignature": false,
-    "outDir": "./dist"
-  },
-  "include": ["src/**/*.ts", "tsdown.config.ts"],
-  "exclude": ["node_modules/*"]
+    "$schema": "https://json.schemastore.org/tsconfig",
+    "extends": "../../config/typescript/tsconfig.base.jsonc",
+    "compilerOptions": {
+        "types": ["node"],
+        "lib": ["DOM", "DOM.Iterable", "ESNext"],
+        "target": "ES2022",
+        "allowJs": true,
+        "allowImportingTsExtensions": false,
+        "declaration": true,
+        "declarationMap": true,
+        "noEmit": false,
+        "noFallthroughCasesInSwitch": true,
+        "noUnusedLocals": true,
+        "noUnusedParameters": true,
+        "noPropertyAccessFromIndexSignature": false,
+        "outDir": "./dist"
+    },
+    "include": ["src/**/*.ts", "tsdown.config.ts"],
+    "exclude": ["node_modules/*"]
 }

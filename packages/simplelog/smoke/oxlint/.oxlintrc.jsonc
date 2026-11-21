@@ -7,6 +7,6 @@
         "simplelog/no-console-alias": "error",
         "simplelog/prefer-hono-context-logger": "error",
         "simplelog/prefer-runtime-entry": "error",
-        "simplelog/require-logger-name": "error",
-    },
+        "simplelog/require-logger-name": "error"
+    }
 }

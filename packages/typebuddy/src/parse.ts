@@ -10,7 +10,7 @@ import {
     isNumber,
     isObject,
     isString,
-    isUndefined,
+    isUndefined
 } from "./guards.js";
 import type { Optional } from "./types/optional.js";
 
@@ -53,7 +53,7 @@ function withoutNegativeZero(value: number): number {
 }
 
 function cloneDefaultArray(
-    defaultValue?: readonly unknown[],
+    defaultValue?: readonly unknown[]
 ): unknown[] | undefined {
     if (!defaultValue) {
         return defaultValue;
@@ -211,7 +211,7 @@ function parseArray<T>(value: unknown, defaultValue: readonly T[]): T[];
 function parseArray(value: unknown): unknown[] | undefined;
 function parseArray(
     value: unknown,
-    defaultValue?: readonly unknown[],
+    defaultValue?: readonly unknown[]
 ): unknown[] | undefined {
     if (isArray(value)) {
         return [...value];
@@ -290,5 +290,5 @@ export {
     parseFloat,
     parseInteger,
     parseNumber,
-    parseString,
+    parseString
 };

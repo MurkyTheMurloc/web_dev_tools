@@ -10,7 +10,7 @@ const expectedRuleIds = [
     "simplelog(no-ad-hoc-console-fallback)",
     "simplelog(prefer-child-logger)",
     "simplelog(prefer-hono-context-logger)",
-    "simplelog(prefer-simplelog)",
+    "simplelog(prefer-simplelog)"
 ] as const;
 
 const badResult =
@@ -21,7 +21,7 @@ const badOutput = `${badResult.stdout.toString()}${badResult.stderr.toString()}`
 
 if (badResult.exitCode !== 1) {
     console.error(
-        `Expected oxlint to exit with code 1, got ${badResult.exitCode}.`,
+        `Expected oxlint to exit with code 1, got ${badResult.exitCode}.`
     );
     console.error(badOutput);
     process.exit(1);
