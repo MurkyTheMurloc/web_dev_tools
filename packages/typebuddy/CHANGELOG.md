@@ -1,5 +1,11 @@
 # @murky-web/typebuddy
 
+## 3.0.1
+
+### Patch Changes
+
+- 3f17a2f: Source formatted with the shared oxfmt config: no trailing commas, 4-space JSON and JSONC. No behaviour change.
+
 ## 3.0.0
 
 ### Major Changes

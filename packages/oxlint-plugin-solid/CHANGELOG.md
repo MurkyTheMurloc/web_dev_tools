@@ -1,5 +1,11 @@
 # @murky-web/oxlint-plugin-solid
 
+## 1.5.1
+
+### Patch Changes
+
+- 3f17a2f: Source formatted with the shared oxfmt config: no trailing commas, 4-space JSON and JSONC. No behaviour change.
+
 ## 1.5.0
 
 ### Minor Changes
