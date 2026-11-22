@@ -191,7 +191,7 @@ createEffect(
 );
 `,
         message:
-            "Fix: derive it where it is read, `const fullName = createMemo(() => …)`",
+            "Fix: delete the effect and the signal and derive the value where it is read, with a plain function, `const fullName = () => …`, or `createMemo(() => …)`",
         ruleId: "no-setter-in-effect"
     }),
     Object.freeze({
@@ -209,7 +209,7 @@ createEffect(
 );
 `,
         message:
-            "Fix: derive the value instead of storing it, `const results = createMemo(async () => { … })`",
+            "Fix: derive the value with an async memo, `const results = createMemo(async () => { … })`, read `results()` inside `<Loading>`",
         ruleId: "no-setter-in-effect"
     }),
     Object.freeze({

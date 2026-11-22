@@ -662,6 +662,50 @@ export const View = () => {
     })
 ]);
 
+const setterReports = Object.freeze([
+    Object.freeze({
+        name: "an effect that writes the signal its compute reads",
+        message:
+            "so each change runs the effect twice and paints the pre-write value in between (Solid reports EFFECT_WRITES_OWN_SOURCE). Fix: compute the written value in a memo, `const nextCount = createMemo(() => …)`",
+        code: inView(`    const [count, setCount] = createSignal(0);
+    createEffect(() => count(), (value) => {
+        log(value);
+        setCount(value % 10);
+    });`)
+    }),
+    Object.freeze({
+        name: "an effect that writes the store its compute reads",
+        message:
+            "`setItems` in the effect function writes 'items', which the compute function reads",
+        code: inView(`    const [items, setItems] = createStore({ list: [] as string[] });
+    createEffect(() => items.list.length, (length) => {
+        log(length);
+        setItems((draft) => {
+            draft.list = draft.list.slice(0, 5);
+        });
+    });`)
+    }),
+    Object.freeze({
+        name: "a relay copy names the writable derivation",
+        message:
+            "`const [full, setFull] = createSignal(() => props.value)`, or `createStore(() => props.x, seed)` for nested data",
+        code: inView(`    const [, setFull] = createSignal("");
+    createEffect(() => a(), (value) => setFull(String(value)));`)
+    })
+]);
+
+const setterSilent = Object.freeze([
+    Object.freeze({
+        name: "an effect that writes another signal next to other work",
+        code: inView(`    const [count] = createSignal(0);
+    const [, setOther] = createSignal(0);
+    createEffect(() => count(), (value) => {
+        log(value);
+        setOther(value);
+    });`)
+    })
+]);
+
 export {
     cleanupReports,
     cleanupSilent,
@@ -671,6 +715,8 @@ export {
     reactiveAsyncSilent,
     serverImportReports,
     serverImportSilent,
+    setterReports,
+    setterSilent,
     strictVoidReports,
     strictVoidSilent
 };

@@ -1,5 +1,5 @@
 import { getSourceCode } from "../compat.mjs";
-import { isFunctionNode, trackImports } from "../utils.mjs";
+import { isFunctionNode, trackImports, walkOwnBody } from "../utils.mjs";
 
 const GETTER_INDEX = 0;
 const SETTER_INDEX = 1;
@@ -86,6 +86,48 @@ function findSetterCall(node, setterNames) {
     return null;
 }
 
+/**
+ * The first setter call in the effect function whose value the compute function
+ * reads: `count()` for a signal, `store.x` (or `store` itself) for a store.
+ */
+function findOwnSourceWrite(node, setterNames, sourceGetters) {
+    const [compute, effectFn] = node.arguments;
+    if (!isFunctionNode(compute) || !isFunctionNode(effectFn)) {
+        return null;
+    }
+
+    const reads = new Set();
+    walkOwnBody(compute.body, (candidate) => {
+        if (
+            candidate.type === "CallExpression" &&
+            candidate.callee.type === "Identifier"
+        ) {
+            reads.add(candidate.callee.name);
+        } else if (
+            candidate.type === "MemberExpression" &&
+            candidate.object.type === "Identifier"
+        ) {
+            reads.add(candidate.object.name);
+        } else if (
+            candidate.type === "Identifier" &&
+            candidate === compute.body
+        ) {
+            reads.add(candidate.name);
+        }
+    });
+
+    let write = null;
+    walkOwnBody(effectFn.body, (candidate) => {
+        write ??=
+            isSetterCall(candidate, setterNames) &&
+            reads.has(sourceGetters.get(candidate.callee.name))
+                ? candidate
+                : null;
+    });
+
+    return write;
+}
+
 /** True when the phase does nothing but write to signals or stores. */
 function onlyWritesSignals(phase, setterNames) {
     if (phase.body.type !== "BlockStatement") {
@@ -110,14 +152,16 @@ export default {
         docs: {
             description:
                 "Disallow effects that only copy a reactive value into another signal or store.",
-            url: "https://docs.solidjs.com/"
+            url: "https://github.com/MurkyTheMurloc/web_dev_tools/blob/main/docs/solid-2-effects.md"
         },
         schema: [],
         messages: {
             asyncSetterInEffect:
-                "This effect awaits and then writes the result with `{{setter}}`, so nothing shows that '{{getter}}' is loading, a rejection never reaches `<Errored>`, and a superseded run can overwrite a newer result. Fix: derive the value instead of storing it, `const {{getter}} = {{derivation}}`, read `{{getter}}()` under a `<Loading>` boundary, and drop `{{setter}}`; for nested data use the function form of `createStore`. Do not: add a flag or a run counter to drop stale results; Solid already does that for a derivation.",
+                "This effect awaits and then writes the result with `{{setter}}`, so nothing shows that '{{getter}}' is loading, a rejection never reaches `<Errored>`, and a superseded run can overwrite a newer one (Solid reports EFFECT_RELAY_TEAR). Fix: derive the value with an async memo, `const {{getter}} = {{derivation}}`, read `{{getter}}()` inside `<Loading>` and `<Errored>`, and drop `{{setter}}` and the effect; for a list whose items keep identity use `createStore(async () => …, seed)`. Do not: add a loading flag or a run counter to drop stale results (Solid drops a superseded run's answer itself), move the write into `onSettled`, or disable the rule.",
+            effectWritesOwnSource:
+                "`{{setter}}` in the effect function writes '{{getter}}', which the compute function reads, so each change runs the effect twice and paints the pre-write value in between (Solid reports EFFECT_WRITES_OWN_SOURCE). Fix: compute the written value in a memo, `const next{{Getter}} = createMemo(() => …)`, read that where '{{getter}}' is read and delete the write; if the write normalizes '{{getter}}', normalize where it is written, in the handler or action that calls `{{setter}}`. Do not: guard the write with an `if` or a flag, read '{{getter}}' with `untrack()` or in the effect function instead of the compute function, or disable the rule.",
             noSetterInEffect:
-                "This effect only copies a value into '{{getter}}' with `{{setter}}`, so everything that reads '{{getter}}' paints a flush behind its source (Solid reports EFFECT_RELAY_TEAR in dev). Fix: derive it where it is read, `const {{getter}} = createMemo(() => …)` returning what `{{setter}}` receives; if '{{getter}}' is also edited locally, `const [{{getter}}, {{setter}}] = createSignal(() => …)`, which resets when the source changes. Do not: move the write into `onSettled` or `queueMicrotask`; that keeps the copy."
+                "This effect only copies a value into '{{getter}}' with `{{setter}}`, so everything that reads '{{getter}}' paints one flush behind its source (Solid reports EFFECT_RELAY_TEAR in dev). Fix: delete the effect and the signal and derive the value where it is read, with a plain function, `const {{getter}} = () => …`, or `createMemo(() => …)` when several readers share it, returning what `{{setter}}` receives; if '{{getter}}' is a local editable copy, use a writable derivation, `const [{{getter}}, {{setter}}] = createSignal(() => props.value)`, or `createStore(() => props.x, seed)` for nested data, which resets when the source changes; for async data use an async `createMemo` read inside `<Loading>` and `<Errored>`. Do not: move the write into `onSettled` or `queueMicrotask`, wrap it in `untrack()`, or disable the rule; each keeps the copy."
         }
     },
     defaultOptions: [],
@@ -125,6 +169,8 @@ export default {
         const { matchImport, handleImportDeclaration } = trackImports();
         // Setter name -> the name of the value it writes.
         const setterNames = new Map();
+        // Setter name -> the getter that reads its value, when there is one.
+        const sourceGetters = new Map();
         const sourceCode = getSourceCode(context);
 
         /** What the fix derives `getter` from: the awaited call, if any. */
@@ -168,6 +214,10 @@ export default {
                         setterName,
                         getGetterName(node, setterName)
                     );
+                    const getter = node.id.elements[GETTER_INDEX];
+                    if (getter?.type === "Identifier") {
+                        sourceGetters.set(setterName, getter.name);
+                    }
                 }
             },
             CallExpression(node) {
@@ -214,6 +264,25 @@ export default {
                         ),
                         node: phase,
                         messageId: "noSetterInEffect"
+                    });
+                    return;
+                }
+
+                const ownWrite = findOwnSourceWrite(
+                    node,
+                    setterNames,
+                    sourceGetters
+                );
+                if (ownWrite) {
+                    const getter = setterNames.get(ownWrite.callee.name);
+                    context.report({
+                        data: {
+                            Getter: `${getter[0].toUpperCase()}${getter.slice(1)}`,
+                            getter,
+                            setter: ownWrite.callee.name
+                        },
+                        node: ownWrite,
+                        messageId: "effectWritesOwnSource"
                     });
                 }
             }

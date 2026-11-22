@@ -10,6 +10,8 @@ import {
     reactiveAsyncSilent,
     serverImportReports,
     serverImportSilent,
+    setterReports,
+    setterSilent,
     strictVoidReports,
     strictVoidSilent
 } from "./model_rule_cases.mjs";
@@ -95,6 +97,7 @@ describe("model rules", () => {
         cleanupSilent,
         "Fix: return the cleanup"
     );
+    registerRule("no-setter-in-effect", setterReports, setterSilent, "Fix:");
     registerRule(
         "strict-void-return",
         strictVoidReports,
