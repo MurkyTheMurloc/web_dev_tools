@@ -26,6 +26,7 @@ const expectedRuleIds = Object.freeze([
     "prefer-class-object",
     "prefer-destructuring",
     "prefer-for",
+    "prefer-ref-shorthand",
     "prefer-show",
     "reactive-async",
     "reactivity",
@@ -470,6 +471,28 @@ export const rows = db.rows;
         message:
             "`let label` has no initial value and no `ref` assigns it, so every read before the first write gets `undefined`. Fix: give it a default, `let label = …;`, or derive it with `const`.",
         ruleId: "init-declarations"
+    }),
+    Object.freeze({
+        code: `export const View = () => {
+    let el!: HTMLDivElement;
+    return <div ref={(node) => { el = node; }} onClick={() => el.focus()} />;
+};
+`,
+        message:
+            "The `ref` callback `(node) => { el = node; }` only stores the element in `el`, which `ref={el}` does on its own: Solid's compiler rewrites a single `ref` variable to that assignment. Fix: `ref={el}`.",
+        ruleId: "prefer-ref-shorthand"
+    }),
+    Object.freeze({
+        code: `declare const autofocus: (el: HTMLElement) => void;
+
+export const View = () => {
+    let el!: HTMLInputElement;
+    return <input ref={[autofocus, el]} onInput={() => el.select()} />;
+};
+`,
+        message:
+            "`el` in the `ref` array is never assigned and stays `undefined`: Solid rewrites only a single `ref={el}` to an assignment, and an array entry must be a callback. Fix: `(node) => { el = node; }` in its place.",
+        ruleId: "prefer-ref-shorthand"
     })
 ]);
 
@@ -843,7 +866,7 @@ const refSilentCases = Object.freeze([
 };
 `,
         name: "a let with a default",
-        silent: ["init-declarations"]
+        silent: ["init-declarations", "prefer-ref-shorthand"]
     }),
     Object.freeze({
         code: `export const View = () => {
@@ -852,7 +875,7 @@ const refSilentCases = Object.freeze([
 };
 `,
         name: "let el! with the shorthand",
-        silent: ["init-declarations"]
+        silent: ["init-declarations", "prefer-ref-shorthand"]
     }),
     Object.freeze({
         code: `export const View = () => {
@@ -861,7 +884,7 @@ const refSilentCases = Object.freeze([
 };
 `,
         name: "let el! with a callback",
-        silent: ["init-declarations"]
+        silent: ["init-declarations", "prefer-ref-shorthand"]
     }),
     Object.freeze({
         code: `declare const autofocus: (el: HTMLElement) => void;
@@ -872,7 +895,7 @@ export const View = () => {
 };
 `,
         name: "let el! with a callback in a ref array",
-        silent: ["init-declarations"]
+        silent: ["init-declarations", "prefer-ref-shorthand"]
     }),
     Object.freeze({
         code: `import { Show } from "solid-js";
@@ -889,7 +912,33 @@ export const View = (props: { open: boolean }) => {
 };
 `,
         name: "Optional<T> under <Show>",
-        silent: ["init-declarations"]
+        silent: ["init-declarations", "prefer-ref-shorthand"]
+    })
+]);
+
+// \`fix\`: what --fix leaves in the source. \`suggestion\`: what
+// --fix-suggestions leaves.
+const refFixCases = Object.freeze([
+    Object.freeze({
+        code: `export const View = () => {
+    let el!: HTMLDivElement;
+    return <div ref={(node) => (el = node)} onClick={() => el.focus()} />;
+};
+`,
+        fix: "<div ref={el} ",
+        name: "a callback that only stores becomes the shorthand"
+    }),
+    Object.freeze({
+        code: `declare const autofocus: (el: HTMLElement) => void;
+
+export const View = () => {
+    let el!: HTMLInputElement;
+    return <input ref={[autofocus, el]} onInput={() => el.select()} />;
+};
+`,
+        fix: "<input ref={[autofocus, el]} ",
+        name: "a bare variable in a ref array",
+        suggestion: "<input ref={[autofocus, (node) => { el = node; }]} "
     })
 ]);
 
@@ -927,6 +976,7 @@ export {
     preferArrowDiagnosticCases,
     preferArrowFixCases,
     preferShowCases,
+    refFixCases,
     refSilentCases,
     ruleCases
 };

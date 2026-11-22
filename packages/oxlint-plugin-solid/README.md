@@ -44,7 +44,8 @@ Aktuell sind enthalten:
   teilen sich alle Requests diesen Zustand) und
   `solid/no-write-in-pure-computation` (meldet Setter in `createMemo`, in der
   Compute-Phase von `createEffect` und im Component-Body)
-- `solid/init-declarations` fuer Variablen, die ein Ref zuweist (siehe unten)
+- `solid/init-declarations` und `solid/prefer-ref-shorthand` fuer Refs (siehe
+  unten)
 - ein Test-Harness, der die exportierte Rule-Surface und echte Diagnostik gegen
   Temp-Projekte prueft
 
@@ -202,6 +203,18 @@ Eintrag, nicht diese Regel an der Deklaration.
 
 In `oxc-config` ist sie nur fuer `*.tsx`/`*.jsx` an und ersetzt dort
 `eslint/init-declarations`; `.ts`-Dateien behalten eslints Regel.
+
+### `solid/prefer-ref-shorthand`
+
+- Ein Ref-Callback, der nur sein Element speichert,
+  `ref={(node) => { el = node; }}` oder `ref={(node) => (el = node)}`, wird per
+  `--fix` zu `ref={el}`. Nur als direkter `ref`-Wert und nur, wenn `el` ein
+  Bezeichner ist (kein `this.el` oder `refs.el`).
+- Ein nackter Bezeichner in einem Ref-Array (`ref={[autofocus, el]}`), der auf
+  ein `let`/`var` ohne Startwert zeigt, wird gemeldet: Solid schreibt nur ein
+  einzelnes `ref={el}` in eine Zuweisung um, im Array bleibt `el` `undefined`.
+  Als Vorschlag (`--fix-suggestions`) wird der Eintrag zu
+  `(node) => { el = node; }`. Direktiven-Funktionen im Array bleiben erlaubt.
 
 ## Autofixes
 

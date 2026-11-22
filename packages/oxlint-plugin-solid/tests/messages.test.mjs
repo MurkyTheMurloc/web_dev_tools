@@ -12,6 +12,7 @@ const SUGGESTION_LABELS = new Set([
     "no-react-deps.deleteDeps",
     "no-react-deps.splitEffect",
     "no-react-deps.useOnSettled",
+    "prefer-ref-shorthand.useCallback",
     "prefer-show.useShow"
 ]);
 

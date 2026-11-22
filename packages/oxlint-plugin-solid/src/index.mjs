@@ -25,6 +25,7 @@ import { preferArrowComponentsRule } from "./rules/prefer_arrow_components.mjs";
 import preferClassObjectRule from "./rules/prefer_class_object.mjs";
 import preferDestructuringRule from "./rules/prefer_destructuring.mjs";
 import preferForRule from "./rules/prefer_for.mjs";
+import preferRefShorthandRule from "./rules/prefer_ref_shorthand.mjs";
 import preferShowRule from "./rules/prefer_show.mjs";
 import { reactiveAsyncRule } from "./rules/reactive_async.mjs";
 import reactivityRule from "./rules/reactivity.mjs";
@@ -68,6 +69,7 @@ const extendedPlugin = {
         "prefer-class-object": preferClassObjectRule,
         "prefer-destructuring": preferDestructuringRule,
         "prefer-for": preferForRule,
+        "prefer-ref-shorthand": preferRefShorthandRule,
         "prefer-show": preferShowRule,
         "reactive-async": reactiveAsyncRule,
         reactivity: reactivityRule,

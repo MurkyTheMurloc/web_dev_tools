@@ -28,6 +28,7 @@ import {
     preferArrowFixCases,
     preferDestructuringSilentCase,
     preferShowCases,
+    refFixCases,
     refSilentCases,
     ruleCases
 } from "./rule_cases.mjs";
@@ -236,6 +237,23 @@ function registerRefTests() {
             // Off for .tsx: solid/init-declarations takes its place.
             expect(result.output).not.toContain("eslint(init-declarations)");
         });
+    });
+
+    refFixCases.forEach((refCase) => {
+        test(`prefer-ref-shorthand: --fix on ${refCase.name}`, async () => {
+            const result = await harness.lint(refCase.code, { fix: true });
+
+            expect(result.source).toContain(refCase.fix);
+        });
+        if (refCase.suggestion !== undefined) {
+            test(`prefer-ref-shorthand: --fix-suggestions on ${refCase.name}`, async () => {
+                const result = await harness.lint(refCase.code, {
+                    flags: ["--fix-suggestions"]
+                });
+
+                expect(result.source).toContain(refCase.suggestion);
+            });
+        }
     });
 
     test("init-declarations: a .ts file keeps eslint's rule alone", async () => {

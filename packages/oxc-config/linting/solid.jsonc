@@ -30,6 +30,7 @@
         "solid/prefer-class-object": "error",
         "solid/prefer-destructuring": "error",
         "solid/prefer-for": "error",
+        "solid/prefer-ref-shorthand": "error",
         "solid/prefer-show": "error",
         "solid/reactive-async": "error",
         "solid/reactivity": "error",
