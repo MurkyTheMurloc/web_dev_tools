@@ -10,3 +10,7 @@ lets an async function that returns a promise do without `await`: in `.ts`,
 so the docs' `createMemo(() => fetchUser(id()))` stays allowed there.
 `reactive-async`'s `return await` fix keeps `async` in `.ts` and drops it in
 `.tsx`.
+
+In `*.tsx`/`*.jsx`, `eslint/no-void` allows `void` as a statement, so a handler
+can start an action, `onClick={() => { void save(); }}`, without tripping
+`no-floating-promises` or `no-misused-promises`.
