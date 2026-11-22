@@ -7,7 +7,7 @@
 // check of the same rule does not pass for the wrong reason.
 
 const READ_OUTSIDE_SCOPE_MESSAGE =
-    "The reactive variable 'rows' should be used within JSX";
+    "Fix: make it a derived function, `const current = () => rows();`, and call `current()` where it is used";
 
 const untilPredicate = Object.freeze({
     name: "until tracks its predicate",
@@ -125,8 +125,42 @@ export const View = () => {
 `
 });
 
+// A direct write names the setter call that replaces it.
+const storeWriteOutsideSetter = Object.freeze({
+    name: "names the setter for a direct store write",
+    message:
+        "Fix: write through the setter's draft, `setStore((draft) => { draft.count = 1; })`",
+    code: `import { createStore } from "solid-js";
+
+export const View = () => {
+    const [store, setStore] = createStore({ count: 0 });
+    const reset = () => {
+        store.count = 1;
+    };
+    return <button onClick={reset}>{store.count}</button>;
+};
+`
+});
+
+const signalReassigned = Object.freeze({
+    name: "names the setter for a reassigned signal",
+    message: "Fix: call the setter, `setCount((value) => value + 1)`",
+    code: `import { createSignal } from "solid-js";
+
+export const View = () => {
+    let [count, setCount] = createSignal(0);
+    const bump = () => {
+        count++;
+    };
+    return <button onClick={bump}>{count()}</button>;
+};
+`
+});
+
 const reactivityScopeReportingCases = Object.freeze([
     conditionalHandlerBinding,
+    storeWriteOutsideSetter,
+    signalReassigned,
     deferredReadAfterTheGap,
     deferredAccessorOutsideScope,
     deferredReadAfterAwaitInMemo

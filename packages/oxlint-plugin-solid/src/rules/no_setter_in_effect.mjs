@@ -1,5 +1,7 @@
+import { getSourceCode } from "../compat.mjs";
 import { isFunctionNode, trackImports } from "../utils.mjs";
 
+const GETTER_INDEX = 0;
 const SETTER_INDEX = 1;
 
 /** `const [value, setValue] = createSignal(...)` -> "setValue". */
@@ -11,6 +13,21 @@ function getSetterName(declarator) {
     const element = declarator.id.elements[SETTER_INDEX];
 
     return element?.type === "Identifier" ? element.name : null;
+}
+
+/**
+ * `const [value, setValue] = createSignal(...)` -> "value", and for `const [,
+ * setValue]` the name the setter implies.
+ */
+function getGetterName(declarator, setterName) {
+    const element = declarator.id.elements[GETTER_INDEX];
+    if (element?.type === "Identifier") {
+        return element.name;
+    }
+
+    const implied = /^set([A-Z])(.*)$/u.exec(setterName);
+
+    return implied ? `${implied[1].toLowerCase()}${implied[2]}` : "value";
 }
 
 /**
@@ -35,32 +52,38 @@ function isSetterCall(node, setterNames) {
     );
 }
 
-/** True when any statement anywhere in the phase writes to a signal or store. */
-function writesSignalsAnywhere(node, setterNames) {
+/** The first setter call anywhere in the phase, or null. */
+function findSetterCall(node, setterNames) {
     if (node === null || typeof node !== "object") {
-        return false;
+        return null;
     }
 
     if (isSetterCall(node, setterNames)) {
-        return true;
+        return node;
     }
 
-    return Object.entries(node).some(([key, value]) => {
+    for (const [key, value] of Object.entries(node)) {
         // `parent` points back up the tree; following it would not terminate.
         if (key === "parent") {
-            return false;
+            continue;
         }
 
         const candidates = Array.isArray(value) ? value : [value];
-
-        return candidates.some(
-            (candidate) =>
+        for (const candidate of candidates) {
+            if (
                 candidate !== null &&
                 typeof candidate === "object" &&
-                !isFunctionNode(candidate) &&
-                writesSignalsAnywhere(candidate, setterNames)
-        );
-    });
+                !isFunctionNode(candidate)
+            ) {
+                const found = findSetterCall(candidate, setterNames);
+                if (found) {
+                    return found;
+                }
+            }
+        }
+    }
+
+    return null;
 }
 
 /** True when the phase does nothing but write to signals or stores. */
@@ -92,15 +115,38 @@ export default {
         schema: [],
         messages: {
             asyncSetterInEffect:
-                "This effect awaits and then writes the result into a signal or store. Return the value from a derivation instead: `createMemo(async () => ...)`, or the function form of `createStore` for nested data. Solid coordinates readiness, error propagation, and dropping superseded runs.",
+                "This effect awaits and then writes the result with `{{setter}}`, so nothing shows that '{{getter}}' is loading, a rejection never reaches `<Errored>`, and a superseded run can overwrite a newer result. Fix: derive the value instead of storing it, `const {{getter}} = {{derivation}}`, read `{{getter}}()` under a `<Loading>` boundary, and drop `{{setter}}`; for nested data use the function form of `createStore`. Do not: add a flag or a run counter to drop stale results; Solid already does that for a derivation.",
             noSetterInEffect:
-                "This effect only writes to a signal or store. Calculate the value where it is read instead: a derived function, `createMemo`, or a writable derived `createSignal(() => ...)` for a local override."
+                "This effect only copies a value into '{{getter}}' with `{{setter}}`, so everything that reads '{{getter}}' paints a flush behind its source (Solid reports EFFECT_RELAY_TEAR in dev). Fix: derive it where it is read, `const {{getter}} = createMemo(() => …)` returning what `{{setter}}` receives; if '{{getter}}' is also edited locally, `const [{{getter}}, {{setter}}] = createSignal(() => …)`, which resets when the source changes. Do not: move the write into `onSettled` or `queueMicrotask`; that keeps the copy."
         }
     },
     defaultOptions: [],
     create(context) {
         const { matchImport, handleImportDeclaration } = trackImports();
-        const setterNames = new Set();
+        // Setter name -> the name of the value it writes.
+        const setterNames = new Map();
+        const sourceCode = getSourceCode(context);
+
+        /** What the fix derives `getter` from: the awaited call, if any. */
+        function derivationFor(call) {
+            const [argument] = call.arguments;
+            if (argument?.type === "AwaitExpression") {
+                const text = sourceCode.getText(argument.argument);
+                if (!text.includes("\n")) {
+                    return `createMemo(() => ${text})`;
+                }
+            }
+
+            return "createMemo(async () => { … })";
+        }
+
+        function setterData(call) {
+            return {
+                derivation: derivationFor(call),
+                getter: setterNames.get(call.callee.name),
+                setter: call.callee.name
+            };
+        }
 
         return {
             ImportDeclaration: handleImportDeclaration,
@@ -118,7 +164,10 @@ export default {
 
                 const setterName = getSetterName(node);
                 if (setterName) {
-                    setterNames.add(setterName);
+                    setterNames.set(
+                        setterName,
+                        getGetterName(node, setterName)
+                    );
                 }
             },
             CallExpression(node) {
@@ -145,11 +194,13 @@ export default {
                 // `onlyWritesSignals` never sees the multi-statement shape at
                 // all — the `await` is not a setter call — which is why an
                 // async phase gets its own search.
-                if (
-                    phase.async === true &&
-                    writesSignalsAnywhere(phase.body, setterNames)
-                ) {
+                const write =
+                    phase.async === true
+                        ? findSetterCall(phase.body, setterNames)
+                        : null;
+                if (write) {
                     context.report({
+                        data: setterData(write),
                         node: phase,
                         messageId: "asyncSetterInEffect"
                     });
@@ -158,6 +209,9 @@ export default {
 
                 if (onlyWritesSignals(phase, setterNames)) {
                     context.report({
+                        data: setterData(
+                            findSetterCall(phase.body, setterNames)
+                        ),
                         node: phase,
                         messageId: "noSetterInEffect"
                     });

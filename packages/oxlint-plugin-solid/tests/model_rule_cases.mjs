@@ -19,7 +19,8 @@ function withImports(body) {
 const reactiveAsyncReports = Object.freeze([
     Object.freeze({
         name: "signal read after await in createMemo",
-        message: "UNTRACKED_READ_AFTER_AWAIT",
+        message:
+            "(Solid warns UNTRACKED_READ_AFTER_AWAIT in dev). Fix: read it before the first `await`, `const currentId = id();` at the top of the callback, and use `currentId` where `id()` is now",
         code: withImports(`const [id] = createSignal(1);
 export const user = createMemo(async () => {
     const first = await load(0);
@@ -100,7 +101,8 @@ export const [name] = createOptimistic(async () => {
     }),
     Object.freeze({
         name: "async callback that only does return await",
-        message: "only does `return await",
+        message:
+            "only does `return await load(id())`, and the `async` adds nothing: Solid reads a returned promise like a value. Fix: return the promise, `createMemo(() => load(id()))`.",
         code: withImports(`const [id] = createSignal(1);
 export const user = createMemo(async () => {
     return await load(id());

@@ -36,6 +36,28 @@ const expectedRuleIds = Object.freeze([
 
 const ruleCases = Object.freeze([
     Object.freeze({
+        code: `import { createEffect, createSignal } from "solid-js";
+
+export const View = () => {
+    const [count] = createSignal(0);
+    createEffect(() => console.log(count()));
+    return <div />;
+};
+`,
+        message:
+            "Fix: split it into a tracked compute that reads the values and an untracked effect that does the work, `createEffect(() => source(), (value) => doWork(value))`",
+        ruleId: "no-single-arg-create-effect"
+    }),
+    Object.freeze({
+        code: `export const Greeting = ({ name = "you", id }) => {
+    return <p id={id}>{name}</p>;
+};
+`,
+        message:
+            'Fix: take `_props` as the parameter and read `props.name`, `props.id` where each value is used, after `const props = merge({ name: "you" }, _props);` as the first line of the body.',
+        ruleId: "no-destructure"
+    }),
+    Object.freeze({
         code: `export const View = (props) => {
     if (props.visible) {
         return <div>Visible</div>;
@@ -149,6 +171,8 @@ createEffect(
     },
 );
 `,
+        message:
+            "Fix: derive it where it is read, `const fullName = createMemo(() => …)`",
         ruleId: "no-setter-in-effect"
     }),
     Object.freeze({
@@ -165,6 +189,8 @@ createEffect(
     },
 );
 `,
+        message:
+            "Fix: derive the value instead of storing it, `const results = createMemo(async () => { … })`",
         ruleId: "no-setter-in-effect"
     }),
     Object.freeze({
@@ -180,6 +206,8 @@ createEffect(
     },
 );
 `,
+        message:
+            "Fix: read it in the compute and take it as an argument, `createEffect(() => ({ id: roomId(), theme: theme() }), ({ id, theme }) => { … })`",
         ruleId: "no-untracked-effect-read"
     }),
     Object.freeze({
@@ -237,6 +265,8 @@ export const View = () => {
     );
 };
 `,
+        message:
+            "Fix: call `createEffect` in the component body, or in a directive factory",
         ruleId: "no-owned-primitives-in-ref"
     }),
     Object.freeze({
@@ -244,6 +274,8 @@ export const View = () => {
 
 createTrackedEffect(() => {});
 `,
+        message:
+            "Fix: move `createTrackedEffect(() => {})` into the component that uses it",
         ruleId: "no-module-scope-reactive-primitive"
     }),
     Object.freeze({
@@ -258,6 +290,8 @@ export const View = () => {
     return <div>{doubled()}</div>;
 };
 `,
+        message:
+            "Fix: return the value from the `createMemo` callback and read the memo where the state behind 'setCount' was read",
         ruleId: "no-write-in-pure-computation"
     }),
     Object.freeze({
@@ -266,6 +300,7 @@ export const View = () => {
 export const port = config.port;
 `,
         fileName: "config.ts",
+        message: "Fix: `const { port } = config`",
         ruleId: "prefer-destructuring"
     }),
     Object.freeze({
@@ -278,6 +313,7 @@ export const Button = (props: Props) => {
     return <button class={local.variant}>Go</button>;
 };
 `,
+        message: 'Fix: `{ variant: "primary" } satisfies Partial<Props>`',
         ruleId: "typed-merge-defaults"
     }),
     Object.freeze({

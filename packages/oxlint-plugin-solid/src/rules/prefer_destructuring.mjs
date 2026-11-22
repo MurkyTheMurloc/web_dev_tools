@@ -5,7 +5,7 @@
 // eslint's rule pushed toward the bug. Defaults as in eslint (declarations and
 // assignments, arrays and objects, no renamed properties); like
 // typescript-eslint, a declaration with a type annotation is left alone.
-import { findVariable } from "../compat.mjs";
+import { findVariable, getSourceCode } from "../compat.mjs";
 import {
     getFunctionName,
     isFunctionNode,
@@ -51,7 +51,8 @@ export default {
         },
         schema: [],
         messages: {
-            preferDestructuring: "Use {{type}} destructuring."
+            preferDestructuring:
+                "`{{statement}}` reads `{{member}}` into a variable by hand; {{type}} destructuring states the source once. Fix: `{{fix}}`."
         }
     },
     defaultOptions: [],
@@ -88,6 +89,30 @@ export default {
                 : id === definition.name;
         }
 
+        const sourceCode = getSourceCode(context);
+
+        /**
+         * The destructuring form of `reportNode`: `const { x } = obj` or `const
+         * [, x] = list`, and `({ x } = obj)` for an assignment.
+         */
+        function buildData(value, reportNode, pattern) {
+            const object = sourceCode.getText(value.object);
+            const statement =
+                reportNode.type === "VariableDeclarator"
+                    ? `${reportNode.parent.kind} ${sourceCode.getText(reportNode)}`
+                    : sourceCode.getText(reportNode);
+            const fix =
+                reportNode.type === "VariableDeclarator"
+                    ? `${reportNode.parent.kind} ${pattern} = ${object}`
+                    : `(${pattern} = ${object})`;
+            return {
+                fix,
+                member: sourceCode.getText(value),
+                statement,
+                type: pattern.startsWith("[") ? "array" : "object"
+            };
+        }
+
         function check(target, value, reportNode) {
             if (
                 target.type !== "Identifier" ||
@@ -97,7 +122,11 @@ export default {
             }
             if (isIndexAccess(value)) {
                 context.report({
-                    data: { type: "array" },
+                    data: buildData(
+                        value,
+                        reportNode,
+                        `[${", ".repeat(value.property.value)}${target.name}]`
+                    ),
                     messageId: "preferDestructuring",
                     node: reportNode
                 });
@@ -110,7 +139,7 @@ export default {
                 !isReactiveSource(value.object)
             ) {
                 context.report({
-                    data: { type: "object" },
+                    data: buildData(value, reportNode, `{ ${target.name} }`),
                     messageId: "preferDestructuring",
                     node: reportNode
                 });

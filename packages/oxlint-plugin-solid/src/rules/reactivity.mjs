@@ -244,27 +244,27 @@ export default {
         ],
         messages: {
             noWrite:
-                "The reactive variable '{{name}}' should not be reassigned or altered directly.",
+                "`{{expression}}` writes to the reactive variable '{{name}}' directly, so {{consequence}}. Fix: {{fix}}. Do not: copy '{{name}}' into a local and write that; the copy never updates.",
             untrackedReactive:
-                "The reactive variable '{{name}}' should be used within JSX, a tracked scope (like createEffect), or inside an event handler function, or else changes will be ignored. To keep it reactive, derive it rather than copy it: a plain function, `createMemo`, or `createSignal(() => ...)` / `createStore(() => ...)` for a local override that a new source value should replace.",
+                "`{{expression}}` is read outside a tracked scope, so it is evaluated once and later changes are ignored (in a component body, Solid warns STRICT_READ_UNTRACKED in dev). Fix: {{fix}}. Do not: wrap the read in `untrack()`; the value still never updates.",
             expectedFunctionGotExpression:
-                "The reactive variable '{{name}}' should be wrapped in a function for reactivity. This includes event handler bindings on native elements, which are not reactive like other JSX props.",
+                "'{{name}}' is read in `{{scope}}`, which is passed where Solid expects a function, so it is evaluated once and later changes are ignored. Fix: {{fix}}. Do not: wrap the read in `untrack()`; that keeps it static.",
             handlerBinding:
                 "'{{name}}' is read where `{{attribute}}` is bound on a native element. Solid binds the handler once, so `{{expression}}` is evaluated a single time and later changes of '{{name}}' are ignored. Fix: decide inside the handler, `{{attribute}}={{{fix}}}`. Do not wrap the read in `untrack()` and do not disable this rule; neither makes the handler react.",
             badSignal:
-                "The reactive variable '{{name}}' should be called as a function when used in {{where}}.",
+                "The accessor '{{name}}' is used without a call in {{where}}, so the code gets the function instead of its value. Fix: call it, `{{name}}()`.",
             badUnnamedDerivedSignal:
-                "This function should be passed to a tracked scope (like createEffect) or an event handler because it contains reactivity, or else changes will be ignored.",
+                "This function reads reactive values but is {{where}}, which is not a tracked scope, so its reads are not tracked and later changes are ignored. Fix: read the values in JSX, in `createMemo(() => …)` or in an effect's compute, and hand the results to this function{{custom}}. Do not: wrap the reads in `untrack()`.",
             shouldDestructure:
-                "For proper analysis, array destructuring should be used to capture the {{nth}}result of this function call.",
+                "The result of `{{callee}}(…)` is not destructured, so this rule cannot see which variable holds the reactive value and does not check its reads. Fix: `{{fix}}`.",
             shouldAssign:
-                "For proper analysis, a variable should be used to capture the result of this function call.",
+                "The result of `{{callee}}(…)` is not assigned to one variable, so this rule cannot check its reads{{destructured}}. Fix: `const {{local}} = {{callee}}(…);` and read `{{read}}` where the value is used.",
             noAsyncTrackedScope:
-                "This tracked scope should not be async. Solid's reactivity only tracks synchronously.",
+                "This `async` function is {{where}}, which tracks it synchronously, so reads after the first `await` are not dependencies and later changes are ignored. Fix: derive the async value first, `const data = createMemo(() => load(…))`, and read `data()` in a function without `async`. Do not: wrap the late reads in `untrack()`.",
             staleCapture:
-                "'{{captured}}' captures the value of the reactive variable '{{name}}' at setup, but a returned function reads the capture later — it will never update. Call '{{name}}' inside the returned function instead, or prefix '{{captured}}' with 'initial'/'default'/'static' if a one-time snapshot is intended.",
+                "'{{captured}}' copies `{{init}}` once at setup, and a returned function reads '{{captured}}' later, so it never sees a new value of '{{name}}'. Fix: read `{{init}}` inside the returned function instead of '{{captured}}'. If a one-time snapshot is intended, name it `initial{{Captured}}`. Do not: wrap the read in `untrack()`.",
             providerValue:
-                "A context provider reads its 'value' prop only once, when it is created, so the reactive variable '{{name}}' will not stay up to date here. Pass the signal, memo, or store itself (or an object containing them) instead of reading it in JSX."
+                "A context provider reads its `value` prop once, when it is created, so `{{expression}}` is evaluated once and consumers never see a new value. Fix: pass something the consumers can read later, `{{accessor}}` (or an object holding it), and read it in the consumers. Do not: wrap the read in `untrack()`."
         }
     },
     defaultOptions: [
@@ -278,15 +278,68 @@ export default {
         // wrapper the parameter is undefined, so the default is applied here.
         const options = context.options[0] ?? { customReactiveFunctions: [] };
 
-        const warnShouldDestructure = (node, nth) =>
+        const sourceCode = getSourceCode(context);
+        /** Code as written, or `fallback` when it spans lines. */
+        const quote = (node, fallback = "…") => {
+            const text = sourceCode.getText(node);
+            return text.includes("\n") ? fallback : text;
+        };
+        const capitalize = (name) => `${name[0].toUpperCase()}${name.slice(1)}`;
+        /** The fix for a tuple primitive whose result is not destructured. */
+        const destructureFix = (id, callee) => {
+            if (matchImport("splitProps", callee)) {
+                // Solid 2.0 has no `splitProps`; `omit` takes the keys as
+                // arguments and the named props stay on `props`.
+                return 'const rest = omit(props, "a", "b")` and read `props.a';
+            }
+            const isStore = matchImport(
+                ["createStore", "createOptimisticStore"],
+                callee
+            );
+            const name =
+                id?.type === "Identifier"
+                    ? id.name
+                    : isStore
+                      ? "store"
+                      : "value";
+            return `const [${name}, set${capitalize(name)}] = ${callee}(…)`;
+        };
+        const warnShouldDestructure = (node, init) => {
+            const callee = init.callee.name;
             context.report({
                 node,
                 messageId: "shouldDestructure",
-                data: nth ? { nth: nth + " " } : undefined
+                data: {
+                    callee,
+                    fix: destructureFix(
+                        node.type === "CallExpression" ? null : node,
+                        callee
+                    )
+                }
             });
-        const warnShouldAssign = (node) =>
-            context.report({ node, messageId: "shouldAssign" });
-        const sourceCode = getSourceCode(context);
+        };
+        const warnShouldAssign = (node, init) => {
+            const callee = init.callee.name;
+            const local = matchImport(["createMemo", "createDeferred"], callee)
+                ? "value"
+                : matchImport("merge", callee)
+                  ? "merged"
+                  : "rest";
+            context.report({
+                node,
+                messageId: "shouldAssign",
+                data: {
+                    callee,
+                    destructured:
+                        node.type === "ObjectPattern" ||
+                        node.type === "ArrayPattern"
+                            ? ", and destructuring it reads each value once"
+                            : "",
+                    local,
+                    read: local === "value" ? "value()" : `${local}.x`
+                }
+            });
+        };
         /**
          * Represents the lexical function stack and relevant information for
          * each function
@@ -632,7 +685,9 @@ export default {
                             messageId: "staleCapture",
                             data: {
                                 name: identifier.name,
-                                captured: captured.name
+                                captured: captured.name,
+                                Captured: capitalize(captured.name),
+                                init: quote(declarator.init)
                             }
                         });
                         return true;
@@ -640,6 +695,227 @@ export default {
                 }
             }
             return false;
+        };
+        /**
+         * Where a function sits, for messages: `passed to \`foo\``for a call
+         * argument, otherwise`fallback`. `callee` is the plain name of the
+         * function it is passed to, when it has one.
+         */
+        const describePlacement = (fn, fallback) => {
+            const parent = fn.parent;
+            if (
+                parent?.type === "CallExpression" &&
+                parent.arguments.includes(fn)
+            ) {
+                return {
+                    callee:
+                        parent.callee.type === "Identifier"
+                            ? parent.callee.name
+                            : null,
+                    where: `passed to \`${quote(parent.callee)}\``
+                };
+            }
+            if (parent?.type === "JSXExpressionContainer") {
+                return { callee: null, where: "a JSX child" };
+            }
+            if (parent?.type === "Property" && parent.kind === "get") {
+                return { callee: null, where: "a store getter" };
+            }
+            return { callee: null, where: fallback };
+        };
+        /**
+         * The parts of the noWrite message for a write to `identifier`: the
+         * write as written, what it breaks, and the setter call or derivation
+         * that replaces it. `kind` is "signal" for a signal or memo, "object"
+         * for props or a store, and "member" for `props.x = …`/`store.x = …`.
+         */
+        const noWriteData = (identifier, kind) => {
+            let write = identifier;
+            while (
+                write.parent &&
+                write.type !== "AssignmentExpression" &&
+                write.type !== "UpdateExpression" &&
+                !write.type.endsWith("Statement")
+            ) {
+                write = write.parent;
+            }
+            const isWrite =
+                write.type === "AssignmentExpression" ||
+                write.type === "UpdateExpression";
+            const name = identifier.name;
+            const expression = isWrite
+                ? quote(write, `${name} = …`)
+                : quote(identifier);
+            // `const [value, setValue] = createX(…)` -> `setValue`.
+            const definition = findVariable(context, identifier)?.defs[0];
+            const declarator =
+                definition?.type === "Variable" ? definition.node : null;
+            const setterElement =
+                declarator?.id.type === "ArrayPattern"
+                    ? declarator.id.elements[1]
+                    : null;
+            const setter =
+                setterElement?.type === "Identifier"
+                    ? setterElement.name
+                    : null;
+            const right =
+                write.type === "AssignmentExpression"
+                    ? quote(write.right)
+                    : "…";
+            if (kind === "member") {
+                const target = identifier.parent;
+                const path = sourceCode.text.slice(
+                    target.object.range[1],
+                    target.range[1]
+                );
+                if (setter) {
+                    const operator =
+                        write.type === "AssignmentExpression"
+                            ? write.operator
+                            : "=";
+                    return {
+                        consequence:
+                            "the write is ignored: a store is read-only outside its setter (Solid warns STORE_WRITE_OUTSIDE_SETTER in dev)",
+                        expression,
+                        fix: `write through the setter's draft, \`${setter}((draft) => { draft${path} ${operator} ${right}; })\``,
+                        name
+                    };
+                }
+                const prop =
+                    !target.computed && target.property.type === "Identifier"
+                        ? target.property.name
+                        : "value";
+                return {
+                    consequence:
+                        "the write goes to an object the parent owns and is read-only here",
+                    expression,
+                    fix: `keep a local value that follows the prop, \`const [${prop}, set${capitalize(prop)}] = createSignal(() => ${quote(target)});\`, and call \`set${capitalize(prop)}(…)\`; or have the parent pass the new value`,
+                    name
+                };
+            }
+            const ownsSetter =
+                setter !== null &&
+                declarator.id.elements[0] === definition.name;
+            if (kind === "signal") {
+                // A signal, memo or derived function.
+                if (ownsSetter) {
+                    let call = `${setter}(${right})`;
+                    if (write.type === "UpdateExpression") {
+                        call = `${setter}((value) => value ${write.operator[0]} 1)`;
+                    } else if (
+                        write.type === "AssignmentExpression" &&
+                        write.operator !== "="
+                    ) {
+                        call = `${setter}((value) => value ${write.operator.slice(0, -1)} ${right})`;
+                    }
+                    return {
+                        consequence:
+                            "the accessor is replaced and nothing that reads it updates",
+                        expression,
+                        fix: `call the setter, \`${call}\``,
+                        name
+                    };
+                }
+                return {
+                    consequence:
+                        "the accessor is replaced and nothing that reads it updates",
+                    expression,
+                    fix: `derive the new value instead, \`createMemo(() => …)\` over its inputs, or declare it as \`const [${name}, set${capitalize(name)}] = createSignal(() => …)\` when it needs a local override`,
+                    name
+                };
+            }
+            if (ownsSetter) {
+                return {
+                    consequence:
+                        "the name no longer points at the store and nothing that reads it updates",
+                    expression,
+                    fix: `call the setter, \`${setter}(() => ${right})\``,
+                    name
+                };
+            }
+            return {
+                consequence:
+                    "the name no longer points at the reactive object and the reads after it lose its updates",
+                expression,
+                fix: `keep '${name}' and give the new value its own name, \`const merged = merge({ … }, ${name})\` for defaults`,
+                name
+            };
+        };
+        /**
+         * The fix for a read outside a tracked scope, with the code's names:
+         * `const x = () => <init>` for a declaration, `props.a` reads for a
+         * destructured `props`, else where the read belongs.
+         */
+        const untrackedReadFix = (reported) => {
+            let child = reported;
+            while (
+                child.parent &&
+                child.parent.type !== "VariableDeclarator" &&
+                !isFunctionNode(child.parent) &&
+                !child.parent.type.endsWith("Statement")
+            ) {
+                child = child.parent;
+            }
+            const declarator = child.parent;
+            const expression = quote(reported);
+            if (
+                declarator?.type === "VariableDeclarator" &&
+                declarator.init === child
+            ) {
+                const init = quote(child);
+                if (declarator.id.type === "Identifier") {
+                    const name = declarator.id.name;
+                    return `make it a derived function, \`const ${name} = () => ${init};\`, and call \`${name}()\` where it is used (\`createMemo(() => ${init})\` when the work is costly, \`createSignal(() => ${init})\` for a local copy that can be edited)`;
+                }
+                if (
+                    declarator.id.type === "ObjectPattern" &&
+                    child === reported
+                ) {
+                    const reads = declarator.id.properties
+                        .filter(
+                            (property) =>
+                                property.type === "Property" &&
+                                property.key.type === "Identifier" &&
+                                !property.computed
+                        )
+                        .map(
+                            (property) =>
+                                `\`${expression}.${property.key.name}\``
+                        );
+                    if (reads.length > 0) {
+                        return `do not destructure; read ${reads.join(", ")} where each value is used`;
+                    }
+                }
+            }
+            return `read \`${expression}\` where the value is used: in JSX, in a function \`() => ${expression}\`, in \`createMemo(() => ${expression})\` or in an effect's compute`;
+        };
+        /**
+         * The fix for a reactive read where a function is expected: wrap the
+         * expression, or pass a called function itself.
+         */
+        const expectedFunctionFix = (scope) => {
+            const text = quote(scope);
+            if (isFunctionNode(scope)) {
+                return `pass the function itself, \`${text}\`, instead of calling it right away`;
+            }
+            // A member or a name may hold a function itself.
+            const called =
+                scope.type === "MemberExpression" || scope.type === "Identifier"
+                    ? ` (or \`() => ${text}()\` when \`${text}\` is itself a function)`
+                    : "";
+            return `pass a function, \`() => ${text}\`${called}`;
+        };
+        /**
+         * What to pass a context provider instead of a read: the accessor of a
+         * call, a function around a property read.
+         */
+        const providerSource = (reported) => {
+            if (reported.type === "CallExpression") {
+                return quote(reported.callee);
+            }
+            return reported.type === "MemberExpression"
+                ? `() => ${quote(reported)}`
+                : quote(reported);
         };
         /**
          * Inspects a specific reference of a reactive variable for correct
@@ -732,20 +1008,48 @@ export default {
                     } else if (matchedExpression) {
                         messageId = "expectedFunctionGotExpression";
                     }
+                    const reported =
+                        parentMemberExpression ??
+                        parentCallExpression ??
+                        identifier;
+                    // What is read: the member or the call of the signal, or
+                    // the signal itself when it is passed as an argument.
+                    const read =
+                        parentMemberExpression ??
+                        (parentCallExpression?.callee === identifier
+                            ? parentCallExpression
+                            : identifier);
+                    let data = {
+                        attribute: handlerAttribute?.name.name,
+                        expression: handlerText,
+                        fix: handlerFix,
+                        name: parentMemberExpression
+                            ? sourceCode.getText(parentMemberExpression)
+                            : identifier.name
+                    };
+                    if (messageId === "untrackedReactive") {
+                        data = {
+                            ...data,
+                            expression: quote(read, data.name),
+                            fix: untrackedReadFix(read)
+                        };
+                    } else if (messageId === "providerValue") {
+                        data = {
+                            ...data,
+                            accessor: providerSource(read),
+                            expression: quote(read, data.name)
+                        };
+                    } else if (messageId === "expectedFunctionGotExpression") {
+                        data = {
+                            ...data,
+                            fix: expectedFunctionFix(matchedExpression.node),
+                            scope: quote(matchedExpression.node)
+                        };
+                    }
                     context.report({
-                        node:
-                            parentMemberExpression ??
-                            parentCallExpression ??
-                            identifier,
+                        node: reported,
                         messageId,
-                        data: {
-                            attribute: handlerAttribute?.name.name,
-                            expression: handlerText,
-                            fix: handlerFix,
-                            name: parentMemberExpression
-                                ? sourceCode.getText(parentMemberExpression)
-                                : identifier.name
-                        }
+                        data
                     });
                 } else {
                     // If all of the reactive variables were declared above the current
@@ -867,9 +1171,7 @@ export default {
                     context.report({
                         node: identifier,
                         messageId: "noWrite",
-                        data: {
-                            name: identifier.name
-                        }
+                        data: noWriteData(identifier, "signal")
                     });
                 } else if (identifier.type === "Identifier") {
                     const reportBadSignal = (where) =>
@@ -974,9 +1276,7 @@ export default {
                     context.report({
                         node: identifier,
                         messageId: "noWrite",
-                        data: {
-                            name: identifier.name
-                        }
+                        data: noWriteData(identifier, "object")
                     });
                 } else if (
                     identifier.parent?.type === "MemberExpression" &&
@@ -991,9 +1291,7 @@ export default {
                         context.report({
                             node: identifier,
                             messageId: "noWrite",
-                            data: {
-                                name: identifier.name
-                            }
+                            data: noWriteData(identifier, "member")
                         });
                     } else if (
                         parent.property.type === "Identifier" &&
@@ -1048,9 +1346,21 @@ export default {
                             matchTrackedScope(trackedScope, node)
                         )
                     ) {
+                        const { callee, where } = describePlacement(
+                            node,
+                            "used here"
+                        );
                         context.report({
                             loc: getFunctionHeadLocation(node, sourceCode),
-                            messageId: "badUnnamedDerivedSignal"
+                            messageId: "badUnnamedDerivedSignal",
+                            data: {
+                                // A callee that tracks its callback itself can
+                                // be declared to the rule.
+                                custom: callee
+                                    ? `; if \`${callee}\` calls it in a tracked scope of its own, list \`${callee}\` in the \`customReactiveFunctions\` option of \`solid/reactivity\``
+                                    : "",
+                                where
+                            }
                         });
                     }
                 }
@@ -1184,7 +1494,7 @@ export default {
                     if (signal) {
                         scopeStack.pushSignal(signal, currentScope().node);
                     } else {
-                        warnShouldDestructure(id ?? init, "first");
+                        warnShouldDestructure(id ?? init, init);
                     }
                 } else if (
                     matchImport(["createMemo", "createDeferred"], callee.name)
@@ -1194,7 +1504,7 @@ export default {
                     if (memo) {
                         scopeStack.pushSignal(memo, currentScope().node);
                     } else {
-                        warnShouldAssign(id ?? init);
+                        warnShouldAssign(id ?? init, init);
                     }
                 } else if (
                     matchImport(
@@ -1207,7 +1517,7 @@ export default {
                     if (store) {
                         scopeStack.pushProps(store, currentScope().node);
                     } else {
-                        warnShouldDestructure(id ?? init, "first");
+                        warnShouldDestructure(id ?? init, init);
                     }
                 } else if (matchImport(["merge", "omit"], callee.name)) {
                     // omit (which replaces splitProps) also returns a single props object
@@ -1215,7 +1525,7 @@ export default {
                     if (merged) {
                         scopeStack.pushProps(merged, currentScope().node);
                     } else {
-                        warnShouldAssign(id ?? init);
+                        warnShouldAssign(id ?? init, init);
                     }
                 } else if (matchImport("splitProps", callee.name)) {
                     // splitProps can return an unbounded array of props variables, though it's most often two
@@ -1226,7 +1536,7 @@ export default {
                             )
                             .filter(Boolean);
                         if (vars.length === 0) {
-                            warnShouldDestructure(id);
+                            warnShouldDestructure(id, init);
                         } else {
                             vars.forEach((variable) => {
                                 scopeStack.pushProps(
@@ -1286,7 +1596,13 @@ export default {
                         // executes async after the fact won't be tracked."
                         context.report({
                             node,
-                            messageId: "noAsyncTrackedScope"
+                            messageId: "noAsyncTrackedScope",
+                            data: {
+                                where: describePlacement(
+                                    node,
+                                    "a tracked scope"
+                                ).where
+                            }
                         });
                     }
                 }

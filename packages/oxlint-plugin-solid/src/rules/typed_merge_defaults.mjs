@@ -3,6 +3,7 @@
 // `Partial<Props>` makes every defaulted prop optional again. Writing the
 // literal with `satisfies Partial<Props>` keeps the literal types and checks
 // the keys against the props; `as const` keeps the literal types too.
+import { getSourceCode } from "../compat.mjs";
 import { trackImports } from "../utils.mjs";
 
 function isAsConst(node) {
@@ -24,12 +25,18 @@ export default {
         schema: [],
         messages: {
             untypedDefaults:
-                'Type this object literal passed to `{{name}}` with `satisfies Partial<Props>`: a plain literal widens `"primary"` to `string`, and `as Partial<Props>` or a `Partial<Props>` variable makes the defaulted props optional again. Example: `merge({ size: 1 } satisfies Partial<Props>, props)`.'
+                'The defaults `{{object}}` passed to `{{name}}` have no checked type, so their literals widen (`"primary"` becomes `string`) and their keys are not checked against the props. Fix: `{{object}} satisfies {{type}}`{{where}}. Do not: write `as Partial<Props>` or use a `Partial<Props>` variable; both make the defaulted props optional again.'
         }
     },
     defaultOptions: [],
     create(context) {
         const { matchImport, handleImportDeclaration } = trackImports();
+        const sourceCode = getSourceCode(context);
+        // A one-line literal is quoted as written; a longer one is elided.
+        const quote = (node) => {
+            const text = sourceCode.getText(node);
+            return text.includes("\n") ? "{ … }" : text;
+        };
         return {
             ImportDeclaration: handleImportDeclaration,
             CallExpression(node) {
@@ -51,8 +58,25 @@ export default {
                             !isAsConst(argument) &&
                             argument.expression.type === "ObjectExpression");
                     if (untyped) {
+                        const literal =
+                            argument.type === "TSAsExpression"
+                                ? argument.expression
+                                : argument;
+                        const asType =
+                            argument.type === "TSAsExpression"
+                                ? sourceCode.getText(argument.typeAnnotation)
+                                : null;
                         context.report({
-                            data: { name: node.callee.name },
+                            data: {
+                                name: node.callee.name,
+                                object: quote(literal),
+                                // `{ … } as Partial<ButtonProps>` names the type.
+                                type: asType ?? "Partial<Props>",
+                                where:
+                                    asType === null
+                                        ? ", with `Props` the props type of the component"
+                                        : ""
+                            },
                             messageId: "untypedDefaults",
                             node: argument
                         });

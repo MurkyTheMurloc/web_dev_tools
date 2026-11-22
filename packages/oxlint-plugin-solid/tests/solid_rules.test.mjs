@@ -148,6 +148,9 @@ function registerRuleDiagnosticsTests() {
 
             expect(result.exitCode).toBeGreaterThan(EXIT_SUCCESS);
             expect(result.output).toContain(`solid(${ruleCase.ruleId})`);
+            if (ruleCase.message !== undefined) {
+                expect(result.output).toContain(ruleCase.message);
+            }
         });
     });
 }

@@ -1,4 +1,4 @@
-import { findVariable } from "../compat.mjs";
+import { findVariable, getSourceCode } from "../compat.mjs";
 import {
     isFunctionNode,
     isPropsByName,
@@ -92,6 +92,16 @@ function isOnlyReturnAwait(callback, awaits) {
     );
 }
 
+/** `id` -> `currentId`, `props.lang` -> `lang`. */
+function localName(name) {
+    const dot = name.lastIndexOf(".");
+    if (dot !== -1) {
+        return name.slice(dot + 1);
+    }
+
+    return `current${name[0].toUpperCase()}${name.slice(1)}`;
+}
+
 export const reactiveAsyncRule = {
     meta: {
         type: "problem",
@@ -103,9 +113,9 @@ export const reactiveAsyncRule = {
         schema: [],
         messages: {
             untrackedReadAfterAwait:
-                "'{{name}}' is first read after an `await` or `yield` in this `{{primitive}}` callback, so it is not a dependency and the result goes stale when it changes (Solid warns UNTRACKED_READ_AFTER_AWAIT in dev). Read it before the first suspension and keep it in a local, or read every input synchronously and move the async work into a helper: `{{primitive}}(() => load(id(), lang()))`. Do not wrap the read in `untrack()`.",
+                "'{{name}}' is first read after an `await` or `yield` in this `{{primitive}}` callback, so it is not a dependency and the result goes stale when it changes (Solid warns UNTRACKED_READ_AFTER_AWAIT in dev). Fix: read it before the first `await`, `const {{local}} = {{read}};` at the top of the callback, and use `{{local}}` where `{{read}}` is now; or read every input synchronously and move the async work into a helper, `{{primitive}}(() => load(…, {{read}}))`. Do not: wrap the read in `untrack()`; that keeps the stale result.",
             redundantAsync:
-                "This `async` `{{primitive}}` callback only does `return await …`. Solid reads a returned promise like a value, so remove `async` and `await` and return the promise: `{{primitive}}(() => load(id()))`."
+                "This `async` `{{primitive}}` callback only does `return await {{promise}}`, and the `async` adds nothing: Solid reads a returned promise like a value. Fix: return the promise, `{{primitive}}(() => {{promise}})`."
         }
     },
     defaultOptions: [],
@@ -116,6 +126,12 @@ export const reactiveAsyncRule = {
         // the same name is not mistaken for the signal.
         const accessors = new Set();
         const stores = new Set();
+        const sourceCode = getSourceCode(context);
+        /** Code as written, or `fallback` when it spans lines. */
+        const quote = (node, fallback) => {
+            const text = sourceCode.getText(node);
+            return text.includes("\n") ? fallback : text;
+        };
 
         function bindingKind(identifier) {
             const definition = findVariable(context, identifier)?.defs[0];
@@ -188,7 +204,10 @@ export const reactiveAsyncRule = {
                 context.report({
                     node: callback,
                     messageId: "redundantAsync",
-                    data: { primitive }
+                    data: {
+                        primitive,
+                        promise: quote(awaits[0].argument, "…")
+                    }
                 });
             }
 
@@ -206,7 +225,12 @@ export const reactiveAsyncRule = {
                     context.report({
                         node: read.node,
                         messageId: "untrackedReadAfterAwait",
-                        data: { name: read.name, primitive }
+                        data: {
+                            local: localName(read.name),
+                            name: read.name,
+                            primitive,
+                            read: quote(read.node, read.name)
+                        }
                     });
                 }
             }
