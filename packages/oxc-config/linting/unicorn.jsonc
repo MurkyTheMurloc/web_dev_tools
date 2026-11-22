@@ -65,7 +65,10 @@
         "unicorn/no-useless-promise-resolve-reject": "error",
         "unicorn/no-useless-spread": "error",
         "unicorn/no-useless-switch-case": "error",
-        "unicorn/no-useless-undefined": "error",
+        // Forked as `typebuddy/no-useless-undefined` (linting/typebuddy.jsonc),
+        // which keeps `let x: Optional<T> = undefined` as the start value of an
+        // `Optional`.
+        "unicorn/no-useless-undefined": "off",
         "unicorn/no-zero-fractions": "error",
         "unicorn/number-literal-case": "error",
         "unicorn/numeric-separators-style": "error",
