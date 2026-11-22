@@ -249,6 +249,8 @@ export default {
                 "The reactive variable '{{name}}' should be used within JSX, a tracked scope (like createEffect), or inside an event handler function, or else changes will be ignored. To keep it reactive, derive it rather than copy it: a plain function, `createMemo`, or `createSignal(() => ...)` / `createStore(() => ...)` for a local override that a new source value should replace.",
             expectedFunctionGotExpression:
                 "The reactive variable '{{name}}' should be wrapped in a function for reactivity. This includes event handler bindings on native elements, which are not reactive like other JSX props.",
+            handlerBinding:
+                "'{{name}}' is read where `{{attribute}}` is bound on a native element. Solid binds the handler once, so `{{expression}}` is evaluated a single time and later changes of '{{name}}' are ignored. Fix: decide inside the handler, `{{attribute}}={{{fix}}}`. Do not wrap the read in `untrack()` and do not disable this rule; neither makes the handler react.",
             badSignal:
                 "The reactive variable '{{name}}' should be called as a function when used in {{where}}.",
             badUnnamedDerivedSignal:
@@ -686,17 +688,60 @@ export default {
                             providerValueContainers.has(n)
                         )
                     );
+                    // An `on*` handler on a native element is bound once; name
+                    // the attribute and the fix.
+                    const handlerAttribute = matchedExpression
+                        ? findParent(identifier, (n) => {
+                              return (
+                                  n.type === "JSXAttribute" &&
+                                  n.name.type === "JSXIdentifier" &&
+                                  /^on[A-Z]/u.test(n.name.name) &&
+                                  n.parent?.name?.type === "JSXIdentifier" &&
+                                  isDOMElementName(n.parent.name.name)
+                              );
+                          })
+                        : null;
+                    const handlerExpression =
+                        handlerAttribute?.value?.type ===
+                        "JSXExpressionContainer"
+                            ? handlerAttribute.value.expression
+                            : null;
+                    const handlerText = handlerExpression
+                        ? sourceCode.getText(handlerExpression)
+                        : "";
+                    // A copyable replacement with the code's own names.
+                    let handlerFix = `(event) => (${handlerText})(event)`;
+                    if (handlerExpression?.type === "ConditionalExpression") {
+                        handlerFix = `(event) => (${handlerText})?.(event)`;
+                    } else if (
+                        handlerExpression?.type === "LogicalExpression" &&
+                        handlerExpression.operator === "&&"
+                    ) {
+                        const { left, right } = handlerExpression;
+                        const callee =
+                            right.type === "Identifier"
+                                ? right.name
+                                : `(${sourceCode.getText(right)})`;
+                        handlerFix = `(event) => { if (${sourceCode.getText(left)}) ${callee}(event); }`;
+                    }
+                    let messageId = "untrackedReactive";
+                    if (inProviderValue) {
+                        messageId = "providerValue";
+                    } else if (handlerAttribute) {
+                        messageId = "handlerBinding";
+                    } else if (matchedExpression) {
+                        messageId = "expectedFunctionGotExpression";
+                    }
                     context.report({
                         node:
                             parentMemberExpression ??
                             parentCallExpression ??
                             identifier,
-                        messageId: inProviderValue
-                            ? "providerValue"
-                            : matchedExpression
-                              ? "expectedFunctionGotExpression"
-                              : "untrackedReactive",
+                        messageId,
                         data: {
+                            attribute: handlerAttribute?.name.name,
+                            expression: handlerText,
+                            fix: handlerFix,
                             name: parentMemberExpression
                                 ? sourceCode.getText(parentMemberExpression)
                                 : identifier.name

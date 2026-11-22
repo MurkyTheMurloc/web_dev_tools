@@ -107,7 +107,26 @@ const reactivityScopeSilentCases = Object.freeze([
     onFlushCallback,
     deferredReadsBeforeTheGap
 ]);
+// A handler on a native element is bound once; the message carries the fix
+// with the code's own names, so an agent can apply it as written.
+const conditionalHandlerBinding = Object.freeze({
+    name: "names the fix for a conditional handler binding",
+    message:
+        "Fix: decide inside the handler, `onClick={(event) => (editing() ? save : cancel)?.(event)}`",
+    code: `import { createSignal } from "solid-js";
+
+declare function save(event: MouseEvent): void;
+declare function cancel(event: MouseEvent): void;
+
+export const View = () => {
+    const [editing] = createSignal(false);
+    return <button onClick={editing() ? save : cancel}>OK</button>;
+};
+`
+});
+
 const reactivityScopeReportingCases = Object.freeze([
+    conditionalHandlerBinding,
     deferredReadAfterTheGap,
     deferredAccessorOutsideScope,
     deferredReadAfterAwaitInMemo
