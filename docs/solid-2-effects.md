@@ -161,3 +161,30 @@ to see the perf diagnostics (relay tears, own-source writes) in dev.
 - Do not move a relay write into `onSettled` or `queueMicrotask`; that keeps the
   copy.
 - Do not disable a rule with `// oxlint-disable`. Each message names the fix.
+
+## Starting an action from a handler
+
+Do the work in the handler, through an `action`, not in an effect watching a
+flag. Call it as a statement with `void`; the action owns its errors (route them
+to an `<Errored>` boundary or handle them inside the action):
+
+```tsx
+const save = action(function* saveAddress() {
+    yield api.saveAddress(snapshot(draft));
+});
+<button
+    type="button"
+    onClick={() => {
+        void save();
+    }}
+>
+    Save
+</button>;
+```
+
+For agents: `onClick={() => { save(); }}` leaves a floating promise
+(`typescript/no-floating-promises`), and
+`onClick={async () => { await save(); }}` hands Solid a promise where it expects
+nothing (`typescript/no-misused-promises`). `void` as a statement is the allowed
+form in `.tsx`; do not add `.catch(() => {})` to silence it, which swallows the
+error the action would have reported.

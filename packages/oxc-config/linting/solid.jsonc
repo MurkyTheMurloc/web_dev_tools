@@ -104,7 +104,12 @@
                 ],
                 // Skips **/pages/** and **/routes/**, which follow the
                 // router's naming.
-                "solid/filename-matches-export": "error"
+                "solid/filename-matches-export": "error",
+                // A handler that starts an action, `onClick={() => { void save(); }}`:
+                // the action handles its own errors, and `void` as a statement is
+                // how typescript/no-floating-promises lets a promise go on purpose.
+                // Without it every form of that call trips a rule.
+                "eslint/no-void": ["error", { "allowAsStatement": true }]
             }
         }
     ]
