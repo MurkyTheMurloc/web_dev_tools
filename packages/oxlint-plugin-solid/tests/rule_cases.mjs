@@ -165,7 +165,7 @@ createEffect(() => {
 }, [count()]);
 `,
         message:
-            "Fix: `createEffect(() => [count()], (values) => { … })`, with the side effect moved into apply. Do not: only delete the array",
+            "Fix: `createEffect(() => ({ count: count() }), ({ count }) => { … })`, reading each dependency in the compute function",
         ruleId: "no-react-deps"
     }),
     Object.freeze({

@@ -8,6 +8,9 @@ import plugin from "../src/index.mjs";
 const SUGGESTION_LABELS = new Set([
     "event-handlers.make-handler",
     "no-innerhtml.useInnerText",
+    "no-react-deps.deleteDeps",
+    "no-react-deps.splitEffect",
+    "no-react-deps.useOnSettled",
     "prefer-show.useShow"
 ]);
 

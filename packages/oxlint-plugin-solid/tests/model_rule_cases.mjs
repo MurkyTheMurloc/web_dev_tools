@@ -460,7 +460,136 @@ export const View = () => <input ref={(el) => { input = el; }} />;`)
     })
 ]);
 
+// The effect rules. `fix`: a fragment the source still (or newly) contains
+// after `--fix`; `suggestion`: the same after `--fix-suggestions`.
+const EFFECT_IMPORTS = `import { createEffect, createMemo, createRenderEffect, createSignal, createStore, createTrackedEffect, onCleanup, onSettled } from "solid-js";
+
+declare function connect(...values: unknown[]): { close(): void };
+declare function log(...values: unknown[]): void;
+declare const config: { value: number };
+`;
+
+function inView(body) {
+    return `${EFFECT_IMPORTS}
+export const View = (props: { id: string }) => {
+    const [a] = createSignal(0);
+    const b = createMemo(() => a() * 2);
+${body}
+    return <div />;
+};
+`;
+}
+
+const reactDepsReports = Object.freeze([
+    Object.freeze({
+        name: "an effect with accessor, call and props deps and a returned cleanup",
+        message:
+            "Fix: `createEffect(() => ({ a: a(), b: b(), id: props.id }), ({ a, b, id }) => { … })`, reading each dependency in the compute function",
+        code: inView(`    createEffect(() => {
+        const connection = connect(a(), b(), props.id);
+        return () => connection.close();
+    }, [a, b(), props.id]);`),
+        // --fix never leaves a one-argument effect behind.
+        fix: "}, [a, b(), props.id]);",
+        suggestion: `createEffect(() => ({ a: a(), b: b(), id: props.id }), ({ a, b, id }) => {
+        const connection = connect(a, b, id);
+        return () => connection.close();
+    });`
+    }),
+    Object.freeze({
+        name: "createRenderEffect with a dependency array",
+        message:
+            "Fix: `createRenderEffect(() => ({ a: a() }), ({ a }) => { … })`",
+        code: inView("    createRenderEffect(() => log(a()), [a]);"),
+        fix: "}, [a]);",
+        suggestion: "createRenderEffect(() => ({ a: a() }), ({ a }) => log(a));"
+    }),
+    Object.freeze({
+        name: "an empty dependency array",
+        message:
+            "Fix: `onSettled(() => { …; return cleanup; })` for one-time setup after mount",
+        code: inView(`    createEffect(() => {
+        const connection = connect();
+        return () => connection.close();
+    }, []);`),
+        fix: "}, []);",
+        suggestion: `onSettled(() => {
+        const connection = connect();
+        return () => connection.close();
+    });`
+    }),
+    Object.freeze({
+        name: "a dep that does not resolve (report only)",
+        message:
+            "`createEffect(() => ({ value: source() }), ({ value }) => { … })`",
+        code: inView(
+            "    createEffect(() => log(config.value), [config.value]);"
+        ),
+        fix: "}, [config.value]);",
+        suggestion: "createEffect(() => log(config.value), [config.value]);"
+    }),
+    Object.freeze({
+        name: "a parameter that would shadow a local (report only)",
+        message: "`createEffect(() => ({ id: props.id }), ({ id }) => { … })`",
+        code: inView(`    createEffect(() => {
+        const id = 1;
+        log(props.id, id);
+    }, [props.id]);`),
+        suggestion: "}, [props.id]);"
+    }),
+    Object.freeze({
+        name: "an array as the third argument of an effect",
+        message:
+            "Fix: delete `[a]` and read those values in the compute function, `createEffect(() => ({ a: a() }), ({ a }) => { … })`.",
+        code: inView(
+            "    createEffect(() => a(), (value) => log(value), [a]);"
+        ),
+        fix: "}, [a]);",
+        suggestion: "createEffect(() => a(), (value) => log(value));"
+    }),
+    Object.freeze({
+        name: "a memo that reads every dep",
+        message: "Fix: delete `[a, b]`, `createMemo(() => a() + b())`.",
+        code: inView(
+            "    const sum = createMemo(() => a() + b(), [a, b]);\n    log(sum());"
+        ),
+        fix: "}, );"
+    }),
+    Object.freeze({
+        name: "a memo that does not read a dep",
+        message:
+            "; `props.id` is not read in the function, so read it there if the memo must recompute when it changes.",
+        code: inView(
+            "    const double = createMemo(() => a() * 2, [a, props.id]);\n    log(double());"
+        ),
+        fix: "}, [a, props.id]);",
+        suggestion: "createMemo(() => a() * 2, );"
+    }),
+    Object.freeze({
+        name: "an array as the third argument of a memo",
+        message: "Fix: delete `[a]`",
+        code: inView(
+            "    const sum = createMemo((prev) => prev + a(), 0, [a]);\n    log(sum());"
+        )
+    })
+]);
+
+const reactDepsSilent = Object.freeze([
+    Object.freeze({
+        name: "a two-phase effect",
+        code: inView("    createEffect(() => a(), (value) => log(value));")
+    }),
+    Object.freeze({
+        name: "a memo whose function takes the seed",
+        code: inView(
+            "    const list = createMemo((prev) => [...prev, a()], []);\n    log(list());"
+        )
+    })
+]);
+
 export {
+    reactDepsReports,
+    reactDepsSilent,
     reactiveAsyncReports,
     reactiveAsyncSilent,
     serverImportReports,

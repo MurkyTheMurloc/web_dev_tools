@@ -1,18 +1,11 @@
 import { getSourceCode } from "../compat.mjs";
-import { isFunctionNode, isPropsByName, trackImports } from "../utils.mjs";
-
-const GETTER_INDEX = 0;
-
-/** `const [value, setValue] = createSignal(...)` -> "value". */
-function getGetterName(declarator) {
-    if (declarator.id.type !== "ArrayPattern") {
-        return null;
-    }
-
-    const element = declarator.id.elements[GETTER_INDEX];
-
-    return element?.type === "Identifier" ? element.name : null;
-}
+import {
+    getGetterName,
+    isFunctionNode,
+    isPropsByName,
+    localName,
+    trackImports
+} from "../utils.mjs";
 
 /** Every name a function's parameters bind, however they are destructured. */
 function collectParameterNames(fn, into) {
@@ -74,11 +67,6 @@ function walkPhase(node, visit) {
             }
         }
     }
-}
-
-/** `count` -> `count`, `props.value` -> `value`. */
-function localName(name) {
-    return name.slice(name.lastIndexOf(".") + 1);
 }
 
 /** The apply's first parameter when it is a plain identifier. */

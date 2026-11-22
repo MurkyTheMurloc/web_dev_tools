@@ -193,6 +193,12 @@ nicht sicher kann, bleibt es bei der Meldung ohne Fix:
 - `solid/imports`: ein Wert wird nie in ein `import type` verschoben, ein Typ
   kommt in einem Wert-Import als `type Name` an und in einem `import type` ohne
   `type`; passt keine vorhandene Deklaration, schreibt der Fix eine neue.
+- `solid/no-react-deps`: bei `createMemo` faellt das Array per `--fix` weg, wenn
+  die Funktion jede Abhaengigkeit liest, sonst nur als Vorschlag. Bei
+  `createEffect`/`createRenderEffect` gibt es nie einen Autofix (ein Effect mit
+  einem Argument wirft MISSING_EFFECT_FN), nur den Vorschlag
+  `createEffect(() => ({ a: a(), id: props.id }), ({ a, id }) => { … })`, wenn
+  jede Abhaengigkeit sauber aufloest, und fuer `[]` den Vorschlag `onSettled`.
 - `solid/prefer-class-object`: steht neben `classList` schon ein `class`, wird
   nur gemeldet (der Fix haette `class` doppelt geschrieben).
 - `solid/prefer-show`: meldet nur Zweige, die sichtbar JSX sind; ein Bezeichner

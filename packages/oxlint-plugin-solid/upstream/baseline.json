@@ -119,7 +119,10 @@
     },
     "no-react-deps": {
         "falsePositive": ["valid:no-react-deps.test.ts:27"],
-        "fix": [],
+        "fix": [
+            "invalid:no-react-deps.test.ts:33",
+            "invalid:no-react-deps.test.ts:42"
+        ],
         "missed": [],
         "parseError": []
     },

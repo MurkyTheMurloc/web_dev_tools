@@ -13,6 +13,22 @@ export function isDOMElementName(name) {
     return DOM_ELEMENT_REGEX.test(name);
 }
 
+/** `const [value, setValue] = createSignal(...)` -> "value". */
+export function getGetterName(declarator) {
+    if (declarator.id.type !== "ArrayPattern") {
+        return null;
+    }
+
+    const [element] = declarator.id.elements;
+
+    return element?.type === "Identifier" ? element.name : null;
+}
+
+/** `count` -> `count`, `props.value` -> `value`. */
+export function localName(name) {
+    return name.slice(name.lastIndexOf(".") + 1);
+}
+
 export function isPropsByName(name) {
     return PROPS_REGEX.test(name);
 }
