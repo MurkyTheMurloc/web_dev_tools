@@ -158,6 +158,34 @@ export function getCommentAfter(node, sourceCode) {
     });
 }
 
+/**
+ * Matches names against exact strings, `*` wildcards (`use*Store`) and regexes
+ * written as "/pattern/" strings.
+ */
+export function createNameMatcher(patterns) {
+    const matchers = patterns.map((entry) => {
+        if (entry.length > 2 && entry.startsWith("/") && entry.endsWith("/")) {
+            try {
+                return new RegExp(entry.slice(1, -1));
+            } catch {
+                return entry;
+            }
+        }
+        if (entry.includes("*")) {
+            const escaped = entry
+                .split("*")
+                .map((part) => part.replace(/[.+?^${}()|[\]\\]/g, "\\$&"))
+                .join("[a-zA-Z0-9_$]*");
+            return new RegExp(`^${escaped}$`);
+        }
+        return entry;
+    });
+    return (name) =>
+        matchers.some((matcher) =>
+            typeof matcher === "string" ? matcher === name : matcher.test(name)
+        );
+}
+
 // Solid 2.0 split the runtime across packages: `solid-js` keeps the core and
 // the store APIs, while `@solidjs/web`, `@solidjs/h`, `@solidjs/html` and
 // `@solidjs/universal` own the renderers. Match both layouts.

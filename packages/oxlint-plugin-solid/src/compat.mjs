@@ -22,6 +22,9 @@ export function getScope(context, node) {
     return context.sourceCode.getScope(node);
 }
 
+/** Look a variable up by name (or identifier node) from a given scope. */
+export const findVariableInScope = utilsFindVariable;
+
 export function findVariable(context, node) {
     return utilsFindVariable(getScope(context, node), node);
 }
