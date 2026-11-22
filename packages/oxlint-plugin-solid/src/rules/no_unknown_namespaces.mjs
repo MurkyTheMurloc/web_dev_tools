@@ -35,7 +35,7 @@ const replacements = {
             `ref={(el) => el.addEventListener("${name}", ${value}, { capture: true })}`
     },
     prop: {
-        why: "which Solid 2.0's types reject for built-in properties: Solid sets `value`, `checked` and the like as properties from the plain name.",
+        why: "which Solid 2.0's types reject on built-in elements: Solid sets `value`, `checked` and the like as properties from the plain name. (On a custom element such as `<my-chart prop:data={…}>`, `prop:` is right and not reported.)",
         fix: ({ name, assign }) => `${name}${assign}`
     },
     style: {
@@ -136,6 +136,17 @@ export default {
                     return;
                 }
                 if (xmlNamespaces.includes(namespace)) {
+                    return;
+                }
+                // `prop:` is how Solid 2.0 sets a property on a custom element
+                // (`<my-chart prop:data={points()}>` is `el.data = points()`),
+                // typed through JSX.ExplicitProperties. Only built-in elements,
+                // whose properties Solid sets from the plain name, are reported.
+                if (
+                    namespace === "prop" &&
+                    openingElement.name.type === "JSXIdentifier" &&
+                    openingElement.name.name.includes("-")
+                ) {
                     return;
                 }
                 const replacement = replacements[namespace];

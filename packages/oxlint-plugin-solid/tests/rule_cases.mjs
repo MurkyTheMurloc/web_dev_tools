@@ -672,6 +672,14 @@ export const View: Component = () => {
 }
 const namespaceCases = Object.freeze([
     Object.freeze({
+        code: `declare const points: () => number[];
+
+export const View = () => <my-chart prop:data={points()} />;
+`,
+        name: "prop: on a custom element sets a property",
+        report: null
+    }),
+    Object.freeze({
         code: ISLAND_VIEW,
         name: "an allowed namespace on a component",
         report: null,
