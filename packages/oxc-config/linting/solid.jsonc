@@ -42,7 +42,7 @@
                 // ParentComponent<Props> arrow signatures. The generic
                 // prefer-readonly-parameter-types rule conflicts with that
                 // convention and would reject the autofix immediately.
-                "prefer-readonly-parameter-types": "off",
+                "typescript/prefer-readonly-parameter-types": "off",
                 // Solid reads a promise returned from a reactive computation
                 // like a value, so `createMemo(() => load(id()))` needs no
                 // `async`. `solid/reactive-async` covers the async cases
