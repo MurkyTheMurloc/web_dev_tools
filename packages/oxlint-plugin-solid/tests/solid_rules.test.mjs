@@ -26,6 +26,7 @@ import {
     noDestructureFixCases,
     preferArrowDiagnosticCases,
     preferArrowFixCases,
+    preferDestructuringSilentCase,
     ruleCases
 } from "./rule_cases.mjs";
 
@@ -124,6 +125,14 @@ function registerPreferArrowDiagnosticTests() {
             expect(result.exitCode).toBeGreaterThan(0);
             expect(result.output).toContain("solid(prefer-arrow-components)");
         });
+    });
+}
+
+function registerPreferDestructuringSilentTest() {
+    test("prefer-destructuring: stays silent on props and stores", async () => {
+        const result = await harness.lint(preferDestructuringSilentCase.code);
+
+        expect(result.output).not.toContain("solid(prefer-destructuring)");
     });
 }
 
@@ -239,6 +248,7 @@ describe("oxlint-plugin-solid", () => {
     });
 
     registerRuleDiagnosticsTests();
+    registerPreferDestructuringSilentTest();
     registerNamespaceTests();
     registerPreferArrowDiagnosticTests();
     registerReactivityAsyncTests();

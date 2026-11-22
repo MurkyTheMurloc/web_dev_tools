@@ -21,6 +21,7 @@ import noUntrackedEffectReadRule from "./rules/no_untracked_effect_read.mjs";
 import noWriteInPureComputationRule from "./rules/no_write_in_pure_computation.mjs";
 import { preferArrowComponentsRule } from "./rules/prefer_arrow_components.mjs";
 import preferClassObjectRule from "./rules/prefer_class_object.mjs";
+import preferDestructuringRule from "./rules/prefer_destructuring.mjs";
 import preferForRule from "./rules/prefer_for.mjs";
 import preferShowRule from "./rules/prefer_show.mjs";
 import { reactiveAsyncRule } from "./rules/reactive_async.mjs";
@@ -60,6 +61,7 @@ const extendedPlugin = {
         "no-write-in-pure-computation": noWriteInPureComputationRule,
         "prefer-arrow-components": preferArrowComponentsRule,
         "prefer-class-object": preferClassObjectRule,
+        "prefer-destructuring": preferDestructuringRule,
         "prefer-for": preferForRule,
         "prefer-show": preferShowRule,
         "reactive-async": reactiveAsyncRule,

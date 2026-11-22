@@ -22,6 +22,7 @@ const expectedRuleIds = Object.freeze([
     "no-write-in-pure-computation",
     "prefer-arrow-components",
     "prefer-class-object",
+    "prefer-destructuring",
     "prefer-for",
     "prefer-show",
     "reactive-async",
@@ -257,6 +258,14 @@ export const View = () => {
 };
 `,
         ruleId: "no-write-in-pure-computation"
+    }),
+    Object.freeze({
+        code: `declare const config: { port: number };
+
+export const port = config.port;
+`,
+        fileName: "config.ts",
+        ruleId: "prefer-destructuring"
     }),
     Object.freeze({
         code: `const cn = (classes) => {
@@ -678,7 +687,32 @@ const namespaceFixCases = Object.freeze([
     })
 ]);
 
+// Reading a prop or a store field into a local is what Solid code should not
+// destructure: the reactive form is \`props.title\` where it is used.
+const preferDestructuringSilentCase = Object.freeze({
+    code: `import { createStore, merge } from "solid-js";
+
+export const Card = (props: { title: string; size: number }) => {
+    const local = merge({ size: 1 }, props);
+    const [store] = createStore({ items: [] as string[] });
+    return (
+        <div>
+            {props.title}
+            {local.size}
+            {store.items.length}
+        </div>
+    );
+};
+
+export function readTitle(props: { title: string }): string {
+    const title = props.title;
+    return title;
+}
+`
+});
+
 export {
+    preferDestructuringSilentCase,
     expectedRuleIds,
     jsxUsesVarsCase,
     namespaceCases,

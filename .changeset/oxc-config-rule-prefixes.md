@@ -1,5 +1,6 @@
 ---
 "@murky-web/oxc-config": minor
+"@murky-web/oxlint-plugin-solid": minor
 ---
 
 Every rule is named with its plugin prefix. Bare names made oxlint pick one

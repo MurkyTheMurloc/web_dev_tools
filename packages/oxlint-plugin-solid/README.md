@@ -29,6 +29,11 @@ Aktuell sind enthalten:
   Verwandte in einem Ref-Callback -- der laeuft ohne Owner, nichts raeumt sie je
   wieder ab), `solid/reactive-async`, `solid/no-server-import-in-client` und
   `solid/strict-void-return` (siehe unten)
+- `solid/prefer-destructuring`, ein Fork von eslints `prefer-destructuring`: er
+  verlangt Destructuring wie das Original, nur nicht aus `props`, dem ersten
+  Parameter einer Komponente und Ergebnissen von `createStore`,
+  `createProjection`, `createOptimisticStore`, `merge` und `omit`. Dort kopiert
+  Destructuring den Wert einmal und verliert die Reaktivitaet.
 - `solid/no-module-scope-reactive-primitive` aus eslint-plugin-solid 0.20.1
   (meldet `createSignal`, `createStore` und Verwandte auf Modul-Ebene: beim SSR
   teilen sich alle Requests diesen Zustand) und
