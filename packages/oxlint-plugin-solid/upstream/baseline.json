@@ -138,6 +138,12 @@
         "missed": [],
         "parseError": []
     },
+    "no-unassigned-vars": {
+        "falsePositive": [],
+        "fix": [],
+        "missed": [],
+        "parseError": []
+    },
     "no-unknown-namespaces": {
         "falsePositive": [
             "valid:no-unknown-namespaces.test.ts:6",

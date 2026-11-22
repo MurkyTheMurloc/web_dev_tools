@@ -77,7 +77,14 @@
                 // exception; it is on only here, so `.ts` files keep
                 // eslint/init-declarations alone.
                 "eslint/init-declarations": "off",
-                "solid/init-declarations": "error"
+                "solid/init-declarations": "error",
+                // `ref={el}` assigns `el`: Solid's compiler rewrites the single
+                // shorthand to `el = node`, which eslint's scope analysis sees
+                // as a read only. solid/no-unassigned-vars is eslint's rule
+                // with that exception; `.ts` files keep
+                // eslint/no-unassigned-vars from eslint.jsonc.
+                "eslint/no-unassigned-vars": "off",
+                "solid/no-unassigned-vars": "error"
             }
         }
     ]

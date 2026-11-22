@@ -30,7 +30,8 @@ import {
     preferShowCases,
     refFixCases,
     refSilentCases,
-    ruleCases
+    ruleCases,
+    unassignedReportingCases
 } from "./rule_cases.mjs";
 
 const EXIT_SUCCESS = 0;
@@ -234,9 +235,40 @@ function registerRefTests() {
             for (const ruleId of refCase.silent) {
                 expect(result.output).not.toContain(`solid(${ruleId})`);
             }
-            // Off for .tsx: solid/init-declarations takes its place.
+            // Off for .tsx: the solid rules take their place.
             expect(result.output).not.toContain("eslint(init-declarations)");
+            expect(result.output).not.toContain("eslint(no-unassigned-vars)");
         });
+    });
+
+    unassignedReportingCases.forEach((unassignedCase) => {
+        test(`no-unassigned-vars: ${unassignedCase.name}`, async () => {
+            const result = await harness.lint(unassignedCase.code);
+
+            expect(result.output).toContain("solid(no-unassigned-vars)");
+            expect(result.output).not.toContain("eslint(no-unassigned-vars)");
+        });
+    });
+
+    test("no-unassigned-vars: a bare entry in a ref array is reported once, by prefer-ref-shorthand", async () => {
+        const result = await harness.lint(
+            "export const View = () => {\n    let el!: HTMLInputElement;\n    return <input ref={[el]} onInput={() => el.select()} />;\n};\n"
+        );
+
+        expect(
+            result.output.match(/solid\(prefer-ref-shorthand\)/gu)
+        ).toHaveLength(1);
+        expect(result.output).not.toContain("no-unassigned-vars)");
+    });
+
+    test("no-unassigned-vars: a .ts file keeps eslint's rule alone", async () => {
+        const result = await harness.lint(
+            "declare function use(value: unknown): void;\n\nexport function read(): void {\n    let x;\n    use(x);\n}\n",
+            { fileName: "src/read.ts" }
+        );
+
+        expect(result.output).toContain("eslint(no-unassigned-vars)");
+        expect(result.output).not.toContain("solid(no-unassigned-vars)");
     });
 
     refFixCases.forEach((refCase) => {

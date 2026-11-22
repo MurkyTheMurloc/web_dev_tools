@@ -44,8 +44,8 @@ Aktuell sind enthalten:
   teilen sich alle Requests diesen Zustand) und
   `solid/no-write-in-pure-computation` (meldet Setter in `createMemo`, in der
   Compute-Phase von `createEffect` und im Component-Body)
-- `solid/init-declarations` und `solid/prefer-ref-shorthand` fuer Refs (siehe
-  unten)
+- `solid/init-declarations`, `solid/no-unassigned-vars` und
+  `solid/prefer-ref-shorthand` fuer Refs (siehe unten)
 - ein Test-Harness, der die exportierte Rule-Surface und echte Diagnostik gegen
   Temp-Projekte prueft
 
@@ -203,6 +203,19 @@ Eintrag, nicht diese Regel an der Deklaration.
 
 In `oxc-config` ist sie nur fuer `*.tsx`/`*.jsx` an und ersetzt dort
 `eslint/init-declarations`; `.ts`-Dateien behalten eslints Regel.
+
+### `solid/no-unassigned-vars`
+
+Port von Upstreams `no-unassigned-vars` (0.20.1): eslints `no-unassigned-vars`,
+nur zaehlt `ref={el}` oder `ref={el!}` als Zuweisung. Gemeldet wird ein `let`
+oder `var` ohne Startwert, das gelesen, aber nie zugewiesen wird, also immer
+`undefined` ist. `ref={() => el}` oder `<Comp elRef={el} />` sind nur Lesen und
+werden gemeldet. Abweichung von Upstream: ein nacktes `el` in `ref={[…]}` meldet
+schon `solid/prefer-ref-shorthand`, deshalb laesst diese Regel die Variable dann
+aus.
+
+In `oxc-config` ist sie nur fuer `*.tsx`/`*.jsx` an und ersetzt dort
+`eslint/no-unassigned-vars`; `.ts`-Dateien behalten eslints Regel.
 
 ### `solid/prefer-ref-shorthand`
 

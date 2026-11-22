@@ -19,6 +19,7 @@ const expectedRuleIds = Object.freeze([
     "no-server-import-in-client",
     "no-setter-in-effect",
     "no-single-arg-create-effect",
+    "no-unassigned-vars",
     "no-unknown-namespaces",
     "no-untracked-effect-read",
     "no-write-in-pure-computation",
@@ -493,6 +494,19 @@ export const View = () => {
         message:
             "`el` in the `ref` array is never assigned and stays `undefined`: Solid rewrites only a single `ref={el}` to an assignment, and an array entry must be a callback. Fix: `(node) => { el = node; }` in its place.",
         ruleId: "prefer-ref-shorthand"
+    }),
+    Object.freeze({
+        code: `declare function use(value: unknown): void;
+
+export const View = () => {
+    let label: string | undefined;
+    use(label);
+    return <p />;
+};
+`,
+        message:
+            "`label` is read but never assigned, so it is always `undefined`. Fix: assign it before it is read, or, if it should hold an element, pass it as `ref={label}`.",
+        ruleId: "no-unassigned-vars"
     })
 ]);
 
@@ -866,7 +880,11 @@ const refSilentCases = Object.freeze([
 };
 `,
         name: "a let with a default",
-        silent: ["init-declarations", "prefer-ref-shorthand"]
+        silent: [
+            "init-declarations",
+            "no-unassigned-vars",
+            "prefer-ref-shorthand"
+        ]
     }),
     Object.freeze({
         code: `export const View = () => {
@@ -875,7 +893,11 @@ const refSilentCases = Object.freeze([
 };
 `,
         name: "let el! with the shorthand",
-        silent: ["init-declarations", "prefer-ref-shorthand"]
+        silent: [
+            "init-declarations",
+            "no-unassigned-vars",
+            "prefer-ref-shorthand"
+        ]
     }),
     Object.freeze({
         code: `export const View = () => {
@@ -884,7 +906,11 @@ const refSilentCases = Object.freeze([
 };
 `,
         name: "let el! with a callback",
-        silent: ["init-declarations", "prefer-ref-shorthand"]
+        silent: [
+            "init-declarations",
+            "no-unassigned-vars",
+            "prefer-ref-shorthand"
+        ]
     }),
     Object.freeze({
         code: `declare const autofocus: (el: HTMLElement) => void;
@@ -895,7 +921,11 @@ export const View = () => {
 };
 `,
         name: "let el! with a callback in a ref array",
-        silent: ["init-declarations", "prefer-ref-shorthand"]
+        silent: [
+            "init-declarations",
+            "no-unassigned-vars",
+            "prefer-ref-shorthand"
+        ]
     }),
     Object.freeze({
         code: `import { Show } from "solid-js";
@@ -912,7 +942,110 @@ export const View = (props: { open: boolean }) => {
 };
 `,
         name: "Optional<T> under <Show>",
-        silent: ["init-declarations", "prefer-ref-shorthand"]
+        silent: [
+            "init-declarations",
+            "no-unassigned-vars",
+            "prefer-ref-shorthand"
+        ]
+    }),
+    Object.freeze({
+        code: `export const View = () => {
+    let el: HTMLDivElement | undefined;
+    return <div ref={el!} onClick={() => el?.focus()} />;
+};
+`,
+        name: "the shorthand with a non-null assertion",
+        silent: [
+            "init-declarations",
+            "no-unassigned-vars",
+            "prefer-ref-shorthand"
+        ]
+    }),
+    Object.freeze({
+        code: `import type { Component } from "solid-js";
+
+type DialogApi = { open: () => void };
+
+declare const Dialog: Component<{ ref: DialogApi }>;
+
+export const View = () => {
+    let api!: DialogApi;
+    return (
+        <>
+            <Dialog ref={api} />
+            <button onClick={() => api.open()}>Open</button>
+        </>
+    );
+};
+`,
+        name: "a ref on a component",
+        silent: [
+            "init-declarations",
+            "no-unassigned-vars",
+            "prefer-ref-shorthand"
+        ]
+    }),
+    Object.freeze({
+        code: `export const View = (props: { on: boolean }) => {
+    let label: string;
+    if (props.on) {
+        label = "on";
+    }
+    return <p>{label}</p>;
+};
+`,
+        name: "a let assigned in the body",
+        silent: ["no-unassigned-vars", "prefer-ref-shorthand"]
+    }),
+    Object.freeze({
+        code: `type Optional<T> = T | undefined;
+
+export const View = () => {
+    let el: Optional<HTMLDivElement> = undefined;
+    return <div ref={el} onClick={() => el?.focus()} />;
+};
+`,
+        name: "Optional<T> with an explicit undefined",
+        silent: [
+            "init-declarations",
+            "no-unassigned-vars",
+            "prefer-ref-shorthand"
+        ]
+    })
+]);
+
+// Read, never assigned, and no single \`ref\` assigns it.
+const unassignedReportingCases = Object.freeze([
+    Object.freeze({
+        code: `declare function use(value: unknown): void;
+
+export const View = () => {
+    let x;
+    use(x);
+    return <p />;
+};
+`,
+        name: "a let that is only read"
+    }),
+    Object.freeze({
+        code: `export const View = () => {
+    let el: HTMLDivElement | undefined;
+    return <div ref={() => el} />;
+};
+`,
+        name: "a ref callback that reads the variable"
+    }),
+    Object.freeze({
+        code: `import type { Component } from "solid-js";
+
+declare const Comp: Component<{ elRef: HTMLElement | undefined }>;
+
+export const View = () => {
+    let el: HTMLElement | undefined;
+    return <Comp elRef={el} />;
+};
+`,
+        name: "a prop that is not `ref`"
     })
 ]);
 
@@ -978,5 +1111,6 @@ export {
     preferShowCases,
     refFixCases,
     refSilentCases,
-    ruleCases
+    ruleCases,
+    unassignedReportingCases
 };
