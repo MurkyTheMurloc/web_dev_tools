@@ -14,7 +14,10 @@
         "eslint/block-scoped-var": "error",
         "eslint/capitalized-comments": "off",
         "eslint/class-methods-use-this": "error",
-        "eslint/complexity": ["error", 30],
+        // Size and complexity limits warn: they ask for a second look, not a
+        // split at any cost. Past a limit, a function that is one cohesive unit
+        // stays whole with a one-line comment above it saying why.
+        "eslint/complexity": ["warn", 20],
         "eslint/constructor-super": "error",
         "eslint/curly": "error",
         "eslint/default-case": "error",
@@ -32,8 +35,13 @@
         "eslint/logical-assignment-operators": "error",
         "eslint/max-classes-per-file": "error",
         "eslint/max-depth": ["error", 4],
-        "eslint/max-lines": ["error", 1000],
-        "eslint/max-lines-per-function": ["error", 60],
+        "eslint/max-lines": [
+            "warn",
+            { "max": 400, "skipBlankLines": true, "skipComments": true }
+        ],
+        // solid/function-size (solid.jsonc) counts the same lines and says
+        // what to extract and where; oxlint can't change this rule's message.
+        "eslint/max-lines-per-function": "off",
         "eslint/max-nested-callbacks": "error",
         "eslint/max-params": "off",
         "eslint/max-statements": "off",
@@ -191,5 +199,15 @@
         "eslint/valid-typeof": "error",
         "eslint/vars-on-top": "error",
         "eslint/yoda": "error"
-    }
+    },
+    "overrides": [
+        {
+            // Generated files are as long as their input; nobody edits them.
+            "files": ["**/*.generated.*"],
+            "rules": {
+                "eslint/complexity": "off",
+                "eslint/max-lines": "off"
+            }
+        }
+    ]
 }
