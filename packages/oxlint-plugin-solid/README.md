@@ -45,13 +45,13 @@ Oxlint-Konfiguration als JS-Plugin geladen:
 ```
 
 Die Regeln heissen `solid/<name>`. Welche Regeln dieses Repo selbst einschaltet,
-steht in `config/oxc/linting/solid.jsonc`.
+steht in `packages/oxc-config/linting/solid.jsonc`.
 
 ## Regeln fuer das Solid-2.0-Modell
 
 Die drei Regeln arbeiten ohne Typinformation, nur mit Syntax und Scope. Sie sind
-in `config/oxc/linting/solid.jsonc` aktiv und ersetzen dort fuer `*.tsx`/`*.jsx`
-die Typ-Regeln `typescript/promise-function-async` und
+in `packages/oxc-config/linting/solid.jsonc` aktiv und ersetzen dort fuer
+`*.tsx`/`*.jsx` die Typ-Regeln `typescript/promise-function-async` und
 `typescript/strict-void-return`.
 
 ### `solid/reactive-async`

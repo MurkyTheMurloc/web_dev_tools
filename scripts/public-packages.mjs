@@ -15,6 +15,11 @@ export const publicPackages = [
         publishToJsr: false,
     },
     {
+        dir: "packages/oxc-config",
+        name: "@murky-web/oxc-config",
+        publishToJsr: false,
+    },
+    {
         dir: "packages/shadcn-lint/packages/lint",
         name: "@murky-web/shadcn-lint",
         publishToJsr: false,

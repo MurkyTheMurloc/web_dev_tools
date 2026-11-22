@@ -213,9 +213,13 @@ function solidProjectConfig(rules = {}) {
 
 function writeSolidProjectConfig(repoRoot, tempDirectoryPath) {
     const configRoot = `${repoRoot}/config`;
-    cpSync(`${configRoot}/oxc/linting`, `${tempDirectoryPath}/oxc/linting`, {
-        recursive: true
-    });
+    cpSync(
+        `${repoRoot}/packages/oxc-config/linting`,
+        `${tempDirectoryPath}/oxc/linting`,
+        {
+            recursive: true
+        }
+    );
     writeFileSync(
         `${tempDirectoryPath}/${OXLINT_CONFIG_PATH}`,
         JSON.stringify(solidProjectConfig())
