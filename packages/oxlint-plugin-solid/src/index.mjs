@@ -1,6 +1,7 @@
 import componentsReturnOnceRule from "./rules/components_return_once.mjs";
 import eventHandlersRule from "./rules/event_handlers.mjs";
 import filenameMatchesExportRule from "./rules/filename_matches_export.mjs";
+import functionSizeRule from "./rules/function_size.mjs";
 import importsRule from "./rules/imports.mjs";
 import initDeclarationsRule from "./rules/init_declarations.mjs";
 import jsxNoDuplicatePropsRule from "./rules/jsx_no_duplicate_props.mjs";
@@ -46,6 +47,7 @@ const extendedPlugin = {
         "components-return-once": componentsReturnOnceRule,
         "event-handlers": eventHandlersRule,
         "filename-matches-export": filenameMatchesExportRule,
+        "function-size": functionSizeRule,
         imports: importsRule,
         "init-declarations": initDeclarationsRule,
         "jsx-no-duplicate-props": jsxNoDuplicatePropsRule,

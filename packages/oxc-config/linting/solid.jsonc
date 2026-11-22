@@ -4,6 +4,9 @@
     "rules": {
         "solid/components-return-once": "error",
         "solid/event-handlers": "error",
+        // Warns past 60 code lines, 80 for a component in .tsx/.jsx; replaces
+        // eslint/max-lines-per-function (see eslint.jsonc).
+        "solid/function-size": ["warn", { "max": 60, "maxComponent": 80 }],
         "solid/imports": "error",
         "solid/jsx-no-duplicate-props": "error",
         "solid/jsx-no-script-url": "error",
@@ -41,6 +44,11 @@
         "solid/validate-jsx-nesting": "error"
     },
     "overrides": [
+        {
+            // Generated files are as long as their input; nobody edits them.
+            "files": ["**/*.generated.*"],
+            "rules": { "solid/function-size": "off" }
+        },
         {
             "files": ["**/*.jsx", "**/*.tsx"],
             "rules": {

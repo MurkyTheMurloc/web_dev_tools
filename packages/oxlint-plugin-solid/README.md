@@ -47,6 +47,7 @@ Aktuell sind enthalten:
 - `solid/init-declarations`, `solid/no-unassigned-vars` und
   `solid/prefer-ref-shorthand` fuer Refs (siehe unten)
 - `solid/filename-matches-export` fuer Dateinamen (siehe unten)
+- `solid/function-size` fuer die Laenge von Funktionen (siehe unten)
 - ein Test-Harness, der die exportierte Rule-Surface und echte Diagnostik gegen
   Temp-Projekte prueft
 
@@ -255,6 +256,29 @@ zaehlen nicht.
 Ohne Autofix: eine Datei umzubenennen ist kein Lint-Fix. In `oxc-config` ist sie
 fuer `*.tsx`/`*.jsx` an, zusammen mit `unicorn/filename-case`, das dort
 snakeCase und pascalCase erlaubt; `.ts`-Dateien bleiben snakeCase.
+
+### `solid/function-size`
+
+Zaehlt wie eslints `max-lines-per-function` mit `skipBlankLines`, `skipComments`
+und `IIFEs: true`: Leer- und reine Kommentarzeilen zaehlen nicht, eine innere
+Funktion zaehlt fuer sich und in ihrer aeusseren mit. Optionen:
+`{ "max": 60, "maxComponent": 80 }`.
+
+- Komponente (PascalCase-Name, enthaelt JSX, in `.tsx`/`.jsx`): `maxComponent`.
+  Die Meldung sagt, JSX in eine Sub-Komponente in eigener PascalCase-`.tsx` und
+  zusammengehoerige Signals, Memos und Effects in ein `createX` in einer
+  snake_case-`.ts` zu ziehen, das Accessors nimmt (`createX(() => props.id)`)
+  und Accessors zurueckgibt.
+- Primitive (`createX`/`useX`): `max`, mit einer Meldung, die nach Belang in
+  kleinere `createX` teilt.
+- Jede andere Funktion: `max`, mit dem Hinweis auf benannte pure Helfer.
+
+Jede Meldung nennt die Zeilen der laengsten Anweisung im Rumpf als Startpunkt
+(ausser bei Komponenten) und sagt: Ist die Funktion eine zusammenhaengende
+Einheit, bleibt sie, mit einem einzeiligen Kommentar darueber, warum; kein
+`// oxlint-disable`. Ohne Autofix. In `oxc-config` steht sie auf `warn` und
+ersetzt `eslint/max-lines-per-function`, dessen Meldung oxlint nicht anpassen
+laesst; `*.generated.*` ist ausgenommen.
 
 ## Autofixes
 

@@ -21,6 +21,7 @@ import {
 import {
     expectedRuleIds,
     filenameCases,
+    functionSizeCases,
     jsxUsesVarsCase,
     namespaceCases,
     namespaceFixCases,
@@ -193,6 +194,27 @@ function registerNamespaceTests() {
 }
 
 const FILENAME_RULE = "solid(filename-matches-export)";
+
+const FUNCTION_SIZE_RULE = "solid(function-size)";
+
+function registerFunctionSizeTests() {
+    functionSizeCases.forEach((sizeCase) => {
+        test(`function-size: ${sizeCase.name}`, async () => {
+            const result = await harness.lint(sizeCase.code, {
+                fileName: sizeCase.fileName
+            });
+
+            if (sizeCase.report === null) {
+                expect(result.output).not.toContain(FUNCTION_SIZE_RULE);
+            } else {
+                expect(result.output).toContain(FUNCTION_SIZE_RULE);
+                for (const fragment of sizeCase.report) {
+                    expect(result.output).toContain(fragment);
+                }
+            }
+        });
+    });
+}
 
 function registerFilenameTests() {
     filenameCases.forEach((filenameCase) => {
@@ -422,6 +444,7 @@ describe("oxlint-plugin-solid", () => {
     registerRuleDiagnosticsTests();
     registerPreferDestructuringSilentTest();
     registerFilenameTests();
+    registerFunctionSizeTests();
     registerNamespaceTests();
     registerPreferShowTests();
     registerRefTests();

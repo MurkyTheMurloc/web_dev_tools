@@ -2,6 +2,7 @@ const expectedRuleIds = Object.freeze([
     "components-return-once",
     "event-handlers",
     "filename-matches-export",
+    "function-size",
     "imports",
     "init-declarations",
     "jsx-no-duplicate-props",
@@ -1217,8 +1218,103 @@ export const readTheme = () => <span />;
     })
 ]);
 
+// `count` lines of code, one statement each, indented for a function body.
+function codeLines(count, indent = "    ") {
+    return Array.from({ length: count }, (_, index) => {
+        return `${indent}total += ${index};`;
+    }).join("\n");
+}
+
+// The shared config warns with `{ max: 60, maxComponent: 80 }`.
+const functionSizeCases = Object.freeze([
+    Object.freeze({
+        name: "a long plain function",
+        code: `export function sumSteps(): number {
+    let total = 0;
+    if (total === 0) {
+${codeLines(10, "        ")}
+    }
+${codeLines(55)}
+    return total;
+}
+`,
+        fileName: "src/sum_steps.ts",
+        report: [
+            "`sumSteps` has 71 code lines (max 60; blank and comment lines don't count)",
+            "Fix: move each self-contained step (lines 3–14 first) into a named pure helper"
+        ]
+    }),
+    Object.freeze({
+        name: "a long component",
+        code: `export const Steps = () => {
+    let total = 0;
+${codeLines(80)}
+    return <p>{total}</p>;
+};
+`,
+        fileName: "src/Steps.tsx",
+        report: [
+            "Component `Steps` has 84 code lines (max 80)",
+            "Fix: move repeated or self-contained JSX into a sub-component in its own PascalCase `.tsx`"
+        ]
+    }),
+    Object.freeze({
+        name: "a component between max and maxComponent",
+        code: `export const Steps = () => {
+    let total = 0;
+${codeLines(70)}
+    return <p>{total}</p>;
+};
+`,
+        fileName: "src/Steps.tsx",
+        report: null
+    }),
+    Object.freeze({
+        name: "a long primitive",
+        code: `export const createSteps = (): (() => number) => {
+    let total = 0;
+${codeLines(60)}
+    return () => total;
+};
+`,
+        fileName: "src/create_steps.ts",
+        report: [
+            "Primitive `createSteps` has 64 code lines (max 60",
+            "Fix: split it by concern into smaller `createX` primitives (lines 2–2 first)"
+        ]
+    }),
+    Object.freeze({
+        name: "a short function",
+        code: `export function sumSteps(): number {
+    let total = 0;
+${codeLines(5)}
+    return total;
+}
+`,
+        fileName: "src/sum_steps.ts",
+        report: null
+    }),
+    Object.freeze({
+        name: "blank and comment lines",
+        code: `export function sumSteps(): number {
+    let total = 0;
+${codeLines(50)}
+${"\n".repeat(20)}
+${"    // a comment line\n".repeat(10)}
+    /*
+${"     * a block comment line\n".repeat(10)}
+     */
+    return total; // a trailing comment keeps the line
+}
+`,
+        fileName: "src/sum_steps.ts",
+        report: null
+    })
+]);
+
 export {
     filenameCases,
+    functionSizeCases,
     preferDestructuringSilentCase,
     expectedRuleIds,
     jsxUsesVarsCase,
