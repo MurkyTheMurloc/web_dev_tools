@@ -37,6 +37,7 @@ export const RULE_PAIRS = {
     "no-array-handlers": "no-array-handlers",
     "no-destructure": "no-destructure",
     "no-innerhtml": "no-innerhtml",
+    "no-module-scope-reactive-primitive": "no-module-scope-reactive-primitive",
     "no-proxy-apis": "no-proxy-apis",
     "no-react-deps": "no-react-deps",
     "no-react-specific-props": "no-react-specific-props",

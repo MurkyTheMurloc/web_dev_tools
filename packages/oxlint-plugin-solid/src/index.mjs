@@ -8,6 +8,7 @@ import { jsxUsesVarsRule } from "./rules/jsx_uses_vars.mjs";
 import { noArrayHandlersRule } from "./rules/no_array_handlers.mjs";
 import noDestructureRule from "./rules/no_destructure.mjs";
 import noInnerhtmlRule from "./rules/no_innerhtml.mjs";
+import noModuleScopeReactivePrimitiveRule from "./rules/no_module_scope_reactive_primitive.mjs";
 import noOwnedPrimitivesInRefRule from "./rules/no_owned_primitives_in_ref.mjs";
 import noProxyApisRule from "./rules/no_proxy_apis.mjs";
 import noReactDepsRule from "./rules/no_react_deps.mjs";
@@ -43,6 +44,8 @@ const extendedPlugin = {
         "no-array-handlers": noArrayHandlersRule,
         "no-destructure": noDestructureRule,
         "no-innerhtml": noInnerhtmlRule,
+        "no-module-scope-reactive-primitive":
+            noModuleScopeReactivePrimitiveRule,
         "no-owned-primitives-in-ref": noOwnedPrimitivesInRefRule,
         "no-proxy-apis": noProxyApisRule,
         "no-react-deps": noReactDepsRule,

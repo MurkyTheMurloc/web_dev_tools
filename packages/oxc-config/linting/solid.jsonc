@@ -12,6 +12,7 @@
         "solid/no-array-handlers": "error",
         "solid/no-destructure": "error",
         "solid/no-innerhtml": "error",
+        "solid/no-module-scope-reactive-primitive": "error",
         "solid/no-owned-primitives-in-ref": "error",
         "solid/no-proxy-apis": "error",
         "solid/no-react-deps": "error",

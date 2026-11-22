@@ -17,7 +17,8 @@ TypeScript-ESLint-Toolchain in den Baum jedes Konsumenten zu ziehen.
 
 Aktuell sind enthalten:
 
-- die komplette von `eslint-plugin-solid` exportierte Regelmenge
+- die Regeln von `eslint-plugin-solid` 0.14.5; was Upstream bis 0.20.1
+  dazugebaut hat, fehlt teils (`bun upstream/run.mjs` zeigt den Abgleich)
 - die zusaetzlichen Projektregeln `solid/prefer-arrow-components`,
   `solid/no-setter-in-effect` (meldet Effects, die nur in ein Signal oder einen
   Store schreiben, statt den Wert abzuleiten -- und Effects, die etwas awaiten
@@ -28,6 +29,9 @@ Aktuell sind enthalten:
   Verwandte in einem Ref-Callback -- der laeuft ohne Owner, nichts raeumt sie je
   wieder ab), `solid/reactive-async`, `solid/no-server-import-in-client` und
   `solid/strict-void-return` (siehe unten)
+- `solid/no-module-scope-reactive-primitive` aus eslint-plugin-solid 0.20.1
+  (meldet `createSignal`, `createStore` und Verwandte auf Modul-Ebene: beim SSR
+  teilen sich alle Requests diesen Zustand)
 - ein Test-Harness, der die exportierte Rule-Surface und echte Diagnostik gegen
   Temp-Projekte prueft
 

@@ -105,6 +105,12 @@
         "missed": [],
         "parseError": []
     },
+    "no-module-scope-reactive-primitive": {
+        "falsePositive": [],
+        "fix": [],
+        "missed": [],
+        "parseError": []
+    },
     "no-proxy-apis": {
         "falsePositive": [],
         "fix": [],

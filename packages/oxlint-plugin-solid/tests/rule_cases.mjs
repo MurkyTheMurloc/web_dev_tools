@@ -9,6 +9,7 @@ const expectedRuleIds = Object.freeze([
     "no-array-handlers",
     "no-destructure",
     "no-innerhtml",
+    "no-module-scope-reactive-primitive",
     "no-owned-primitives-in-ref",
     "no-proxy-apis",
     "no-react-deps",
@@ -231,6 +232,13 @@ export const View = () => {
 };
 `,
         ruleId: "no-owned-primitives-in-ref"
+    }),
+    Object.freeze({
+        code: `import { createTrackedEffect } from "solid-js";
+
+createTrackedEffect(() => {});
+`,
+        ruleId: "no-module-scope-reactive-primitive"
     }),
     Object.freeze({
         code: `const cn = (classes) => {
