@@ -14,7 +14,9 @@
         "solid/no-innerhtml": "error",
         "solid/no-module-scope-reactive-primitive": "error",
         "solid/no-owned-primitives-in-ref": "error",
-        "solid/no-proxy-apis": "error",
+        // Only for targets without Proxy; createStore and createProjection are
+        // the core Solid 2.0 store API.
+        "solid/no-proxy-apis": "off",
         "solid/no-react-deps": "error",
         "solid/no-react-specific-props": "error",
         "solid/no-setter-in-effect": "error",

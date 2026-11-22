@@ -11,3 +11,6 @@ plugin per name: `no-nested-ternary`, `no-lonely-if` and
 (`expect-expect`, `no-focused-tests`, `valid-expect`, ...) resolved to the
 unloaded jest plugin. All of them are on now. `bun run test` in the package
 fails on a bare rule name.
+
+`solid/no-proxy-apis` is off: it is meant for targets without Proxy and reported
+every `createStore`. jsx-a11y treats Solid's `for` like `htmlFor`.
