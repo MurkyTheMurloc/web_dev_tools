@@ -1,4 +1,8 @@
-import { isInsideFunctionScope, isLoggerImportSource } from "./utils.mjs";
+import {
+    isInsideFunctionScope,
+    isLoggerImportSource,
+    oneLine
+} from "./utils.mjs";
 
 export const preferChildLoggerRule = {
     meta: {
@@ -10,7 +14,7 @@ export const preferChildLoggerRule = {
         schema: [],
         messages: {
             preferChildLogger:
-                "Prefer logger.createChildLogger(...) over creating a new root Logger inside a nested function scope."
+                "`{{call}}` builds a new root logger on every call of the function around it, without a parent's name prefix or options (threshold, log file, colors). Fix: `logger.createChildLogger({{name}})` on the logger the caller passes in or the module's root logger, or `c.var.logger.createChildLogger({{name}})` inside a Hono handler."
         }
     },
     create(context) {
@@ -47,12 +51,21 @@ export const preferChildLoggerRule = {
                     return;
                 }
 
+                const [firstArgument] = node.arguments ?? [];
+                const data = {
+                    call: oneLine(context.sourceCode.getText(node)),
+                    name: firstArgument
+                        ? oneLine(context.sourceCode.getText(firstArgument))
+                        : '"child"'
+                };
+
                 if (
                     node.callee?.type === "Identifier" &&
                     loggerConstructors.has(node.callee.name)
                 ) {
                     context.report({
                         messageId: "preferChildLogger",
+                        data,
                         node: node.callee
                     });
                     return;
@@ -68,6 +81,7 @@ export const preferChildLoggerRule = {
                 ) {
                     context.report({
                         messageId: "preferChildLogger",
+                        data,
                         node: node.callee.property
                     });
                 }

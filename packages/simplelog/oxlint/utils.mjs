@@ -1,4 +1,12 @@
 const SIMPLELOG_PACKAGE = "@murky-web/simplelog";
+const CONSOLE_METHOD_TO_LOGGER_METHOD = {
+    debug: "debug",
+    error: "error",
+    info: "info",
+    log: "info",
+    trace: "debug",
+    warn: "warn"
+};
 const SIMPLELOG_LOG_METHODS = new Set([
     "debug",
     "error",
@@ -178,16 +186,49 @@ function getEnclosingFunction(node) {
     return null;
 }
 
-function functionHasContextParam(node) {
-    if (!node) {
-        return false;
+/** The Hono context parameter's name (`c`, `ctx` or `context`), or `null`. */
+function getContextParamName(node) {
+    for (const param of node?.params ?? []) {
+        const name = collectAssignedNames(param).find(
+            (candidate) =>
+                candidate === "c" ||
+                candidate === "ctx" ||
+                candidate === "context"
+        );
+        if (name) {
+            return name;
+        }
     }
 
-    return (node.params ?? []).some((param) => {
-        return collectAssignedNames(param).some(
-            (name) => name === "c" || name === "ctx" || name === "context"
-        );
-    });
+    return null;
+}
+
+/** Source text on one line, for quoting code in a message. */
+function oneLine(text) {
+    return text.replaceAll(/\s+/gu, " ");
+}
+
+/**
+ * The call with its callee replaced, so a message can hand back the fixed call.
+ * Arguments spread over several lines become `(…)`.
+ */
+function callWithCallee(sourceCode, call, callee) {
+    const rest = sourceCode
+        .getText(call)
+        .slice(call.callee.range[1] - call.range[0]);
+    return `${callee}${rest.includes("\n") ? "(…)" : rest}`;
+}
+
+/**
+ * A logger name to suggest: the file's base name, or its directory's for an
+ * `index` file.
+ */
+function loggerNameHint(context) {
+    const parts = (context.filename ?? context.getFilename?.() ?? "").split(
+        /[\\/]/u
+    );
+    const base = (parts.at(-1) ?? "").replace(/\..*$/u, "");
+    return (base === "index" ? parts.at(-2) : base) || "app";
 }
 
 function isTopLevelNode(node) {
@@ -195,7 +236,11 @@ function isTopLevelNode(node) {
 }
 
 export {
-    functionHasContextParam,
+    callWithCallee,
+    CONSOLE_METHOD_TO_LOGGER_METHOD,
+    getContextParamName,
+    loggerNameHint,
+    oneLine,
     getEnclosingFunction,
     isBareSimplelogSource,
     isConsoleBindCall,

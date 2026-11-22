@@ -1,4 +1,9 @@
-import { isConsoleObjectExpression, isLoggerLikeTarget } from "./utils.mjs";
+import {
+    isConsoleObjectExpression,
+    isLoggerLikeTarget,
+    loggerNameHint,
+    oneLine
+} from "./utils.mjs";
 
 export const noAdHocConsoleFallbackRule = {
     meta: {
@@ -10,13 +15,24 @@ export const noAdHocConsoleFallbackRule = {
         schema: [],
         messages: {
             noAdHocConsoleFallback:
-                "Do not use console as an ad-hoc logger fallback or alias. Pass a SimpleLog logger or create one intentionally."
+                '`{{expression}}` logs through bare `console` whenever that branch is taken, so those lines skip the logger\'s level threshold, name and log file, and a call such as `.log(...)` has no `Logger` counterpart. Fix: `{{fix}}` with `import { Logger } from "@murky-web/simplelog/node";` (or `/bun`, `/web`), or make the logger a required parameter. Do not swap in `globalThis.console` or a `console` alias; both report too.'
         }
     },
     create(context) {
-        function reportConsoleNode(node) {
+        function reportConsoleNode(node, owner) {
+            const { sourceCode } = context;
+            const text = sourceCode.getText(owner);
+            const start = node.range[0] - owner.range[0];
+            const end = node.range[1] - owner.range[0];
+            const replacement = `new Logger(${JSON.stringify(loggerNameHint(context))})`;
             context.report({
                 messageId: "noAdHocConsoleFallback",
+                data: {
+                    expression: oneLine(text),
+                    fix: oneLine(
+                        `${text.slice(0, start)}${replacement}${text.slice(end)}`
+                    )
+                },
                 node
             });
         }
@@ -28,20 +44,20 @@ export const noAdHocConsoleFallbackRule = {
                 }
 
                 if (isConsoleObjectExpression(node.left)) {
-                    reportConsoleNode(node.left);
+                    reportConsoleNode(node.left, node);
                 }
 
                 if (isConsoleObjectExpression(node.right)) {
-                    reportConsoleNode(node.right);
+                    reportConsoleNode(node.right, node);
                 }
             },
             ConditionalExpression(node) {
                 if (isConsoleObjectExpression(node.consequent)) {
-                    reportConsoleNode(node.consequent);
+                    reportConsoleNode(node.consequent, node);
                 }
 
                 if (isConsoleObjectExpression(node.alternate)) {
-                    reportConsoleNode(node.alternate);
+                    reportConsoleNode(node.alternate, node);
                 }
             },
             VariableDeclarator(node) {
@@ -49,7 +65,7 @@ export const noAdHocConsoleFallbackRule = {
                     isLoggerLikeTarget(node.id) &&
                     isConsoleObjectExpression(node.init)
                 ) {
-                    reportConsoleNode(node.init);
+                    reportConsoleNode(node.init, node);
                 }
             },
             AssignmentExpression(node) {
@@ -57,7 +73,7 @@ export const noAdHocConsoleFallbackRule = {
                     isLoggerLikeTarget(node.left) &&
                     isConsoleObjectExpression(node.right)
                 ) {
-                    reportConsoleNode(node.right);
+                    reportConsoleNode(node.right, node);
                 }
             }
         };
