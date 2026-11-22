@@ -99,7 +99,7 @@ export default {
         docs: {
             description:
                 "Disallow reading reactive values in the untracked apply phase of an effect.",
-            url: "https://docs.solidjs.com/"
+            url: "https://github.com/MurkyTheMurloc/web_dev_tools/blob/main/docs/solid-2-effects.md"
         },
         schema: [],
         messages: {

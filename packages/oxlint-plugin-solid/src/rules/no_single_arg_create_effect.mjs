@@ -12,7 +12,7 @@ export default {
         docs: {
             description:
                 "Require the two-argument `createEffect(compute, effect)` form used by Solid 2.0.",
-            url: "https://github.com/solidjs/eslint-plugin-solid/blob/main/packages/eslint-plugin-solid/docs/no-single-arg-create-effect.md"
+            url: "https://github.com/MurkyTheMurloc/web_dev_tools/blob/main/docs/solid-2-effects.md"
         },
         schema: [],
         messages: {
