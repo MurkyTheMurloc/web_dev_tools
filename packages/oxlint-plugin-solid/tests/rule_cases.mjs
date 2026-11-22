@@ -1113,6 +1113,21 @@ export function readTitle(props: { title: string }): string {
 // null when the rule stays silent.
 const filenameCases = Object.freeze([
     Object.freeze({
+        name: "a PascalCase re-export of a component",
+        code: `export { default as Counter } from "./CounterComponent";
+`,
+        fileName: "src/islands/Counter.tsx",
+        report: null
+    }),
+    Object.freeze({
+        name: "a fixture exporting test components",
+        code: `export const PlainPage = () => <main />;
+export const OtherPage = () => <main />;
+`,
+        fileName: "src/renderer/script_injection.fixture.tsx",
+        report: null
+    }),
+    Object.freeze({
         name: "a PascalCase file named after its component",
         code: `export const Counter = () => {
     return <button>0</button>;

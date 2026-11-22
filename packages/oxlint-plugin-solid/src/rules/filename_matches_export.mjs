@@ -7,7 +7,15 @@ import { basename, relative } from "node:path";
 
 const JSX_FILE = /\.[jt]sx$/u;
 const PASCAL_NAME = /^[A-Z]/u;
-const DEFAULT_IGNORE = ["**/pages/**", "**/routes/**"];
+// Router files follow the router's naming; fixtures and tests export many
+// throwaway components and are named after what they test.
+const DEFAULT_IGNORE = [
+    "**/pages/**",
+    "**/routes/**",
+    "**/*.fixture.*",
+    "**/*.test.*",
+    "**/*.spec.*"
+];
 
 function isFunction(node) {
     let inner = node;
@@ -90,8 +98,10 @@ function collectFunctionBindings(program) {
 }
 
 // The exported components: `{ name, node }` for every PascalCase export bound
-// to a function, and the default export separately. Type-only exports and
-// re-exports (`export { X } from`) are left out.
+// to a function, and the default export separately. Type-only exports are
+// left out. A PascalCase re-export of a local module (`export { default as
+// Counter } from "./CounterComponent"`) counts as the component it names: the
+// module it comes from is not visible here, and the name is the convention.
 function collectComponents(program) {
     const functions = collectFunctionBindings(program);
     const named = [];
@@ -125,6 +135,28 @@ function collectComponents(program) {
                     functions.has(specifier.local.name) &&
                     specifier.exported.type === "Identifier" &&
                     specifier.exported.name !== "default"
+                ) {
+                    named.push({
+                        name: specifier.exported.name,
+                        node: specifier.exported
+                    });
+                }
+            }
+        }
+        if (
+            statement.type === "ExportNamedDeclaration" &&
+            statement.exportKind !== "type" &&
+            // A local module re-exported under its component's name; a
+            // re-export from a package (`export { Show } from "solid-js"`)
+            // is not this file's component.
+            typeof statement.source?.value === "string" &&
+            statement.source.value.startsWith(".")
+        ) {
+            for (const specifier of statement.specifiers) {
+                if (
+                    specifier.exportKind !== "type" &&
+                    specifier.exported.type === "Identifier" &&
+                    /^[A-Z]/u.test(specifier.exported.name)
                 ) {
                     named.push({
                         name: specifier.exported.name,
