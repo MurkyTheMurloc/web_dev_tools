@@ -28,3 +28,7 @@ New rule `solid/typed-merge-defaults`, enabled in oxc-config: an object literal
 passed to `merge` needs `satisfies Partial<Props>` (or `as const`), because a
 plain literal widens `"primary"` to `string` and `as Partial<Props>` makes the
 defaults optional again.
+
+In `*.tsx`/`*.jsx`, `eslint/no-ternary` is off: Solid evaluates a ternary in an
+attribute or child reactively, and the compiler memoizes element branches.
+`no-nested-ternary` and `no-unneeded-ternary` stay on.

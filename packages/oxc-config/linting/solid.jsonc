@@ -60,7 +60,13 @@
                 // `const total = () => props.price * props.qty`, and type
                 // components through `Component<P>`, which the rule already
                 // accepts. Exports stay covered by explicit-module-boundary-types.
-                "typescript/explicit-function-return-type": "off"
+                "typescript/explicit-function-return-type": "off",
+                // Solid evaluates a ternary in an attribute or a child reactively,
+                // and the compiler memoizes element branches (a prod <Show>
+                // compiles to the same ternary). The replacement, `let` + `if`
+                // in the component body, runs once and is not reactive.
+                // no-nested-ternary and no-unneeded-ternary stay on everywhere.
+                "eslint/no-ternary": "off"
             }
         }
     ]
