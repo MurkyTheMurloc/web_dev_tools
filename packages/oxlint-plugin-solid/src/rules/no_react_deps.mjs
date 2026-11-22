@@ -1,4 +1,5 @@
-import { isFunctionNode, trace, trackImports } from "../utils.mjs";
+import { getSourceCode } from "../compat.mjs";
+import { isFunctionNode, messageCode, trace, trackImports } from "../utils.mjs";
 export default {
     meta: {
         type: "problem",
@@ -11,7 +12,7 @@ export default {
         schema: [],
         messages: {
             noUselessDep:
-                "In Solid, `{{name}}` doesn't accept a dependency array because it automatically tracks its dependencies. To narrow what is tracked, read only those values in the compute phase."
+                "`{{name}}` gets the dependency array `{{deps}}`. Solid 2.0 has no dependency arrays: it tracks what the compute function reads, and the second argument is {{second}}. Fix: {{fix}}"
         }
     },
     defaultOptions: [],
@@ -42,11 +43,27 @@ export default {
                         // A second argument that looks like a dependency array was passed to
                         // createEffect/createMemo, and the inline function doesn't accept a parameter, so it
                         // can't just be an initial value.
+                        const deps = messageCode(
+                            getSourceCode(context).getText(node.arguments[1]),
+                            "[…]"
+                        );
+                        const isEffect =
+                            matchImport("createEffect", node.callee.name) ===
+                            "createEffect";
                         context.report({
                             node: node.arguments[1], // if this is a variable, highlight the usage, not the initialization
                             messageId: "noUselessDep",
                             data: {
-                                name: node.callee.name
+                                name: node.callee.name,
+                                deps,
+                                // createEffect(compute, apply) and
+                                // createMemo(compute, options) in Solid 2.0.
+                                second: isEffect
+                                    ? "the apply function"
+                                    : "the options object",
+                                fix: isEffect
+                                    ? `\`${node.callee.name}(() => ${deps}, (values) => { … })\`, with the side effect moved into apply. Do not: only delete the array; a one-argument \`createEffect\` is an error in 2.0.`
+                                    : `delete \`${deps}\`; \`${node.callee.name}\` already tracks what its function reads.`
                             },
                             // remove dep array if it's given inline, otherwise don't fix
                             fix:

@@ -1,6 +1,11 @@
 import { getPropertyName } from "@eslint-community/eslint-utils";
 
-import { isFunctionNode, isJSXElementOrFragment } from "../utils.mjs";
+import { getSourceCode } from "../compat.mjs";
+import {
+    isFunctionNode,
+    isJSXElementOrFragment,
+    messageCode
+} from "../utils.mjs";
 export default {
     meta: {
         type: "problem",
@@ -13,13 +18,16 @@ export default {
         schema: [],
         messages: {
             preferFor:
-                "Use Solid's `<For />` component for efficiently rendering lists. Array#map causes DOM elements to be recreated.",
+                "`{{array}}.map(…)` in JSX re-runs the whole map when `{{array}}` changes, so the DOM of every row is created again. Fix: `<For each={{{array}}}>{{{callback}}}</For>`.",
             preferForOrIndex:
-                "Use Solid's `<For />` component for rendering lists (`keyed={false}` for the index-based form). Array#map causes DOM elements to be recreated."
+                "`{{array}}.map(…)` in JSX re-runs the whole map when `{{array}}` changes, so the DOM of every row is created again. Fix: `<For each={{{array}}}>{({{item}}, {{index}}) => …}</For>`, where `{{index}}` is an accessor (read `{{index}}()`); with `keyed={false}`, `{{item}}` is the accessor (`{{item}}()`) and `{{index}}` a plain number."
         }
     },
     defaultOptions: [],
     create(context) {
+        const sourceCode = getSourceCode(context);
+        const arrayText = (node) =>
+            messageCode(sourceCode.getText(node.callee.object), "items()");
         const reportPreferFor = (node) => {
             const jsxExpressionContainerNode = node.parent;
             const arrayNode = node.callee.object;
@@ -27,6 +35,13 @@ export default {
             context.report({
                 node,
                 messageId: "preferFor",
+                data: {
+                    array: arrayText(node),
+                    callback: messageCode(
+                        sourceCode.getText(mapFnNode),
+                        "(item) => …"
+                    )
+                },
                 fix: (fixer) => {
                     const beforeArray = [
                         jsxExpressionContainerNode.range[0],
@@ -77,9 +92,24 @@ export default {
                             reportPreferFor(node);
                         } else {
                             // Too many possible solutions to make a suggestion or fix
+                            const [item, index] = mapFnNode.params.map(
+                                (param) => {
+                                    if (param.type === "RestElement") {
+                                        return null;
+                                    }
+                                    return param.type === "Identifier"
+                                        ? param.name
+                                        : sourceCode.getText(param);
+                                }
+                            );
                             context.report({
                                 node,
-                                messageId: "preferForOrIndex"
+                                messageId: "preferForOrIndex",
+                                data: {
+                                    array: arrayText(node),
+                                    item: item ?? "item",
+                                    index: index ?? "index"
+                                }
                             });
                         }
                     }

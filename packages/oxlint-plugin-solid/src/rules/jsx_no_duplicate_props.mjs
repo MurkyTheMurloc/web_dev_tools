@@ -1,4 +1,5 @@
-import { jsxGetAllProps } from "../utils.mjs";
+import { getSourceCode } from "../compat.mjs";
+import { jsxGetAllProps, messageCode } from "../utils.mjs";
 export default {
     meta: {
         type: "problem",
@@ -21,11 +22,12 @@ export default {
             }
         ],
         messages: {
-            noDuplicateProps: "Duplicate props are not allowed.",
+            noDuplicateProps:
+                "`{{name}}` is passed twice. The later value overwrites the earlier one, and as two JSX attributes TypeScript rejects it (TS17001). Fix: keep the one `{{name}}` you mean and delete the other.",
             noDuplicateClass:
-                "Duplicate `class` props are not allowed; while it might seem to work, it can break unexpectedly. Pass one `class` with the object or array form instead.",
+                "`class` is passed twice. One value overwrites the other, and as two JSX attributes TypeScript rejects it (TS17001). Fix: one `class` with both values in the array form, `{{fix}}`.",
             noDuplicateChildren:
-                "Using {{used}} at the same time is not allowed."
+                "{{used}} each set the element's content, so one replaces the other. Fix: keep one of them: JSX children for markup, `textContent` for plain text, `innerHTML` for trusted HTML."
         }
     },
     defaultOptions: [],
@@ -34,7 +36,24 @@ export default {
             JSXOpeningElement(node) {
                 const ignoreCase = context.options[0]?.ignoreCase ?? false;
                 const props = new Set();
+                // The first node of each name, for the merged `class` fix.
+                const firstNodes = new Map();
+                const sourceCode = getSourceCode(context);
+                // The value of the prop whose name is `nameNode`: an
+                // attribute's string or expression, or a spread property's.
+                const valueText = (nameNode) => {
+                    const { value } = nameNode.parent;
+                    if (!value) {
+                        return "true";
+                    }
+                    return sourceCode.getText(
+                        value.type === "JSXExpressionContainer"
+                            ? value.expression
+                            : value
+                    );
+                };
                 const checkPropName = (name, node) => {
+                    const written = name;
                     if (ignoreCase || name.startsWith("on")) {
                         name = name
                             .toLowerCase()
@@ -47,8 +66,17 @@ export default {
                             messageId:
                                 name === "class"
                                     ? "noDuplicateClass"
-                                    : "noDuplicateProps"
+                                    : "noDuplicateProps",
+                            data: {
+                                name: written,
+                                fix: messageCode(
+                                    `class={[${valueText(firstNodes.get(name))}, ${valueText(node)}]}`,
+                                    'class={["card", { active: active() }]}'
+                                )
+                            }
                         });
+                    } else {
+                        firstNodes.set(name, node);
                     }
                     props.add(name);
                 };
@@ -64,10 +92,10 @@ export default {
                 const hasTextContent =
                     props.has("textContent") || props.has("textContent");
                 const used = [
-                    hasChildrenProp && "`props.children`",
+                    hasChildrenProp && "`children`",
                     hasChildren && "JSX children",
-                    hasInnerHTML && "`props.innerHTML`",
-                    hasTextContent && "`props.textContent`"
+                    hasInnerHTML && "`innerHTML`",
+                    hasTextContent && "`textContent`"
                 ].filter(Boolean);
                 if (used.length > 1) {
                     context.report({

@@ -66,6 +66,8 @@ export const View = () => {
     return <span>Hidden</span>;
 };
 `,
+        message:
+            "Fix: one return with the condition in JSX, `return <Show when={props.visible} fallback={<span>Hidden</span>}><div>Visible</div></Show>;`",
         ruleId: "components-return-once"
     }),
     Object.freeze({
@@ -73,6 +75,8 @@ export const View = () => {
     return <button onclick={() => true}>Save</button>;
 };
 `,
+        message:
+            "only `on` followed by an uppercase letter is, so `onclick` is set as an attribute and a function value is never called. Fix: `onClick`.",
         ruleId: "event-handlers"
     }),
     Object.freeze({
@@ -80,6 +84,7 @@ export const View = () => {
 
 render(() => <div />, document.body);
 `,
+        message: 'Fix: `import { render } from "@solidjs/web";`.',
         ruleId: "imports"
     }),
     Object.freeze({
@@ -87,6 +92,8 @@ render(() => <div />, document.body);
     return <div class="blue" class="green" />;
 };
 `,
+        message:
+            'Fix: one `class` with both values in the array form, `class={["blue", "green"]}`.',
         ruleId: "jsx-no-duplicate-props"
     }),
     Object.freeze({
@@ -94,6 +101,8 @@ render(() => <div />, document.body);
     return <a href="javascript:alert('x')">Unsafe</a>;
 };
 `,
+        message:
+            'Fix: run the code in an event handler, `<button type="button" onClick={() => …}>`',
         ruleId: "jsx-no-script-url"
     }),
     Object.freeze({
@@ -101,6 +110,7 @@ render(() => <div />, document.body);
     return <MissingComponent />;
 };
 `,
+        message: "Fix: import `MissingComponent` or fix its spelling.",
         ruleId: "jsx-no-undef"
     }),
     Object.freeze({
@@ -108,6 +118,8 @@ render(() => <div />, document.body);
     return <button onClick={[(value) => value, "hello"]}>Hello</button>;
 };
 `,
+        message:
+            'Fix: `onClick={(event) => ((value) => value)("hello", event)}`.',
         ruleId: "no-array-handlers"
     }),
     Object.freeze({
@@ -126,6 +138,8 @@ export const View = () => {
     return <div innerHTML={getHtml()} />;
 };
 `,
+        message:
+            "Fix: for text, render it as a child, `<div>{getHtml()}</div>`",
         ruleId: "no-innerhtml"
     }),
     Object.freeze({
@@ -138,6 +152,7 @@ export const View = () => {
 `,
         // Off in oxc-config (it is for targets without Proxy), on for its test.
         rules: { "solid/no-proxy-apis": "error" },
+        message: "Fix: use a plain object, with getters",
         ruleId: "no-proxy-apis"
     }),
     Object.freeze({
@@ -149,6 +164,8 @@ createEffect(() => {
     return count();
 }, [count()]);
 `,
+        message:
+            "Fix: `createEffect(() => [count()], (values) => { … })`, with the side effect moved into apply. Do not: only delete the array",
         ruleId: "no-react-deps"
     }),
     Object.freeze({
@@ -156,6 +173,7 @@ createEffect(() => {
     return <div className="card">Hello</div>;
 };
 `,
+        message: 'Fix: `class="card"`.',
         ruleId: "no-react-specific-props"
     }),
     Object.freeze({
@@ -215,6 +233,7 @@ createEffect(
     return <div foo:bar={null}>Hello</div>;
 };
 `,
+        message: "Fix: the plain name `bar`",
         ruleId: "no-unknown-namespaces"
     }),
     Object.freeze({
@@ -228,6 +247,8 @@ export function View(props: Props): JSX.Element {
     return <section>{props.children}</section>;
 }
 `,
+        message:
+            'Fix: `export const View: ParentComponent<Props> = (props) => { … };` with `import type { ParentComponent } from "solid-js";`.',
         ruleId: "prefer-arrow-components"
     }),
     Object.freeze({
@@ -235,6 +256,7 @@ export function View(props: Props): JSX.Element {
     return <div classList={{ active: props.on }}>Hello</div>;
 };
 `,
+        message: "Fix: `class={{ active: props.on }}`.",
         ruleId: "prefer-class-object"
     }),
     Object.freeze({
@@ -242,6 +264,7 @@ export function View(props: Props): JSX.Element {
 
 export const primitives = [createContext, createRoot, createSignal];
 `,
+        message: 'Fix: `import { createContext } from "solid-js";`.',
         ruleId: "imports"
     }),
     Object.freeze({
@@ -325,6 +348,7 @@ export const View = () => {
     return <div class={cn({ red: true })}>Hello</div>;
 };
 `,
+        message: "Fix: `class={{ red: true }}`.",
         ruleId: "prefer-class-object"
     }),
     Object.freeze({
@@ -332,6 +356,8 @@ export const View = () => {
     return <ol>{props.items.map((item) => <li>{item}</li>)}</ol>;
 };
 `,
+        message:
+            "Fix: `<For each={props.items}>{(item) => <li>{item}</li>}</For>`.",
         ruleId: "prefer-for"
     }),
     Object.freeze({
@@ -339,6 +365,8 @@ export const View = () => {
     return <div>{props.visible && <span>Visible</span>}</div>;
 };
 `,
+        message:
+            "Fix: `<Show when={props.visible}><span>Visible</span></Show>`",
         ruleId: "prefer-show"
     }),
     Object.freeze({
@@ -393,6 +421,7 @@ export const rows = db.rows;
         files: {
             "src/server/db.ts": "export const db = { rows: [] };\n"
         },
+        message: "Fix: import a server function module instead",
         ruleId: "no-server-import-in-client"
     }),
     Object.freeze({
@@ -400,6 +429,7 @@ export const rows = db.rows;
     return <button onClick={() => console.log("x")}>Save</button>;
 };
 `,
+        message: 'Fix: a block body, `onClick={() => { console.log("x"); }}`.',
         ruleId: "strict-void-return"
     }),
     Object.freeze({
@@ -407,6 +437,7 @@ export const rows = db.rows;
     return <div></div>;
 };
 `,
+        message: "Fix: `<div />`.",
         ruleId: "self-closing-comp"
     }),
     Object.freeze({
@@ -414,6 +445,7 @@ export const rows = db.rows;
     return <div style={{ fontSize: "10px" }}>Hello</div>;
 };
 `,
+        message: 'Fix: `"font-size": "10px"`.',
         ruleId: "style-prop"
     }),
     Object.freeze({
@@ -421,6 +453,7 @@ export const rows = db.rows;
     return <p><div>Hello</div></p>;
 };
 `,
+        message: "Fix: move the `<div>` out of the `<p>`",
         ruleId: "validate-jsx-nesting"
     })
 ]);
@@ -603,7 +636,9 @@ export const View: Component = () => {
 const ALLOW_CLIENT = Object.freeze({
     "solid/no-unknown-namespaces": ["error", { allowedNamespaces: ["client"] }]
 });
-const COMPONENT_MESSAGE = "Namespaced props have no effect on components.";
+// What the rule says about a namespaced prop on the Island component.
+const componentMessage = (prop) =>
+    `\`${prop}\` on \`<Island>\` is a namespaced prop, and Solid gives a namespace no meaning on a component. Fix: a plain prop name, or, when a framework handles it (an island directive), allow it with this rule's \`allowedNamespacedProps\` option (\`"${prop}"\`).`;
 // soferno's island directives: the six strategies its runtime implements.
 const ALLOW_ISLAND_DIRECTIVES = Object.freeze({
     "solid/no-unknown-namespaces": [
@@ -645,7 +680,7 @@ const namespaceCases = Object.freeze([
     Object.freeze({
         code: ISLAND_VIEW,
         name: "a namespace on a component without the option",
-        report: COMPONENT_MESSAGE
+        report: componentMessage("client:visible")
     }),
     Object.freeze({
         code: `import type { Component } from "solid-js";
@@ -668,7 +703,7 @@ export const View: Component = () => {
 };
 `,
         name: "a removed namespace the option does not cover",
-        report: "'on:' was removed in Solid 2.0.",
+        report: "`on:click` uses the `on:` namespace, which Solid 2.0 removed. Event props are camelCase. Fix: `onClick={onClick}`.",
         rules: ALLOW_CLIENT
     }),
     Object.freeze({
@@ -686,13 +721,13 @@ export const View: Component = () => {
     Object.freeze({
         code: islandView('client:network="4g"'),
         name: "a prop of an allowed namespace that is not in the list",
-        report: COMPONENT_MESSAGE,
+        report: componentMessage("client:network"),
         rules: ALLOW_ISLAND_DIRECTIVES
     }),
     Object.freeze({
         code: islandView("client:visble"),
         name: "a misspelled directive",
-        report: COMPONENT_MESSAGE,
+        report: componentMessage("client:visble"),
         rules: ALLOW_ISLAND_DIRECTIVES
     }),
     Object.freeze({
@@ -763,13 +798,13 @@ const preferShowCases = Object.freeze([
         code: preferShowView("props.on ? (<b>on</b>) : <i>off</i>"),
         fix: "<div><Show when={props.on} fallback={<i>off</i>}><b>on</b></Show></div>",
         name: "a ternary with JSX branches",
-        report: "solid(prefer-show)"
+        report: "Fix: `<Show when={props.on} fallback={<i>off</i>}><b>on</b></Show>`."
     }),
     Object.freeze({
         code: preferShowView("props.count && <span>new</span>"),
         fix: null,
         name: "an && with a JSX branch",
-        report: "solid(prefer-show)",
+        report: "Fix: `<Show when={props.count}><span>new</span></Show>`; `<Show>` renders nothing for every falsy value.",
         suggestion:
             "<div><Show when={props.count}><span>new</span></Show></div>"
     })

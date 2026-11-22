@@ -1,5 +1,5 @@
 import { getSourceCode } from "../compat.mjs";
-import { getFunctionName } from "../utils.mjs";
+import { getFunctionName, messageCode } from "../utils.mjs";
 const isNothing = (node) => {
     if (!node) {
         return true;
@@ -14,6 +14,34 @@ const isNothing = (node) => {
     }
 };
 const getLineLength = (loc) => loc.end.line - loc.start.line + 1;
+const EARLY_RETURN_PATTERN = "return <Show when={…} fallback={…}>…</Show>;";
+// `if (test) return A; ... return B;` as one `<Show>`, when the `if` holds
+// nothing but that return and both returns have a value.
+const earlyReturnFix = (earlyReturn, lastReturn, sourceCode) => {
+    const block = earlyReturn.parent;
+    const ifStatement =
+        block.type === "BlockStatement" && block.body.length === 1
+            ? block.parent
+            : block;
+    if (
+        ifStatement.type !== "IfStatement" ||
+        ifStatement.alternate ||
+        !earlyReturn.argument ||
+        !lastReturn?.argument
+    ) {
+        return EARLY_RETURN_PATTERN;
+    }
+    const jsx = (node) => {
+        const text = sourceCode.getText(node);
+        return node.type === "JSXElement" || node.type === "JSXFragment"
+            ? text
+            : `{${text}}`;
+    };
+    return messageCode(
+        `return <Show when={${sourceCode.getText(ifStatement.test)}} fallback={${sourceCode.getText(lastReturn.argument)}}>${jsx(earlyReturn.argument)}</Show>;`,
+        EARLY_RETURN_PATTERN
+    );
+};
 export default {
     meta: {
         type: "problem",
@@ -26,9 +54,9 @@ export default {
         schema: [],
         messages: {
             noEarlyReturn:
-                "Solid components run once, so an early return breaks reactivity. Move the condition inside a JSX element, such as a fragment or <Show />.",
+                "{{component}} returns early. A component body runs once, so it never switches branches when the condition changes (dev: `STRICT_READ_UNTRACKED`). Fix: one return with the condition in JSX, `{{fix}}` (`<Switch>`/`<Match>` for more branches). Do not: `untrack()` the condition.",
             noConditionalReturn:
-                "Solid components run once, so a conditional return breaks reactivity. Move the condition inside a JSX element, such as a fragment or <Show />."
+                "{{component}} picks its return with `{{test}}`. A component body runs once, so it never switches when `{{test}}` changes. Fix: `{{fix}}`. Do not: `untrack()` the condition."
         }
     },
     defaultOptions: [],
@@ -39,6 +67,51 @@ export default {
             return node.type === "JSXElement" || node.type === "JSXFragment"
                 ? text
                 : `{${text}}`;
+        };
+        // The autofix's replacement for `return test ? a : b`.
+        const conditionalReplacement = (argument) => {
+            const sourceCode = getSourceCode(context);
+            const { test, consequent, alternate } = argument;
+            const conditions = [{ test, consequent }];
+            let fallback = alternate;
+            while (fallback.type === "ConditionalExpression") {
+                conditions.push({
+                    test: fallback.test,
+                    consequent: fallback.consequent
+                });
+                fallback = fallback.alternate;
+            }
+            if (conditions.length >= 2) {
+                // we have a nested ternary, use <Switch><Match /></Switch>
+                const fallbackStr = !isNothing(fallback)
+                    ? ` fallback={${sourceCode.getText(fallback)}}`
+                    : "";
+                return `<Switch${fallbackStr}>\n${conditions
+                    .map(
+                        ({ test, consequent }) =>
+                            `<Match when={${sourceCode.getText(test)}}>${putIntoJSX(consequent)}</Match>`
+                    )
+                    .join("\n")}\n</Switch>`;
+            }
+            if (isNothing(consequent)) {
+                // we have a single ternary and the consequent is nothing. Negate the condition and use a <Show>.
+                return `<Show when={!(${sourceCode.getText(test)})}>${putIntoJSX(alternate)}</Show>`;
+            }
+            if (
+                isNothing(fallback) ||
+                getLineLength(consequent.loc) >=
+                    getLineLength(alternate.loc) * 1.5
+            ) {
+                // we have a standard ternary, and the alternate is a bit shorter in LOC than the consequent, which
+                // should be enough to tell that it's logically a fallback instead of an equal branch.
+                const fallbackStr = !isNothing(fallback)
+                    ? ` fallback={${sourceCode.getText(fallback)}}`
+                    : "";
+                return `<Show when={${sourceCode.getText(test)}}${fallbackStr}>${putIntoJSX(consequent)}</Show>`;
+            }
+            // we have a standard ternary, but no signal from the user as to which branch is the "fallback" and
+            // which is the children. Move the whole conditional inside a JSX fragment.
+            return `<>${putIntoJSX(argument)}</>`;
         };
         const currentFunction = () => functionStack[functionStack.length - 1];
         const onFunctionEnter = (node) => {
@@ -72,98 +145,72 @@ export default {
                 currentFunction().isComponent = false;
             }
             if (currentFunction().isComponent) {
-                // Warn on each early return
-                currentFunction().earlyReturns.forEach((earlyReturn) => {
+                const sourceCode = getSourceCode(context);
+                const name = getFunctionName(node);
+                const component = name ? `\`${name}\`` : "This component";
+                const { lastReturn } = currentFunction();
+                // Warn on each early return; with more than one, the branches
+                // go into a <Switch>, which no single `if` shows.
+                const { earlyReturns } = currentFunction();
+                earlyReturns.forEach((earlyReturn) => {
                     context.report({
                         node: earlyReturn,
-                        messageId: "noEarlyReturn"
+                        messageId: "noEarlyReturn",
+                        data: {
+                            component,
+                            fix:
+                                earlyReturns.length > 1
+                                    ? "return <Switch fallback={…}><Match when={…}>…</Match></Switch>;"
+                                    : earlyReturnFix(
+                                          earlyReturn,
+                                          lastReturn,
+                                          sourceCode
+                                      )
+                        }
                     });
                 });
-                const argument = currentFunction().lastReturn?.argument;
+                const argument = lastReturn?.argument;
+                // What the conditional return becomes: the autofix's
+                // replacement where there is one, else the whole expression
+                // in a fragment, which keeps it reactive.
+                const conditionalData = (test, replacement) => ({
+                    component,
+                    test: messageCode(sourceCode.getText(test), "condition"),
+                    fix: messageCode(
+                        `return ${replacement};`,
+                        "return <Show when={condition} fallback={…}>…</Show>;"
+                    )
+                });
                 if (argument?.type === "ConditionalExpression") {
-                    const sourceCode = getSourceCode(context);
                     context.report({
                         node: argument.parent,
                         messageId: "noConditionalReturn",
-                        fix: (fixer) => {
-                            const { test, consequent, alternate } = argument;
-                            const conditions = [{ test, consequent }];
-                            let fallback = alternate;
-                            while (fallback.type === "ConditionalExpression") {
-                                conditions.push({
-                                    test: fallback.test,
-                                    consequent: fallback.consequent
-                                });
-                                fallback = fallback.alternate;
-                            }
-                            if (conditions.length >= 2) {
-                                // we have a nested ternary, use <Switch><Match /></Switch>
-                                const fallbackStr = !isNothing(fallback)
-                                    ? ` fallback={${sourceCode.getText(fallback)}}`
-                                    : "";
-                                return fixer.replaceText(
-                                    argument,
-                                    `<Switch${fallbackStr}>\n${conditions
-                                        .map(
-                                            ({ test, consequent }) =>
-                                                `<Match when={${sourceCode.getText(test)}}>${putIntoJSX(consequent)}</Match>`
-                                        )
-                                        .join("\n")}\n</Switch>`
-                                );
-                            }
-                            if (isNothing(consequent)) {
-                                // we have a single ternary and the consequent is nothing. Negate the condition and use a <Show>.
-                                return fixer.replaceText(
-                                    argument,
-                                    `<Show when={!(${sourceCode.getText(test)})}>${putIntoJSX(alternate)}</Show>`
-                                );
-                            }
-                            if (
-                                isNothing(fallback) ||
-                                getLineLength(consequent.loc) >=
-                                    getLineLength(alternate.loc) * 1.5
-                            ) {
-                                // we have a standard ternary, and the alternate is a bit shorter in LOC than the consequent, which
-                                // should be enough to tell that it's logically a fallback instead of an equal branch.
-                                const fallbackStr = !isNothing(fallback)
-                                    ? ` fallback={${sourceCode.getText(fallback)}}`
-                                    : "";
-                                return fixer.replaceText(
-                                    argument,
-                                    `<Show when={${sourceCode.getText(test)}}${fallbackStr}>${putIntoJSX(consequent)}</Show>`
-                                );
-                            }
-                            // we have a standard ternary, but no signal from the user as to which branch is the "fallback" and
-                            // which is the children. Move the whole conditional inside a JSX fragment.
-                            return fixer.replaceText(
+                        data: conditionalData(
+                            argument.test,
+                            conditionalReplacement(argument)
+                        ),
+                        fix: (fixer) =>
+                            fixer.replaceText(
                                 argument,
-                                `<>${putIntoJSX(argument)}</>`
-                            );
-                        }
+                                conditionalReplacement(argument)
+                            )
                     });
                 } else if (argument?.type === "LogicalExpression") {
-                    if (argument.operator === "&&") {
-                        const sourceCode = getSourceCode(context);
-                        // we have a `return condition && expression`--put that in a <Show />
-                        context.report({
-                            node: argument,
-                            messageId: "noConditionalReturn",
-                            fix: (fixer) => {
-                                const { left: test, right: consequent } =
-                                    argument;
-                                return fixer.replaceText(
-                                    argument,
-                                    `<Show when={${sourceCode.getText(test)}}>${putIntoJSX(consequent)}</Show>`
-                                );
-                            }
-                        });
-                    } else {
-                        // we have some other kind of conditional, warn
-                        context.report({
-                            node: argument,
-                            messageId: "noConditionalReturn"
-                        });
-                    }
+                    // `return condition && expression` goes into a <Show />;
+                    // any other operator into a fragment, without a fix.
+                    const isAnd = argument.operator === "&&";
+                    const replacement = isAnd
+                        ? `<Show when={${sourceCode.getText(argument.left)}}>${putIntoJSX(argument.right)}</Show>`
+                        : `<>${putIntoJSX(argument)}</>`;
+                    context.report({
+                        node: argument,
+                        messageId: "noConditionalReturn",
+                        data: conditionalData(argument.left, replacement),
+                        fix: isAnd
+                            ? (fixer) =>
+                                  fixer.replaceText(argument, replacement)
+                            : undefined
+                    });
                 }
             }
             // Pop on exit

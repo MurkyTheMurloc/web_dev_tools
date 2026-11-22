@@ -1,4 +1,5 @@
-import { jsxPropName } from "../utils.mjs";
+import { getSourceCode } from "../compat.mjs";
+import { jsxPropName, messageCode } from "../utils.mjs";
 const DEFAULT_CLASSNAMES = ["cn", "clsx", "classnames"];
 export default {
     meta: {
@@ -30,14 +31,26 @@ export default {
         ],
         messages: {
             classlistRemoved:
-                "The `classList` prop was removed in Solid 2.0. Pass the object to `class` instead.",
+                "`{{ name }}` was removed in Solid 2.0; on a native element it is a compile error. `class` takes the object itself. Fix: `{{ fix }}`.",
             preferClassObject:
-                "Pass the object to `class` directly instead of through {{ classnames }}."
+                "`{{ classnames }}(…)` turns the object into a string, which replaces the whole `class` attribute on every change. Solid 2.0's `class` takes the object and toggles single classes. Fix: `{{ fix }}`."
         }
     },
     defaultOptions: [],
     create(context) {
         const classnames = context.options[0]?.classnames ?? DEFAULT_CLASSNAMES;
+        const sourceCode = getSourceCode(context);
+        // An attribute's value as an expression: `"a"` or the braced code.
+        const valueText = (attribute) => {
+            if (!attribute.value) {
+                return "true";
+            }
+            return sourceCode.getText(
+                attribute.value.type === "JSXExpressionContainer"
+                    ? attribute.value.expression
+                    : attribute.value
+            );
+        };
         return {
             JSXAttribute(node) {
                 const name = jsxPropName(node);
@@ -50,14 +63,27 @@ export default {
                     // With a `class` attribute next to it, renaming would
                     // write the attribute twice (a parse error in TSX); the
                     // two have to be merged by hand.
-                    const hasClassAttribute = node.parent.attributes.some(
+                    const classAttribute = node.parent.attributes.find(
                         (attribute) =>
                             attribute.type === "JSXAttribute" &&
                             jsxPropName(attribute) === "class"
                     );
+                    const hasClassAttribute = classAttribute !== undefined;
                     context.report({
                         node,
                         messageId: "classlistRemoved",
+                        data: {
+                            name,
+                            // Next to a `class`, both go into the array form.
+                            fix: messageCode(
+                                hasClassAttribute
+                                    ? `class={[${valueText(classAttribute)}, ${valueText(node)}]}`
+                                    : `class={${valueText(node)}}`,
+                                hasClassAttribute
+                                    ? 'class={["card", { active: active() }]}'
+                                    : "class={{ active: active() }}"
+                            )
+                        },
                         fix: hasClassAttribute
                             ? null
                             : (fixer) => fixer.replaceText(node.name, "class")
@@ -84,7 +110,13 @@ export default {
                     context.report({
                         node,
                         messageId: "preferClassObject",
-                        data: { classnames: expr.callee.name },
+                        data: {
+                            classnames: expr.callee.name,
+                            fix: messageCode(
+                                `class={${sourceCode.getText(expr.arguments[0])}}`,
+                                "class={{ active: active() }}"
+                            )
+                        },
                         fix: (fixer) => {
                             const objectRange = expr.arguments[0].range;
                             return [

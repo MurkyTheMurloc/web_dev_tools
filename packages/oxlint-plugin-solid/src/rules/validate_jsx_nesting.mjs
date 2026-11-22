@@ -431,9 +431,9 @@ export default {
         },
         messages: {
             invalidNesting:
-                "Invalid HTML nesting: `<{{child}}>` cannot be a child of `<{{parent}}>`. The HTML parser restructures this, so the rendered DOM won't match this markup.",
+                "Invalid HTML nesting: `<{{child}}>` cannot be a child of `<{{parent}}>`. The HTML parser restructures this, so the rendered DOM won't match this markup. Fix: move the `<{{child}}>` out of the `<{{parent}}>`, or change one of the two tags so HTML allows the nesting.",
             invalidNestingInserted:
-                "Invalid HTML nesting: `<{{child}}>` cannot be a child of `<{{parent}}>`. The client inserts it as written, but the HTML parser restructures it in server-rendered HTML, so hydration won't match this markup."
+                "Invalid HTML nesting: `<{{child}}>` cannot be a child of `<{{parent}}>`. The client inserts it as written, but the HTML parser restructures it in server-rendered HTML, so hydration won't match this markup. Fix: move the `<{{child}}>` out of the `<{{parent}}>`, or change one of the two tags so HTML allows the nesting."
         },
         schema: []
     },

@@ -310,6 +310,12 @@ export const preferArrowComponentsRule = {
             recommended: false
         },
         fixable: "code",
+        messages: {
+            preferArrow:
+                "`{{name}}` is a function declaration; an arrow const typed `{{type}}` checks its props and returned JSX against Solid's component type{{children}}. Fix: `{{fix}}`{{importFix}}.",
+            preferArrowUsedEarly:
+                "`{{name}}` is a function declaration; an arrow const typed `{{type}}` checks its props and returned JSX against Solid's component type{{children}}. It is used above its declaration, where a const is not initialized yet, so there is no autofix. Fix: move it above its first use as `{{fix}}`{{importFix}}."
+        },
         schema: [],
         type: "suggestion"
     },
@@ -433,16 +439,36 @@ export const preferArrowComponentsRule = {
                 );
             };
 
-            const message =
-                "Prefer export const components typed as Component<Props> or ParentComponent<Props>.";
             for (const plan of plans) {
                 const { node } = plan;
+                const typeName = `${plan.resolvedTypeName}${getPropsSuffix(plan.typeReference)}`;
+                const exportPrefix =
+                    node.parent?.type === "ExportNamedDeclaration"
+                        ? "export "
+                        : "";
+                const data = {
+                    name: node.id.name,
+                    type: typeName,
+                    children:
+                        plan.desiredTypeName === "ParentComponent"
+                            ? ", and `ParentComponent` types `children`"
+                            : "",
+                    fix: `${exportPrefix}const ${node.id.name}: ${typeName} = (${plan.propsParam.text}) => { … };${node.parent?.type === "ExportDefaultDeclaration" ? ` export default ${node.id.name};` : ""}`,
+                    importFix: plan.needsImport
+                        ? ` with \`import type { ${plan.desiredTypeName} } from "solid-js";\``
+                        : ""
+                };
                 if (!plan.fixable) {
-                    context.report({ message, node });
+                    context.report({
+                        data,
+                        messageId: "preferArrowUsedEarly",
+                        node
+                    });
                     continue;
                 }
 
                 context.report({
+                    data,
                     fix(fixer) {
                         const exportKind = node.parent?.type;
                         const propsSuffix = getPropsSuffix(plan.typeReference);
@@ -473,7 +499,7 @@ export const preferArrowComponentsRule = {
 
                         return edits;
                     },
-                    message,
+                    messageId: "preferArrow",
                     node
                 });
             }

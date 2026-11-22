@@ -1,4 +1,10 @@
-import { isFunctionNode, jsxPropName, trackImports } from "../utils.mjs";
+import { getSourceCode } from "../compat.mjs";
+import {
+    isFunctionNode,
+    jsxPropName,
+    messageCode,
+    trackImports
+} from "../utils.mjs";
 
 const EVENT_HANDLER_NAME = /^on(?::|[A-Z])/;
 const DOM_EVENT_NAME = /^on[a-z]/;
@@ -23,6 +29,16 @@ function isVoidExpression(expression) {
             expression.operator === "void") ||
         (expression.type === "Identifier" && expression.name === "undefined")
     );
+}
+
+// `(el) => (input = el)` as `(el) => { input = el; }`: the arrow up to its
+// `=>`, then the body as a statement. Parentheses around the body are not in
+// its range, so they are dropped with everything between `=>` and the body.
+function blockBody(callback, sourceCode) {
+    const text = sourceCode.getText(callback);
+    const head = text.slice(0, callback.body.range[0] - callback.range[0]);
+    const arrow = head.slice(0, head.lastIndexOf("=>") + 2);
+    return `${arrow} { ${sourceCode.getText(callback.body)}; }`;
 }
 
 function describe(expression) {
@@ -84,16 +100,17 @@ export const strictVoidReturnRule = {
         schema: [],
         messages: {
             handlerReturnsValue:
-                "This `{{attribute}}` callback is an expression-bodied arrow, so it returns {{what}}, which Solid ignores. Write a block body (`() => { … }`) or discard it explicitly with `void …`.",
+                "The `{{attribute}}` callback is an expression-bodied arrow, so it returns {{what}}, which Solid ignores: a returned cleanup, promise or `false` does nothing there. Fix: a block body, `{{attribute}}={{{fix}}}`.",
             cleanupReturnsValue:
-                "This `{{primitive}}` callback returns a value, which is ignored. Remove the `return`, or use a block body that does not return.",
+                "The `{{primitive}}` callback returns `{{value}}`, which Solid ignores. Fix: {{fix}}",
             settledReturnsValue:
-                "This `onSettled` callback returns a value that is not a function. Only a returned cleanup function is used; remove the `return` or return `() => { … }`."
+                "The `onSettled` callback returns `{{value}}`, which is not a function. Solid only uses a returned cleanup function and ignores anything else. Fix: return nothing, or return the cleanup, `return () => { … };`."
         }
     },
     defaultOptions: [],
     create(context) {
         const { matchImport, handleImportDeclaration } = trackImports();
+        const sourceCode = getSourceCode(context);
 
         function checkHandler(callback, attribute) {
             if (
@@ -109,7 +126,11 @@ export const strictVoidReturnRule = {
                 messageId: "handlerReturnsValue",
                 data: {
                     attribute,
-                    what: describe(callback.body)
+                    what: describe(callback.body),
+                    fix: messageCode(
+                        blockBody(callback, sourceCode),
+                        "(event) => { … }"
+                    )
                 }
             });
         }
@@ -124,20 +145,29 @@ export const strictVoidReturnRule = {
 
             // A call may well return nothing (`() => clearInterval(id)`); without
             // types only values that are certainly not void are reported.
-            if (
-                values.some(
-                    (value) =>
-                        PLAIN_VALUE_TYPES.has(value.type) &&
-                        !isVoidExpression(value)
-                )
-            ) {
+            const returned = values.find(
+                (value) =>
+                    PLAIN_VALUE_TYPES.has(value.type) &&
+                    !isVoidExpression(value)
+            );
+            if (returned) {
+                const value = messageCode(sourceCode.getText(returned), "…");
                 context.report({
                     node: callback,
                     messageId:
                         primitive === "onSettled"
                             ? "settledReturnsValue"
                             : "cleanupReturnsValue",
-                    data: { primitive }
+                    data: {
+                        primitive,
+                        value,
+                        // An expression body becomes a statement; a block
+                        // keeps its code and drops the returned value.
+                        fix:
+                            callback.body.type === "BlockStatement"
+                                ? `drop the value, \`return;\` in place of \`return ${value};\`.`
+                                : `a block body, \`${primitive}(${messageCode(blockBody(callback, sourceCode), "() => { … }")})\`.`
+                    }
                 });
             }
         }

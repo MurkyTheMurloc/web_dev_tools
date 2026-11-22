@@ -19,15 +19,9 @@ const styled = (property) => view(`<div style={{ ${property} }} />`);
 
 const kebabCases = Object.freeze([
     // kebab-case 2
-    ['fontFamily: "serif"', "Use font-family instead of fontFamily."],
-    [
-        'WebkitTransition: "none"',
-        "Use -webkit-transition instead of WebkitTransition."
-    ],
-    [
-        'borderTopLeftRadius: "1px"',
-        "Use border-top-left-radius instead of borderTopLeftRadius."
-    ]
+    ['fontFamily: "serif"', 'Fix: `"font-family": "serif"`.'],
+    ['WebkitTransition: "none"', 'Fix: `"-webkit-transition": "none"`.'],
+    ['borderTopLeftRadius: "1px"', 'Fix: `"border-top-left-radius": "1px"`.']
 ]);
 
 describe("runtime dependencies reach the rules", () => {
@@ -61,9 +55,7 @@ describe("runtime dependencies reach the rules", () => {
         test("rejects a property that is no CSS", async () => {
             const result = await harness.lint(styled('fooBar: "x"'));
 
-            expect(result.output).toContain(
-                "fooBar is not a valid CSS property."
-            );
+            expect(result.output).toContain("`fooBar` is not a CSS property");
         });
 
         test("accepts a kebab-cased property", async () => {
@@ -92,7 +84,7 @@ describe("runtime dependencies reach the rules", () => {
             );
 
             expect(result.output).toContain(
-                "anchor-default is not a valid CSS property."
+                "`anchor-default` is not a CSS property"
             );
         });
     });
@@ -114,7 +106,7 @@ describe("runtime dependencies reach the rules", () => {
             const result = await harness.lint(source, { fix: true });
 
             expect(result.output).toContain(
-                "Use an object for the style prop instead of a string."
+                "`style` gets a string, which Solid sets as the whole `cssText`"
             );
             expect(result.source).toBe(source);
         });
@@ -127,7 +119,7 @@ describe("runtime dependencies reach the rules", () => {
             );
 
             expect(result.output).toContain(
-                "The innerHTML attribute should not be used on an element with child elements"
+                "`<div>` has both `innerHTML` and children"
             );
         });
 
@@ -137,7 +129,7 @@ describe("runtime dependencies reach the rules", () => {
             );
 
             expect(result.output).toContain(
-                "The string passed to innerHTML does not appear to be valid HTML."
+                'holds no HTML, so it is parsed as HTML for nothing and a later `<` or `&` in it turns into markup. Fix: `innerText="just text"`.'
             );
         });
 

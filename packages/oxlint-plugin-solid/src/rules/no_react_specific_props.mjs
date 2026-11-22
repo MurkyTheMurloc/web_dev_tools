@@ -1,4 +1,10 @@
-import { isDOMElementName, jsxGetProp, jsxHasProp } from "../utils.mjs";
+import { getSourceCode } from "../compat.mjs";
+import {
+    isDOMElementName,
+    jsxGetProp,
+    jsxHasProp,
+    messageCode
+} from "../utils.mjs";
 
 const REACT_SPECIFIC_PROPS = [
     { from: "className", to: "class" },
@@ -15,8 +21,8 @@ export const noReactSpecificPropsRule = {
         fixable: "code",
         messages: {
             noUselessKey:
-                "Elements in a <For> or <Index> list do not need a key prop.",
-            prefer: "Prefer the `{{ to }}` prop over the deprecated `{{ from }}` prop."
+                "`key` on `<{{element}}>` is React's list key. Solid gives it no meaning and sets it as a plain `key` attribute; `<For>` keys rows by item identity. Fix: remove `{{key}}`; to key a list by a field, `<For each={items()} keyed={(item) => item.id}>`.",
+            prefer: "`{{ from }}` is React's name for `{{ to }}`, and Solid 2.0 has no such alias: {{ effect }}. Fix: `{{ fix }}`{{ merge }}."
         },
         schema: [],
         type: "problem"
@@ -37,8 +43,24 @@ export const noReactSpecificPropsRule = {
                           }
                         : undefined;
 
+                    const hasTarget = jsxHasProp(node.attributes, to);
+                    const value = attribute.value
+                        ? `=${getSourceCode(context).getText(attribute.value)}`
+                        : "";
                     context.report({
-                        data: { from, to },
+                        data: {
+                            from,
+                            to,
+                            effect:
+                                node.name.type === "JSXIdentifier" &&
+                                isDOMElementName(node.name.name)
+                                    ? `it sets an unknown \`${from}\` attribute and the element gets no \`${to}\``
+                                    : `the component receives a \`${from}\` prop, not \`${to}\``,
+                            fix: messageCode(`${to}${value}`, `${to}={…}`),
+                            merge: hasTarget
+                                ? `, merged into the \`${to}\` the element already has`
+                                : ""
+                        },
                         fix,
                         messageId: "prefer",
                         node: attribute
@@ -55,6 +77,13 @@ export const noReactSpecificPropsRule = {
                     }
 
                     context.report({
+                        data: {
+                            element: node.name.name,
+                            key: messageCode(
+                                getSourceCode(context).getText(keyProp),
+                                "key"
+                            )
+                        },
                         fix(fixer) {
                             return fixer.remove(keyProp);
                         },

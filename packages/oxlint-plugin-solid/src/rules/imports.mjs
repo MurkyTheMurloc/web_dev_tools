@@ -141,7 +141,8 @@ export default {
         fixable: "code",
         schema: [],
         messages: {
-            "prefer-source": 'Prefer importing {{name}} from "{{source}}".'
+            "prefer-source":
+                "`{{name}}` is imported from `{{from}}`, but Solid 2.0 defines it in `{{source}}`; where `{{from}}` does not re-export it, the import is a build error or `undefined`. Fix: `{{fix}}`."
         }
     },
     defaultOptions: [],
@@ -163,7 +164,9 @@ export default {
                                 messageId: "prefer-source",
                                 data: {
                                     name: specifier.imported.name,
-                                    source: correctSource
+                                    from: source,
+                                    source: correctSource,
+                                    fix: `import ${isType ? "type " : ""}{ ${specifierText(specifier, false)} } from "${correctSource}";`
                                 },
                                 fix(fixer) {
                                     const sourceCode = getSourceCode(context);

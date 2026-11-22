@@ -94,7 +94,7 @@ function registerImportsRuleTests() {
             );
 
             expect(result.output).toContain(
-                `Prefer importing ${name} from "solid-js".`
+                `Fix: \`import { ${name} } from "solid-js";\`.`
             );
         });
     });

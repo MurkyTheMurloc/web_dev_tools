@@ -17,26 +17,13 @@ export function isPropsByName(name) {
     return PROPS_REGEX.test(name);
 }
 
-export function formatList(strings) {
-    if (strings.length === 0) {
-        return "";
-    }
-
-    if (strings.length === 1) {
-        return `'${strings[0]}'`;
-    }
-
-    if (strings.length === 2) {
-        return `'${strings[0]}' and '${strings[1]}'`;
-    }
-
-    const last = strings.length - 1;
-    return `${strings
-        .slice(0, last)
-        .map((stringValue) => {
-            return `'${stringValue}'`;
-        })
-        .join(", ")}, and '${strings[last]}'`;
+// Code quoted in a lint message: the text itself when it fits on one short
+// line, else the fallback pattern, so a message never carries a whole block.
+const MESSAGE_CODE_MAX_LENGTH = 100;
+export function messageCode(text, fallback) {
+    return text.length <= MESSAGE_CODE_MAX_LENGTH && !text.includes("\n")
+        ? text
+        : fallback;
 }
 
 export function find(node, predicate) {

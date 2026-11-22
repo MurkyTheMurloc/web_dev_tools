@@ -1,7 +1,8 @@
 import { getStringIfConstant } from "@eslint-community/eslint-utils";
 import isHtml from "is-html";
 
-import { jsxPropName } from "../utils.mjs";
+import { getSourceCode } from "../compat.mjs";
+import { jsxPropName, messageCode } from "../utils.mjs";
 export default {
     meta: {
         type: "problem",
@@ -28,20 +29,42 @@ export default {
         ],
         messages: {
             dangerous:
-                "The innerHTML attribute is dangerous; passing unsanitized input can lead to security vulnerabilities.",
+                "`innerHTML={{{value}}}` parses the value as HTML, so input that reaches it can inject markup and run script (XSS). Fix: for text, render it as a child, `<{{element}}>{{{value}}}</{{element}}>`; for HTML, sanitize it before it reaches `innerHTML`.",
             conflict:
-                "The innerHTML attribute should not be used on an element with child elements; they will be overwritten.",
+                "`<{{element}}>` has both `innerHTML` and children, and one replaces the other, so part of this markup never renders. Fix: keep one: drop the children, or drop `innerHTML` and write its markup as JSX.",
             notHtml:
-                "The string passed to innerHTML does not appear to be valid HTML.",
-            useInnerText:
-                "For text content, using innerText is clearer and safer.",
+                "`innerHTML` gets `{{value}}`, which holds no HTML, so it is parsed as HTML for nothing and a later `<` or `&` in it turns into markup. Fix: `{{fix}}`.",
+            useInnerText: "Replace `innerHTML` with `innerText`.",
             dangerouslySetInnerHTML:
-                "The dangerouslySetInnerHTML prop is not supported; use innerHTML instead."
+                "`dangerouslySetInnerHTML` is React's prop; Solid sets it as an unknown attribute and the HTML never renders. Fix: `{{fix}}`."
         }
     },
     defaultOptions: [{ allowStatic: true }],
     create(context) {
         const allowStatic = Boolean(context.options[0]?.allowStatic ?? true);
+        const sourceCode = getSourceCode(context);
+        const elementName = (attribute) =>
+            sourceCode.getText(attribute.parent.name);
+        // `<div innerHTML={html} />`: the value as an expression.
+        const valueText = (attribute) =>
+            messageCode(
+                sourceCode.getText(
+                    attribute.value?.type === "JSXExpressionContainer"
+                        ? attribute.value.expression
+                        : attribute.value
+                ),
+                "html"
+            );
+        const reportDangerous = (node) => {
+            context.report({
+                node,
+                messageId: "dangerous",
+                data: {
+                    element: elementName(node),
+                    value: node.value ? valueText(node) : "true"
+                }
+            });
+        };
         return {
             JSXAttribute(node) {
                 if (jsxPropName(node) === "dangerouslySetInnerHTML") {
@@ -59,6 +82,9 @@ export default {
                             context.report({
                                 node,
                                 messageId: "dangerouslySetInnerHTML",
+                                data: {
+                                    fix: `innerHTML={${messageCode(sourceCode.getText(htmlProp.value), "html")}}`
+                                },
                                 fix: (fixer) => {
                                     const propRange = node.range;
                                     const valueRange = htmlProp.value.range;
@@ -77,13 +103,15 @@ export default {
                         } else {
                             context.report({
                                 node,
-                                messageId: "dangerouslySetInnerHTML"
+                                messageId: "dangerouslySetInnerHTML",
+                                data: { fix: "innerHTML={html}" }
                             });
                         }
                     } else {
                         context.report({
                             node,
-                            messageId: "dangerouslySetInnerHTML"
+                            messageId: "dangerouslySetInnerHTML",
+                            data: { fix: "innerHTML={html}" }
                         });
                     }
                     return;
@@ -106,13 +134,24 @@ export default {
                             ) {
                                 context.report({
                                     node: node.parent.parent, // report error on JSXElement instead of JSXAttribute
-                                    messageId: "conflict"
+                                    messageId: "conflict",
+                                    data: { element: elementName(node) }
                                 });
                             }
                         } else {
                             context.report({
                                 node,
                                 messageId: "notHtml",
+                                data: {
+                                    value: messageCode(
+                                        sourceCode.getText(node.value),
+                                        '"…"'
+                                    ),
+                                    fix: messageCode(
+                                        `innerText=${sourceCode.getText(node.value)}`,
+                                        "innerText={text}"
+                                    )
+                                },
                                 suggest: [
                                     {
                                         fix: (fixer) =>
@@ -126,16 +165,10 @@ export default {
                             });
                         }
                     } else {
-                        context.report({
-                            node,
-                            messageId: "dangerous"
-                        });
+                        reportDangerous(node);
                     }
                 } else {
-                    context.report({
-                        node,
-                        messageId: "dangerous"
-                    });
+                    reportDangerous(node);
                 }
             }
         };

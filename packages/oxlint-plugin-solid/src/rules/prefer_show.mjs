@@ -1,5 +1,5 @@
 import { getSourceCode } from "../compat.mjs";
-import { isJSXElementOrFragment } from "../utils.mjs";
+import { isJSXElementOrFragment, messageCode } from "../utils.mjs";
 // Only a branch that is visibly JSX is reported. A text ternary is the
 // cheapest form, and an Identifier may hold text, where a `<Show>` is slower:
 // the compiler does not lower it. Oxlint's tree drops parentheses, so
@@ -17,11 +17,11 @@ export default {
         schema: [],
         messages: {
             preferShowAnd:
-                "Use Solid's `<Show />` component for conditionally showing content.",
+                '`{{test}} && …` renders an element, and when `{{test}}` is `0` or `""` it renders that value instead of nothing. Fix: `{{fix}}`; `<Show>` renders nothing for every falsy value.',
             preferShowTernary:
-                "Use Solid's `<Show />` component for conditionally showing content with a fallback.",
+                "`{{test}} ? … : …` switches between elements, which is what `<Show>` is for; a ternary is the cheaper form only when both branches are text. Fix: `{{fix}}`.",
             useShow:
-                "Replace with `<Show />`. A falsy value such as `0` is no longer rendered."
+                "Replace with `<Show>`. A falsy value such as `0` is then no longer rendered."
         }
     },
     defaultOptions: [],
@@ -33,11 +33,21 @@ export default {
         };
         // `{count() && <A/>}` renders `0` when count() is 0, `<Show>` renders
         // nothing, so the rewrite is a suggestion, not a fix.
+        const testText = (node) =>
+            messageCode(sourceCode.getText(node), "condition");
         const logicalExpressionHandler = (node) => {
             if (node.operator === "&&" && isJSXElementOrFragment(node.right)) {
+                const test = sourceCode.getText(node.left);
                 context.report({
                     node,
                     messageId: "preferShowAnd",
+                    data: {
+                        test: testText(node.left),
+                        fix: messageCode(
+                            `<Show when={${test}}>${putIntoJSX(node.right)}</Show>`,
+                            `<Show when={${testText(node.left)}}>…</Show>`
+                        )
+                    },
                     suggest: [
                         {
                             messageId: "useShow",
@@ -62,9 +72,17 @@ export default {
                 isJSXElementOrFragment(node.consequent) ||
                 isJSXElementOrFragment(node.alternate)
             ) {
+                const test = sourceCode.getText(node.test);
                 context.report({
                     node,
                     messageId: "preferShowTernary",
+                    data: {
+                        test: testText(node.test),
+                        fix: messageCode(
+                            `<Show when={${test}} fallback={${sourceCode.getText(node.alternate)}}>${putIntoJSX(node.consequent)}</Show>`,
+                            `<Show when={${testText(node.test)}} fallback={…}>…</Show>`
+                        )
+                    },
                     fix: (fixer) =>
                         fixer.replaceText(
                             node.parent?.type === "JSXExpressionContainer" &&

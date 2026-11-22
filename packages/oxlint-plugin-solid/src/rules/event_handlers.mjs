@@ -1,7 +1,7 @@
 import { getStaticValue } from "@eslint-community/eslint-utils";
 
 import { getScope, getSourceCode } from "../compat.mjs";
-import { isDOMElementName } from "../utils.mjs";
+import { isDOMElementName, messageCode } from "../utils.mjs";
 const COMMON_EVENTS = [
     "onAnimationEnd",
     "onAnimationIteration",
@@ -69,6 +69,7 @@ const COMMON_EVENTS_MAP = new Map(
         }
     })()
 );
+const IDENTIFIER = /^[A-Za-z_$][\w$]*$/;
 const NONSTANDARD_EVENTS_MAP = {
     ondoubleclick: "onDblClick"
 };
@@ -112,20 +113,25 @@ export default {
         ],
         messages: {
             "detected-attr":
-                'The {{name}} prop is named as an event handler (starts with "on"), but Solid knows its value ({{staticValue}}) is a string or number, so it will be treated as an attribute. If this is intentional, use the plain attribute name instead of an on-prefixed one.',
-            naming: "In Solid 2.0, {{name}} is a plain attribute, not an event handler, so a function value is never called. If it is an event handler, change it to {{handlerName}}.",
+                "`{{name}}` is named like an event handler but has the constant value `{{staticValue}}`, so Solid writes it into the template as an attribute and attaches no listener. Fix: to handle the event, pass a function, `{{name}}={{{handler}}}`; to keep an attribute, use a name that does not start with `on`.",
+            naming: "`{{name}}` is not an event handler in Solid 2.0: only `on` followed by an uppercase letter is, so `{{name}}` is set as an attribute and a function value is never called. Fix: `{{handlerName}}` if it handles the `{{event}}` event; otherwise a name that does not start with `on`.",
             capitalization:
-                "The {{name}} prop should be renamed to {{fixedName}} for readability.",
+                "`{{name}}` is not an event handler in Solid 2.0: only `on` followed by an uppercase letter is, so `{{name}}` is set as an attribute and a function value is never called. Fix: `{{fixedName}}`.",
             nonstandard:
-                "The {{name}} prop should be renamed to {{fixedName}}, because it's not a standard event handler.",
-            "make-handler": "Change the {{name}} prop to {{handlerName}}.",
+                "`{{name}}` listens to a `{{event}}` event, which the DOM never fires. Fix: `{{fixedName}}`.",
+            "make-handler": "Rename `{{name}}` to `{{handlerName}}`.",
             "spread-handler":
-                "The {{name}} prop should be added as a JSX attribute, not spread in. Solid doesn't add listeners when spreading into JSX."
+                "`{{name}}` is spread in from an object literal. Solid before 1.6 attaches no listener for a spread handler, which is what the `warnOnSpread` option checks. Fix: pass it as an attribute, `{{name}}={{{value}}}`."
         }
     },
     defaultOptions: [],
     create(context) {
         const sourceCode = getSourceCode(context);
+        // `onClick="save"` most likely means the function `save`.
+        const handlerFor = (value) =>
+            typeof value === "string" && IDENTIFIER.test(value)
+                ? value
+                : "(event) => { … }";
         return {
             JSXAttribute(node) {
                 const openingElement = node.parent;
@@ -170,7 +176,8 @@ export default {
                         messageId: "detected-attr",
                         data: {
                             name,
-                            staticValue: staticValue.value
+                            staticValue: staticValue.value,
+                            handler: handlerFor(staticValue.value)
                         }
                     });
                 } else if (
@@ -178,13 +185,14 @@ export default {
                     node.value?.type === "Literal"
                 ) {
                     // Check for same as above for literal values
+                    const value = node.value !== null ? node.value.value : true;
                     context.report({
                         node,
                         messageId: "detected-attr",
                         data: {
                             name,
-                            staticValue:
-                                node.value !== null ? node.value.value : true
+                            staticValue: value,
+                            handler: handlerFor(value)
                         }
                     });
                 } else if (!context.options[0]?.ignoreCase) {
@@ -195,7 +203,11 @@ export default {
                         context.report({
                             node: node.name,
                             messageId: "nonstandard",
-                            data: { name, fixedName },
+                            data: {
+                                name,
+                                fixedName,
+                                event: name.slice(2).toLowerCase()
+                            },
                             fix: (fixer) =>
                                 fixer.replaceText(node.name, fixedName)
                         });
@@ -223,7 +235,11 @@ export default {
                         context.report({
                             node: node.name,
                             messageId: "naming",
-                            data: { name, handlerName },
+                            data: {
+                                name,
+                                handlerName,
+                                event: name.slice(2).toLowerCase()
+                            },
                             suggest: [
                                 {
                                     messageId: "make-handler",
@@ -262,7 +278,11 @@ export default {
                                 node,
                                 messageId: "spread-handler",
                                 data: {
-                                    name: node.key.name
+                                    name: node.key.name,
+                                    value: messageCode(
+                                        sourceCode.getText(node.value),
+                                        "handler"
+                                    )
                                 },
                                 *fix(fixer) {
                                     const commaAfter =

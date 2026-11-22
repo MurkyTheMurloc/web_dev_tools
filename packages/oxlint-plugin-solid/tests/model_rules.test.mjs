@@ -60,12 +60,12 @@ describe("model rules", () => {
         "no-server-import-in-client",
         serverImportReports,
         serverImportSilent,
-        "Import a server function module instead"
+        "Fix: import a server function module instead"
     );
     registerRule(
         "strict-void-return",
         strictVoidReports,
         strictVoidSilent,
-        "Solid ignores"
+        "which Solid ignores"
     );
 });

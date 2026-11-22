@@ -351,7 +351,8 @@ export const View = () => <button onClick={() => setCount(count() + 1)}>+</butto
     }),
     Object.freeze({
         name: "expression-bodied onInput returning an assignment",
-        message: "expression-bodied arrow",
+        message:
+            "Fix: a block body, `onInput={(event) => { value = event.currentTarget.value; }}`.",
         code: withImports(`let value = "";
 export const View = () => <input onInput={(event) => (value = event.currentTarget.value)} />;`)
     }),
@@ -376,7 +377,8 @@ export const View = () => <input ref={[(el) => (input = el)]} />;`)
     }),
     Object.freeze({
         name: "onCleanup returning a value",
-        message: "callback returns a value",
+        message:
+            "callback returns `1`, which Solid ignores. Fix: drop the value, `return;` in place of `return 1;`.",
         code: withImports(`export const stop = () => {
     onCleanup(() => {
         return 1;
@@ -385,7 +387,7 @@ export const View = () => <input ref={[(el) => (input = el)]} />;`)
     }),
     Object.freeze({
         name: "onCleanup expression body that assigns",
-        message: "callback returns a value",
+        message: "Fix: a block body, `onCleanup(() => { active = false; })`.",
         code: withImports(`let active = true;
 export const stop = () => {
     onCleanup(() => (active = false));
@@ -393,7 +395,7 @@ export const stop = () => {
     }),
     Object.freeze({
         name: "onSettled returning something that is not a function",
-        message: "not a function",
+        message: 'returns `"ready"`, which is not a function',
         code: withImports(`export const start = () => {
     onSettled(() => "ready");
 };`)
