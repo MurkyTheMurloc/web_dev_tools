@@ -102,7 +102,24 @@ export const detail = createMemo(async () => {
 `
 });
 
+// A React-style dependency array is no-react-deps' report; reactivity stays
+// out of it so the array is reported once, with the right fix.
+const reactDepsArray = Object.freeze({
+    name: "leaves a React dependency array to no-react-deps",
+    code: `import { createEffect, createSignal } from "solid-js";
+
+export const View = (props: { id: string }) => {
+    const [count] = createSignal(1);
+    createEffect(() => {
+        console.log(count());
+    }, [count, props.id]);
+    return <p />;
+};
+`
+});
+
 const reactivityScopeSilentCases = Object.freeze([
+    reactDepsArray,
     untilPredicate,
     onFlushCallback,
     deferredReadsBeforeTheGap

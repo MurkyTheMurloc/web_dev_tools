@@ -959,6 +959,28 @@ export default {
                             : null;
                     // Reads inside a context provider's `value={...}` get a specific message; the
                     // value is read once, untracked, when the provider is created.
+                    // A React-style dependency array (`createEffect(fn, [a, b])`)
+                    // is no-react-deps' report, with the right fix; reporting
+                    // each entry here too would suggest `() => [a, b]`.
+                    const depsArray = findParent(
+                        identifier,
+                        (n) => n.type === "ArrayExpression"
+                    );
+                    if (
+                        depsArray?.parent?.type === "CallExpression" &&
+                        depsArray.parent.arguments.indexOf(depsArray) >= 1 &&
+                        depsArray.parent.callee.type === "Identifier" &&
+                        matchImport(
+                            [
+                                "createEffect",
+                                "createRenderEffect",
+                                "createMemo"
+                            ],
+                            depsArray.parent.callee.name
+                        )
+                    ) {
+                        return;
+                    }
                     const inProviderValue = Boolean(
                         findParent(identifier, (n) =>
                             providerValueContainers.has(n)
