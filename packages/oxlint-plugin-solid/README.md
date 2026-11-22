@@ -31,7 +31,9 @@ Aktuell sind enthalten:
   `solid/strict-void-return` (siehe unten)
 - `solid/no-module-scope-reactive-primitive` aus eslint-plugin-solid 0.20.1
   (meldet `createSignal`, `createStore` und Verwandte auf Modul-Ebene: beim SSR
-  teilen sich alle Requests diesen Zustand)
+  teilen sich alle Requests diesen Zustand) und
+  `solid/no-write-in-pure-computation` (meldet Setter in `createMemo`, in der
+  Compute-Phase von `createEffect` und im Component-Body)
 - ein Test-Harness, der die exportierte Rule-Surface und echte Diagnostik gegen
   Temp-Projekte prueft
 

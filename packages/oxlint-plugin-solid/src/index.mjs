@@ -17,6 +17,7 @@ import { noServerImportInClientRule } from "./rules/no_server_import_in_client.m
 import noSetterInEffectRule from "./rules/no_setter_in_effect.mjs";
 import noUnknownNamespacesRule from "./rules/no_unknown_namespaces.mjs";
 import noUntrackedEffectReadRule from "./rules/no_untracked_effect_read.mjs";
+import noWriteInPureComputationRule from "./rules/no_write_in_pure_computation.mjs";
 import { preferArrowComponentsRule } from "./rules/prefer_arrow_components.mjs";
 import preferClassObjectRule from "./rules/prefer_class_object.mjs";
 import preferForRule from "./rules/prefer_for.mjs";
@@ -54,6 +55,7 @@ const extendedPlugin = {
         "no-server-import-in-client": noServerImportInClientRule,
         "no-unknown-namespaces": noUnknownNamespacesRule,
         "no-untracked-effect-read": noUntrackedEffectReadRule,
+        "no-write-in-pure-computation": noWriteInPureComputationRule,
         "prefer-arrow-components": preferArrowComponentsRule,
         "prefer-class-object": preferClassObjectRule,
         "prefer-for": preferForRule,

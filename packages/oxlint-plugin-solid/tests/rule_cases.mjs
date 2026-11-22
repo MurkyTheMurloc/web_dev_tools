@@ -18,6 +18,7 @@ const expectedRuleIds = Object.freeze([
     "no-setter-in-effect",
     "no-unknown-namespaces",
     "no-untracked-effect-read",
+    "no-write-in-pure-computation",
     "prefer-arrow-components",
     "prefer-class-object",
     "prefer-for",
@@ -239,6 +240,20 @@ export const View = () => {
 createTrackedEffect(() => {});
 `,
         ruleId: "no-module-scope-reactive-primitive"
+    }),
+    Object.freeze({
+        code: `import { createMemo, createSignal } from "solid-js";
+
+export const View = () => {
+    const [count, setCount] = createSignal(0);
+    const doubled = createMemo(() => {
+        setCount(1);
+        return count() * 2;
+    });
+    return <div>{doubled()}</div>;
+};
+`,
+        ruleId: "no-write-in-pure-computation"
     }),
     Object.freeze({
         code: `const cn = (classes) => {

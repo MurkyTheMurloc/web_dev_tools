@@ -42,6 +42,7 @@ export const RULE_PAIRS = {
     "no-react-deps": "no-react-deps",
     "no-react-specific-props": "no-react-specific-props",
     "no-unknown-namespaces": "no-unknown-namespaces",
+    "no-write-in-pure-computation": "no-write-in-pure-computation",
     "prefer-class-object": "prefer-classlist",
     "prefer-for": "prefer-for",
     "prefer-show": "prefer-show",

@@ -148,6 +148,12 @@
         "missed": [],
         "parseError": []
     },
+    "no-write-in-pure-computation": {
+        "falsePositive": [],
+        "fix": [],
+        "missed": [],
+        "parseError": []
+    },
     "prefer-class-object": {
         "falsePositive": [
             "valid:prefer-classlist.test.ts:6",
