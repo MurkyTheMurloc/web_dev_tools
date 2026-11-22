@@ -35,6 +35,7 @@
         "solid/self-closing-comp": "error",
         "solid/strict-void-return": "error",
         "solid/style-prop": "error",
+        "solid/typed-merge-defaults": "error",
         "solid/validate-jsx-nesting": "error"
     },
     "overrides": [

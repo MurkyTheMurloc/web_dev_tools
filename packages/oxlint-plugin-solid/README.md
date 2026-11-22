@@ -34,6 +34,10 @@ Aktuell sind enthalten:
   Parameter einer Komponente und Ergebnissen von `createStore`,
   `createProjection`, `createOptimisticStore`, `merge` und `omit`. Dort kopiert
   Destructuring den Wert einmal und verliert die Reaktivitaet.
+- `solid/typed-merge-defaults`: verlangt `satisfies Partial<Props>` (oder
+  `as const`) an Objekt-Literalen in `merge`/`mergeProps`. Ohne werden Literale
+  zu `string` aufgeweitet, und `as Partial<Props>` macht die Defaults wieder
+  optional. `omit` behaelt seine Typen und braucht nichts.
 - `solid/no-module-scope-reactive-primitive` aus eslint-plugin-solid 0.20.1
   (meldet `createSignal`, `createStore` und Verwandte auf Modul-Ebene: beim SSR
   teilen sich alle Requests diesen Zustand) und

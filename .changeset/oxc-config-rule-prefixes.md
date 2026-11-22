@@ -23,3 +23,8 @@ In `*.tsx`/`*.jsx`, `typescript/explicit-function-return-type` is off: Solid's
 docs write derived values as un-annotated accessors
 (`const total = () => props.price * props.qty`). Exports keep
 `explicit-module-boundary-types`.
+
+New rule `solid/typed-merge-defaults`, enabled in oxc-config: an object literal
+passed to `merge` needs `satisfies Partial<Props>` (or `as const`), because a
+plain literal widens `"primary"` to `string` and `as Partial<Props>` makes the
+defaults optional again.

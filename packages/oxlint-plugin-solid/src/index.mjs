@@ -29,6 +29,7 @@ import reactivityRule from "./rules/reactivity.mjs";
 import selfClosingCompRule from "./rules/self_closing_comp.mjs";
 import { strictVoidReturnRule } from "./rules/strict_void_return.mjs";
 import stylePropRule from "./rules/style_prop.mjs";
+import typedMergeDefaultsRule from "./rules/typed_merge_defaults.mjs";
 import validateJsxNestingRule from "./rules/validate_jsx_nesting.mjs";
 
 const extendedPlugin = {
@@ -69,6 +70,7 @@ const extendedPlugin = {
         "self-closing-comp": selfClosingCompRule,
         "strict-void-return": strictVoidReturnRule,
         "style-prop": stylePropRule,
+        "typed-merge-defaults": typedMergeDefaultsRule,
         "validate-jsx-nesting": validateJsxNestingRule
     }
 };

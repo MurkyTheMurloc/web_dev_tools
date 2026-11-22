@@ -30,6 +30,7 @@ const expectedRuleIds = Object.freeze([
     "self-closing-comp",
     "strict-void-return",
     "style-prop",
+    "typed-merge-defaults",
     "validate-jsx-nesting"
 ]);
 
@@ -266,6 +267,18 @@ export const port = config.port;
 `,
         fileName: "config.ts",
         ruleId: "prefer-destructuring"
+    }),
+    Object.freeze({
+        code: `import { merge } from "solid-js";
+
+type Props = { variant?: "primary" | "secondary" };
+
+export const Button = (props: Props) => {
+    const local = merge({ variant: "primary" }, props);
+    return <button class={local.variant}>Go</button>;
+};
+`,
+        ruleId: "typed-merge-defaults"
     }),
     Object.freeze({
         code: `const cn = (classes) => {
