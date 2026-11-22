@@ -102,7 +102,17 @@ export const [name] = createOptimistic(async () => {
     Object.freeze({
         name: "async callback that only does return await",
         message:
-            "only does `return await load(id())`, and the `async` adds nothing: Solid reads a returned promise like a value. Fix: return the promise, `createMemo(() => load(id()))`.",
+            "only does `return await load(id())`, and the `await` adds nothing: Solid reads a returned promise like a value. Fix: return the promise, `createMemo(() => load(id()))`.",
+        code: withImports(`const [id] = createSignal(1);
+export const user = createMemo(async () => {
+    return await load(id());
+});`)
+    }),
+    Object.freeze({
+        name: "async callback that only does return await, in a .ts file",
+        message:
+            "Fix: return the promise, `createMemo(async () => load(id()))`.",
+        fileName: "src/model_case.ts",
         code: withImports(`const [id] = createSignal(1);
 export const user = createMemo(async () => {
     return await load(id());

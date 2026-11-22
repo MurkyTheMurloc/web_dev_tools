@@ -115,7 +115,7 @@ export const reactiveAsyncRule = {
             untrackedReadAfterAwait:
                 "'{{name}}' is first read after an `await` or `yield` in this `{{primitive}}` callback, so it is not a dependency and the result goes stale when it changes (Solid warns UNTRACKED_READ_AFTER_AWAIT in dev). Fix: read it before the first `await`, `const {{local}} = {{read}};` at the top of the callback, and use `{{local}}` where `{{read}}` is now; or read every input synchronously and move the async work into a helper, `{{primitive}}(() => load(…, {{read}}))`. Do not: wrap the read in `untrack()`; that keeps the stale result.",
             redundantAsync:
-                "This `async` `{{primitive}}` callback only does `return await {{promise}}`, and the `async` adds nothing: Solid reads a returned promise like a value. Fix: return the promise, `{{primitive}}(() => {{promise}})`."
+                "This `async` `{{primitive}}` callback only does `return await {{promise}}`, and the `await` adds nothing: Solid reads a returned promise like a value. Fix: return the promise, `{{primitive}}({{fix}})`. Do not: wrap it in `try` only to keep the `await`."
         }
     },
     defaultOptions: [],
@@ -205,6 +205,13 @@ export const reactiveAsyncRule = {
                     node: callback,
                     messageId: "redundantAsync",
                     data: {
+                        // .ts keeps `async`: typescript/promise-function-async
+                        // asks for it on a promise-returning function there,
+                        // and typescript/require-await accepts it without an
+                        // await. .tsx/.jsx turn that rule off, so `async` goes.
+                        fix: /\.[jt]sx$/u.test(context.filename ?? "")
+                            ? `() => ${quote(awaits[0].argument, "…")}`
+                            : `async () => ${quote(awaits[0].argument, "…")}`,
                         primitive,
                         promise: quote(awaits[0].argument, "…")
                     }

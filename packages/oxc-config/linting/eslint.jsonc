@@ -188,7 +188,11 @@
         "eslint/prefer-template": "error",
         "eslint/preserve-caught-error": "error",
         "eslint/radix": "error",
-        "eslint/require-await": "error",
+        // typescript/require-await (typescript.jsonc) replaces it: with types it
+        // lets an async function that returns a promise do without await, so
+        // `createMemo(async () => fetchUser(id()))` passes in .ts, where
+        // typescript/promise-function-async asks for the async.
+        "eslint/require-await": "off",
         "eslint/require-yield": "error",
         "eslint/sort-imports": "off",
         "eslint/sort-keys": "error",

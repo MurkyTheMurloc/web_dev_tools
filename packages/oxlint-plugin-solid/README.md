@@ -77,13 +77,15 @@ in `packages/oxc-config/linting/solid.jsonc` aktiv und ersetzen dort fuer
 ### `solid/reactive-async`
 
 In einer reaktiven Berechnung liest Solid ein zurueckgegebenes Promise wie einen
-Wert; `createMemo(() => getProduct(props.id))` braucht kein `async`. Geprueft
-werden die Callbacks von `createMemo`, `createDeferred`, `createSignal(fn)`,
-`createStore(fn)`, `createProjection`, `createOptimistic`,
-`createOptimisticStore`, `dynamic`, `dynamicComponent` und die Compute-Phase des
-zweiphasigen `createEffect`/`createRenderEffect`. Die empfohlene Form liest alle
-Inputs synchron und lagert das Async in einen Helfer aus:
-`createMemo(() => load(id(), lang()))`.
+Wert. In `.tsx`/`.jsx` braucht `createMemo(() => getProduct(props.id))` deshalb
+kein `async`; in `.ts` verlangt `typescript/promise-function-async` es, also
+`createMemo(async () => getProduct(props.id))`, und `typescript/require-await`
+laesst das ohne `await` zu. Geprueft werden die Callbacks von `createMemo`,
+`createDeferred`, `createSignal(fn)`, `createStore(fn)`, `createProjection`,
+`createOptimistic`, `createOptimisticStore`, `dynamic`, `dynamicComponent` und
+die Compute-Phase des zweiphasigen `createEffect`/`createRenderEffect`. Die
+empfohlene Form liest alle Inputs synchron und lagert das Async in einen Helfer
+aus: `createMemo(() => load(id(), lang()))`.
 
 Gemeldet wird
 
@@ -94,9 +96,10 @@ Gemeldet wird
   Quelle, die schon vor dem `await` gelesen wurde, darf danach wieder gelesen
   werden. Lies den Wert vor dem `await` in eine lokale Variable, nicht mit
   `untrack()`. `solid/reactivity` meldet diese Reads nicht noch einmal.
-- ein `async`-Callback, dessen einziges `await` ein `return await x` ist:
-  `async` und `await` weglassen und das Promise zurueckgeben. Innerhalb von
-  `try` bleibt `return await` erlaubt, weil es das `catch` erst moeglich macht.
+- ein `async`-Callback, dessen einziges `await` ein `return await x` ist: das
+  `await` weglassen und das Promise zurueckgeben, in `.tsx` auch das `async`, in
+  `.ts` bleibt es stehen (siehe oben). Innerhalb von `try` bleibt `return await`
+  erlaubt, weil es das `catch` erst moeglich macht.
 
 Grenzen: Reads in verschachtelten Funktionen, Helfern und `.then`-Callbacks
 sieht die Regel nicht (die Laufzeit-Diagnose schon). Ob ein Name ein Signal ist,
