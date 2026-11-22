@@ -112,6 +112,8 @@ export const View = () => {
     return <div>{proxy.value}</div>;
 };
 `,
+        // Off in oxc-config (it is for targets without Proxy), on for its test.
+        rules: { "solid/no-proxy-apis": "error" },
         ruleId: "no-proxy-apis"
     }),
     Object.freeze({

@@ -14,3 +14,6 @@ fails on a bare rule name.
 
 `solid/no-proxy-apis` is off: it is meant for targets without Proxy and reported
 every `createStore`. jsx-a11y treats Solid's `for` like `htmlFor`.
+
+`prefer-destructuring` is off: destructuring props or a store copies the value
+once and drops reactivity.

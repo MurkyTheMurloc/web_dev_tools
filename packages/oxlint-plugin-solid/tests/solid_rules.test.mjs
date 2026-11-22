@@ -132,7 +132,8 @@ function registerRuleDiagnosticsTests() {
         test(`reports ${ruleCase.ruleId}`, async () => {
             const result = await harness.lint(ruleCase.code, {
                 fileName: ruleCase.fileName,
-                files: ruleCase.files
+                files: ruleCase.files,
+                rules: ruleCase.rules
             });
 
             expect(result.exitCode).toBeGreaterThan(EXIT_SUCCESS);
