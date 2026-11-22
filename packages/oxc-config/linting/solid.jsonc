@@ -54,7 +54,12 @@
                 // The typed rule needs types for what handlers return; the
                 // syntax-only `solid/strict-void-return` covers handlers,
                 // `ref` and `onCleanup`/`onSettled` callbacks.
-                "typescript/strict-void-return": "off"
+                "typescript/strict-void-return": "off",
+                // Solid's docs write derived values as un-annotated accessors,
+                // `const total = () => props.price * props.qty`, and type
+                // components through `Component<P>`, which the rule already
+                // accepts. Exports stay covered by explicit-module-boundary-types.
+                "typescript/explicit-function-return-type": "off"
             }
         }
     ]

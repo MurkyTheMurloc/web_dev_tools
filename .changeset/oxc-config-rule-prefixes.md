@@ -18,3 +18,8 @@ every `createStore`. jsx-a11y treats Solid's `for` like `htmlFor`.
 
 `prefer-destructuring` is off: destructuring props or a store copies the value
 once and drops reactivity.
+
+In `*.tsx`/`*.jsx`, `typescript/explicit-function-return-type` is off: Solid's
+docs write derived values as un-annotated accessors
+(`const total = () => props.price * props.qty`). Exports keep
+`explicit-module-boundary-types`.
