@@ -470,7 +470,7 @@ export const rows = db.rows;
 };
 `,
         message:
-            "`let label` has no initial value and no `ref` assigns it, so every read before the first write gets `undefined`. Fix: give it a default, `let label = …;`, or derive it with `const`.",
+            "`let label` has no initial value and no `ref` assigns it, so every read before the first write gets `undefined`. Fix: give it its start value, `let label = …;`: a real default, `= undefined` for an `Optional<T>`",
         ruleId: "init-declarations"
     }),
     Object.freeze({

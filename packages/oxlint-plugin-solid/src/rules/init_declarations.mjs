@@ -43,7 +43,7 @@ export default {
         schema: [],
         messages: {
             noInitialValue:
-                "`{{kind}} {{name}}` has no initial value and no `ref` assigns it, so every read before the first write gets `undefined`. Fix: give it a default, `{{kind}} {{name}} = …;`, or derive it with `const`. Only a variable a `ref` assigns may stay uninitialized (`let el!: HTMLDivElement;` with `ref={el}`). Do not: add `= undefined` (unicorn/no-useless-undefined reports it) or `!` without a ref."
+                "`{{kind}} {{name}}` has no initial value and no `ref` assigns it, so every read before the first write gets `undefined`. Fix: give it its start value, `{{kind}} {{name}} = …;`: a real default, `= undefined` for an `Optional<T>` (`let timer: Optional<Timeout> = undefined;`) or `= null` for a `Maybe<T>`; or derive it with `const`. Only a variable a `ref` assigns may stay uninitialized (`let el!: HTMLDivElement;` with `ref={el}`). Do not: add `!` without a ref, or `= undefined` without an `Optional<T>` type (typebuddy/no-useless-undefined reports it)."
         }
     },
     defaultOptions: [],
