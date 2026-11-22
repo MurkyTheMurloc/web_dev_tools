@@ -184,7 +184,11 @@
     },
     "prefer-show": {
         "falsePositive": [],
-        "fix": [],
+        "fix": [
+            "invalid:prefer-show.test.ts:14",
+            "invalid:prefer-show.test.ts:25",
+            "invalid:prefer-show.test.ts:60"
+        ],
         "missed": [],
         "parseError": []
     },

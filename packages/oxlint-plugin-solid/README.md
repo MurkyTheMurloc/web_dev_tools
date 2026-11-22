@@ -195,6 +195,11 @@ nicht sicher kann, bleibt es bei der Meldung ohne Fix:
   `type`; passt keine vorhandene Deklaration, schreibt der Fix eine neue.
 - `solid/prefer-class-object`: steht neben `classList` schon ein `class`, wird
   nur gemeldet (der Fix haette `class` doppelt geschrieben).
+- `solid/prefer-show`: meldet nur Zweige, die sichtbar JSX sind; ein Bezeichner
+  (`{c() ? label : "b"}`) kann Text sein, und dort ist der Ternary billiger als
+  `<Show>`. Der Ternary wird umgeschrieben, `&&` nur als Vorschlag
+  (`--fix-suggestions`): `{count() && <Badge />}` rendert bei `0` eine `0`,
+  `<Show>` nichts.
 
 Ein typischer Fix-Fall:
 

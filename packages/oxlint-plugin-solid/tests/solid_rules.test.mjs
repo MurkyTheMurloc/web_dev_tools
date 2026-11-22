@@ -27,6 +27,7 @@ import {
     preferArrowDiagnosticCases,
     preferArrowFixCases,
     preferDestructuringSilentCase,
+    preferShowCases,
     ruleCases
 } from "./rule_cases.mjs";
 
@@ -184,6 +185,42 @@ function registerNamespaceTests() {
     });
 }
 
+const PREFER_SHOW_RULE = "solid(prefer-show)";
+
+function registerPreferShowTests() {
+    preferShowCases.forEach((showCase) => {
+        test(`prefer-show: ${showCase.name}`, async () => {
+            const result = await harness.lint(showCase.code);
+
+            if (showCase.report === null) {
+                expect(result.output).not.toContain(PREFER_SHOW_RULE);
+            } else {
+                expect(result.output).toContain(showCase.report);
+            }
+        });
+        if (showCase.fix !== undefined) {
+            test(`prefer-show: --fix on ${showCase.name}`, async () => {
+                const result = await harness.lint(showCase.code, { fix: true });
+
+                if (showCase.fix === null) {
+                    expect(result.source).toBe(showCase.code);
+                } else {
+                    expect(result.source).toContain(showCase.fix);
+                }
+            });
+        }
+        if (showCase.suggestion !== undefined) {
+            test(`prefer-show: --fix-suggestions on ${showCase.name}`, async () => {
+                const result = await harness.lint(showCase.code, {
+                    flags: ["--fix-suggestions"]
+                });
+
+                expect(result.source).toContain(showCase.suggestion);
+            });
+        }
+    });
+}
+
 function registerReactivityAsyncTests() {
     reactivityAsyncReportingCases.forEach((asyncCase) => {
         test(`reactive-async: ${asyncCase.name}`, async () => {
@@ -250,6 +287,7 @@ describe("oxlint-plugin-solid", () => {
     registerRuleDiagnosticsTests();
     registerPreferDestructuringSilentTest();
     registerNamespaceTests();
+    registerPreferShowTests();
     registerPreferArrowDiagnosticTests();
     registerReactivityAsyncTests();
     registerReactivityScopeTests();

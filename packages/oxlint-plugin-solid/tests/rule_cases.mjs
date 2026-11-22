@@ -700,6 +700,45 @@ const namespaceFixCases = Object.freeze([
     })
 ]);
 
+function preferShowView(expression) {
+    return `import type { Component } from "solid-js";
+
+declare const label: string;
+
+export const View: Component<{ count: number; on: boolean }> = (props) => {
+    return <div>{${expression}}</div>;
+};
+`;
+}
+// \`fix\`: what --fix leaves in the source. \`suggestion\`: what
+// --fix-suggestions leaves. null: the rule stays silent.
+const preferShowCases = Object.freeze([
+    Object.freeze({
+        code: preferShowView('props.on ? label : "off"'),
+        name: "a ternary with an Identifier branch",
+        report: null
+    }),
+    Object.freeze({
+        code: preferShowView("props.on && label"),
+        name: "an && with an Identifier branch",
+        report: null
+    }),
+    Object.freeze({
+        code: preferShowView("props.on ? (<b>on</b>) : <i>off</i>"),
+        fix: "<div><Show when={props.on} fallback={<i>off</i>}><b>on</b></Show></div>",
+        name: "a ternary with JSX branches",
+        report: "solid(prefer-show)"
+    }),
+    Object.freeze({
+        code: preferShowView("props.count && <span>new</span>"),
+        fix: null,
+        name: "an && with a JSX branch",
+        report: "solid(prefer-show)",
+        suggestion:
+            "<div><Show when={props.count}><span>new</span></Show></div>"
+    })
+]);
+
 // Reading a prop or a store field into a local is what Solid code should not
 // destructure: the reactive form is \`props.title\` where it is used.
 const preferDestructuringSilentCase = Object.freeze({
@@ -733,5 +772,6 @@ export {
     noDestructureFixCases,
     preferArrowDiagnosticCases,
     preferArrowFixCases,
+    preferShowCases,
     ruleCases
 };

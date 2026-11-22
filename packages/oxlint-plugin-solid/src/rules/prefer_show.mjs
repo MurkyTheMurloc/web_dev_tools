@@ -1,6 +1,9 @@
 import { getSourceCode } from "../compat.mjs";
 import { isJSXElementOrFragment } from "../utils.mjs";
-const EXPENSIVE_TYPES = ["JSXElement", "JSXFragment", "Identifier"];
+// Only a branch that is visibly JSX is reported. A text ternary is the
+// cheapest form, and an Identifier may hold text, where a `<Show>` is slower:
+// the compiler does not lower it. Oxlint's tree drops parentheses, so
+// `(<A/>)` is a JSXElement here too.
 export default {
     meta: {
         type: "problem",
@@ -10,12 +13,15 @@ export default {
             url: "https://github.com/solidjs-community/eslint-plugin-solid/blob/main/packages/eslint-plugin-solid/docs/prefer-show.md"
         },
         fixable: "code",
+        hasSuggestions: true,
         schema: [],
         messages: {
             preferShowAnd:
                 "Use Solid's `<Show />` component for conditionally showing content.",
             preferShowTernary:
-                "Use Solid's `<Show />` component for conditionally showing content with a fallback."
+                "Use Solid's `<Show />` component for conditionally showing content with a fallback.",
+            useShow:
+                "Replace with `<Show />`. A falsy value such as `0` is no longer rendered."
         }
     },
     defaultOptions: [],
@@ -25,29 +31,36 @@ export default {
             const text = sourceCode.getText(node);
             return isJSXElementOrFragment(node) ? text : `{${text}}`;
         };
+        // `{count() && <A/>}` renders `0` when count() is 0, `<Show>` renders
+        // nothing, so the rewrite is a suggestion, not a fix.
         const logicalExpressionHandler = (node) => {
-            if (
-                node.operator === "&&" &&
-                EXPENSIVE_TYPES.includes(node.right.type)
-            ) {
+            if (node.operator === "&&" && isJSXElementOrFragment(node.right)) {
                 context.report({
                     node,
                     messageId: "preferShowAnd",
-                    fix: (fixer) =>
-                        fixer.replaceText(
-                            node.parent?.type === "JSXExpressionContainer" &&
-                                isJSXElementOrFragment(node.parent.parent)
-                                ? node.parent
-                                : node,
-                            `<Show when={${sourceCode.getText(node.left)}}>${putIntoJSX(node.right)}</Show>`
-                        )
+                    suggest: [
+                        {
+                            messageId: "useShow",
+                            fix: (fixer) =>
+                                fixer.replaceText(
+                                    node.parent?.type ===
+                                        "JSXExpressionContainer" &&
+                                        isJSXElementOrFragment(
+                                            node.parent.parent
+                                        )
+                                        ? node.parent
+                                        : node,
+                                    `<Show when={${sourceCode.getText(node.left)}}>${putIntoJSX(node.right)}</Show>`
+                                )
+                        }
+                    ]
                 });
             }
         };
         const conditionalExpressionHandler = (node) => {
             if (
-                EXPENSIVE_TYPES.includes(node.consequent.type) ||
-                EXPENSIVE_TYPES.includes(node.alternate.type)
+                isJSXElementOrFragment(node.consequent) ||
+                isJSXElementOrFragment(node.alternate)
             ) {
                 context.report({
                     node,
