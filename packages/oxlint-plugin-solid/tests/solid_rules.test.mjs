@@ -20,6 +20,7 @@ import {
 } from "./reactivity_scope_cases.mjs";
 import {
     expectedRuleIds,
+    filenameCases,
     jsxUsesVarsCase,
     namespaceCases,
     namespaceFixCases,
@@ -188,6 +189,62 @@ function registerNamespaceTests() {
             expect(result.source).toContain("<Island client:visible />");
             expect(result.source).toBe(fixCase.code);
         });
+    });
+}
+
+const FILENAME_RULE = "solid(filename-matches-export)";
+
+function registerFilenameTests() {
+    filenameCases.forEach((filenameCase) => {
+        test(`filename-matches-export: ${filenameCase.name}`, async () => {
+            const result = await harness.lint(filenameCase.code, {
+                fileName: filenameCase.fileName,
+                rules: filenameCase.rules
+            });
+
+            if (filenameCase.report === null) {
+                expect(result.output).not.toContain(FILENAME_RULE);
+                expect(result.output).not.toContain("unicorn(filename-case)");
+            } else {
+                expect(result.output).toContain(FILENAME_RULE);
+                expect(result.output).toContain(filenameCase.report);
+            }
+        });
+    });
+
+    // The override in solid.jsonc wins over a case's `rules`, so the option
+    // is checked on the rule directly.
+    test("filename-matches-export: an empty ignore list checks pages/ too", () => {
+        const reports = [];
+        const visitor = solidPlugin.rules["filename-matches-export"].create({
+            filename: "/app/src/pages/about.tsx",
+            options: [{ ignore: [] }],
+            report: (report) => reports.push(report)
+        });
+        visitor.Program({
+            body: [
+                {
+                    declaration: {
+                        id: { name: "Home", type: "Identifier" },
+                        type: "FunctionDeclaration"
+                    },
+                    type: "ExportDefaultDeclaration"
+                }
+            ]
+        });
+
+        expect(reports.map((report) => report.data.expected)).toEqual([
+            "Home.tsx"
+        ]);
+    });
+
+    test("filename-matches-export: a .ts file keeps snake_case alone", async () => {
+        const result = await harness.lint("export const one = 1;\n", {
+            fileName: "src/Config.ts"
+        });
+
+        expect(result.output).toContain("unicorn(filename-case)");
+        expect(result.output).not.toContain(FILENAME_RULE);
     });
 }
 
@@ -364,6 +421,7 @@ describe("oxlint-plugin-solid", () => {
 
     registerRuleDiagnosticsTests();
     registerPreferDestructuringSilentTest();
+    registerFilenameTests();
     registerNamespaceTests();
     registerPreferShowTests();
     registerRefTests();
@@ -374,7 +432,9 @@ describe("oxlint-plugin-solid", () => {
     registerNoDestructureSilentTests();
 
     test("tracks JSX component usage so no-unused-vars stays quiet", async () => {
-        const result = await harness.lint(jsxUsesVarsCase.code);
+        const result = await harness.lint(jsxUsesVarsCase.code, {
+            fileName: "src/View.tsx"
+        });
 
         expect(result.exitCode).toBe(EXIT_SUCCESS);
         expect(result.output).not.toContain("no-unused-vars");

@@ -46,6 +46,7 @@ Aktuell sind enthalten:
   Compute-Phase von `createEffect` und im Component-Body)
 - `solid/init-declarations`, `solid/no-unassigned-vars` und
   `solid/prefer-ref-shorthand` fuer Refs (siehe unten)
+- `solid/filename-matches-export` fuer Dateinamen (siehe unten)
 - ein Test-Harness, der die exportierte Rule-Surface und echte Diagnostik gegen
   Temp-Projekte prueft
 
@@ -228,6 +229,32 @@ In `oxc-config` ist sie nur fuer `*.tsx`/`*.jsx` an und ersetzt dort
   einzelnes `ref={el}` in eine Zuweisung um, im Array bleibt `el` `undefined`.
   Als Vorschlag (`--fix-suggestions`) wird der Eintrag zu
   `(node) => { el = node; }`. Direktiven-Funktionen im Array bleiben erlaubt.
+
+### `solid/filename-matches-export`
+
+Gilt nur fuer `.tsx`/`.jsx`. Eine Datei, die eine Komponente exportiert, heisst
+wie diese Komponente in PascalCase (`Navigate.tsx` exportiert `Navigate`); eine
+Datei, die nur JSX benutzt und keine Komponente exportiert, bleibt snake_case
+(`solid_ssr_renderer.tsx` exportiert `solidSsrRenderer`). Eine Komponente ist
+ein Export mit PascalCase-Namen, dessen Wert eine Funktion ist
+(`export const Counter = () => …`, `export function Counter()`,
+`export { Counter }`), oder ein solcher Default-Export
+(`export default function Counter()`, `export default Counter`). Typ-Exporte,
+Nicht-Funktionen wie `createContext(…)` und Re-Exporte (`export { X } from`)
+zaehlen nicht.
+
+- Mit Komponenten muss der Name vor dem ersten Punkt einer von ihnen sein, bei
+  einem Default-Export genau dieser. Der Rest bleibt: `slider.island.tsx` mit
+  `Slider` wird zu `Slider.island.tsx`. Helfer daneben sind erlaubt
+  (`IslandsPage.tsx` exportiert `IslandsPage` und `filterProps`).
+- Ohne Komponente muss der Name snake_case sein.
+- `index.tsx` ist immer erlaubt.
+- Die Option `ignore` (Globs, Standard `["**/pages/**", "**/routes/**"]`) nimmt
+  Ordner aus, deren Dateinamen der Router vorgibt.
+
+Ohne Autofix: eine Datei umzubenennen ist kein Lint-Fix. In `oxc-config` ist sie
+fuer `*.tsx`/`*.jsx` an, zusammen mit `unicorn/filename-case`, das dort
+snakeCase und pascalCase erlaubt; `.ts`-Dateien bleiben snakeCase.
 
 ## Autofixes
 

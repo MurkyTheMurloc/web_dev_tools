@@ -123,7 +123,10 @@ function registerFixes(label, fixes) {
                     });
 
                     expect(again.source).toBe(result.source);
-                    expect(again.output).not.toContain("solid(");
+                    // The fixture's file name is not under test.
+                    expect(again.output).not.toMatch(
+                        /solid\((?!filename-matches-export\))/u
+                    );
                 }
             });
         });

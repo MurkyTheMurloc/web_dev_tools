@@ -1,6 +1,7 @@
 const expectedRuleIds = Object.freeze([
     "components-return-once",
     "event-handlers",
+    "filename-matches-export",
     "imports",
     "init-declarations",
     "jsx-no-duplicate-props",
@@ -39,6 +40,15 @@ const expectedRuleIds = Object.freeze([
 ]);
 
 const ruleCases = Object.freeze([
+    Object.freeze({
+        code: `export const Counter = () => {
+    return <button>0</button>;
+};
+`,
+        fileName: "src/components/counter.tsx",
+        message: "Fix: rename the file to `Counter.tsx`.",
+        ruleId: "filename-matches-export"
+    }),
     Object.freeze({
         code: `import { createEffect, createSignal } from "solid-js";
 
@@ -1099,7 +1109,101 @@ export function readTitle(props: { title: string }): string {
 `
 });
 
+// `report` is a fragment of the solid/filename-matches-export message, or
+// null when the rule stays silent.
+const filenameCases = Object.freeze([
+    Object.freeze({
+        name: "a PascalCase file named after its component",
+        code: `export const Counter = () => {
+    return <button>0</button>;
+};
+`,
+        fileName: "src/components/Counter.tsx",
+        report: null
+    }),
+    Object.freeze({
+        name: "a snake_case module that exports a renderer function",
+        code: `export const solidSsrRenderer = () => {
+    return <div />;
+};
+`,
+        fileName: "src/renderer/solid_ssr_renderer.tsx",
+        report: null
+    }),
+    Object.freeze({
+        name: "a file named after another component",
+        code: `const Counter = () => {
+    return <button>0</button>;
+};
+
+export default Counter;
+`,
+        fileName: "src/components/Clicker.tsx",
+        report: "Fix: rename the file to `Counter.tsx`."
+    }),
+    Object.freeze({
+        name: "a component and its helpers, named after the component",
+        code: `export const filterProps = (props: object) => props;
+
+export function IslandsPage() {
+    return <main />;
+}
+`,
+        fileName: "src/shared/IslandsPage.tsx",
+        report: null
+    }),
+    Object.freeze({
+        name: "a component in a snake_case file",
+        code: `export const IslandsPage = () => {
+    return <main />;
+};
+`,
+        fileName: "src/shared/islands_page.tsx",
+        report: "Fix: rename the file to `IslandsPage.tsx`."
+    }),
+    Object.freeze({
+        name: "an island infix kept in the new name",
+        code: `export const Slider = () => {
+    return <input type="range" />;
+};
+`,
+        fileName: "src/components/slider.island.tsx",
+        report: "Fix: rename the file to `Slider.island.tsx`."
+    }),
+    Object.freeze({
+        name: "a PascalCase file without a component",
+        code: `import { createContext } from "solid-js";
+
+export type Theme = "dark" | "light";
+export const ThemeContext = createContext<Theme>("dark");
+export { Show } from "solid-js";
+export const readTheme = () => <span />;
+`,
+        fileName: "src/contexts/ThemeContext.tsx",
+        report: "Fix: rename the file to `theme_context.tsx`."
+    }),
+    Object.freeze({
+        name: "an index.tsx",
+        code: `export const Counter = () => {
+    return <button>0</button>;
+};
+`,
+        fileName: "src/components/index.tsx",
+        report: null
+    }),
+    Object.freeze({
+        name: "a page under pages/",
+        code: `export default function Home() {
+    return <main />;
+}
+`,
+        fileName: "src/pages/about.tsx",
+        report: null
+    })
+]);
+
 export {
+    filenameCases,
     preferDestructuringSilentCase,
     expectedRuleIds,
     jsxUsesVarsCase,

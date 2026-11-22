@@ -84,7 +84,19 @@
                 // with that exception; `.ts` files keep
                 // eslint/no-unassigned-vars from eslint.jsonc.
                 "eslint/no-unassigned-vars": "off",
-                "solid/no-unassigned-vars": "error"
+                "solid/no-unassigned-vars": "error",
+                // A file that exports a component is PascalCase and named
+                // after it (`Navigate.tsx`), a file that only uses JSX stays
+                // snake_case (`solid_ssr_renderer.tsx`). filename-case allows
+                // both here; solid/filename-matches-export decides which one
+                // applies. `.ts` files keep snakeCase alone from unicorn.jsonc.
+                "unicorn/filename-case": [
+                    "error",
+                    { "cases": { "snakeCase": true, "pascalCase": true } }
+                ],
+                // Skips **/pages/** and **/routes/**, which follow the
+                // router's naming.
+                "solid/filename-matches-export": "error"
             }
         }
     ]
