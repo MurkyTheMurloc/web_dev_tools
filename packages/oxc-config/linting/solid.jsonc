@@ -10,6 +10,7 @@
         "solid/jsx-no-undef": "error",
         "solid/jsx-uses-vars": "error",
         "solid/no-array-handlers": "error",
+        "solid/no-cleanup-in-effect-apply": "error",
         "solid/no-destructure": "error",
         "solid/no-innerhtml": "error",
         "solid/no-module-scope-reactive-primitive": "error",

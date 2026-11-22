@@ -6,6 +6,7 @@ import { jsxNoScriptUrlRule } from "./rules/jsx_no_script_url.mjs";
 import jsxNoUndefRule from "./rules/jsx_no_undef.mjs";
 import { jsxUsesVarsRule } from "./rules/jsx_uses_vars.mjs";
 import { noArrayHandlersRule } from "./rules/no_array_handlers.mjs";
+import noCleanupInEffectApplyRule from "./rules/no_cleanup_in_effect_apply.mjs";
 import noDestructureRule from "./rules/no_destructure.mjs";
 import noInnerhtmlRule from "./rules/no_innerhtml.mjs";
 import noModuleScopeReactivePrimitiveRule from "./rules/no_module_scope_reactive_primitive.mjs";
@@ -46,6 +47,7 @@ const extendedPlugin = {
         "jsx-no-undef": jsxNoUndefRule,
         "jsx-uses-vars": jsxUsesVarsRule,
         "no-array-handlers": noArrayHandlersRule,
+        "no-cleanup-in-effect-apply": noCleanupInEffectApplyRule,
         "no-destructure": noDestructureRule,
         "no-innerhtml": noInnerhtmlRule,
         "no-module-scope-reactive-primitive":

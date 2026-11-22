@@ -7,6 +7,7 @@ import plugin from "../src/index.mjs";
 // reports, and are listed here by id.
 const SUGGESTION_LABELS = new Set([
     "event-handlers.make-handler",
+    "no-cleanup-in-effect-apply.returnCleanup",
     "no-innerhtml.useInnerText",
     "no-react-deps.deleteDeps",
     "no-react-deps.splitEffect",

@@ -7,6 +7,7 @@ const expectedRuleIds = Object.freeze([
     "jsx-no-undef",
     "jsx-uses-vars",
     "no-array-handlers",
+    "no-cleanup-in-effect-apply",
     "no-destructure",
     "no-innerhtml",
     "no-module-scope-reactive-primitive",

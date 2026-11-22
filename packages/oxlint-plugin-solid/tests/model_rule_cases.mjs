@@ -587,7 +587,84 @@ const reactDepsSilent = Object.freeze([
     })
 ]);
 
+const cleanupReports = Object.freeze([
+    Object.freeze({
+        name: "onCleanup in the effect function",
+        message:
+            "(Solid warns NO_OWNER_CLEANUP in dev). Fix: return the cleanup from the effect function, `return () => clearInterval(timer);`",
+        code: inView(`    createEffect(() => a(), (value) => {
+        const timer = setInterval(() => log(value), 1000);
+        onCleanup(() => clearInterval(timer));
+    });`),
+        suggestion: "        return () => clearInterval(timer);\n    });"
+    }),
+    Object.freeze({
+        name: "onCleanup in the effect member of a bundle",
+        message: "is called in the effect function of `createEffect`",
+        code: inView(`    createEffect(() => a(), {
+        effect: (value) => {
+            onCleanup(() => log(value));
+        },
+        error: () => {}
+    });`),
+        suggestion: "return () => log(value);"
+    }),
+    Object.freeze({
+        name: "onCleanup in the effect function of createRenderEffect",
+        message: "is called in the effect function of `createRenderEffect`",
+        code: inView(`    createRenderEffect(() => a(), (value) => {
+        onCleanup(() => log(value));
+        log(value);
+    });`),
+        // Not the last statement: no suggestion.
+        suggestion: "onCleanup(() => log(value));"
+    }),
+    Object.freeze({
+        name: "onCleanup in onSettled",
+        message:
+            "is called in the `onSettled` callback, where Solid 2.0 forbids it and throws CLEANUP_IN_FORBIDDEN_SCOPE in dev. Fix: return the cleanup from the callback, `return () => observer.disconnect();`",
+        code: inView(`    onSettled(() => {
+        const observer = new ResizeObserver(() => {});
+        onCleanup(() => observer.disconnect());
+    });`),
+        suggestion: "        return () => observer.disconnect();\n    });"
+    }),
+    Object.freeze({
+        name: "onCleanup in createTrackedEffect",
+        message: "is called in the `createTrackedEffect` callback",
+        code: inView(`    createTrackedEffect(() => {
+        log(a());
+        onCleanup(() => log("done"));
+    });`)
+    })
+]);
+
+const cleanupSilent = Object.freeze([
+    Object.freeze({
+        name: "onCleanup in the component body",
+        code: inView('    onCleanup(() => log("done"));')
+    }),
+    Object.freeze({
+        name: "a returned cleanup",
+        code: inView(`    createEffect(() => a(), (value) => {
+        const timer = setInterval(() => log(value), 1000);
+        return () => clearInterval(timer);
+    });`)
+    }),
+    Object.freeze({
+        // no-owned-primitives-in-ref reports this one.
+        name: "onCleanup in a ref callback",
+        code: `${EFFECT_IMPORTS}
+export const View = () => {
+    return <div ref={(element) => onCleanup(() => element.remove())} />;
+};
+`
+    })
+]);
+
 export {
+    cleanupReports,
+    cleanupSilent,
     reactDepsReports,
     reactDepsSilent,
     reactiveAsyncReports,

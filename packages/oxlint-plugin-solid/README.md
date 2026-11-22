@@ -24,7 +24,8 @@ Aktuell sind enthalten:
   Store schreiben, statt den Wert abzuleiten -- und Effects, die etwas awaiten
   und das Ergebnis zurueckschreiben, statt es aus einer Derivation zu liefern)
   `solid/no-untracked-effect-read` (meldet reaktive Reads in der apply-Phase
-  eines zweiphasigen `createEffect`, die dort nicht tracken) und
+  eines zweiphasigen `createEffect`, die dort nicht tracken),
+  `solid/no-cleanup-in-effect-apply` (siehe unten) und
   `solid/no-owned-primitives-in-ref` (meldet `createEffect`/`onCleanup` und
   Verwandte in einem Ref-Callback -- der laeuft ohne Owner, nichts raeumt sie je
   wieder ab), `solid/reactive-async`, `solid/no-server-import-in-client` und
@@ -169,6 +170,20 @@ gilt wieder HTML). Abweichung von Upstream: ein `<input type="hidden">` in einer
 Tabelle wird nicht gemeldet, der Parser laesst es dort stehen. Grenzen: ein
 Elternknoten, der kein DOM-Element ist (`<Show>`, eine Komponente, ein
 `.map()`-Callback), wird nicht durchschaut.
+
+### `solid/no-cleanup-in-effect-apply`
+
+Meldet `onCleanup(...)`, dessen naechste umgebende Funktion die Effect-Funktion
+von `createEffect`/`createRenderEffect` ist (zweites Argument, oder
+`effect`/`error` eines Bundle-Objekts): sie laeuft ohne Owner, Solid warnt
+NO_OWNER_CLEANUP, und der Cleanup laeuft nie. Ebenso in einem `onSettled`- oder
+`createTrackedEffect`-Callback, wo Solid CLEANUP_IN_FORBIDDEN_SCOPE wirft. Der
+Fix ist `return () => …` aus dem Callback. Steht `onCleanup(fn)` als letzte
+Anweisung und gibt der Callback sonst nichts zurueck, schlaegt die Regel
+`return fn;` vor. Ref-Callbacks meldet `solid/no-owned-primitives-in-ref`.
+
+Hintergrund zu allen Effect-Regeln:
+[`docs/solid-2-effects.md`](../../docs/solid-2-effects.md).
 
 ## Autofixes
 

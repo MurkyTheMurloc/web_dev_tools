@@ -2,6 +2,8 @@ import { afterAll, beforeAll, describe, expect, test } from "vitest";
 
 import { createLintHarness } from "./helpers.mjs";
 import {
+    cleanupReports,
+    cleanupSilent,
     reactDepsReports,
     reactDepsSilent,
     reactiveAsyncReports,
@@ -86,6 +88,12 @@ describe("model rules", () => {
         reactDepsReports,
         reactDepsSilent,
         "Solid 2.0"
+    );
+    registerRule(
+        "no-cleanup-in-effect-apply",
+        cleanupReports,
+        cleanupSilent,
+        "Fix: return the cleanup"
     );
     registerRule(
         "strict-void-return",
