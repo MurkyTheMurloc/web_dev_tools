@@ -7,8 +7,9 @@ https://github.com/solidjs-community/eslint-plugin-solid
 Most rules of this package are ports of rules from eslint-plugin-solid,
 rewritten as plain JavaScript on the Oxlint AST (the original port is the 0.14.5
 state, see `meta.version` in `src/index.mjs`; `validate-jsx-nesting` was ported
-again from 0.20.0). The rules and the helpers they share are covered by its
-licence:
+again from 0.20.0). `upstream/cases.json` holds its test cases at commit d3e946c
+(0.20.1); the package does not ship it. The rules, the helpers they share and
+those test cases are covered by its licence:
 
 - `components-return-once`, `event-handlers`, `imports`,
   `jsx-no-duplicate-props`, `jsx-no-script-url`, `jsx-no-undef`,
