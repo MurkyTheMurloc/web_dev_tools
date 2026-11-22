@@ -89,7 +89,12 @@
         "typescript/prefer-optional-chain": "error",
         "typescript/prefer-promise-reject-errors": "error",
         "typescript/prefer-readonly": "error",
-        "typescript/prefer-readonly-parameter-types": "error",
+        // Off: it demands deep readonly on every parameter, so it reports
+        // Readonly<T> (shallow), ReadonlyMap and every service object meant to
+        // change (a Logger, the Hono app, pools, caches). On soferno its options
+        // (ignoreInferredTypes, allow, treatMethodsAsReadonly) took 377 findings
+        // only to 365. typescript-eslint ships it in no preset.
+        "typescript/prefer-readonly-parameter-types": "off",
         "typescript/prefer-reduce-type-parameter": "error",
         "typescript/prefer-regexp-exec": "error",
         "typescript/prefer-return-this-type": "error",

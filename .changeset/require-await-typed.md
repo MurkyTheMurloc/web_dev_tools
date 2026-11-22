@@ -14,3 +14,7 @@ so the docs' `createMemo(() => fetchUser(id()))` stays allowed there.
 In `*.tsx`/`*.jsx`, `eslint/no-void` allows `void` as a statement, so a handler
 can start an action, `onClick={() => { void save(); }}`, without tripping
 `no-floating-promises` or `no-misused-promises`.
+
+`typescript/prefer-readonly-parameter-types` is off: it demands deep readonly on
+every parameter and reports `Readonly<T>`, `ReadonlyMap` and service objects
+(loggers, the Hono app, caches) that cannot be readonly.

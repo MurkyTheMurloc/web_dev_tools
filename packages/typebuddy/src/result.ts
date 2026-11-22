@@ -35,7 +35,6 @@ function isSuccess<R extends Readonly<Result<unknown>>>(
 /** Creates a successful result object for MaybePromise-style flows. */
 function ok(): Success<void>;
 function ok<T>(value: T): Success<T>;
-// oxlint-disable-next-line typescript-eslint/prefer-readonly-parameter-types -- ok() intentionally accepts arbitrary payload values, including mutable ones.
 function ok<T>(...args: readonly [T] | []): Success<T | void> {
     const [value] = args;
     return {
@@ -47,7 +46,6 @@ function ok<T>(...args: readonly [T] | []): Success<T | void> {
 /** Creates the default failed result object for MaybePromise-style flows. */
 function err(): Failed;
 function err<T extends null>(value: T): Failed<T>;
-// oxlint-disable-next-line typescript-eslint/prefer-readonly-parameter-types -- err() mirrors ok() and accepts the caller's payload shape without forcing readonly wrappers.
 function err<T extends null>(...args: readonly [T] | []): Failed {
     const [value] = args;
     return {
