@@ -19,6 +19,7 @@
         "solid/no-react-specific-props": "error",
         "solid/no-setter-in-effect": "error",
         "solid/no-server-import-in-client": "error",
+        "solid/no-single-arg-create-effect": "error",
         "solid/no-unknown-namespaces": "error",
         "solid/no-write-in-pure-computation": "error",
         "solid/no-untracked-effect-read": "error",

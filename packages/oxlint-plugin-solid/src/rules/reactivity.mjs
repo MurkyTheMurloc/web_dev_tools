@@ -259,8 +259,6 @@ export default {
                 "For proper analysis, a variable should be used to capture the result of this function call.",
             noAsyncTrackedScope:
                 "This tracked scope should not be async. Solid's reactivity only tracks synchronously.",
-            readAfterAwait:
-                "The reactive variable '{{name}}' is read after an await, so it registers no dependency and this computation will not re-run when it changes. Read every reactive input before the first async gap.",
             staleCapture:
                 "'{{captured}}' captures the value of the reactive variable '{{name}}' at setup, but a returned function reads the capture later — it will never update. Call '{{name}}' inside the returned function instead, or prefix '{{captured}}' with 'initial'/'default'/'static' if a one-time snapshot is intended.",
             providerValue:
@@ -810,12 +808,9 @@ export default {
             const isReadAfterSuspension = (identifier) =>
                 suspensionTaint != null &&
                 getStart(identifier) >= suspensionTaint;
-            const reportReadAfterAwait = (identifier) =>
-                context.report({
-                    node: identifier,
-                    messageId: "readAfterAwait",
-                    data: { name: identifier.name }
-                });
+            // Reads after the first `await` are reported by `reactive-async`,
+            // which follows the runtime's UNTRACKED_READ_AFTER_AWAIT; here they
+            // are only kept out of the tracked-scope analysis.
             // Iterate through all usages of (derived) signals in the current scope
             for (const {
                 reference,
@@ -845,11 +840,7 @@ export default {
                         (identifier.parent?.type === "ArrayExpression" &&
                             identifier.parent.parent?.type === "CallExpression")
                     ) {
-                        if (isReadAfterSuspension(identifier)) {
-                            // In an async computation, reads after the first suspension point aren't
-                            // tracked.
-                            reportReadAfterAwait(identifier);
-                        } else {
+                        if (!isReadAfterSuspension(identifier)) {
                             // This signal is getting called properly, analyze it.
                             handleTrackedScopes(identifier, declarationScope);
                         }
@@ -970,11 +961,7 @@ export default {
                         // about untracked usages of these props, because the user has shown
                         // that they understand the consequences of using a reactive
                         // variable to initialize something else. Do nothing.
-                    } else if (isReadAfterSuspension(identifier)) {
-                        // In an async computation, reads after the first suspension point aren't
-                        // tracked.
-                        reportReadAfterAwait(identifier);
-                    } else {
+                    } else if (!isReadAfterSuspension(identifier)) {
                         // The props are the object in a property read access, which
                         // should be under a tracked scope.
                         handleTrackedScopes(identifier, declarationScope);
@@ -1246,7 +1233,7 @@ export default {
                         // Async computations are first-class in Solid 2.0 (async createMemo,
                         // function-form createSignal/createStore, etc.). Reads before the first
                         // suspension point are tracked normally; reads after it get a targeted
-                        // readAfterAwait report in onFunctionExit instead of a blanket warning.
+                        // reactive-async report on reads after the first await instead of a blanket warning.
                         asyncTrackedScopes.add(node);
                     } else if (node.async) {
                         // "[Solid's] approach only tracks synchronously. If you have a
@@ -1405,12 +1392,13 @@ export default {
                     ) {
                         // Solid 2.0 split these into `(compute, apply)`. The
                         // compute phase tracks and, like any computation, may
-                        // be async (`reactive-async` checks it); a lone async
-                        // function is reported. The apply phase runs untracked
+                        // be async (`reactive-async` checks it). A lone function
+                        // is reported by no-single-arg-create-effect, whether
+                        // async or not. The apply phase runs untracked
                         // and may return a cleanup, so reads there poll rather
                         // than subscribe. `createEffect` also accepts an effect
                         // bundle object in place of a plain apply function.
-                        pushTrackedScope(arg0, "function", Boolean(arg1));
+                        pushTrackedScope(arg0, "function", true);
                         if (arg1) {
                             if (arg1.type === "ObjectExpression") {
                                 for (const property of arg1.properties) {

@@ -129,6 +129,12 @@
         "missed": [],
         "parseError": []
     },
+    "no-single-arg-create-effect": {
+        "falsePositive": [],
+        "fix": [],
+        "missed": [],
+        "parseError": []
+    },
     "no-unknown-namespaces": {
         "falsePositive": [
             "valid:no-unknown-namespaces.test.ts:6",
@@ -196,6 +202,15 @@
         "fix": [],
         "missed": [
             "invalid:reactivity.test.ts:829",
+            "invalid:reactivity.test.ts:1247",
+            "invalid:reactivity.test.ts:1256",
+            "invalid:reactivity.test.ts:1391",
+            "invalid:reactivity.test.ts:1401",
+            "invalid:reactivity.test.ts:1413",
+            "invalid:reactivity.test.ts:1425",
+            "invalid:reactivity.test.ts:1437",
+            "invalid:reactivity.test.ts:1450",
+            "invalid:reactivity.test.ts:1462",
             "invalid:reactivity.test.ts:1569"
         ],
         "parseError": []

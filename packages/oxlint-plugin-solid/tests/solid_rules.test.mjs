@@ -176,18 +176,21 @@ function registerNamespaceTests() {
 
 function registerReactivityAsyncTests() {
     reactivityAsyncReportingCases.forEach((asyncCase) => {
-        test(`reactivity: ${asyncCase.name}`, async () => {
+        test(`reactive-async: ${asyncCase.name}`, async () => {
             const result = await harness.lint(asyncCase.code);
 
             expect(result.output).toContain(READ_AFTER_GAP_MESSAGE);
+            // Reported once, by reactive-async; reactivity stays out of it.
+            expect(result.output).not.toContain("solid(reactivity)");
         });
     });
 
     reactivityAsyncSilentCases.forEach((asyncCase) => {
-        test(`reactivity: ${asyncCase.name}`, async () => {
+        test(`reactive-async: ${asyncCase.name}`, async () => {
             const result = await harness.lint(asyncCase.code);
 
             expect(result.output).not.toContain("solid(reactivity)");
+            expect(result.output).not.toContain("solid(reactive-async)");
         });
     });
 }

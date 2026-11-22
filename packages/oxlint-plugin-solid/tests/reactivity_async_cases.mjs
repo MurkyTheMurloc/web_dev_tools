@@ -12,7 +12,7 @@
 // pass for the wrong reason. The silent case asserts the rule id, which is stricter —
 // the old blanket rule reported this exact fixture, so this test fails on it.
 
-const READ_AFTER_GAP_MESSAGE = "is read after an await";
+const READ_AFTER_GAP_MESSAGE = "is first read after an `await` or `yield`";
 
 const readsBeforeTheGap = Object.freeze({
     name: "allows an async computation that reads its inputs before awaiting",
@@ -71,7 +71,30 @@ export const createSaver = (): unknown => {
 `
 });
 
-const reactivityAsyncSilentCases = Object.freeze([readsBeforeTheGap]);
+// The runtime only warns about a source first read after the gap: one read
+// before it is already a dependency.
+const rereadAfterTheGap = Object.freeze({
+    name: "stays silent on a source read again after the first await",
+    code: `import { createMemo, createSignal } from "solid-js";
+
+declare function loadUser(id: number): Promise<string>;
+
+export const createProfile = (): unknown => {
+    const [userId] = createSignal(1);
+    const profile = createMemo(async () => {
+        const user = await loadUser(userId());
+        return [user, userId()];
+    });
+
+    return profile;
+};
+`
+});
+
+const reactivityAsyncSilentCases = Object.freeze([
+    readsBeforeTheGap,
+    rereadAfterTheGap
+]);
 const reactivityAsyncReportingCases = Object.freeze([
     readsAfterTheGap,
     readsAfterAYield

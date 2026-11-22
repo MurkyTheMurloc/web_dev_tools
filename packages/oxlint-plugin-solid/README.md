@@ -64,16 +64,22 @@ in `packages/oxc-config/linting/solid.jsonc` aktiv und ersetzen dort fuer
 
 In einer reaktiven Berechnung liest Solid ein zurueckgegebenes Promise wie einen
 Wert; `createMemo(() => getProduct(props.id))` braucht kein `async`. Geprueft
-werden die Callbacks von `createMemo`, `createSignal(fn)`, `createStore(fn)`,
-`createProjection`, `createOptimistic`, `createOptimisticStore` und die
-Compute-Phase des zweiphasigen `createEffect`/`createRenderEffect`.
+werden die Callbacks von `createMemo`, `createDeferred`, `createSignal(fn)`,
+`createStore(fn)`, `createProjection`, `createOptimistic`,
+`createOptimisticStore`, `dynamic`, `dynamicComponent` und die Compute-Phase des
+zweiphasigen `createEffect`/`createRenderEffect`. Die empfohlene Form liest alle
+Inputs synchron und lagert das Async in einen Helfer aus:
+`createMemo(() => load(id(), lang()))`.
 
 Gemeldet wird
 
-- ein Read nach dem ersten `await` im selben Callback (Aufruf eines Signals oder
-  Memos, `props.x`, Property-Read eines Stores): Solid meldet das zur Laufzeit
-  als `UNTRACKED_READ_AFTER_AWAIT`, es wird nie eine Dependency. Lies den Wert
-  vor dem `await` in eine lokale Variable.
+- eine Quelle (Aufruf eines Signals oder Memos, `props.x`, Property-Read eines
+  Stores), die erst nach dem ersten `await` oder `yield` im selben Callback
+  gelesen wird: Solid meldet das im Dev-Build als `UNTRACKED_READ_AFTER_AWAIT`,
+  sie wird nie eine Dependency. Wie zur Laufzeit zaehlt nur der erste Read: eine
+  Quelle, die schon vor dem `await` gelesen wurde, darf danach wieder gelesen
+  werden. Lies den Wert vor dem `await` in eine lokale Variable, nicht mit
+  `untrack()`. `solid/reactivity` meldet diese Reads nicht noch einmal.
 - ein `async`-Callback, dessen einziges `await` ein `return await x` ist:
   `async` und `await` weglassen und das Promise zurueckgeben. Innerhalb von
   `try` bleibt `return await` erlaubt, weil es das `catch` erst moeglich macht.

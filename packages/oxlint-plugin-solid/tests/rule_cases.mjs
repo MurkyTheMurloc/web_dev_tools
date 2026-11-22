@@ -16,6 +16,7 @@ const expectedRuleIds = Object.freeze([
     "no-react-specific-props",
     "no-server-import-in-client",
     "no-setter-in-effect",
+    "no-single-arg-create-effect",
     "no-unknown-namespaces",
     "no-untracked-effect-read",
     "no-write-in-pure-computation",

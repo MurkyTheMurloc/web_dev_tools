@@ -27,6 +27,9 @@ export const BASELINE_PATH = join(PACKAGE_DIR, "upstream/baseline.json");
 
 // Our rule name -> upstream rule name, for every rule both plugins have.
 // jsx-uses-vars is left out: upstream tests it through core no-unused-vars.
+// reactivity's "missed" cases include upstream's read-after-await and
+// single-function createEffect cases on purpose: reactive-async and
+// no-single-arg-create-effect report those, so reactivity does not.
 export const RULE_PAIRS = {
     "components-return-once": "components-return-once",
     "event-handlers": "event-handlers",
@@ -41,6 +44,7 @@ export const RULE_PAIRS = {
     "no-proxy-apis": "no-proxy-apis",
     "no-react-deps": "no-react-deps",
     "no-react-specific-props": "no-react-specific-props",
+    "no-single-arg-create-effect": "no-single-arg-create-effect",
     "no-unknown-namespaces": "no-unknown-namespaces",
     "no-write-in-pure-computation": "no-write-in-pure-computation",
     "prefer-class-object": "prefer-classlist",
