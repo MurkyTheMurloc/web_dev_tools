@@ -187,7 +187,10 @@ function runRule(ours, cases, pluginPath, workDir) {
     for (const diagnostic of lint(dir)) {
         const fileName = diagnostic.filename.replace(/^.*\//u, "");
         if (diagnostic.code?.includes(`(${ours})`)) {
-            hits.set(fileName, (hits.get(fileName) ?? 0) + 1);
+            hits.set(fileName, [
+                ...(hits.get(fileName) ?? []),
+                diagnostic.message
+            ]);
         } else if (!diagnostic.code) {
             parseErrors.add(fileName);
         }
@@ -198,8 +201,13 @@ function runRule(ours, cases, pluginPath, workDir) {
     lint(fixDir, ["--fix"]);
 
     const result = { falsePositive: [], fix: [], missed: [], parseError: [] };
+    const details = {};
     for (const testCase of all) {
         const id = caseId(testCase);
+        details[id] = {
+            code: testCase.code,
+            messages: hits.get(testCase.fileName) ?? []
+        };
         if (parseErrors.has(testCase.fileName)) {
             result.parseError.push(id);
             continue;
@@ -223,7 +231,7 @@ function runRule(ours, cases, pluginPath, workDir) {
             result.fix.push(id);
         }
     }
-    return { cases: all.length, result };
+    return { cases: all.length, details, result };
 }
 
 export function runUpstreamCases() {
@@ -264,6 +272,19 @@ function main() {
             ])
         )
     );
+    const showIndex = process.argv.indexOf("--show");
+    if (showIndex !== -1) {
+        const { details, result } = report[process.argv[showIndex + 1]];
+        for (const bucket of ["falsePositive", "missed", "fix"]) {
+            for (const id of result[bucket]) {
+                console.log(`\n### ${bucket} ${id}`);
+                console.log(details[id].code.trim());
+                for (const message of details[id].messages) {
+                    console.log(`  -> ${message}`);
+                }
+            }
+        }
+    }
     if (process.argv.includes("--write-baseline")) {
         writeFileSync(
             BASELINE_PATH,
