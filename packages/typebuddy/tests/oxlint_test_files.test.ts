@@ -137,10 +137,12 @@ describe("isTestFile", () => {
 });
 
 describe("typebuddy oxlint rules in test files", () => {
+    // `no-useless-undefined` replaces unicorn's rule, which lints test files
+    // too; tests/oxlint_useless_undefined.test.ts checks it there.
     it("registers every rule this suite checks", () => {
         expect(
             Object.keys(typebuddyOxlintPlugin.rules).toSorted()
-        ).toStrictEqual([...RULE_IDS]);
+        ).toStrictEqual(["no-useless-undefined", ...RULE_IDS]);
     });
 
     describe.each(RULE_IDS)("%s", (ruleId) => {

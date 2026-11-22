@@ -11,6 +11,7 @@ const testNamedPath = new URL("./violations.bench.ts", smokeDir);
 const testDirectoryPath = new URL("./__tests__/async-helper.ts", smokeDir);
 
 const expectedRuleIds = [
+    "typebuddy(no-useless-undefined)",
     "typebuddy(prefer-optional)",
     "typebuddy(prefer-maybe)",
     "typebuddy(prefer-nullable)",
@@ -115,6 +116,21 @@ const siblingHits = countDiagnostics("use-server-sibling.ts");
 if (siblingHits !== 2) {
     console.error(
         `Expected exactly 2 diagnostics for the function without "use server" next to one with it, got ${siblingHits}.`
+    );
+    console.error(output);
+    process.exit(1);
+}
+
+// `startValues` in violations.ts: the `Optional` start value is kept, the
+// un-annotated one is reported.
+const uselessUndefinedHits = diagnostics.filter(
+    (d) =>
+        d.filename.endsWith("/violations.ts") &&
+        d.code === "typebuddy(no-useless-undefined)"
+).length;
+if (uselessUndefinedHits !== 1) {
+    console.error(
+        `Expected exactly 1 no-useless-undefined diagnostic in violations.ts (the un-annotated let), got ${uselessUndefinedHits}.`
     );
     console.error(output);
     process.exit(1);
