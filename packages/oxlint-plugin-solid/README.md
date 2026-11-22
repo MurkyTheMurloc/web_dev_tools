@@ -44,6 +44,7 @@ Aktuell sind enthalten:
   teilen sich alle Requests diesen Zustand) und
   `solid/no-write-in-pure-computation` (meldet Setter in `createMemo`, in der
   Compute-Phase von `createEffect` und im Component-Body)
+- `solid/init-declarations` fuer Variablen, die ein Ref zuweist (siehe unten)
 - ein Test-Harness, der die exportierte Rule-Surface und echte Diagnostik gegen
   Temp-Projekte prueft
 
@@ -184,6 +185,23 @@ Anweisung und gibt der Callback sonst nichts zurueck, schlaegt die Regel
 
 Hintergrund zu allen Effect-Regeln:
 [`docs/solid-2-effects.md`](../../docs/solid-2-effects.md).
+
+### `solid/init-declarations`
+
+Ein Fork von eslints `init-declarations` im Modus `"always"`: jedes `let` und
+`var` braucht einen Startwert, ausser eine Variable, die ein `ref` in derselben
+Datei zuweist. Zugewiesen heisst `ref={el}` oder `ref={el!}` an einem beliebigen
+JSX-Element (der Compiler macht aus dem einzelnen `ref` eine Zuweisung) oder
+`el = node` in einem Ref-Callback, direkt oder als Eintrag in `ref={[…]}`. Die
+beiden Formen dafuer sind `let el!: HTMLDivElement;` fuer Elemente, die immer
+gerendert werden, und `let el: Optional<HTMLDivElement>;` (typebuddy) fuer
+bedingte. Wie in eslint bleiben `for-in`-/`for-of`-Variablen und `declare`
+aussen vor, `const` ist nicht Sache der Regel. Ein nacktes `el` in einem
+Ref-Array wird nie zugewiesen; das meldet `solid/prefer-ref-shorthand` am
+Eintrag, nicht diese Regel an der Deklaration.
+
+In `oxc-config` ist sie nur fuer `*.tsx`/`*.jsx` an und ersetzt dort
+`eslint/init-declarations`; `.ts`-Dateien behalten eslints Regel.
 
 ## Autofixes
 

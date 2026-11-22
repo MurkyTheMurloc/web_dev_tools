@@ -1,6 +1,7 @@
 import componentsReturnOnceRule from "./rules/components_return_once.mjs";
 import eventHandlersRule from "./rules/event_handlers.mjs";
 import importsRule from "./rules/imports.mjs";
+import initDeclarationsRule from "./rules/init_declarations.mjs";
 import jsxNoDuplicatePropsRule from "./rules/jsx_no_duplicate_props.mjs";
 import { jsxNoScriptUrlRule } from "./rules/jsx_no_script_url.mjs";
 import jsxNoUndefRule from "./rules/jsx_no_undef.mjs";
@@ -42,6 +43,7 @@ const extendedPlugin = {
         "components-return-once": componentsReturnOnceRule,
         "event-handlers": eventHandlersRule,
         imports: importsRule,
+        "init-declarations": initDeclarationsRule,
         "jsx-no-duplicate-props": jsxNoDuplicatePropsRule,
         "jsx-no-script-url": jsxNoScriptUrlRule,
         "jsx-no-undef": jsxNoUndefRule,

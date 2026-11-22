@@ -28,6 +28,7 @@ import {
     preferArrowFixCases,
     preferDestructuringSilentCase,
     preferShowCases,
+    refSilentCases,
     ruleCases
 } from "./rule_cases.mjs";
 
@@ -224,6 +225,30 @@ function registerPreferShowTests() {
     });
 }
 
+function registerRefTests() {
+    refSilentCases.forEach((refCase) => {
+        test(`refs: leaves ${refCase.name} alone`, async () => {
+            const result = await harness.lint(refCase.code);
+
+            for (const ruleId of refCase.silent) {
+                expect(result.output).not.toContain(`solid(${ruleId})`);
+            }
+            // Off for .tsx: solid/init-declarations takes its place.
+            expect(result.output).not.toContain("eslint(init-declarations)");
+        });
+    });
+
+    test("init-declarations: a .ts file keeps eslint's rule alone", async () => {
+        const result = await harness.lint(
+            'export function pick(on: boolean): string {\n    let label: string;\n    label = on ? "on" : "off";\n    return label;\n}\n',
+            { fileName: "src/pick.ts" }
+        );
+
+        expect(result.output).toContain("eslint(init-declarations)");
+        expect(result.output).not.toContain("solid(init-declarations)");
+    });
+}
+
 function registerReactivityAsyncTests() {
     reactivityAsyncReportingCases.forEach((asyncCase) => {
         test(`reactive-async: ${asyncCase.name}`, async () => {
@@ -291,6 +316,7 @@ describe("oxlint-plugin-solid", () => {
     registerPreferDestructuringSilentTest();
     registerNamespaceTests();
     registerPreferShowTests();
+    registerRefTests();
     registerPreferArrowDiagnosticTests();
     registerReactivityAsyncTests();
     registerReactivityScopeTests();

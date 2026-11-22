@@ -67,7 +67,16 @@
                 // compiles to the same ternary). The replacement, `let` + `if`
                 // in the component body, runs once and is not reactive.
                 // no-nested-ternary and no-unneeded-ternary stay on everywhere.
-                "eslint/no-ternary": "off"
+                "eslint/no-ternary": "off",
+                // A `let` that a `ref` assigns has no value to start with:
+                // Solid sets it to the element (`let el!: HTMLDivElement;`
+                // with `ref={el}`, `let el: Optional<HTMLDivElement>;` under
+                // `<Show>`), and a default would be a value nobody reads.
+                // solid/init-declarations is eslint's rule with that one
+                // exception; it is on only here, so `.ts` files keep
+                // eslint/init-declarations alone.
+                "eslint/init-declarations": "off",
+                "solid/init-declarations": "error"
             }
         }
     ]

@@ -2,6 +2,7 @@ const expectedRuleIds = Object.freeze([
     "components-return-once",
     "event-handlers",
     "imports",
+    "init-declarations",
     "jsx-no-duplicate-props",
     "jsx-no-script-url",
     "jsx-no-undef",
@@ -456,6 +457,19 @@ export const rows = db.rows;
 `,
         message: "Fix: move the `<div>` out of the `<p>`",
         ruleId: "validate-jsx-nesting"
+    }),
+    Object.freeze({
+        code: `export const View = (props: { on: boolean }) => {
+    let label: string;
+    if (props.on) {
+        label = "on";
+    }
+    return <p>{label}</p>;
+};
+`,
+        message:
+            "`let label` has no initial value and no `ref` assigns it, so every read before the first write gets `undefined`. Fix: give it a default, `let label = …;`, or derive it with `const`.",
+        ruleId: "init-declarations"
     })
 ]);
 
@@ -819,6 +833,66 @@ const preferShowCases = Object.freeze([
     })
 ]);
 
+// A \`let\` a \`ref\` assigns may stay uninitialized; \`silent\` lists the rules
+// that stay quiet on the case.
+const refSilentCases = Object.freeze([
+    Object.freeze({
+        code: `export const View = () => {
+    let count = 0;
+    return <button onClick={() => (count += 1)}>{count}</button>;
+};
+`,
+        name: "a let with a default",
+        silent: ["init-declarations"]
+    }),
+    Object.freeze({
+        code: `export const View = () => {
+    let el!: HTMLDivElement;
+    return <div ref={el} onClick={() => el.focus()} />;
+};
+`,
+        name: "let el! with the shorthand",
+        silent: ["init-declarations"]
+    }),
+    Object.freeze({
+        code: `export const View = () => {
+    let el!: HTMLDivElement;
+    return <div ref={(node) => { el = node; node.focus(); }} />;
+};
+`,
+        name: "let el! with a callback",
+        silent: ["init-declarations"]
+    }),
+    Object.freeze({
+        code: `declare const autofocus: (el: HTMLElement) => void;
+
+export const View = () => {
+    let el!: HTMLInputElement;
+    return <input ref={[autofocus, (node) => { el = node; }]} onInput={() => el.select()} />;
+};
+`,
+        name: "let el! with a callback in a ref array",
+        silent: ["init-declarations"]
+    }),
+    Object.freeze({
+        code: `import { Show } from "solid-js";
+
+type Optional<T> = T | undefined;
+
+export const View = (props: { open: boolean }) => {
+    let dialog: Optional<HTMLDialogElement>;
+    return (
+        <Show when={props.open}>
+            <dialog ref={dialog} onClose={() => dialog?.close()} />
+        </Show>
+    );
+};
+`,
+        name: "Optional<T> under <Show>",
+        silent: ["init-declarations"]
+    })
+]);
+
 // Reading a prop or a store field into a local is what Solid code should not
 // destructure: the reactive form is \`props.title\` where it is used.
 const preferDestructuringSilentCase = Object.freeze({
@@ -853,5 +927,6 @@ export {
     preferArrowDiagnosticCases,
     preferArrowFixCases,
     preferShowCases,
+    refSilentCases,
     ruleCases
 };
