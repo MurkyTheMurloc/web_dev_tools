@@ -27,6 +27,7 @@ type RuleContext = {
     report(descriptor: {
         node: unknown;
         messageId: string;
+        data: { name: string };
         suggest?: {
             messageId: string;
             fix(fixer: RuleFixer): unknown;
@@ -38,6 +39,29 @@ function hasTryCatch(nodes: AstNode[]): boolean {
     return nodes.some((node) => {
         return node.type === "TryStatement";
     });
+}
+
+/**
+ * What the message calls the function: its own name, the name it is bound to,
+ * or else the first line of its source.
+ */
+function functionLabel(node: AstNode, getText: (node: unknown) => string) {
+    const candidates = [node["id"], node.parent?.["id"], node.parent?.["key"]];
+    for (const candidate of candidates) {
+        if (
+            typeof candidate === "object" &&
+            candidate !== null &&
+            "type" in candidate &&
+            candidate.type === "Identifier" &&
+            "name" in candidate &&
+            typeof candidate.name === "string"
+        ) {
+            return candidate.name;
+        }
+    }
+
+    const [firstLine = ""] = getText(node).split("\n");
+    return firstLine.trim();
 }
 
 function isCallArgumentCallback(node: AstNode): boolean {
@@ -59,6 +83,7 @@ const rule = {
     create(context: RuleContext) {
         const sourceCode = context.getSourceCode();
         const imports = createImportPlanner(sourceCode);
+        const getText = (node: unknown) => sourceCode.getText(node);
 
         // Two zero-width insertions leave the body's own text untouched, byte
         // for byte. Rebuilding it statement by statement used to strip leading
@@ -201,6 +226,7 @@ const rule = {
                 context.report({
                     node,
                     messageId: "missingTryCatch",
+                    data: { name: functionLabel(node, getText) },
                     suggest: suggestWrap(node, (fixer) => {
                         return wrapExpressionBodyFixes(node, bodyNode, fixer);
                     })
@@ -214,6 +240,7 @@ const rule = {
             context.report({
                 node,
                 messageId: "missingTryCatch",
+                data: { name: functionLabel(node, getText) },
                 suggest: suggestWrap(bodyNode, (fixer) => {
                     return wrapBlockFixes(bodyNode, fixer);
                 })
@@ -240,7 +267,7 @@ const rule = {
         schema: [],
         messages: {
             missingTryCatch:
-                "Async functions must have a try-catch block returning an error result.",
+                '`{{name}}` is async without a `try`/`catch`, so a throw inside it rejects the promise and callers that check `isError` never see the failure. Fix: put the body in `try { … } catch { return err(); }` (after a directive such as `"use cache"`) with `import { err } from "@murky-web/typebuddy";` and `return ok(value)` in the `try`; if the failure is a bug rather than an outcome for the caller, `throw` instead, which the rule accepts. Do not wrap only part of the body, and do not return `ok(...)` from the `catch`.',
             suggestTryCatch:
                 "Wrap the body in try/catch and return err() from the catch."
         }

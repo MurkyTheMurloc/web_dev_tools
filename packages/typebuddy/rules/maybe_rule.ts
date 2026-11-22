@@ -14,7 +14,7 @@ const rule = {
         report(descriptor: {
             node: unknown;
             messageId: string;
-            data: { type: string };
+            data: { type: string; union: string };
             fix(fixer: RuleFixer): unknown;
         }): void;
     }) {
@@ -42,7 +42,10 @@ const rule = {
                     context.report({
                         node,
                         messageId: "useMaybe",
-                        data: { type: typeText },
+                        data: {
+                            type: typeText,
+                            union: sourceCode.getText(node)
+                        },
                         fix(fixer) {
                             // `Maybe` has to be the package's type where the
                             // fix puts it: imported, or already imported.
@@ -76,7 +79,8 @@ const rule = {
         fixable: "code",
         schema: [],
         messages: {
-            useMaybe: "Use Maybe<{{type}}> instead of {{type}} | null"
+            useMaybe:
+                '`{{union}}` is the type typebuddy names `Maybe<{{type}}>`. Both mean the same, and one spelling keeps `T | null` recognisable as the thing `isMaybe` narrows. Fix: `Maybe<{{type}}>` with `import type { Maybe } from "@murky-web/typebuddy";` (`--fix` applies it where `Maybe` is not already another binding).'
         }
     }
 };

@@ -14,7 +14,7 @@ const rule = {
         report(descriptor: {
             node: unknown;
             messageId: string;
-            data: { type: string };
+            data: { type: string; union: string };
             fix(fixer: RuleFixer): unknown;
         }): void;
     }) {
@@ -43,7 +43,10 @@ const rule = {
                     context.report({
                         node,
                         messageId: "preferOptional",
-                        data: { type: typeText },
+                        data: {
+                            type: typeText,
+                            union: sourceCode.getText(node)
+                        },
                         fix(fixer) {
                             // See `prefer-maybe`: the fix only uses the
                             // package's own `Optional`, imported where it is
@@ -76,7 +79,7 @@ const rule = {
         schema: [],
         messages: {
             preferOptional:
-                "Use Optional<{{type}}> instead of {{type}} | undefined"
+                '`{{union}}` is the type typebuddy names `Optional<{{type}}>`. Both mean the same, and one spelling keeps `T | undefined` recognisable as the thing `isOptional` narrows. Fix: `Optional<{{type}}>` with `import type { Optional } from "@murky-web/typebuddy";` (`--fix` applies it where `Optional` is not already another binding).'
         }
     }
 };
