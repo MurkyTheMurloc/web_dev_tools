@@ -1,5 +1,27 @@
 # @murky-web/typebuddy
 
+## 3.1.0
+
+### Minor Changes
+
+- 9a85554: New oxlint rule `typebuddy/no-useless-undefined`: unicorn's
+  `no-useless-undefined` as oxlint ships it, with its options and autofixes,
+  except that `let x: Optional<T> = undefined` (or `T | undefined`) is allowed,
+  because `undefined` is the start value of an `Optional<T>` as `null` is of a
+  `Maybe<T>`. An un-annotated `let x = undefined` is reported without an autofix
+  and its message says to annotate it or give a real default, not to drop the
+  initializer that `eslint/init-declarations` asks for. Trailing `undefined`
+  arguments are reported without an autofix.
+
+### Patch Changes
+
+- f02c7b5: The oxlint rules' messages quote the code they report (`Promise<string>`,
+  `return session`, the async function's name) and say what goes wrong at runtime,
+  then give a copyable `Fix:` built from that code, with the import line from
+  `@murky-web/typebuddy`. Where there is a tempting non-fix, such as an `as` cast
+  or returning `ok(...)` from a `catch`, the message says not to. What the rules
+  report is unchanged.
+
 ## 3.0.1
 
 ### Patch Changes
