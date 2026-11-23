@@ -1,5 +1,12 @@
 # @murky-web/oxc-config
 
+## 0.1.1
+
+### Patch Changes
+
+- 6747c1e: Republish through CI with trusted publishing and provenance. The
+  hand-published 0.1.0 has registry metadata but no downloadable tarball.
+
 ## 0.1.0
 
 ### Minor Changes
