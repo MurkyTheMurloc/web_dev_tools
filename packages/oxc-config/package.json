@@ -1,0 +1,25 @@
+{
+    "name": "@murky-web/oxc-config",
+    "version": "0.0.0",
+    "description": "Shared oxfmt and oxlint configuration",
+    "license": "ISC",
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/MurkyTheMurloc/web_dev_tools.git",
+        "directory": "packages/oxc-config"
+    },
+    "files": [
+        ".oxfmtrc.jsonc",
+        ".oxlintrc.jsonc",
+        "linting",
+        "README.md"
+    ],
+    "publishConfig": {
+        "access": "public",
+        "provenance": true
+    },
+    "peerDependencies": {
+        "oxfmt": ">=0.79.0",
+        "oxlint": ">=1.94.0"
+    }
+}

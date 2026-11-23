@@ -16,6 +16,14 @@
         "vitest": "5.1.1",
       },
     },
+    "packages/oxc-config": {
+      "name": "@murky-web/oxc-config",
+      "version": "0.0.0",
+      "peerDependencies": {
+        "oxfmt": ">=0.79.0",
+        "oxlint": ">=1.94.0",
+      },
+    },
     "packages/oxlint-plugin-solid": {
       "name": "@murky-web/oxlint-plugin-solid",
       "version": "1.5.1",
@@ -201,6 +209,8 @@
     "@manypkg/get-packages": ["@manypkg/get-packages@3.1.0", "", { "dependencies": { "@manypkg/find-root": "^3.1.0", "@manypkg/tools": "^2.1.0" } }, "sha512-0TbBVyvPrP7xGYBI/cP8UP+yl/z+HtbTttAD7FMAJgn/kXOTwh5/60TsqP9ZYY710forNfyV0N8P/IE/ujGZJg=="],
 
     "@manypkg/tools": ["@manypkg/tools@2.1.2", "", { "dependencies": { "jju": "^1.4.0", "tinyglobby": "^0.2.13", "yaml": "^2.9.0" } }, "sha512-6QEf6yqFbETdwGITKq57aYoPfX/3K8XFNwsAlx0C1M7o8cb79sv1M3w+tWuWvIcSbNqrLF7OD7YpZMVVz335hQ=="],
+
+    "@murky-web/oxc-config": ["@murky-web/oxc-config@workspace:packages/oxc-config"],
 
     "@murky-web/oxlint-plugin-solid": ["@murky-web/oxlint-plugin-solid@workspace:packages/oxlint-plugin-solid"],
 

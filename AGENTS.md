@@ -11,8 +11,9 @@ workflow with npm trusted publishing).
 | `packages/typebuddy` | `@murky-web/typebuddy` | runtime guards, `Result`, utility and global types (`globals.d.ts`), and its oxlint plugin (`rules/`, `oxlint/`) |
 | `packages/simplelog` | `@murky-web/simplelog` | small logger, and its oxlint plugin (`oxlint/`) |
 | `packages/oxlint-plugin-solid` | `@murky-web/oxlint-plugin-solid` | Solid rules for oxlint |
+| `packages/oxc-config` | `@murky-web/oxc-config` | shared oxfmt and oxlint rules, extended by the packages here and by consuming projects |
 | `packages/shadcn-lint/packages/lint` | `@murky-web/shadcn-lint` | Tailwind design-system rules for Solid 2.0 (fork of shadcn-ui/lint, see `docs/shadcn-lint-fork.md`) |
-| `config/` | – | shared oxlint/oxfmt rules (`config/oxc`) and tsconfig bases (`config/typescript`), extended by the packages; not a package |
+| `config/` | – | tsconfig bases (`config/typescript`), extended by the packages; not a package |
 | `vendor/anti-slop` | – | dmmulroy/anti-slop as a submodule, copied into projects by the templates |
 
 ## Tooling
@@ -23,10 +24,10 @@ workflow with npm trusted publishing).
   shell, CI installs that version.
 - Bun only: `bun install`, `bun run <script>`, tests with `bun run test` (vitest), never `bun test`.
 - TypeScript 7 (`tsc`), builds with `tsdown`.
-- Lint and format with oxlint and oxfmt from `config/oxc`. Each package has its own `lint`
+- Lint and format with oxlint and oxfmt from `packages/oxc-config`. Each package has its own `lint`
   with its own `.oxlintrc.jsonc` extending the shared one; the root `bun run lint` runs every
   package's `lint`. The lint plugins have no `lint` script; their tests are the check.
-- `config/`, every `.oxlintrc*`, `.oxfmtrc*` and `tsconfig*` are the user's: never edit them
+- `config/`, `packages/oxc-config/`, every `.oxlintrc*`, `.oxfmtrc*` and `tsconfig*` are the user's: never edit them
   to make a check pass. Fix the code.
 
 ## Before reporting done
