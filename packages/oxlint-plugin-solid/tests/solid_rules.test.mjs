@@ -454,12 +454,35 @@ describe("oxlint-plugin-solid", () => {
     registerImportsRuleTests();
     registerNoDestructureSilentTests();
 
+    // All cases write into one temp project. Two paths that differ only in
+    // case are one file on macOS but two on Linux, where TypeScript then
+    // rejects the tsconfig ("differs only in casing") for whatever runs next.
+    test("test file names are unique ignoring case", async () => {
+        const source = await readFile(
+            new URL("./rule_cases.mjs", import.meta.url),
+            "utf8"
+        );
+        const names = [...source.matchAll(/fileName: "([^"]+)"/gu)].map(
+            (match) => match[1]
+        );
+        const byLowerCase = new Map();
+        for (const name of names) {
+            const known = byLowerCase.get(name.toLowerCase());
+            expect(
+                known === undefined || known === name,
+                `${known} vs ${name}`
+            ).toBe(true);
+            byLowerCase.set(name.toLowerCase(), name);
+        }
+    });
+
     test("tracks JSX component usage so no-unused-vars stays quiet", async () => {
         const result = await harness.lint(jsxUsesVarsCase.code, {
             fileName: "src/View.tsx"
         });
 
-        expect(result.exitCode).toBe(EXIT_SUCCESS);
+        // The output names the rule when anything reports, e.g. only in CI.
+        expect(result.exitCode, result.output).toBe(EXIT_SUCCESS);
         expect(result.output).not.toContain("no-unused-vars");
     });
 
