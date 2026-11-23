@@ -1,18 +1,52 @@
-import { isDOMElementName } from "../utils.mjs";
+import { getSourceCode } from "../compat.mjs";
+import { isDOMElementName, messageCode } from "../utils.mjs";
 // Solid 2.0 removed every Solid-specific JSX namespace. What is left are the
 // XML namespaces the DOM itself defines.
 const xmlNamespaces = ["xmlns", "xlink"];
-// Removed namespace -> what to write instead.
+const REMOVED = "which Solid 2.0 removed.";
+const LOWERCASE_EVENT = /^[a-z]+$/;
+// Removed namespace -> why, and the replacement written with the prop's own
+// name (`name`), its `=value` (`assign`) and its value as an expression
+// (`value`).
 const replacements = {
-    attr: "the standard attribute",
-    bool: "the standard attribute (booleans are presence/absence)",
-    class: "the `class` prop with an object or array value",
-    on: "a camel-case event prop such as `onClick`, or a ref callback with `addEventListener` when listener options are needed",
-    oncapture:
-        "a camel-case event prop, or a ref callback with `addEventListener` when capture is needed",
-    prop: "the standard property",
-    style: "the `style` prop with an object value",
-    use: "a ref callback or directive factory, composing with a ref array"
+    attr: {
+        why: `${REMOVED} Attributes are the default.`,
+        fix: ({ name, assign }) => `${name}${assign}`
+    },
+    bool: {
+        why: `${REMOVED} A boolean value adds or removes the attribute.`,
+        fix: ({ name, assign }) => `${name}${assign}`
+    },
+    class: {
+        why: `${REMOVED} \`class\` takes an object.`,
+        fix: ({ name, value }) => `class={{ "${name}": ${value} }}`
+    },
+    on: {
+        why: `${REMOVED} Event props are camelCase.`,
+        // `onClick` listens to `click`; any other event name needs a ref.
+        fix: ({ name, value }) =>
+            LOWERCASE_EVENT.test(name)
+                ? `on${name[0].toUpperCase()}${name.slice(1)}={${value}}`
+                : `ref={(el) => el.addEventListener("${name}", ${value})}`
+    },
+    oncapture: {
+        why: `${REMOVED} Listener options go through a ref callback.`,
+        fix: ({ name, value }) =>
+            `ref={(el) => el.addEventListener("${name}", ${value}, { capture: true })}`
+    },
+    prop: {
+        why: "which Solid 2.0's types reject on built-in elements: Solid sets `value`, `checked` and the like as properties from the plain name. (On a custom element such as `<my-chart prop:data={…}>`, `prop:` is right and not reported.)",
+        fix: ({ name, assign }) => `${name}${assign}`
+    },
+    style: {
+        why: `${REMOVED} \`style\` takes an object.`,
+        fix: ({ name, value }) => `style={{ "${name}": ${value} }}`
+    },
+    use: {
+        why: `${REMOVED} A directive is now a factory that returns the ref callback \`(el) => { … }\`.`,
+        fix: ({ name, assign, value }) =>
+            assign === "" ? `ref={${name}}` : `ref={${name}(${value})}`
+    }
 };
 export default {
     meta: {
@@ -53,10 +87,11 @@ export default {
         ],
         messages: {
             removed:
-                "'{{namespace}}:' was removed in Solid 2.0. Use {{replacement}} instead.",
+                "`{{attribute}}` uses the `{{namespace}}:` namespace, {{why}} Fix: `{{fix}}`.",
             unknown:
-                "'{{namespace}}:' is not a namespace Solid understands. Solid 2.0 has no special JSX prefixes.",
-            component: "Namespaced props have no effect on components."
+                '`{{attribute}}` uses the `{{namespace}}:` namespace, which neither Solid 2.0 nor the DOM knows, so it is set as a literal `{{attribute}}` attribute. Fix: the plain name `{{name}}`, or, when a framework gives `{{namespace}}:` a meaning, allow it with this rule\'s `allowedNamespacedProps` option (`"{{attribute}}"`).',
+            component:
+                '`{{attribute}}` on `<{{element}}>` is a namespaced prop, and Solid gives a namespace no meaning on a component. Fix: a plain prop name, or, when a framework handles it (an island directive), allow it with this rule\'s `allowedNamespacedProps` option (`"{{attribute}}"`).'
         }
     },
     defaultOptions: [],
@@ -65,6 +100,7 @@ export default {
             context.options?.[0]?.allowedNamespaces;
         const explicitlyAllowedProps =
             context.options?.[0]?.allowedNamespacedProps;
+        const sourceCode = getSourceCode(context);
         return {
             "JSXAttribute > JSXNamespacedName": (node) => {
                 const namespace = node.namespace?.name;
@@ -81,6 +117,7 @@ export default {
                     return;
                 }
                 const openingElement = node.parent.parent;
+                const attribute = `${namespace}:${node.name?.name}`;
                 if (
                     openingElement.name.type === "JSXIdentifier" &&
                     !isDOMElementName(openingElement.name.name)
@@ -88,25 +125,67 @@ export default {
                     // Solid itself gives a namespaced prop on a component no
                     // meaning. No suggestion: deleting the prefix changes the
                     // prop's name, and the rule cannot know which one is meant.
-                    context.report({ node, messageId: "component" });
+                    context.report({
+                        node,
+                        messageId: "component",
+                        data: {
+                            attribute,
+                            element: sourceCode.getText(openingElement.name)
+                        }
+                    });
                     return;
                 }
                 if (xmlNamespaces.includes(namespace)) {
                     return;
                 }
+                // `prop:` is how Solid 2.0 sets a property on a custom element
+                // (`<my-chart prop:data={points()}>` is `el.data = points()`),
+                // typed through JSX.ExplicitProperties. Only built-in elements,
+                // whose properties Solid sets from the plain name, are reported.
+                if (
+                    namespace === "prop" &&
+                    openingElement.name.type === "JSXIdentifier" &&
+                    openingElement.name.name.includes("-")
+                ) {
+                    return;
+                }
                 const replacement = replacements[namespace];
                 if (replacement) {
+                    const { value } = node.parent;
+                    const parts = {
+                        name: node.name.name,
+                        assign: value ? `=${sourceCode.getText(value)}` : "",
+                        value: value
+                            ? sourceCode.getText(
+                                  value.type === "JSXExpressionContainer"
+                                      ? value.expression
+                                      : value
+                              )
+                            : "true"
+                    };
                     context.report({
                         node,
                         messageId: "removed",
-                        data: { namespace, replacement }
+                        data: {
+                            attribute,
+                            namespace,
+                            why: replacement.why,
+                            fix: messageCode(
+                                replacement.fix(parts),
+                                replacement.fix({
+                                    name: parts.name,
+                                    assign: value ? "={…}" : "",
+                                    value: "…"
+                                })
+                            )
+                        }
                     });
                     return;
                 }
                 context.report({
                     node,
                     messageId: "unknown",
-                    data: { namespace }
+                    data: { attribute, namespace, name: node.name.name }
                 });
             }
         };

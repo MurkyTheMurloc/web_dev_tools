@@ -16,6 +16,20 @@ const OWNED_PRIMITIVES = [
     "onSettled"
 ];
 
+/**
+ * What Solid 2.0 does in dev when a ref callback creates the primitive. A ref
+ * callback owns nothing, like an effect callback.
+ */
+function diagnosticFor(primitive) {
+    if (primitive === "onCleanup") {
+        return " and Solid throws CLEANUP_IN_FORBIDDEN_SCOPE in dev";
+    }
+
+    return ["onSettled", "createReaction"].includes(primitive)
+        ? ""
+        : " and Solid throws PRIMITIVE_IN_EFFECT_CALLBACK in dev";
+}
+
 /** The callbacks a `ref` prop applies, including the ones in a ref array. */
 function getRefCallbacks(expression) {
     if (isFunctionNode(expression)) {
@@ -78,7 +92,7 @@ export default {
         schema: [],
         messages: {
             ownedPrimitiveInRef:
-                "`{{name}}` is called inside a ref callback, which runs without an owner — nothing will ever dispose it. Create it in the directive factory instead, and let the returned callback only store the element."
+                "`{{name}}` is called inside a ref callback, which runs without an owner, so nothing disposes it{{diagnostic}}. Fix: call `{{name}}` in the component body, or in a directive factory that returns the ref callback, `const directive = () => { {{name}}(…); return (el) => { /* store or update el */ }; }` used as `ref={directive()}`; the ref callback itself only touches the element."
         }
     },
     defaultOptions: [],
@@ -109,10 +123,17 @@ export default {
                             return;
                         }
 
+                        const primitive = matchImport(
+                            OWNED_PRIMITIVES,
+                            candidate.callee.name
+                        );
                         context.report({
                             node: candidate,
                             messageId: "ownedPrimitiveInRef",
-                            data: { name: candidate.callee.name }
+                            data: {
+                                diagnostic: diagnosticFor(primitive),
+                                name: candidate.callee.name
+                            }
                         });
                     });
                 }

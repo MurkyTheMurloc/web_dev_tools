@@ -60,8 +60,10 @@ export default {
             }
         ],
         messages: {
-            selfClose: "Empty components are self-closing.",
-            dontSelfClose: "This element should not be self-closing."
+            selfClose:
+                "`<{{name}}></{{name}}>` has no children, so the closing tag only adds noise. Fix: `<{{name}} />`.",
+            dontSelfClose:
+                "`<{{name}} />` is written self-closing, and this rule's `component`/`html` options ask for an explicit closing tag on `<{{name}}>`. Fix: `<{{name}}></{{name}}>`."
         }
     },
     defaultOptions: [],
@@ -93,10 +95,12 @@ export default {
                 if (canSelfClose) {
                     const shouldSelfClose =
                         shouldBeSelfClosedWhenPossible(node);
+                    const name = getSourceCode(context).getText(node.name);
                     if (shouldSelfClose && !node.selfClosing) {
                         context.report({
                             node,
                             messageId: "selfClose",
+                            data: { name },
                             fix(fixer) {
                                 // Represents the last character of the JSXOpeningElement, the '>' character
                                 const openingElementEnding = node.range[1] - 1;
@@ -115,6 +119,7 @@ export default {
                         context.report({
                             node,
                             messageId: "dontSelfClose",
+                            data: { name },
                             fix(fixer) {
                                 const sourceCode = getSourceCode(context);
                                 const tagName = sourceCode.getText(node.name);

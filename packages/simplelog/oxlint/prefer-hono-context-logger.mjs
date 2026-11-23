@@ -1,6 +1,7 @@
 import {
     SIMPLELOG_LOG_METHODS,
-    functionHasContextParam,
+    callWithCallee,
+    getContextParamName,
     getEnclosingFunction
 } from "./utils.mjs";
 
@@ -14,7 +15,7 @@ export const preferHonoContextLoggerRule = {
         schema: [],
         messages: {
             preferHonoContextLogger:
-                "Prefer c.var.logger inside Hono handlers instead of calling a root logger directly."
+                '`{{call}}` logs through the root logger `{{logger}}` inside a Hono handler, so the line misses the request-scoped child logger and its request name. Fix: `{{fix}}`, with `app.use(createHonoLoggerMiddleware({ logger: {{logger}} }))` from `"@murky-web/simplelog/hono"` registered before the route.'
         }
     },
     create(context) {
@@ -99,12 +100,28 @@ export const preferHonoContextLoggerRule = {
                 }
 
                 const enclosingFunction = getEnclosingFunction(node);
-                if (!functionHasContextParam(enclosingFunction)) {
+                const contextName = getContextParamName(enclosingFunction);
+                if (!contextName) {
                     return;
                 }
 
+                const loggerName = node.callee.object.name;
+                const method = node.callee.property.name;
                 context.report({
                     messageId: "preferHonoContextLogger",
+                    data: {
+                        call: callWithCallee(
+                            context.sourceCode,
+                            node,
+                            `${loggerName}.${method}`
+                        ),
+                        fix: callWithCallee(
+                            context.sourceCode,
+                            node,
+                            `${contextName}.var.logger.${method}`
+                        ),
+                        logger: loggerName
+                    },
                     node: node.callee.object
                 });
             }

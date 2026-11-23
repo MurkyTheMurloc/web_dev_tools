@@ -7,7 +7,7 @@
 // check of the same rule does not pass for the wrong reason.
 
 const READ_OUTSIDE_SCOPE_MESSAGE =
-    "The reactive variable 'rows' should be used within JSX";
+    "Fix: make it a derived function, `const current = () => rows();`, and call `current()` where it is used";
 
 const untilPredicate = Object.freeze({
     name: "until tracks its predicate",
@@ -102,12 +102,82 @@ export const detail = createMemo(async () => {
 `
 });
 
+// A React-style dependency array is no-react-deps' report; reactivity stays
+// out of it so the array is reported once, with the right fix.
+const reactDepsArray = Object.freeze({
+    name: "leaves a React dependency array to no-react-deps",
+    code: `import { createEffect, createSignal } from "solid-js";
+
+export const View = (props: { id: string }) => {
+    const [count] = createSignal(1);
+    createEffect(() => {
+        console.log(count());
+    }, [count, props.id]);
+    return <p />;
+};
+`
+});
+
 const reactivityScopeSilentCases = Object.freeze([
+    reactDepsArray,
     untilPredicate,
     onFlushCallback,
     deferredReadsBeforeTheGap
 ]);
+// A handler on a native element is bound once; the message carries the fix
+// with the code's own names, so an agent can apply it as written.
+const conditionalHandlerBinding = Object.freeze({
+    name: "names the fix for a conditional handler binding",
+    message:
+        "Fix: decide inside the handler, `onClick={(event) => (editing() ? save : cancel)?.(event)}`",
+    code: `import { createSignal } from "solid-js";
+
+declare function save(event: MouseEvent): void;
+declare function cancel(event: MouseEvent): void;
+
+export const View = () => {
+    const [editing] = createSignal(false);
+    return <button onClick={editing() ? save : cancel}>OK</button>;
+};
+`
+});
+
+// A direct write names the setter call that replaces it.
+const storeWriteOutsideSetter = Object.freeze({
+    name: "names the setter for a direct store write",
+    message:
+        "Fix: write through the setter's draft, `setStore((draft) => { draft.count = 1; })`",
+    code: `import { createStore } from "solid-js";
+
+export const View = () => {
+    const [store, setStore] = createStore({ count: 0 });
+    const reset = () => {
+        store.count = 1;
+    };
+    return <button onClick={reset}>{store.count}</button>;
+};
+`
+});
+
+const signalReassigned = Object.freeze({
+    name: "names the setter for a reassigned signal",
+    message: "Fix: call the setter, `setCount((value) => value + 1)`",
+    code: `import { createSignal } from "solid-js";
+
+export const View = () => {
+    let [count, setCount] = createSignal(0);
+    const bump = () => {
+        count++;
+    };
+    return <button onClick={bump}>{count()}</button>;
+};
+`
+});
+
 const reactivityScopeReportingCases = Object.freeze([
+    conditionalHandlerBinding,
+    storeWriteOutsideSetter,
+    signalReassigned,
     deferredReadAfterTheGap,
     deferredAccessorOutsideScope,
     deferredReadAfterAwaitInMemo

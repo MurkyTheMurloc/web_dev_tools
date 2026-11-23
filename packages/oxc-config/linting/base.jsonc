@@ -18,7 +18,8 @@
         "jsx-a11y": {
             "polymorphicPropName": null,
             "components": {},
-            "attributes": {}
+            // Solid writes `for`, not React's `htmlFor`.
+            "attributes": { "for": ["htmlFor", "for"] }
         },
         "next": {
             "rootDir": []

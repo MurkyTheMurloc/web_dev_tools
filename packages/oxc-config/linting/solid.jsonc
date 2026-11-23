@@ -4,17 +4,23 @@
     "rules": {
         "solid/components-return-once": "error",
         "solid/event-handlers": "error",
+        // Warns past 60 code lines, 80 for a component in .tsx/.jsx; replaces
+        // eslint/max-lines-per-function (see eslint.jsonc).
+        "solid/function-size": ["warn", { "max": 60, "maxComponent": 80 }],
         "solid/imports": "error",
         "solid/jsx-no-duplicate-props": "error",
         "solid/jsx-no-script-url": "error",
         "solid/jsx-no-undef": "error",
         "solid/jsx-uses-vars": "error",
         "solid/no-array-handlers": "error",
+        "solid/no-cleanup-in-effect-apply": "error",
         "solid/no-destructure": "error",
         "solid/no-innerhtml": "error",
         "solid/no-module-scope-reactive-primitive": "error",
         "solid/no-owned-primitives-in-ref": "error",
-        "solid/no-proxy-apis": "error",
+        // Only for targets without Proxy; createStore and createProjection are
+        // the core Solid 2.0 store API.
+        "solid/no-proxy-apis": "off",
         "solid/no-react-deps": "error",
         "solid/no-react-specific-props": "error",
         "solid/no-setter-in-effect": "error",
@@ -25,16 +31,24 @@
         "solid/no-untracked-effect-read": "error",
         "solid/prefer-arrow-components": "error",
         "solid/prefer-class-object": "error",
+        "solid/prefer-destructuring": "error",
         "solid/prefer-for": "error",
+        "solid/prefer-ref-shorthand": "error",
         "solid/prefer-show": "error",
         "solid/reactive-async": "error",
         "solid/reactivity": "error",
         "solid/self-closing-comp": "error",
         "solid/strict-void-return": "error",
         "solid/style-prop": "error",
+        "solid/typed-merge-defaults": "error",
         "solid/validate-jsx-nesting": "error"
     },
     "overrides": [
+        {
+            // Generated files are as long as their input; nobody edits them.
+            "files": ["**/*.generated.*"],
+            "rules": { "solid/function-size": "off" }
+        },
         {
             "files": ["**/*.jsx", "**/*.tsx"],
             "rules": {
@@ -42,7 +56,7 @@
                 // ParentComponent<Props> arrow signatures. The generic
                 // prefer-readonly-parameter-types rule conflicts with that
                 // convention and would reject the autofix immediately.
-                "prefer-readonly-parameter-types": "off",
+                "typescript/prefer-readonly-parameter-types": "off",
                 // Solid reads a promise returned from a reactive computation
                 // like a value, so `createMemo(() => load(id()))` needs no
                 // `async`. `solid/reactive-async` covers the async cases
@@ -51,7 +65,51 @@
                 // The typed rule needs types for what handlers return; the
                 // syntax-only `solid/strict-void-return` covers handlers,
                 // `ref` and `onCleanup`/`onSettled` callbacks.
-                "typescript/strict-void-return": "off"
+                "typescript/strict-void-return": "off",
+                // Solid's docs write derived values as un-annotated accessors,
+                // `const total = () => props.price * props.qty`, and type
+                // components through `Component<P>`, which the rule already
+                // accepts. Exports stay covered by explicit-module-boundary-types.
+                "typescript/explicit-function-return-type": "off",
+                // Solid evaluates a ternary in an attribute or a child reactively,
+                // and the compiler memoizes element branches (a prod <Show>
+                // compiles to the same ternary). The replacement, `let` + `if`
+                // in the component body, runs once and is not reactive.
+                // no-nested-ternary and no-unneeded-ternary stay on everywhere.
+                "eslint/no-ternary": "off",
+                // A `let` that a `ref` assigns has no value to start with:
+                // Solid sets it to the element (`let el!: HTMLDivElement;`
+                // with `ref={el}`, `let el: Optional<HTMLDivElement>;` under
+                // `<Show>`), and a default would be a value nobody reads.
+                // solid/init-declarations is eslint's rule with that one
+                // exception; it is on only here, so `.ts` files keep
+                // eslint/init-declarations alone.
+                "eslint/init-declarations": "off",
+                "solid/init-declarations": "error",
+                // `ref={el}` assigns `el`: Solid's compiler rewrites the single
+                // shorthand to `el = node`, which eslint's scope analysis sees
+                // as a read only. solid/no-unassigned-vars is eslint's rule
+                // with that exception; `.ts` files keep
+                // eslint/no-unassigned-vars from eslint.jsonc.
+                "eslint/no-unassigned-vars": "off",
+                "solid/no-unassigned-vars": "error",
+                // A file that exports a component is PascalCase and named
+                // after it (`Navigate.tsx`), a file that only uses JSX stays
+                // snake_case (`solid_ssr_renderer.tsx`). filename-case allows
+                // both here; solid/filename-matches-export decides which one
+                // applies. `.ts` files keep snakeCase alone from unicorn.jsonc.
+                "unicorn/filename-case": [
+                    "error",
+                    { "cases": { "snakeCase": true, "pascalCase": true } }
+                ],
+                // Skips **/pages/** and **/routes/**, which follow the
+                // router's naming.
+                "solid/filename-matches-export": "error",
+                // A handler that starts an action, `onClick={() => { void save(); }}`:
+                // the action handles its own errors, and `void` as a statement is
+                // how typescript/no-floating-promises lets a promise go on purpose.
+                // Without it every form of that call trips a rule.
+                "eslint/no-void": ["error", { "allowAsStatement": true }]
             }
         }
     ]

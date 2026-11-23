@@ -1,3 +1,5 @@
+import { loggerNameHint, oneLine } from "./utils.mjs";
+
 export const requireLoggerNameRule = {
     meta: {
         type: "problem",
@@ -8,7 +10,7 @@ export const requireLoggerNameRule = {
         schema: [],
         messages: {
             requireLoggerName:
-                "Provide a non-empty logger name when creating a SimpleLog Logger."
+                "`{{call}}` has no name, so its lines print an empty logger name and cannot be told apart from other loggers' lines. Fix: `{{fix}}`, named after the module or service it logs for."
         }
     },
     create(context) {
@@ -60,10 +62,17 @@ export const requireLoggerNameRule = {
                     return;
                 }
 
+                const { sourceCode } = context;
+                const call = oneLine(sourceCode.getText(node));
+                const name = JSON.stringify(loggerNameHint(context));
                 const [firstArgument] = node.arguments ?? [];
                 if (!firstArgument) {
                     context.report({
                         messageId: "requireLoggerName",
+                        data: {
+                            call,
+                            fix: `new ${sourceCode.getText(node.callee)}(${name})`
+                        },
                         node: node.callee
                     });
                     return;
@@ -74,8 +83,17 @@ export const requireLoggerNameRule = {
                     typeof firstArgument.value === "string" &&
                     firstArgument.value.trim().length === 0
                 ) {
+                    const start = firstArgument.range[0] - node.range[0];
+                    const end = firstArgument.range[1] - node.range[0];
+                    const text = sourceCode.getText(node);
                     context.report({
                         messageId: "requireLoggerName",
+                        data: {
+                            call,
+                            fix: oneLine(
+                                `${text.slice(0, start)}${name}${text.slice(end)}`
+                            )
+                        },
                         node: firstArgument
                     });
                 }

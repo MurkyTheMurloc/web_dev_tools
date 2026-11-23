@@ -1,17 +1,11 @@
-import { isFunctionNode, isPropsByName, trackImports } from "../utils.mjs";
-
-const GETTER_INDEX = 0;
-
-/** `const [value, setValue] = createSignal(...)` -> "value". */
-function getGetterName(declarator) {
-    if (declarator.id.type !== "ArrayPattern") {
-        return null;
-    }
-
-    const element = declarator.id.elements[GETTER_INDEX];
-
-    return element?.type === "Identifier" ? element.name : null;
-}
+import { getSourceCode } from "../compat.mjs";
+import {
+    getGetterName,
+    isFunctionNode,
+    isPropsByName,
+    localName,
+    trackImports
+} from "../utils.mjs";
 
 /** Every name a function's parameters bind, however they are destructured. */
 function collectParameterNames(fn, into) {
@@ -75,18 +69,42 @@ function walkPhase(node, visit) {
     }
 }
 
+/** The apply's first parameter when it is a plain identifier. */
+function valueName(apply) {
+    const [first] = apply.params;
+
+    return first?.type === "Identifier" ? first.name : "value";
+}
+
+/**
+ * The effect with `read` moved into its compute, which hands both values over
+ * as one object: `({ value: <the compute's expression>, local: read })`.
+ */
+function buildFix(sourceCode, api, compute, apply, read, local) {
+    const computed =
+        isFunctionNode(compute) &&
+        compute.body.type !== "BlockStatement" &&
+        compute.body.type !== "ObjectExpression"
+            ? sourceCode.getText(compute.body)
+            : "…";
+    const quoted = computed.includes("\n") ? "…" : computed;
+    const value = valueName(apply);
+
+    return `${api}(() => ({ ${value}: ${quoted}, ${local}: ${read} }), ({ ${value}, ${local} }) => { … })`;
+}
+
 export default {
     meta: {
         type: "problem",
         docs: {
             description:
                 "Disallow reading reactive values in the untracked apply phase of an effect.",
-            url: "https://docs.solidjs.com/"
+            url: "https://github.com/MurkyTheMurloc/web_dev_tools/blob/main/docs/solid-2-effects.md"
         },
         schema: [],
         messages: {
             untrackedEffectRead:
-                "'{{name}}' is read in the effect's apply phase, which runs untracked — changes to it will not re-run this effect. Read it in the compute phase and take it as an argument instead."
+                "`{{read}}` is read in the apply phase of `{{api}}`, which runs untracked, so a change to '{{name}}' does not re-run this effect. Fix: read it in the compute and take it as an argument, `{{fix}}`, then use `{{local}}` in place of `{{read}}`."
         }
     },
     defaultOptions: [],
@@ -132,6 +150,32 @@ export default {
                 // parameter, so those names are already settled values.
                 const settled = new Set();
                 collectParameterNames(apply, settled);
+                const sourceCode = getSourceCode(context);
+                const report = (candidate, name) => {
+                    const read = sourceCode.getText(candidate);
+                    const short = localName(name);
+                    // `(title) => … props.title` would bind `title` twice.
+                    const local =
+                        short === valueName(apply) ? `${short}Read` : short;
+                    context.report({
+                        node: candidate,
+                        messageId: "untrackedEffectRead",
+                        data: {
+                            api: node.callee.name,
+                            fix: buildFix(
+                                sourceCode,
+                                node.callee.name,
+                                compute,
+                                apply,
+                                read,
+                                local
+                            ),
+                            local,
+                            name,
+                            read
+                        }
+                    });
+                };
 
                 walkPhase(apply.body, (candidate) => {
                     // `signal()` — a getter call that did not come through the
@@ -142,11 +186,7 @@ export default {
                         getterNames.has(candidate.callee.name) &&
                         !settled.has(candidate.callee.name)
                     ) {
-                        context.report({
-                            node: candidate,
-                            messageId: "untrackedEffectRead",
-                            data: { name: candidate.callee.name }
-                        });
+                        report(candidate, candidate.callee.name);
                         return;
                     }
 
@@ -160,13 +200,10 @@ export default {
                         !settled.has(candidate.object.name) &&
                         candidate.property.type === "Identifier"
                     ) {
-                        context.report({
-                            node: candidate,
-                            messageId: "untrackedEffectRead",
-                            data: {
-                                name: `${candidate.object.name}.${candidate.property.name}`
-                            }
-                        });
+                        report(
+                            candidate,
+                            `${candidate.object.name}.${candidate.property.name}`
+                        );
                     }
                 });
             }

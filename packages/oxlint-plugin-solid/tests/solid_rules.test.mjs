@@ -20,13 +20,20 @@ import {
 } from "./reactivity_scope_cases.mjs";
 import {
     expectedRuleIds,
+    filenameCases,
+    functionSizeCases,
     jsxUsesVarsCase,
     namespaceCases,
     namespaceFixCases,
     noDestructureFixCases,
     preferArrowDiagnosticCases,
     preferArrowFixCases,
-    ruleCases
+    preferDestructuringSilentCase,
+    preferShowCases,
+    refFixCases,
+    refSilentCases,
+    ruleCases,
+    unassignedReportingCases
 } from "./rule_cases.mjs";
 
 const EXIT_SUCCESS = 0;
@@ -92,7 +99,7 @@ function registerImportsRuleTests() {
             );
 
             expect(result.output).toContain(
-                `Prefer importing ${name} from "solid-js".`
+                `Fix: \`import { ${name} } from "solid-js";\`.`
             );
         });
     });
@@ -127,16 +134,28 @@ function registerPreferArrowDiagnosticTests() {
     });
 }
 
+function registerPreferDestructuringSilentTest() {
+    test("prefer-destructuring: stays silent on props and stores", async () => {
+        const result = await harness.lint(preferDestructuringSilentCase.code);
+
+        expect(result.output).not.toContain("solid(prefer-destructuring)");
+    });
+}
+
 function registerRuleDiagnosticsTests() {
     ruleCases.forEach((ruleCase) => {
         test(`reports ${ruleCase.ruleId}`, async () => {
             const result = await harness.lint(ruleCase.code, {
                 fileName: ruleCase.fileName,
-                files: ruleCase.files
+                files: ruleCase.files,
+                rules: ruleCase.rules
             });
 
             expect(result.exitCode).toBeGreaterThan(EXIT_SUCCESS);
             expect(result.output).toContain(`solid(${ruleCase.ruleId})`);
+            if (ruleCase.message !== undefined) {
+                expect(result.output).toContain(ruleCase.message);
+            }
         });
     });
 }
@@ -171,6 +190,191 @@ function registerNamespaceTests() {
             expect(result.source).toContain("<Island client:visible />");
             expect(result.source).toBe(fixCase.code);
         });
+    });
+}
+
+const FILENAME_RULE = "solid(filename-matches-export)";
+
+const FUNCTION_SIZE_RULE = "solid(function-size)";
+
+function registerFunctionSizeTests() {
+    functionSizeCases.forEach((sizeCase) => {
+        test(`function-size: ${sizeCase.name}`, async () => {
+            const result = await harness.lint(sizeCase.code, {
+                fileName: sizeCase.fileName
+            });
+
+            if (sizeCase.report === null) {
+                expect(result.output).not.toContain(FUNCTION_SIZE_RULE);
+            } else {
+                expect(result.output).toContain(FUNCTION_SIZE_RULE);
+                for (const fragment of sizeCase.report) {
+                    expect(result.output).toContain(fragment);
+                }
+            }
+        });
+    });
+}
+
+function registerFilenameTests() {
+    filenameCases.forEach((filenameCase) => {
+        test(`filename-matches-export: ${filenameCase.name}`, async () => {
+            const result = await harness.lint(filenameCase.code, {
+                fileName: filenameCase.fileName,
+                rules: filenameCase.rules
+            });
+
+            if (filenameCase.report === null) {
+                expect(result.output).not.toContain(FILENAME_RULE);
+                expect(result.output).not.toContain("unicorn(filename-case)");
+            } else {
+                expect(result.output).toContain(FILENAME_RULE);
+                expect(result.output).toContain(filenameCase.report);
+            }
+        });
+    });
+
+    // The override in solid.jsonc wins over a case's `rules`, so the option
+    // is checked on the rule directly.
+    test("filename-matches-export: an empty ignore list checks pages/ too", () => {
+        const reports = [];
+        const visitor = solidPlugin.rules["filename-matches-export"].create({
+            filename: "/app/src/pages/about.tsx",
+            options: [{ ignore: [] }],
+            report: (report) => reports.push(report)
+        });
+        visitor.Program({
+            body: [
+                {
+                    declaration: {
+                        id: { name: "Home", type: "Identifier" },
+                        type: "FunctionDeclaration"
+                    },
+                    type: "ExportDefaultDeclaration"
+                }
+            ]
+        });
+
+        expect(reports.map((report) => report.data.expected)).toEqual([
+            "Home.tsx"
+        ]);
+    });
+
+    test("filename-matches-export: a .ts file keeps snake_case alone", async () => {
+        const result = await harness.lint("export const one = 1;\n", {
+            fileName: "src/Config.ts"
+        });
+
+        expect(result.output).toContain("unicorn(filename-case)");
+        expect(result.output).not.toContain(FILENAME_RULE);
+    });
+}
+
+const PREFER_SHOW_RULE = "solid(prefer-show)";
+
+function registerPreferShowTests() {
+    preferShowCases.forEach((showCase) => {
+        test(`prefer-show: ${showCase.name}`, async () => {
+            const result = await harness.lint(showCase.code);
+
+            if (showCase.report === null) {
+                expect(result.output).not.toContain(PREFER_SHOW_RULE);
+            } else {
+                expect(result.output).toContain(showCase.report);
+            }
+        });
+        if (showCase.fix !== undefined) {
+            test(`prefer-show: --fix on ${showCase.name}`, async () => {
+                const result = await harness.lint(showCase.code, { fix: true });
+
+                if (showCase.fix === null) {
+                    expect(result.source).toBe(showCase.code);
+                } else {
+                    expect(result.source).toContain(showCase.fix);
+                }
+            });
+        }
+        if (showCase.suggestion !== undefined) {
+            test(`prefer-show: --fix-suggestions on ${showCase.name}`, async () => {
+                const result = await harness.lint(showCase.code, {
+                    flags: ["--fix-suggestions"]
+                });
+
+                expect(result.source).toContain(showCase.suggestion);
+            });
+        }
+    });
+}
+
+function registerRefTests() {
+    refSilentCases.forEach((refCase) => {
+        test(`refs: leaves ${refCase.name} alone`, async () => {
+            const result = await harness.lint(refCase.code);
+
+            for (const ruleId of refCase.silent) {
+                expect(result.output).not.toContain(`solid(${ruleId})`);
+            }
+            // Off for .tsx: the solid rules take their place.
+            expect(result.output).not.toContain("eslint(init-declarations)");
+            expect(result.output).not.toContain("eslint(no-unassigned-vars)");
+        });
+    });
+
+    unassignedReportingCases.forEach((unassignedCase) => {
+        test(`no-unassigned-vars: ${unassignedCase.name}`, async () => {
+            const result = await harness.lint(unassignedCase.code);
+
+            expect(result.output).toContain("solid(no-unassigned-vars)");
+            expect(result.output).not.toContain("eslint(no-unassigned-vars)");
+        });
+    });
+
+    test("no-unassigned-vars: a bare entry in a ref array is reported once, by prefer-ref-shorthand", async () => {
+        const result = await harness.lint(
+            "export const View = () => {\n    let el!: HTMLInputElement;\n    return <input ref={[el]} onInput={() => el.select()} />;\n};\n"
+        );
+
+        expect(
+            result.output.match(/solid\(prefer-ref-shorthand\)/gu)
+        ).toHaveLength(1);
+        expect(result.output).not.toContain("no-unassigned-vars)");
+    });
+
+    test("no-unassigned-vars: a .ts file keeps eslint's rule alone", async () => {
+        const result = await harness.lint(
+            "declare function use(value: unknown): void;\n\nexport function read(): void {\n    let x;\n    use(x);\n}\n",
+            { fileName: "src/read.ts" }
+        );
+
+        expect(result.output).toContain("eslint(no-unassigned-vars)");
+        expect(result.output).not.toContain("solid(no-unassigned-vars)");
+    });
+
+    refFixCases.forEach((refCase) => {
+        test(`prefer-ref-shorthand: --fix on ${refCase.name}`, async () => {
+            const result = await harness.lint(refCase.code, { fix: true });
+
+            expect(result.source).toContain(refCase.fix);
+        });
+        if (refCase.suggestion !== undefined) {
+            test(`prefer-ref-shorthand: --fix-suggestions on ${refCase.name}`, async () => {
+                const result = await harness.lint(refCase.code, {
+                    flags: ["--fix-suggestions"]
+                });
+
+                expect(result.source).toContain(refCase.suggestion);
+            });
+        }
+    });
+
+    test("init-declarations: a .ts file keeps eslint's rule alone", async () => {
+        const result = await harness.lint(
+            'export function pick(on: boolean): string {\n    let label: string;\n    label = on ? "on" : "off";\n    return label;\n}\n',
+            { fileName: "src/pick.ts" }
+        );
+
+        expect(result.output).toContain("eslint(init-declarations)");
+        expect(result.output).not.toContain("solid(init-declarations)");
     });
 }
 
@@ -238,7 +442,12 @@ describe("oxlint-plugin-solid", () => {
     });
 
     registerRuleDiagnosticsTests();
+    registerPreferDestructuringSilentTest();
+    registerFilenameTests();
+    registerFunctionSizeTests();
     registerNamespaceTests();
+    registerPreferShowTests();
+    registerRefTests();
     registerPreferArrowDiagnosticTests();
     registerReactivityAsyncTests();
     registerReactivityScopeTests();
@@ -246,7 +455,9 @@ describe("oxlint-plugin-solid", () => {
     registerNoDestructureSilentTests();
 
     test("tracks JSX component usage so no-unused-vars stays quiet", async () => {
-        const result = await harness.lint(jsxUsesVarsCase.code);
+        const result = await harness.lint(jsxUsesVarsCase.code, {
+            fileName: "src/View.tsx"
+        });
 
         expect(result.exitCode).toBe(EXIT_SUCCESS);
         expect(result.output).not.toContain("no-unused-vars");

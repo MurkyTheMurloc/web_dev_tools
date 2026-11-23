@@ -110,6 +110,69 @@ const getPropertyInfo = (prop) => {
         return null;
     }
 };
+const MAX_LISTED_READS = 4;
+const MAX_SETUP_LENGTH = 160;
+// The parts of the noDestructure message that name the code: the pattern as
+// written, the parameter to take instead, the `props.x` reads, and the setup
+// line for defaults and a rest. A fixable plan carries the exact line its fix
+// inserts. Without a fix (a default that reads another prop, a computed key)
+// the line cannot be written for the code, so the message names the helpers.
+const describeDestructure = (sourceCode, plan) => {
+    const { props } = plan;
+    const end = props.typeAnnotation?.range[0] ?? props.range[1];
+    const written = sourceCode.text.slice(props.range[0], end).trim();
+    const properties = props.properties.filter(
+        (property) => property.type === "Property"
+    );
+    const rest = props.properties.find(
+        (property) => property.type === "RestElement"
+    );
+    const hasDefaults = properties.some(
+        (property) => property.value.type === "AssignmentPattern"
+    );
+    const propsName = plan.propsName ?? "props";
+    const param = plan.origProps ?? (hasDefaults ? "_props" : propsName);
+    const access = (property) =>
+        property.key.type === "Identifier" && !property.computed
+            ? `\`${propsName}.${property.key.name}\``
+            : `\`${propsName}[${sourceCode.getText(property.key)}]\``;
+    const listed = properties.slice(0, MAX_LISTED_READS).map(access);
+    if (properties.length > MAX_LISTED_READS) {
+        listed.push("…");
+    }
+    let reads = listed.join(", ");
+    if (listed.length === 0) {
+        // `({ ...rest })` is the whole props object under another name.
+        reads =
+            rest?.argument.type === "Identifier"
+                ? `\`${propsName}\` in place of \`${rest.argument.name}\``
+                : `\`${propsName}.<name>\``;
+    }
+    const setup = plan.fixable
+        ? (plan.lineToInsert ?? "")
+              .split("\n")
+              .map((line) => line.trim())
+              .filter(Boolean)
+              .join(" ")
+        : "";
+    const helpers = [
+        hasDefaults && `\`merge({ … }, ${param})\` for the defaults`,
+        rest && listed.length > 0 && `\`omit(${propsName}, …)\` for the rest`
+    ].filter(Boolean);
+    let setupText = "";
+    if (setup !== "" && setup.length <= MAX_SETUP_LENGTH && listed.length > 0) {
+        setupText = `, after \`${setup}\` as the first line of the body`;
+    } else if (helpers.length > 0) {
+        setupText = `, with ${helpers.join(" and ")}`;
+    }
+    return {
+        param,
+        pattern: written.includes("\n") ? "{ … }" : written,
+        reads,
+        setup: setupText
+    };
+};
+
 export default {
     meta: {
         type: "problem",
@@ -122,8 +185,9 @@ export default {
         schema: [],
         messages: {
             noDestructure:
-                "Destructuring component props breaks Solid's reactivity; use property access instead.",
-            missingImport: "`{{name}}` is used without an import from solid-js."
+                "Destructuring `{{pattern}}` in the parameter list reads each prop once, so later changes from the parent never reach this component. Fix: take `{{param}}` as the parameter and read {{reads}} where each value is used{{setup}}. Do not: copy the props into locals in the body; that reads them once too.",
+            missingImport:
+                '`{{name}}` is called but not imported, so the call throws a ReferenceError. Fix: `import { {{specifier}} } from "solid-js";`.'
             // noWriteToProps: "Component props are readonly, writing to props is not supported.",
         }
     },
@@ -530,22 +594,30 @@ export default {
                 context.report({
                     node: identifier,
                     messageId: "missingImport",
-                    data: { name: identifier.name },
+                    data: {
+                        name: identifier.name,
+                        specifier: importSpecifierText(
+                            generatedImport(identifier.name)
+                        )
+                    },
                     fix: (fixer) => importFix(fixer, danglingImports)
                 });
             }
             const [carrier] = plans.filter((plan) => plan.fixable);
             plans.forEach((plan) => {
+                const data = describeDestructure(sourceCode, plan);
                 if (!plan.fixable) {
                     context.report({
                         node: plan.props,
-                        messageId: "noDestructure"
+                        messageId: "noDestructure",
+                        data
                     });
                     return;
                 }
                 context.report({
                     node: plan.props,
                     messageId: "noDestructure",
+                    data,
                     fix: (fixer) =>
                         fixDestructure(
                             plan,

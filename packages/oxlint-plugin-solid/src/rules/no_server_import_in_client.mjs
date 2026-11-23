@@ -303,7 +303,7 @@ export const noServerImportInClientRule = {
         schema: [],
         messages: {
             serverImportInClient:
-                '\'{{specifier}}\' lives under src/server/ but does not have the "use server" directive, so importing it into client code ships server-only code to the browser. Import a server function module instead (a `"use server";` directive at the top, async exports only), and keep database clients and secrets inside it.'
+                '`{{specifier}}` is under src/server/ without a `"use server"` directive, so this import ships server-only code (database clients, secrets) to the browser. Fix: import a server function module instead, one that starts with `"use server";` and exports async functions; for types only, `import type`. Do not: add `"use server"` to `{{specifier}}`; each exported function becomes a browser-callable endpoint.'
         }
     },
     defaultOptions: [],

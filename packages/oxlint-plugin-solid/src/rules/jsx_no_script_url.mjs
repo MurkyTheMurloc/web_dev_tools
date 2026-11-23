@@ -18,7 +18,7 @@ export const jsxNoScriptUrlRule = {
         },
         messages: {
             noJSURL:
-                "For security, don't use javascript: URLs. Use event handlers instead if you can."
+                '`{{name}}` holds a `javascript:` URL, which runs its text as code when followed; text from input makes it a script injection (XSS). Fix: run the code in an event handler, `<button type="button" onClick={() => …}>`, and give a link a real `href`. Do not: assemble the URL at run time to get past this rule.'
         },
         schema: [],
         type: "problem"
@@ -47,7 +47,8 @@ export const jsxNoScriptUrlRule = {
                 ) {
                     context.report({
                         messageId: "noJSURL",
-                        node: node.value
+                        node: node.value,
+                        data: { name: node.name.name }
                     });
                 }
             }

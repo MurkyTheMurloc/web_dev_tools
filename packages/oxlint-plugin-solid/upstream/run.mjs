@@ -45,6 +45,7 @@ export const RULE_PAIRS = {
     "no-react-deps": "no-react-deps",
     "no-react-specific-props": "no-react-specific-props",
     "no-single-arg-create-effect": "no-single-arg-create-effect",
+    "no-unassigned-vars": "no-unassigned-vars",
     "no-unknown-namespaces": "no-unknown-namespaces",
     "no-write-in-pure-computation": "no-write-in-pure-computation",
     "prefer-class-object": "prefer-classlist",

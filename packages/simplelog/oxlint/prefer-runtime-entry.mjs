@@ -9,7 +9,7 @@ export const preferRuntimeEntryRule = {
         },
         schema: [],
         messages: {
-            preferRuntimeEntry: `Prefer an explicit runtime entry over "${SIMPLELOG_PACKAGE}". Use a runtime-specific import like "@murky-web/simplelog/node", "@murky-web/simplelog/web", "@murky-web/simplelog/bun", or "@murky-web/simplelog/hono".`
+            preferRuntimeEntry: `\`"${SIMPLELOG_PACKAGE}"\` is the Node entry: it pulls \`node:fs\` into the bundle, which browsers and most edge runtimes do not have. Fix: \`"${SIMPLELOG_PACKAGE}/node"\` for the same Node logger, \`"${SIMPLELOG_PACKAGE}/bun"\` for Bun, or \`"${SIMPLELOG_PACKAGE}/web"\` for edge runtimes and browsers; \`createHonoLoggerMiddleware\` comes from \`"${SIMPLELOG_PACKAGE}/hono"\`.`
         }
     },
     create(context) {

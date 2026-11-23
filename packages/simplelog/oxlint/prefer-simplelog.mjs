@@ -1,11 +1,8 @@
-const CONSOLE_METHOD_TO_LOGGER_METHOD = {
-    debug: "debug",
-    error: "error",
-    info: "info",
-    log: "info",
-    trace: "debug",
-    warn: "warn"
-};
+import {
+    callWithCallee,
+    CONSOLE_METHOD_TO_LOGGER_METHOD,
+    loggerNameHint
+} from "./utils.mjs";
 
 export const preferSimplelogRule = {
     meta: {
@@ -17,7 +14,7 @@ export const preferSimplelogRule = {
         schema: [],
         messages: {
             preferSimplelog:
-                "Prefer a SimpleLog logger over direct console.{{consoleMethod}}(). Use logger.{{loggerMethod}}(...) instead."
+                '`{{call}}` writes past SimpleLog, so the line skips the logger\'s level threshold, name and log file. Fix: `{{fix}}` on the module\'s logger (`import { Logger } from "@murky-web/simplelog/node"; const logger = new Logger("{{name}}");`, or the `/bun` or `/web` entry), or on `c.var.logger` inside a Hono handler. Do not alias `console` or add `// oxlint-disable` to keep the call.'
         }
     },
     create(context) {
@@ -53,8 +50,17 @@ export const preferSimplelogRule = {
                 context.report({
                     messageId: "preferSimplelog",
                     data: {
-                        consoleMethod,
-                        loggerMethod
+                        call: callWithCallee(
+                            context.sourceCode,
+                            node,
+                            `console.${consoleMethod}`
+                        ),
+                        fix: callWithCallee(
+                            context.sourceCode,
+                            node,
+                            `logger.${loggerMethod}`
+                        ),
+                        name: loggerNameHint(context)
                     },
                     node: node.callee.property
                 });

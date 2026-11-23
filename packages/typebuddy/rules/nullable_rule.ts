@@ -14,7 +14,7 @@ const rule = {
         report(descriptor: {
             node: unknown;
             messageId: string;
-            data: { type: string };
+            data: { type: string; union: string };
             fix(fixer: RuleFixer): unknown;
         }): void;
     }) {
@@ -43,7 +43,10 @@ const rule = {
                     context.report({
                         node,
                         messageId: "useNullable",
-                        data: { type: typeText },
+                        data: {
+                            type: typeText,
+                            union: sourceCode.getText(node)
+                        },
                         fix(fixer) {
                             // See `prefer-maybe`: the fix only uses the
                             // package's own `Nullable`, imported where it is
@@ -76,7 +79,7 @@ const rule = {
         schema: [],
         messages: {
             useNullable:
-                "Use Nullable<{{type}}> instead of {{type}} | null | undefined"
+                '`{{union}}` is the type typebuddy names `Nullable<{{type}}>`. Both mean the same, and one spelling keeps `T | null | undefined` recognisable as the thing `isNullable` narrows. Fix: `Nullable<{{type}}>` with `import type { Nullable } from "@murky-web/typebuddy";` (`--fix` applies it where `Nullable` is not already another binding).'
         }
     }
 };

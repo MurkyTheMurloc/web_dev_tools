@@ -41,6 +41,17 @@ function lines(...rows: string[]): string {
     return rows.join("\n");
 }
 
+/**
+ * Matches a message that contains every given piece, in order. Messages are
+ * read by agents that apply the `Fix:` as written, so the tests pin it.
+ */
+function messageWith(...pieces: string[]): RegExp {
+    const escaped = pieces.map((piece) =>
+        piece.replaceAll(/[.*+?^${}()|[\]\\]/gu, "\\$&")
+    );
+    return new RegExp(escaped.join("[\\s\\S]*"), "u");
+}
+
 describe("prefer-maybe-promise", () => {
     tester.run("prefer-maybe-promise", pluginRule("prefer-maybe-promise"), {
         valid: [
@@ -82,7 +93,15 @@ describe("prefer-maybe-promise", () => {
                     "    }",
                     "}"
                 ),
-                errors: [{ messageId: "returnFailedPromise" }],
+                errors: [
+                    {
+                        message: messageWith(
+                            "settles on nothing (it has no `return`) instead of `err()`",
+                            `Fix: end the \`catch\` with \`return err();\` and \`import { err } from "${PACKAGE}";\`, renaming a \`catch (err)\` parameter first`,
+                            "Do not return `ok(...)` from the `catch`."
+                        )
+                    }
+                ],
                 output: null
             },
             {
@@ -96,7 +115,14 @@ describe("prefer-maybe-promise", () => {
                     "    }",
                     "}"
                 ),
-                errors: [{ messageId: "returnFailedPromise" }],
+                errors: [
+                    {
+                        message: messageWith(
+                            "settles on `return;` instead of `err()`",
+                            "Fix: end the `catch` with `return err();`"
+                        )
+                    }
+                ],
                 output: null
             },
             {
@@ -166,7 +192,11 @@ describe("prefer-maybe-promise", () => {
                 ),
                 errors: [
                     {
-                        messageId: "wrapReturn",
+                        message: messageWith(
+                            "`return session` in the `try`",
+                            "Fix: `return ok(session)`; if `session` already is a `Result`, unwrap it: `const settled = session; if (settled.isError) return err(); return ok(settled.value);`.",
+                            "Do not cast it with `as`."
+                        ),
                         suggestions: [
                             {
                                 messageId: "suggestWrapReturn",
@@ -246,7 +276,14 @@ describe("prefer-maybe-promise", () => {
                     "    }",
                     "}"
                 ),
-                errors: [{ messageId: "returnVoidPromise" }],
+                errors: [
+                    {
+                        message: messageWith(
+                            "`return;` in the `try` of an async `void` function",
+                            `Fix: \`return ok();\` with \`import { ok } from "${PACKAGE}";\``
+                        )
+                    }
+                ],
                 output: lines(
                     `import { ok } from "${PACKAGE}";`,
                     "export async function run(): MaybePromise<void> {",
@@ -279,7 +316,15 @@ describe("prefer-maybe-promise", () => {
                     '    return ok("x");',
                     "}"
                 ),
-                errors: [{ messageId: "replaceWithMaybePromise" }],
+                errors: [
+                    {
+                        message: messageWith(
+                            "`Promise<string>` makes a failure a rejection",
+                            `Fix: \`MaybePromise<string>\` with \`import type { MaybePromise } from "${PACKAGE}";\`, then \`return ok(value)\` from the \`try\` and \`return err()\` from the \`catch\`.`,
+                            "Do not cast the returns with `as`"
+                        )
+                    }
+                ],
                 output: lines(
                     `import type { MaybePromise } from "${PACKAGE}";`,
                     "export async function load(): MaybePromise<string> {",
@@ -359,6 +404,37 @@ describe("prefer-maybe-promise", () => {
                 output: null
             },
             {
+                name: "rewrites an inline failed object in a catch to err()",
+                code: lines(
+                    `import { err, ok } from "${PACKAGE}";`,
+                    "export async function load(): MaybePromise<string> {",
+                    "    try {",
+                    '        return ok("x");',
+                    "    } catch {",
+                    "        return { isError: true, value: null };",
+                    "    }",
+                    "}"
+                ),
+                errors: [
+                    {
+                        message: messageWith(
+                            "`{ isError: true, value: null }` builds the failed result by hand",
+                            `Fix: \`err()\` with \`import { err } from "${PACKAGE}";\``
+                        )
+                    }
+                ],
+                output: lines(
+                    `import { err, ok } from "${PACKAGE}";`,
+                    "export async function load(): MaybePromise<string> {",
+                    "    try {",
+                    '        return ok("x");',
+                    "    } catch {",
+                    "        return err();",
+                    "    }",
+                    "}"
+                )
+            },
+            {
                 name: "still rewrites an inline success object that is exactly isError and value",
                 code: lines(
                     `import { ok } from "${PACKAGE}";`,
@@ -370,7 +446,14 @@ describe("prefer-maybe-promise", () => {
                     "    }",
                     "}"
                 ),
-                errors: [{ messageId: "preferOkResult" }],
+                errors: [
+                    {
+                        message: messageWith(
+                            '`{ isError: false, value: "x" }` builds the success result by hand',
+                            `Fix: \`ok("x")\` with \`import { ok } from "${PACKAGE}";\``
+                        )
+                    }
+                ],
                 output: lines(
                     `import { ok } from "${PACKAGE}";`,
                     "export async function load(): MaybePromise<string> {",
@@ -408,7 +491,11 @@ describe("require-try-catch", () => {
                 ),
                 errors: [
                     {
-                        messageId: "missingTryCatch",
+                        message: messageWith(
+                            "`load` is async without a `try`/`catch`",
+                            `Fix: put the body in \`try { … } catch { return err(); }\` (after a directive such as \`"use cache"\`) with \`import { err } from "${PACKAGE}";\` and \`return ok(value)\` in the \`try\``,
+                            "Do not wrap only part of the body"
+                        ),
                         suggestions: [
                             {
                                 messageId: "suggestTryCatch",
@@ -535,7 +622,10 @@ describe("require-try-catch", () => {
                 code: "export const load = async () => await fetchName();",
                 errors: [
                     {
-                        messageId: "missingTryCatch",
+                        message: messageWith(
+                            "`load` is async without a `try`/`catch`",
+                            "Fix: put the body in `try { … } catch { return err(); }`"
+                        ),
                         suggestions: [
                             {
                                 messageId: "suggestTryCatch",
@@ -564,24 +654,27 @@ const TYPE_RULES = [
         name: "prefer-maybe",
         typeName: "Maybe",
         union: "string | null",
-        messageId: "useMaybe"
+        messageId: "useMaybe",
+        guard: "isMaybe"
     },
     {
         name: "prefer-nullable",
         typeName: "Nullable",
         union: "string | null | undefined",
-        messageId: "useNullable"
+        messageId: "useNullable",
+        guard: "isNullable"
     },
     {
         name: "prefer-optional",
         typeName: "Optional",
         union: "string | undefined",
-        messageId: "preferOptional"
+        messageId: "preferOptional",
+        guard: "isOptional"
     }
 ] as const;
 
 describe.each(TYPE_RULES)("$name imports the type it rewrites to", (entry) => {
-    const { typeName, union, messageId } = entry;
+    const { typeName, union, messageId, guard } = entry;
     const declaration = `export type Name = ${union};`;
     const rewritten = `export type Name = ${typeName}<string>;`;
 
@@ -599,7 +692,15 @@ describe.each(TYPE_RULES)("$name imports the type it rewrites to", (entry) => {
             {
                 name: "adds the type import before the first statement",
                 code: declaration,
-                errors: [{ messageId }],
+                errors: [
+                    {
+                        message: messageWith(
+                            `\`${union}\` is the type typebuddy names \`${typeName}<string>\``,
+                            `\`${guard}\` narrows`,
+                            `Fix: \`${typeName}<string>\` with \`import type { ${typeName} } from "${PACKAGE}";\``
+                        )
+                    }
+                ],
                 output: lines(
                     `import type { ${typeName} } from "${PACKAGE}";`,
                     rewritten

@@ -24,16 +24,30 @@ Aktuell sind enthalten:
   Store schreiben, statt den Wert abzuleiten -- und Effects, die etwas awaiten
   und das Ergebnis zurueckschreiben, statt es aus einer Derivation zu liefern)
   `solid/no-untracked-effect-read` (meldet reaktive Reads in der apply-Phase
-  eines zweiphasigen `createEffect`, die dort nicht tracken) und
+  eines zweiphasigen `createEffect`, die dort nicht tracken),
+  `solid/no-cleanup-in-effect-apply` (siehe unten) und
   `solid/no-owned-primitives-in-ref` (meldet `createEffect`/`onCleanup` und
   Verwandte in einem Ref-Callback -- der laeuft ohne Owner, nichts raeumt sie je
   wieder ab), `solid/reactive-async`, `solid/no-server-import-in-client` und
   `solid/strict-void-return` (siehe unten)
+- `solid/prefer-destructuring`, ein Fork von eslints `prefer-destructuring`: er
+  verlangt Destructuring wie das Original, nur nicht aus `props`, dem ersten
+  Parameter einer Komponente und Ergebnissen von `createStore`,
+  `createProjection`, `createOptimisticStore`, `merge` und `omit`. Dort kopiert
+  Destructuring den Wert einmal und verliert die Reaktivitaet.
+- `solid/typed-merge-defaults`: verlangt `satisfies Partial<Props>` (oder
+  `as const`) an Objekt-Literalen in `merge`/`mergeProps`. Ohne werden Literale
+  zu `string` aufgeweitet, und `as Partial<Props>` macht die Defaults wieder
+  optional. `omit` behaelt seine Typen und braucht nichts.
 - `solid/no-module-scope-reactive-primitive` aus eslint-plugin-solid 0.20.1
   (meldet `createSignal`, `createStore` und Verwandte auf Modul-Ebene: beim SSR
   teilen sich alle Requests diesen Zustand) und
   `solid/no-write-in-pure-computation` (meldet Setter in `createMemo`, in der
   Compute-Phase von `createEffect` und im Component-Body)
+- `solid/init-declarations`, `solid/no-unassigned-vars` und
+  `solid/prefer-ref-shorthand` fuer Refs (siehe unten)
+- `solid/filename-matches-export` fuer Dateinamen (siehe unten)
+- `solid/function-size` fuer die Laenge von Funktionen (siehe unten)
 - ein Test-Harness, der die exportierte Rule-Surface und echte Diagnostik gegen
   Temp-Projekte prueft
 
@@ -63,13 +77,15 @@ in `packages/oxc-config/linting/solid.jsonc` aktiv und ersetzen dort fuer
 ### `solid/reactive-async`
 
 In einer reaktiven Berechnung liest Solid ein zurueckgegebenes Promise wie einen
-Wert; `createMemo(() => getProduct(props.id))` braucht kein `async`. Geprueft
-werden die Callbacks von `createMemo`, `createDeferred`, `createSignal(fn)`,
-`createStore(fn)`, `createProjection`, `createOptimistic`,
-`createOptimisticStore`, `dynamic`, `dynamicComponent` und die Compute-Phase des
-zweiphasigen `createEffect`/`createRenderEffect`. Die empfohlene Form liest alle
-Inputs synchron und lagert das Async in einen Helfer aus:
-`createMemo(() => load(id(), lang()))`.
+Wert. In `.tsx`/`.jsx` braucht `createMemo(() => getProduct(props.id))` deshalb
+kein `async`; in `.ts` verlangt `typescript/promise-function-async` es, also
+`createMemo(async () => getProduct(props.id))`, und `typescript/require-await`
+laesst das ohne `await` zu. Geprueft werden die Callbacks von `createMemo`,
+`createDeferred`, `createSignal(fn)`, `createStore(fn)`, `createProjection`,
+`createOptimistic`, `createOptimisticStore`, `dynamic`, `dynamicComponent` und
+die Compute-Phase des zweiphasigen `createEffect`/`createRenderEffect`. Die
+empfohlene Form liest alle Inputs synchron und lagert das Async in einen Helfer
+aus: `createMemo(() => load(id(), lang()))`.
 
 Gemeldet wird
 
@@ -80,9 +96,10 @@ Gemeldet wird
   Quelle, die schon vor dem `await` gelesen wurde, darf danach wieder gelesen
   werden. Lies den Wert vor dem `await` in eine lokale Variable, nicht mit
   `untrack()`. `solid/reactivity` meldet diese Reads nicht noch einmal.
-- ein `async`-Callback, dessen einziges `await` ein `return await x` ist:
-  `async` und `await` weglassen und das Promise zurueckgeben. Innerhalb von
-  `try` bleibt `return await` erlaubt, weil es das `catch` erst moeglich macht.
+- ein `async`-Callback, dessen einziges `await` ein `return await x` ist: das
+  `await` weglassen und das Promise zurueckgeben, in `.tsx` auch das `async`, in
+  `.ts` bleibt es stehen (siehe oben). Innerhalb von `try` bleibt `return await`
+  erlaubt, weil es das `catch` erst moeglich macht.
 
 Grenzen: Reads in verschachtelten Funktionen, Helfern und `.then`-Callbacks
 sieht die Regel nicht (die Laufzeit-Diagnose schon). Ob ein Name ein Signal ist,
@@ -161,6 +178,111 @@ Tabelle wird nicht gemeldet, der Parser laesst es dort stehen. Grenzen: ein
 Elternknoten, der kein DOM-Element ist (`<Show>`, eine Komponente, ein
 `.map()`-Callback), wird nicht durchschaut.
 
+### `solid/no-cleanup-in-effect-apply`
+
+Meldet `onCleanup(...)`, dessen naechste umgebende Funktion die Effect-Funktion
+von `createEffect`/`createRenderEffect` ist (zweites Argument, oder
+`effect`/`error` eines Bundle-Objekts): sie laeuft ohne Owner, Solid warnt
+NO_OWNER_CLEANUP, und der Cleanup laeuft nie. Ebenso in einem `onSettled`- oder
+`createTrackedEffect`-Callback, wo Solid CLEANUP_IN_FORBIDDEN_SCOPE wirft. Der
+Fix ist `return () => …` aus dem Callback. Steht `onCleanup(fn)` als letzte
+Anweisung und gibt der Callback sonst nichts zurueck, schlaegt die Regel
+`return fn;` vor. Ref-Callbacks meldet `solid/no-owned-primitives-in-ref`.
+
+Hintergrund zu allen Effect-Regeln:
+[`docs/solid-2-effects.md`](../../docs/solid-2-effects.md).
+
+### `solid/init-declarations`
+
+Ein Fork von eslints `init-declarations` im Modus `"always"`: jedes `let` und
+`var` braucht einen Startwert, ausser eine Variable, die ein `ref` in derselben
+Datei zuweist. Zugewiesen heisst `ref={el}` oder `ref={el!}` an einem beliebigen
+JSX-Element (der Compiler macht aus dem einzelnen `ref` eine Zuweisung) oder
+`el = node` in einem Ref-Callback, direkt oder als Eintrag in `ref={[…]}`. Die
+beiden Formen dafuer sind `let el!: HTMLDivElement;` fuer Elemente, die immer
+gerendert werden, und `let el: Optional<HTMLDivElement>;` (typebuddy) fuer
+bedingte. Wie in eslint bleiben `for-in`-/`for-of`-Variablen und `declare`
+aussen vor, `const` ist nicht Sache der Regel. Ein nacktes `el` in einem
+Ref-Array wird nie zugewiesen; das meldet `solid/prefer-ref-shorthand` am
+Eintrag, nicht diese Regel an der Deklaration.
+
+In `oxc-config` ist sie nur fuer `*.tsx`/`*.jsx` an und ersetzt dort
+`eslint/init-declarations`; `.ts`-Dateien behalten eslints Regel.
+
+### `solid/no-unassigned-vars`
+
+Port von Upstreams `no-unassigned-vars` (0.20.1): eslints `no-unassigned-vars`,
+nur zaehlt `ref={el}` oder `ref={el!}` als Zuweisung. Gemeldet wird ein `let`
+oder `var` ohne Startwert, das gelesen, aber nie zugewiesen wird, also immer
+`undefined` ist. `ref={() => el}` oder `<Comp elRef={el} />` sind nur Lesen und
+werden gemeldet. Abweichung von Upstream: ein nacktes `el` in `ref={[…]}` meldet
+schon `solid/prefer-ref-shorthand`, deshalb laesst diese Regel die Variable dann
+aus.
+
+In `oxc-config` ist sie nur fuer `*.tsx`/`*.jsx` an und ersetzt dort
+`eslint/no-unassigned-vars`; `.ts`-Dateien behalten eslints Regel.
+
+### `solid/prefer-ref-shorthand`
+
+- Ein Ref-Callback, der nur sein Element speichert,
+  `ref={(node) => { el = node; }}` oder `ref={(node) => (el = node)}`, wird per
+  `--fix` zu `ref={el}`. Nur als direkter `ref`-Wert und nur, wenn `el` ein
+  Bezeichner ist (kein `this.el` oder `refs.el`).
+- Ein nackter Bezeichner in einem Ref-Array (`ref={[autofocus, el]}`), der auf
+  ein `let`/`var` ohne Startwert zeigt, wird gemeldet: Solid schreibt nur ein
+  einzelnes `ref={el}` in eine Zuweisung um, im Array bleibt `el` `undefined`.
+  Als Vorschlag (`--fix-suggestions`) wird der Eintrag zu
+  `(node) => { el = node; }`. Direktiven-Funktionen im Array bleiben erlaubt.
+
+### `solid/filename-matches-export`
+
+Gilt nur fuer `.tsx`/`.jsx`. Eine Datei, die eine Komponente exportiert, heisst
+wie diese Komponente in PascalCase (`Navigate.tsx` exportiert `Navigate`); eine
+Datei, die nur JSX benutzt und keine Komponente exportiert, bleibt snake_case
+(`solid_ssr_renderer.tsx` exportiert `solidSsrRenderer`). Eine Komponente ist
+ein Export mit PascalCase-Namen, dessen Wert eine Funktion ist
+(`export const Counter = () => …`, `export function Counter()`,
+`export { Counter }`), oder ein solcher Default-Export
+(`export default function Counter()`, `export default Counter`). Typ-Exporte,
+Nicht-Funktionen wie `createContext(…)` und Re-Exporte (`export { X } from`)
+zaehlen nicht.
+
+- Mit Komponenten muss der Name vor dem ersten Punkt einer von ihnen sein, bei
+  einem Default-Export genau dieser. Der Rest bleibt: `slider.island.tsx` mit
+  `Slider` wird zu `Slider.island.tsx`. Helfer daneben sind erlaubt
+  (`IslandsPage.tsx` exportiert `IslandsPage` und `filterProps`).
+- Ohne Komponente muss der Name snake_case sein.
+- `index.tsx` ist immer erlaubt.
+- Die Option `ignore` (Globs, Standard `["**/pages/**", "**/routes/**"]`) nimmt
+  Ordner aus, deren Dateinamen der Router vorgibt.
+
+Ohne Autofix: eine Datei umzubenennen ist kein Lint-Fix. In `oxc-config` ist sie
+fuer `*.tsx`/`*.jsx` an, zusammen mit `unicorn/filename-case`, das dort
+snakeCase und pascalCase erlaubt; `.ts`-Dateien bleiben snakeCase.
+
+### `solid/function-size`
+
+Zaehlt wie eslints `max-lines-per-function` mit `skipBlankLines`, `skipComments`
+und `IIFEs: true`: Leer- und reine Kommentarzeilen zaehlen nicht, eine innere
+Funktion zaehlt fuer sich und in ihrer aeusseren mit. Optionen:
+`{ "max": 60, "maxComponent": 80 }`.
+
+- Komponente (PascalCase-Name, enthaelt JSX, in `.tsx`/`.jsx`): `maxComponent`.
+  Die Meldung sagt, JSX in eine Sub-Komponente in eigener PascalCase-`.tsx` und
+  zusammengehoerige Signals, Memos und Effects in ein `createX` in einer
+  snake_case-`.ts` zu ziehen, das Accessors nimmt (`createX(() => props.id)`)
+  und Accessors zurueckgibt.
+- Primitive (`createX`/`useX`): `max`, mit einer Meldung, die nach Belang in
+  kleinere `createX` teilt.
+- Jede andere Funktion: `max`, mit dem Hinweis auf benannte pure Helfer.
+
+Jede Meldung nennt die Zeilen der laengsten Anweisung im Rumpf als Startpunkt
+(ausser bei Komponenten) und sagt: Ist die Funktion eine zusammenhaengende
+Einheit, bleibt sie, mit einem einzeiligen Kommentar darueber, warum; kein
+`// oxlint-disable`. Ohne Autofix. In `oxc-config` steht sie auf `warn` und
+ersetzt `eslint/max-lines-per-function`, dessen Meldung oxlint nicht anpassen
+laesst; `*.generated.*` ist ausgenommen.
+
 ## Autofixes
 
 `oxlint --fix` schreibt nur Code, der danach noch dasselbe tut. Wo ein Umbau das
@@ -184,8 +306,19 @@ nicht sicher kann, bleibt es bei der Meldung ohne Fix:
 - `solid/imports`: ein Wert wird nie in ein `import type` verschoben, ein Typ
   kommt in einem Wert-Import als `type Name` an und in einem `import type` ohne
   `type`; passt keine vorhandene Deklaration, schreibt der Fix eine neue.
+- `solid/no-react-deps`: bei `createMemo` faellt das Array per `--fix` weg, wenn
+  die Funktion jede Abhaengigkeit liest, sonst nur als Vorschlag. Bei
+  `createEffect`/`createRenderEffect` gibt es nie einen Autofix (ein Effect mit
+  einem Argument wirft MISSING_EFFECT_FN), nur den Vorschlag
+  `createEffect(() => ({ a: a(), id: props.id }), ({ a, id }) => { … })`, wenn
+  jede Abhaengigkeit sauber aufloest, und fuer `[]` den Vorschlag `onSettled`.
 - `solid/prefer-class-object`: steht neben `classList` schon ein `class`, wird
   nur gemeldet (der Fix haette `class` doppelt geschrieben).
+- `solid/prefer-show`: meldet nur Zweige, die sichtbar JSX sind; ein Bezeichner
+  (`{c() ? label : "b"}`) kann Text sein, und dort ist der Ternary billiger als
+  `<Show>`. Der Ternary wird umgeschrieben, `&&` nur als Vorschlag
+  (`--fix-suggestions`): `{count() && <Badge />}` rendert bei `0` eine `0`,
+  `<Show>` nichts.
 
 Ein typischer Fix-Fall:
 

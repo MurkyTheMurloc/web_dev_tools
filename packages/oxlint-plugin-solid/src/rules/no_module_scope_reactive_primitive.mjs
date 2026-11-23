@@ -2,6 +2,7 @@
 // Reactive state created at module scope is shared across every request when
 // server rendering, so one user's state leaks into another's response. Any
 // enclosing function is the escape hatch, `createRoot` included.
+import { getSourceCode } from "../compat.mjs";
 import { findParent, isFunctionNode, trackImports } from "../utils.mjs";
 
 // Upstream's list plus createTrackedEffect and createReaction, which Solid
@@ -31,7 +32,7 @@ export default {
         schema: [],
         messages: {
             moduleScopePrimitive:
-                "{{name}} at module scope creates state shared across all SSR requests. Create it inside a component or provider, or wrap it in `createRoot` if module-level state is intentional (client-only)."
+                "`{{statement}}` runs once per process at module scope, so with server rendering every request shares this state and one user's data reaches another's response. Fix: move `{{statement}}` into the component that uses it, or into a provider component that hands it down with `<Context value={…}>`. Only for client-only state that is meant to be global: wrap it in `createRoot(() => …)`."
         }
     },
     defaultOptions: [],
@@ -47,8 +48,21 @@ export default {
                     return;
                 }
                 if (findParent(node, isFunctionNode) === null) {
+                    // The whole declaration when there is one, so the fix can
+                    // move it as written.
+                    const declaration = findParent(
+                        node,
+                        (candidate) => candidate.type === "VariableDeclaration"
+                    );
+                    const text = getSourceCode(context).getText(
+                        declaration ?? node
+                    );
                     context.report({
-                        data: { name: node.callee.name },
+                        data: {
+                            statement: text.includes("\n")
+                                ? `${node.callee.name}(…)`
+                                : text
+                        },
                         messageId: "moduleScopePrimitive",
                         node
                     });

@@ -27,6 +27,7 @@ type RuleContext = {
     report(descriptor: {
         node: unknown;
         messageId: string;
+        data?: Record<string, string>;
         fix?(fixer: RuleFixer): unknown;
         suggest?: RuleSuggestion[];
     }): void;
@@ -279,6 +280,11 @@ const rule = {
             if (getTypeName(typeAnnotation) !== "Promise") return;
 
             const typeName = typeAnnotation["typeName"];
+            const awaited = getTypeArgument(typeAnnotation);
+            const data = {
+                promise: sourceCode.getText(typeAnnotation),
+                type: awaited ? sourceCode.getText(awaited) : "T"
+            };
             const rewrite = (fixer: RuleFixer) => {
                 const typeImport = imports.fixes(
                     typeName,
@@ -303,6 +309,7 @@ const rule = {
                 context.report({
                     node: typeName,
                     messageId: "replaceWithMaybePromise",
+                    data,
                     fix(fixer) {
                         return rewrite(fixer);
                     }
@@ -313,6 +320,7 @@ const rule = {
             context.report({
                 node: typeName,
                 messageId: "replaceWithMaybePromise",
+                data,
                 suggest: [
                     {
                         messageId: "suggestMaybePromise",
@@ -369,6 +377,7 @@ const rule = {
                     context.report({
                         node,
                         messageId: "returnVoidPromise",
+                        data: { code: sourceCode.getText(node) },
                         fix(fixer) {
                             return withHelperFixes(
                                 node,
@@ -411,6 +420,10 @@ const rule = {
                 context.report({
                     node: argument,
                     messageId: "preferOkResult",
+                    data: {
+                        object: sourceCode.getText(argument),
+                        value: sourceCode.getText(objectValue)
+                    },
                     fix(fixer) {
                         const valueText = sourceCode.getText(objectValue);
                         return withHelperFixes(
@@ -432,6 +445,7 @@ const rule = {
                 context.report({
                     node: argument,
                     messageId: "preferErrResult",
+                    data: { object: sourceCode.getText(argument) },
                     fix(fixer) {
                         return withHelperFixes(
                             node,
@@ -456,6 +470,7 @@ const rule = {
                 context.report({
                     node: argument,
                     messageId: "wrapReturn",
+                    data: { argument: sourceCode.getText(argument) },
                     suggest: suggestWithHelper(
                         node,
                         "suggestWrapReturn",
@@ -521,6 +536,7 @@ const rule = {
                 context.report({
                     node: statement,
                     messageId: "returnFailedPromise",
+                    data: { found: `\`${sourceCode.getText(statement)}\`` },
                     fix(fixer) {
                         return withHelperFixes(
                             statement,
@@ -543,6 +559,7 @@ const rule = {
                     context.report({
                         node: argument,
                         messageId: "preferErrResult",
+                        data: { object: sourceCode.getText(argument) },
                         fix(fixer) {
                             return withHelperFixes(
                                 statement,
@@ -558,7 +575,8 @@ const rule = {
 
             context.report({
                 node: statement,
-                messageId: "returnFailedPromise"
+                messageId: "returnFailedPromise",
+                data: { found: `\`${sourceCode.getText(statement)}\`` }
             });
         }
 
@@ -639,6 +657,7 @@ const rule = {
             context.report({
                 node: handler,
                 messageId: "returnFailedPromise",
+                data: { found: "nothing (it has no `return`)" },
                 fix(fixer) {
                     const handlerBody = handler["body"];
                     if (
@@ -695,18 +714,19 @@ const rule = {
         schema: [],
         messages: {
             replaceWithMaybePromise:
-                "Use 'MaybePromise' instead of 'Promise' as the return type in async functions.",
+                '`{{promise}}` makes a failure a rejection the caller has to catch; typebuddy\'s async functions resolve to a result instead, which the caller checks with `isError`. Fix: `MaybePromise<{{type}}>` with `import type { MaybePromise } from "@murky-web/typebuddy";`, then `return ok(value)` from the `try` and `return err()` from the `catch`. Do not cast the returns with `as` to make them fit.',
             suggestMaybePromise: "Replace 'Promise' with 'MaybePromise'.",
-            wrapReturn: "Wrap return value with ok(value).",
+            wrapReturn:
+                "`return {{argument}}` in the `try` of an async function resolves to a bare value, and a caller reading `.isError` gets `undefined`. Fix: `return ok({{argument}})`; if `{{argument}}` already is a `Result`, unwrap it: `const settled = {{argument}}; if (settled.isError) return err(); return ok(settled.value);`. Do not cast it with `as`.",
             suggestWrapReturn: "Wrap the return value in ok(...).",
             preferOkResult:
-                "Use ok(value) instead of an inline success result object.",
+                '`{{object}}` builds the success result by hand; without a return type its `isError` widens to `boolean` and `isSuccess` stops narrowing it. Fix: `ok({{value}})` with `import { ok } from "@murky-web/typebuddy";` (`--fix` applies it).',
             preferErrResult:
-                "Use err() instead of an inline error result object.",
+                '`{{object}}` builds the failed result by hand; without a return type its `isError` widens to `boolean` and `isSuccess` stops narrowing it. Fix: `err()` with `import { err } from "@murky-web/typebuddy";` (`--fix` applies it).',
             returnVoidPromise:
-                "Return ok() for async functions with Promise<void> return type.",
+                '`{{code}}` in the `try` of an async `void` function resolves to `undefined` instead of a result, so a caller reading `.isError` throws a `TypeError`. Fix: `return ok();` with `import { ok } from "@murky-web/typebuddy";` (`--fix` applies it).',
             returnFailedPromise:
-                "Return err() in the catch block of async functions."
+                'The `catch` of this async function settles on {{found}} instead of `err()`, so the caller gets no `Failed` result and `isError` misses the failure. Fix: end the `catch` with `return err();` and `import { err } from "@murky-web/typebuddy";`, renaming a `catch (err)` parameter first; a fallback value belongs in the `try` as `return ok(fallback)`. Do not return `ok(...)` from the `catch`.'
         }
     }
 };

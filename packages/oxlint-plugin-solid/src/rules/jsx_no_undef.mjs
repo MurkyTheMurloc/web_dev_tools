@@ -1,10 +1,5 @@
 import { getScope, getSourceCode } from "../compat.mjs";
-import {
-    isDOMElementName,
-    formatList,
-    appendImports,
-    insertImports
-} from "../utils.mjs";
+import { isDOMElementName, appendImports, insertImports } from "../utils.mjs";
 // Currently all of the control flow components are from 'solid-js'.
 // Solid 2.0 dropped `Index` (use `<For keyed={false}>`) and renamed the
 // async/error boundaries. All of these are exported from `solid-js`.
@@ -55,10 +50,12 @@ export default {
             }
         ],
         messages: {
-            undefined: "'{{identifier}}' is not defined.",
+            undefined:
+                "`{{identifier}}` is used in JSX but not defined in this module, so rendering it throws a ReferenceError. Fix: import `{{identifier}}` or fix its spelling.",
             customDirectiveUndefined:
-                "Custom directive '{{identifier}}' is not defined.",
-            autoImport: "{{imports}} should be imported from '{{source}}'."
+                "The directive `{{identifier}}` in `use:{{identifier}}` is not defined in this module, so applying it throws a ReferenceError. Fix: import `{{identifier}}` or fix its spelling.",
+            autoImport:
+                'Used in JSX but not imported: `{{imports}}`. Rendering throws a ReferenceError. Fix: `import { {{imports}} } from "{{source}}";`, or add them to the existing `{{source}}` import.'
         }
     },
     defaultOptions: [],
@@ -188,7 +185,7 @@ export default {
                             node: importNode,
                             messageId: "autoImport",
                             data: {
-                                imports: formatList(missingComponents), // "Show, For, and Switch"
+                                imports: missingComponents.join(", "), // "Show, For, Switch"
                                 source: SOURCE_MODULE
                             },
                             fix: (fixer) => {
@@ -205,7 +202,7 @@ export default {
                             node: programNode,
                             messageId: "autoImport",
                             data: {
-                                imports: formatList(missingComponents),
+                                imports: missingComponents.join(", "),
                                 source: SOURCE_MODULE
                             },
                             fix: (fixer) => {

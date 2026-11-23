@@ -242,13 +242,26 @@ export async function flush(): MaybePromise<void> {
 
 ### Oxlint rules
 
-`@murky-web/typebuddy/oxlint` has `prefer-maybe`, `prefer-maybe-promise`,
-`prefer-nullable`, `prefer-optional` and `require-try-catch`. They skip test
-files: `*.test.*`, `*.spec.*` and `*.bench.*`, anything under a `__tests__/`,
-`tests/`, `test/` or `__mocks__/` directory, and `vitest.setup.*`,
-`vitest-setup.*` and `setupTests.*`. Names like `latest.ts` or `contest.ts` are
-source files and stay checked. Directories count relative to the directory
-oxlint runs in, so a project checked out under `/tmp/test/` is not silenced.
+`@murky-web/typebuddy/oxlint` has `no-useless-undefined`, `prefer-maybe`,
+`prefer-maybe-promise`, `prefer-nullable`, `prefer-optional` and
+`require-try-catch`. All but `no-useless-undefined` skip test files: `*.test.*`,
+`*.spec.*` and `*.bench.*`, anything under a `__tests__/`, `tests/`, `test/` or
+`__mocks__/` directory, and `vitest.setup.*`, `vitest-setup.*` and
+`setupTests.*`. Names like `latest.ts` or `contest.ts` are source files and stay
+checked. Directories count relative to the directory oxlint runs in, so a
+project checked out under `/tmp/test/` is not silenced.
+
+`no-useless-undefined` is unicorn's rule of that name as oxlint ships it, with
+the same options (`checkArguments`, `checkArrowFunctionBody`, both on), except
+that a `let` whose type is `Optional<T>` or a union with `undefined` keeps its
+`undefined` start value: `let x: Optional<T> = undefined;`, like
+`let x: Maybe<T> = null;`, so every `let` can have an initializer
+(`eslint/init-declarations`). It replaces `unicorn/no-useless-undefined` (turn
+that one off) and, like it, lints test files too. An un-annotated
+`let x = undefined` is reported without an autofix: the fix is a type or a real
+default, not `let x;`. Trailing `undefined` arguments are reported without an
+autofix too, because `arguments.length` and rest parameters see them (oxlint
+only removes them under `--fix-dangerously`).
 
 Autofixes only do what cannot change what the code means:
 

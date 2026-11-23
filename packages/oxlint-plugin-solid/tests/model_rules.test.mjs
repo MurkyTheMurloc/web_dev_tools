@@ -2,10 +2,16 @@ import { afterAll, beforeAll, describe, expect, test } from "vitest";
 
 import { createLintHarness } from "./helpers.mjs";
 import {
+    cleanupReports,
+    cleanupSilent,
+    reactDepsReports,
+    reactDepsSilent,
     reactiveAsyncReports,
     reactiveAsyncSilent,
     serverImportReports,
     serverImportSilent,
+    setterReports,
+    setterSilent,
     strictVoidReports,
     strictVoidSilent
 } from "./model_rule_cases.mjs";
@@ -13,10 +19,11 @@ import {
 const DEFAULT_FIXTURE = "src/model_case.tsx";
 let harness = null;
 
-function lintCase(modelCase) {
+function lintCase(modelCase, options = {}) {
     return harness.lint(modelCase.code, {
         fileName: modelCase.fileName ?? DEFAULT_FIXTURE,
-        files: modelCase.files
+        files: modelCase.files,
+        ...options
     });
 }
 
@@ -29,6 +36,22 @@ function registerRule(ruleId, reports, silent, message) {
                 expect(result.output).toContain(`solid(${ruleId})`);
                 expect(result.output).toContain(modelCase.message ?? message);
             });
+            if (modelCase.fix !== undefined) {
+                test(`--fix on ${modelCase.name}`, async () => {
+                    const result = await lintCase(modelCase, { fix: true });
+
+                    expect(result.source).toContain(modelCase.fix);
+                });
+            }
+            if (modelCase.suggestion !== undefined) {
+                test(`--fix-suggestions on ${modelCase.name}`, async () => {
+                    const result = await lintCase(modelCase, {
+                        flags: ["--fix-suggestions"]
+                    });
+
+                    expect(result.source).toContain(modelCase.suggestion);
+                });
+            }
         });
 
         silent.forEach((modelCase) => {
@@ -60,12 +83,25 @@ describe("model rules", () => {
         "no-server-import-in-client",
         serverImportReports,
         serverImportSilent,
-        "Import a server function module instead"
+        "Fix: import a server function module instead"
     );
+    registerRule(
+        "no-react-deps",
+        reactDepsReports,
+        reactDepsSilent,
+        "Solid 2.0"
+    );
+    registerRule(
+        "no-cleanup-in-effect-apply",
+        cleanupReports,
+        cleanupSilent,
+        "Fix: return the cleanup"
+    );
+    registerRule("no-setter-in-effect", setterReports, setterSilent, "Fix:");
     registerRule(
         "strict-void-return",
         strictVoidReports,
         strictVoidSilent,
-        "Solid ignores"
+        "which Solid ignores"
     );
 });

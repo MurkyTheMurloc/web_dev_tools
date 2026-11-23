@@ -119,7 +119,10 @@
     },
     "no-react-deps": {
         "falsePositive": ["valid:no-react-deps.test.ts:27"],
-        "fix": [],
+        "fix": [
+            "invalid:no-react-deps.test.ts:33",
+            "invalid:no-react-deps.test.ts:42"
+        ],
         "missed": [],
         "parseError": []
     },
@@ -130,6 +133,12 @@
         "parseError": []
     },
     "no-single-arg-create-effect": {
+        "falsePositive": [],
+        "fix": [],
+        "missed": [],
+        "parseError": []
+    },
+    "no-unassigned-vars": {
         "falsePositive": [],
         "fix": [],
         "missed": [],
@@ -184,7 +193,11 @@
     },
     "prefer-show": {
         "falsePositive": [],
-        "fix": [],
+        "fix": [
+            "invalid:prefer-show.test.ts:14",
+            "invalid:prefer-show.test.ts:25",
+            "invalid:prefer-show.test.ts:60"
+        ],
         "missed": [],
         "parseError": []
     },

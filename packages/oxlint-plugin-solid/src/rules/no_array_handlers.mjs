@@ -1,4 +1,5 @@
-import { isDOMElementName, trace } from "../utils.mjs";
+import { getSourceCode } from "../compat.mjs";
+import { isDOMElementName, messageCode, trace } from "../utils.mjs";
 
 export const noArrayHandlersRule = {
     meta: {
@@ -8,7 +9,7 @@ export const noArrayHandlersRule = {
         },
         messages: {
             noArrayHandlers:
-                "Passing an array as an event handler is potentially type-unsafe."
+                "`{{name}}` gets the array `{{expression}}`. Solid calls `handler(data, event)` for `[handler, data]`, but the JSX types take `data` as `any`, so a wrong argument passes the type check. Fix: `{{name}}={{{fix}}}`."
         },
         schema: [],
         type: "problem"
@@ -32,15 +33,43 @@ export const noArrayHandlersRule = {
                     node.name.type === "JSXIdentifier" &&
                     /^on[a-zA-Z]/.test(node.name.name);
 
+                const traced =
+                    node.value?.type === "JSXExpressionContainer"
+                        ? trace(node.value.expression, context)
+                        : null;
                 if (
                     (isNamespacedHandler || isNormalEventHandler) &&
-                    node.value?.type === "JSXExpressionContainer" &&
-                    trace(node.value.expression, context).type ===
-                        "ArrayExpression"
+                    traced?.type === "ArrayExpression"
                 ) {
+                    const sourceCode = getSourceCode(context);
+                    const [handler, data] = traced.elements.map(
+                        (element, index) => {
+                            if (!element || element.type === "SpreadElement") {
+                                return null;
+                            }
+                            const text = sourceCode.getText(element);
+                            // An inline function is called as `(fn)(...)`.
+                            return index === 0 &&
+                                element.type !== "Identifier" &&
+                                element.type !== "MemberExpression"
+                                ? `(${text})`
+                                : text;
+                        }
+                    );
                     context.report({
                         messageId: "noArrayHandlers",
-                        node
+                        node,
+                        data: {
+                            name: sourceCode.getText(node.name),
+                            expression: messageCode(
+                                sourceCode.getText(node.value.expression),
+                                "[handler, data]"
+                            ),
+                            fix: messageCode(
+                                `(event) => ${handler ?? "handler"}(${data ?? "data"}, event)`,
+                                "(event) => handler(data, event)"
+                            )
+                        }
                     });
                 }
             }

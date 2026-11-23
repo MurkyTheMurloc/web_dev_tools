@@ -12,14 +12,14 @@ export default {
         docs: {
             description:
                 "Require the two-argument `createEffect(compute, effect)` form used by Solid 2.0.",
-            url: "https://github.com/solidjs/eslint-plugin-solid/blob/main/packages/eslint-plugin-solid/docs/no-single-arg-create-effect.md"
+            url: "https://github.com/MurkyTheMurloc/web_dev_tools/blob/main/docs/solid-2-effects.md"
         },
         schema: [],
         messages: {
             singleArgEffect:
-                "In Solid 2.0, createEffect takes separate compute and effect functions: `createEffect(() => signal(), (value) => doWork(value))`. For a derived value use `createMemo`; for a one-shot side effect, just call the function directly.",
+                "`{{name}}` is called with one function, a form Solid 2.0 removed: it throws MISSING_EFFECT_FN in dev. Fix: split it into a tracked compute that reads the values and an untracked effect that does the work, `{{name}}(() => source(), (value) => doWork(value))`. For a derived value use `createMemo(() => …)` instead; for one-time work after mount use `onSettled(() => …)`.",
             singleArgRenderEffect:
-                "In Solid 2.0, createRenderEffect takes separate compute and effect functions: `createRenderEffect(() => signal(), (value) => doWork(value))`."
+                "`{{name}}` is called with one function, a form Solid 2.0 does not have: the function runs only as the tracked compute, with no effect phase. Fix: split it into a tracked compute that reads the values and an untracked effect that does the work, `{{name}}(() => source(), (value) => doWork(value))`. For a derived value use `createMemo(() => …)` instead."
         }
     },
     defaultOptions: [],
@@ -35,11 +35,16 @@ export default {
                     return;
                 }
                 if (matchImport("createEffect", node.callee.name)) {
-                    context.report({ messageId: "singleArgEffect", node });
+                    context.report({
+                        data: { name: node.callee.name },
+                        messageId: "singleArgEffect",
+                        node
+                    });
                 } else if (
                     matchImport("createRenderEffect", node.callee.name)
                 ) {
                     context.report({
+                        data: { name: node.callee.name },
                         messageId: "singleArgRenderEffect",
                         node
                     });

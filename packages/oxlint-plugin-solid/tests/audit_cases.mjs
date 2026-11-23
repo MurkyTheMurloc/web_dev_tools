@@ -642,11 +642,13 @@ const nestingSilent = Object.freeze(
 // The cases of eslint-plugin-solid 0.20 for `validate-jsx-nesting`. The rule
 // reports the pairs that parse5 does not keep as written, so the silent list
 // holds the markup the spec forbids but the parser keeps.
+const NESTING_FIX = (parent, child) =>
+    `Fix: move the \`<${child}>\` out of the \`<${parent}>\`, or change one of the two tags so HTML allows the nesting.`;
 const NESTING_MESSAGES = Object.freeze({
     plain: (parent, child) =>
-        `Invalid HTML nesting: \`<${child}>\` cannot be a child of \`<${parent}>\`. The HTML parser restructures this, so the rendered DOM won't match this markup.`,
+        `Invalid HTML nesting: \`<${child}>\` cannot be a child of \`<${parent}>\`. The HTML parser restructures this, so the rendered DOM won't match this markup. ${NESTING_FIX(parent, child)}`,
     inserted: (parent, child) =>
-        `Invalid HTML nesting: \`<${child}>\` cannot be a child of \`<${parent}>\`. The client inserts it as written, but the HTML parser restructures it in server-rendered HTML, so hydration won't match this markup.`
+        `Invalid HTML nesting: \`<${child}>\` cannot be a child of \`<${parent}>\`. The client inserts it as written, but the HTML parser restructures it in server-rendered HTML, so hydration won't match this markup. ${NESTING_FIX(parent, child)}`
 });
 // `reports` are the messages of the rule, one per report and in source order:
 // the case fails on a missing, an extra or a wrong kind of report.

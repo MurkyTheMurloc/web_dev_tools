@@ -9,7 +9,7 @@
 //
 // Not the same as no-setter-in-effect, which reports effects that only write
 // and should be derivations; both stay.
-import { findVariable } from "../compat.mjs";
+import { findVariable, getSourceCode } from "../compat.mjs";
 import {
     findParent,
     getFunctionName,
@@ -107,11 +107,11 @@ export default {
         schema: [],
         messages: {
             writeInMemo:
-                "Calling the setter '{{name}}' inside {{api}} makes the computation impure and creates an update cycle. Derive the value instead of storing it, or move the write to an effect.",
+                "`{{call}}` writes state inside `{{api}}`, which must be pure: Solid throws REACTIVE_WRITE_IN_OWNED_SCOPE in dev, and the write re-runs whatever reads it. Fix: return the value from the `{{api}}` callback and read the memo where the state behind '{{name}}' was read, then drop that state; if it is also edited locally, make it a writable derived signal, `createSignal(() => …)`. Do not: wrap the write in `untrack()`; the guard is on the owner, not on tracking.",
             writeInCompute:
-                "Calling the setter '{{name}}' in the compute half of {{api}} — the compute function is tracked and must be pure. Move the write into the effect half (the second argument).",
+                "`{{call}}` runs in the compute half of `{{api}}`, which is tracked and must be pure: Solid throws REACTIVE_WRITE_IN_OWNED_SCOPE in dev. Fix: when the written value derives from what the compute reads, replace the state behind '{{name}}' with `createMemo(() => …)`; when the write is part of the side effect, move it to the effect half, `{{api}}(() => …, (value) => { {{call}}; })`, which runs untracked. Do not: wrap the write in `untrack()`; the guard is on the owner, not on tracking.",
             writeInComponent:
-                "Calling the setter '{{name}}' during component setup — the body runs once as a pure owned scope, and Solid 2.0 throws on setup writes in dev. Initialize the state with the right value instead, or move the write into an effect half or event handler."
+                "`{{call}}` runs during component setup, an owned scope that must be pure: Solid throws REACTIVE_WRITE_IN_OWNED_SCOPE in dev. Fix: create the state with this value, `createSignal(value)` (or `createSignal(() => props.x)` to follow a prop), or make the write in an event handler or in `onSettled(() => { {{call}}; })`. Do not: wrap the write in `untrack()`; the guard is on the owner, not on tracking."
         }
     },
     defaultOptions: [],
@@ -129,6 +129,13 @@ export default {
          */
         const pendingComponentWrites = new Map();
         const functionStack = [];
+        const sourceCode = getSourceCode(context);
+
+        /** The setter call as written, or `setX(…)` when it spans lines. */
+        function quote(call) {
+            const text = sourceCode.getText(call);
+            return text.includes("\n") ? `${call.callee.name}(…)` : text;
+        }
 
         function isSetter(identifier) {
             const definition = findVariable(context, identifier)?.defs[0];
@@ -178,7 +185,7 @@ export default {
             }
             for (const call of pending) {
                 context.report({
-                    data: { name: call.callee.name },
+                    data: { call: quote(call), name: call.callee.name },
                     messageId: "writeInComponent",
                     node: call
                 });
@@ -244,7 +251,11 @@ export default {
                 }
                 if (computation) {
                     context.report({
-                        data: { api: computation.api, name: node.callee.name },
+                        data: {
+                            api: computation.api,
+                            call: quote(node),
+                            name: node.callee.name
+                        },
                         messageId: computation.messageId,
                         node
                     });
