@@ -54,7 +54,7 @@ export const rows = createDeferred(async () => {
 
 const deferredReadAfterTheGap = Object.freeze({
     name: "createDeferred reports a read placed after the first await",
-    message: "is read after an await",
+    message: "is first read after an `await` or `yield`",
     code: `import { createDeferred, createSignal } from "solid-js";
 
 declare function loadRows(): Promise<string[]>;
@@ -85,7 +85,8 @@ export const current = rows();
 // `{{name}}` it names.
 const deferredReadAfterAwaitInMemo = Object.freeze({
     name: "reactive-async knows a createDeferred accessor",
-    message: "'rows' is read after an `await` in this `createMemo` callback",
+    message:
+        "'rows' is first read after an `await` or `yield` in this `createMemo` callback",
     code: `import { createDeferred, createMemo, createSignal } from "solid-js";
 
 declare function load(id: number): Promise<string>;

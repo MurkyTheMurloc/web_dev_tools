@@ -28,7 +28,9 @@
         "provenance": true
     },
     "scripts": {
-        "test": "vitest run"
+        "test": "vitest run",
+        "upstream:report": "bun upstream/run.mjs",
+        "upstream:baseline": "bun upstream/run.mjs --write-baseline"
     },
     "dependencies": {
         "@eslint-community/eslint-utils": "^4.10.1",
@@ -41,6 +43,7 @@
         "validate-html-nesting": "^1.2.4"
     },
     "devDependencies": {
+        "@babel/parser": "^7.29.0",
         "@solidjs/web": "^2.0.3",
         "solid-js": "^2.0.3"
     }

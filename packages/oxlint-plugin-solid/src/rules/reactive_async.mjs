@@ -14,6 +14,8 @@ import {
 const COMPUTATION_PRIMITIVES = [
     "createDeferred",
     "createMemo",
+    "dynamic",
+    "dynamicComponent",
     "createOptimistic",
     "createOptimisticStore",
     "createProjection",
@@ -101,7 +103,7 @@ export const reactiveAsyncRule = {
         schema: [],
         messages: {
             untrackedReadAfterAwait:
-                "'{{name}}' is read after an `await` in this `{{primitive}}` callback. Solid reports this as UNTRACKED_READ_AFTER_AWAIT: only reads before the first `await` are dependencies, so the result goes stale when it changes. Read it before the `await` and use the local afterwards: `const current = {{name}}; … await …`.",
+                "'{{name}}' is first read after an `await` or `yield` in this `{{primitive}}` callback, so it is not a dependency and the result goes stale when it changes (Solid warns UNTRACKED_READ_AFTER_AWAIT in dev). Read it before the first suspension and keep it in a local, or read every input synchronously and move the async work into a helper: `{{primitive}}(() => load(id(), lang()))`. Do not wrap the read in `untrack()`.",
             redundantAsync:
                 "This `async` `{{primitive}}` callback only does `return await …`. Solid reads a returned promise like a value, so remove `async` and `await` and return the promise: `{{primitive}}(() => load(id()))`."
         }
@@ -154,11 +156,19 @@ export const reactiveAsyncRule = {
 
         function checkCallback(callback, primitive) {
             const awaits = [];
+            // `await`, and `yield` in a generator computation: both suspend it.
+            const gaps = [];
             const reads = [];
 
             walkOwnBody(callback.body, (candidate) => {
                 if (candidate.type === "AwaitExpression") {
                     awaits.push(candidate);
+                }
+                if (
+                    candidate.type === "AwaitExpression" ||
+                    candidate.type === "YieldExpression"
+                ) {
+                    gaps.push(candidate);
                 }
 
                 const name = readName(candidate);
@@ -167,7 +177,7 @@ export const reactiveAsyncRule = {
                 }
             });
 
-            if (awaits.length === 0) {
+            if (gaps.length === 0) {
                 return;
             }
 
@@ -184,9 +194,15 @@ export const reactiveAsyncRule = {
 
             // A read inside the awaited expression itself still runs before the
             // await suspends, so the boundary is where the first await ends.
-            const firstAwaitEnd = Math.min(...awaits.map(getEnd));
+            // Like the runtime, a source already read before it is a dependency
+            // and fine to read again; a late source is reported once.
+            const firstAwaitEnd = Math.min(...gaps.map(getEnd));
+            const tracked = new Set();
             for (const read of reads) {
-                if (getStart(read.node) >= firstAwaitEnd) {
+                if (getStart(read.node) < firstAwaitEnd) {
+                    tracked.add(read.name);
+                } else if (!tracked.has(read.name)) {
+                    tracked.add(read.name);
                     context.report({
                         node: read.node,
                         messageId: "untrackedReadAfterAwait",

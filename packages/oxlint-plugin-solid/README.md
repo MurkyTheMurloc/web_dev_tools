@@ -17,7 +17,8 @@ TypeScript-ESLint-Toolchain in den Baum jedes Konsumenten zu ziehen.
 
 Aktuell sind enthalten:
 
-- die komplette von `eslint-plugin-solid` exportierte Regelmenge
+- die Regeln von `eslint-plugin-solid` 0.14.5; was Upstream bis 0.20.1
+  dazugebaut hat, fehlt teils (`bun upstream/run.mjs` zeigt den Abgleich)
 - die zusaetzlichen Projektregeln `solid/prefer-arrow-components`,
   `solid/no-setter-in-effect` (meldet Effects, die nur in ein Signal oder einen
   Store schreiben, statt den Wert abzuleiten -- und Effects, die etwas awaiten
@@ -28,6 +29,11 @@ Aktuell sind enthalten:
   Verwandte in einem Ref-Callback -- der laeuft ohne Owner, nichts raeumt sie je
   wieder ab), `solid/reactive-async`, `solid/no-server-import-in-client` und
   `solid/strict-void-return` (siehe unten)
+- `solid/no-module-scope-reactive-primitive` aus eslint-plugin-solid 0.20.1
+  (meldet `createSignal`, `createStore` und Verwandte auf Modul-Ebene: beim SSR
+  teilen sich alle Requests diesen Zustand) und
+  `solid/no-write-in-pure-computation` (meldet Setter in `createMemo`, in der
+  Compute-Phase von `createEffect` und im Component-Body)
 - ein Test-Harness, der die exportierte Rule-Surface und echte Diagnostik gegen
   Temp-Projekte prueft
 
@@ -58,16 +64,22 @@ in `packages/oxc-config/linting/solid.jsonc` aktiv und ersetzen dort fuer
 
 In einer reaktiven Berechnung liest Solid ein zurueckgegebenes Promise wie einen
 Wert; `createMemo(() => getProduct(props.id))` braucht kein `async`. Geprueft
-werden die Callbacks von `createMemo`, `createSignal(fn)`, `createStore(fn)`,
-`createProjection`, `createOptimistic`, `createOptimisticStore` und die
-Compute-Phase des zweiphasigen `createEffect`/`createRenderEffect`.
+werden die Callbacks von `createMemo`, `createDeferred`, `createSignal(fn)`,
+`createStore(fn)`, `createProjection`, `createOptimistic`,
+`createOptimisticStore`, `dynamic`, `dynamicComponent` und die Compute-Phase des
+zweiphasigen `createEffect`/`createRenderEffect`. Die empfohlene Form liest alle
+Inputs synchron und lagert das Async in einen Helfer aus:
+`createMemo(() => load(id(), lang()))`.
 
 Gemeldet wird
 
-- ein Read nach dem ersten `await` im selben Callback (Aufruf eines Signals oder
-  Memos, `props.x`, Property-Read eines Stores): Solid meldet das zur Laufzeit
-  als `UNTRACKED_READ_AFTER_AWAIT`, es wird nie eine Dependency. Lies den Wert
-  vor dem `await` in eine lokale Variable.
+- eine Quelle (Aufruf eines Signals oder Memos, `props.x`, Property-Read eines
+  Stores), die erst nach dem ersten `await` oder `yield` im selben Callback
+  gelesen wird: Solid meldet das im Dev-Build als `UNTRACKED_READ_AFTER_AWAIT`,
+  sie wird nie eine Dependency. Wie zur Laufzeit zaehlt nur der erste Read: eine
+  Quelle, die schon vor dem `await` gelesen wurde, darf danach wieder gelesen
+  werden. Lies den Wert vor dem `await` in eine lokale Variable, nicht mit
+  `untrack()`. `solid/reactivity` meldet diese Reads nicht noch einmal.
 - ein `async`-Callback, dessen einziges `await` ein `return await x` ist:
   `async` und `await` weglassen und das Promise zurueckgeben. Innerhalb von
   `try` bleibt `return await` erlaubt, weil es das `catch` erst moeglich macht.

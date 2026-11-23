@@ -8,14 +8,17 @@ import { jsxUsesVarsRule } from "./rules/jsx_uses_vars.mjs";
 import { noArrayHandlersRule } from "./rules/no_array_handlers.mjs";
 import noDestructureRule from "./rules/no_destructure.mjs";
 import noInnerhtmlRule from "./rules/no_innerhtml.mjs";
+import noModuleScopeReactivePrimitiveRule from "./rules/no_module_scope_reactive_primitive.mjs";
 import noOwnedPrimitivesInRefRule from "./rules/no_owned_primitives_in_ref.mjs";
 import noProxyApisRule from "./rules/no_proxy_apis.mjs";
 import noReactDepsRule from "./rules/no_react_deps.mjs";
 import { noReactSpecificPropsRule } from "./rules/no_react_specific_props.mjs";
 import { noServerImportInClientRule } from "./rules/no_server_import_in_client.mjs";
 import noSetterInEffectRule from "./rules/no_setter_in_effect.mjs";
+import noSingleArgCreateEffectRule from "./rules/no_single_arg_create_effect.mjs";
 import noUnknownNamespacesRule from "./rules/no_unknown_namespaces.mjs";
 import noUntrackedEffectReadRule from "./rules/no_untracked_effect_read.mjs";
+import noWriteInPureComputationRule from "./rules/no_write_in_pure_computation.mjs";
 import { preferArrowComponentsRule } from "./rules/prefer_arrow_components.mjs";
 import preferClassObjectRule from "./rules/prefer_class_object.mjs";
 import preferForRule from "./rules/prefer_for.mjs";
@@ -43,14 +46,18 @@ const extendedPlugin = {
         "no-array-handlers": noArrayHandlersRule,
         "no-destructure": noDestructureRule,
         "no-innerhtml": noInnerhtmlRule,
+        "no-module-scope-reactive-primitive":
+            noModuleScopeReactivePrimitiveRule,
         "no-owned-primitives-in-ref": noOwnedPrimitivesInRefRule,
         "no-proxy-apis": noProxyApisRule,
         "no-react-deps": noReactDepsRule,
         "no-react-specific-props": noReactSpecificPropsRule,
         "no-setter-in-effect": noSetterInEffectRule,
         "no-server-import-in-client": noServerImportInClientRule,
+        "no-single-arg-create-effect": noSingleArgCreateEffectRule,
         "no-unknown-namespaces": noUnknownNamespacesRule,
         "no-untracked-effect-read": noUntrackedEffectReadRule,
+        "no-write-in-pure-computation": noWriteInPureComputationRule,
         "prefer-arrow-components": preferArrowComponentsRule,
         "prefer-class-object": preferClassObjectRule,
         "prefer-for": preferForRule,

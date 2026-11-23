@@ -1,0 +1,236 @@
+{
+    "components-return-once": {
+        "falsePositive": [],
+        "fix": [],
+        "missed": [],
+        "parseError": []
+    },
+    "event-handlers": {
+        "falsePositive": [
+            "valid:event-handlers.test.ts:32",
+            "valid:event-handlers.test.ts:36"
+        ],
+        "fix": [],
+        "missed": [],
+        "parseError": []
+    },
+    "imports": {
+        "falsePositive": ["valid:imports.test.ts:15"],
+        "fix": [
+            "invalid:imports.test.ts:52",
+            "invalid:imports.test.ts:63",
+            "invalid:imports.test.ts:76",
+            "invalid:imports.test.ts:91",
+            "invalid:imports.test.ts:103",
+            "invalid:imports.test.ts:116",
+            "invalid:imports.test.ts:133",
+            "invalid:imports.test.ts:147",
+            "invalid:imports.test.ts:159",
+            "invalid:imports.test.ts:171",
+            "invalid:imports.test.ts:198"
+        ],
+        "missed": [
+            "invalid:imports.test.ts:52",
+            "invalid:imports.test.ts:63",
+            "invalid:imports.test.ts:76",
+            "invalid:imports.test.ts:91",
+            "invalid:imports.test.ts:103",
+            "invalid:imports.test.ts:147"
+        ],
+        "parseError": []
+    },
+    "jsx-no-duplicate-props": {
+        "falsePositive": [],
+        "fix": [],
+        "missed": ["invalid:jsx-no-duplicate-props.test.ts:66"],
+        "parseError": []
+    },
+    "jsx-no-script-url": {
+        "falsePositive": [],
+        "fix": [],
+        "missed": [],
+        "parseError": []
+    },
+    "jsx-no-undef": {
+        "falsePositive": [],
+        "fix": ["invalid:jsx-no-undef.test.ts:78"],
+        "missed": [],
+        "parseError": []
+    },
+    "no-array-handlers": {
+        "falsePositive": [],
+        "fix": [],
+        "missed": [],
+        "parseError": []
+    },
+    "no-destructure": {
+        "falsePositive": [
+            "valid:no-destructure.test.ts:39",
+            "valid:no-destructure.test.ts:40",
+            "valid:no-destructure.test.ts:43",
+            "valid:no-destructure.test.ts:44"
+        ],
+        "fix": [
+            "invalid:no-destructure.test.ts:128",
+            "invalid:no-destructure.test.ts:133",
+            "invalid:no-destructure.test.ts:138",
+            "invalid:no-destructure.test.ts:147",
+            "invalid:no-destructure.test.ts:156",
+            "invalid:no-destructure.test.ts:165",
+            "invalid:no-destructure.test.ts:174",
+            "invalid:no-destructure.test.ts:183",
+            "invalid:no-destructure.test.ts:192",
+            "invalid:no-destructure.test.ts:203",
+            "invalid:no-destructure.test.ts:218",
+            "invalid:no-destructure.test.ts:227",
+            "invalid:no-destructure.test.ts:236",
+            "invalid:no-destructure.test.ts:245",
+            "invalid:no-destructure.test.ts:254",
+            "invalid:no-destructure.test.ts:263",
+            "invalid:no-destructure.test.ts:272",
+            "invalid:no-destructure.test.ts:281",
+            "invalid:no-destructure.test.ts:290",
+            "invalid:no-destructure.test.ts:299",
+            "invalid:no-destructure.test.ts:310",
+            "invalid:no-destructure.test.ts:319",
+            "invalid:no-destructure.test.ts:373",
+            "invalid:no-destructure.test.ts:384"
+        ],
+        "missed": [],
+        "parseError": []
+    },
+    "no-innerhtml": {
+        "falsePositive": [],
+        "fix": [],
+        "missed": [],
+        "parseError": []
+    },
+    "no-module-scope-reactive-primitive": {
+        "falsePositive": [],
+        "fix": [],
+        "missed": [],
+        "parseError": []
+    },
+    "no-proxy-apis": {
+        "falsePositive": [],
+        "fix": [],
+        "missed": [],
+        "parseError": []
+    },
+    "no-react-deps": {
+        "falsePositive": ["valid:no-react-deps.test.ts:27"],
+        "fix": [],
+        "missed": [],
+        "parseError": []
+    },
+    "no-react-specific-props": {
+        "falsePositive": [],
+        "fix": [],
+        "missed": [],
+        "parseError": []
+    },
+    "no-single-arg-create-effect": {
+        "falsePositive": [],
+        "fix": [],
+        "missed": [],
+        "parseError": []
+    },
+    "no-unknown-namespaces": {
+        "falsePositive": [
+            "valid:no-unknown-namespaces.test.ts:6",
+            "valid:no-unknown-namespaces.test.ts:7",
+            "valid:no-unknown-namespaces.test.ts:8",
+            "valid:no-unknown-namespaces.test.ts:9",
+            "valid:no-unknown-namespaces.test.ts:10",
+            "valid:no-unknown-namespaces.test.ts:11",
+            "valid:no-unknown-namespaces.test.ts:12",
+            "valid:no-unknown-namespaces.test.ts:13",
+            "valid:no-unknown-namespaces.test.ts:14",
+            "valid:no-unknown-namespaces.test.ts:21",
+            "valid:no-unknown-namespaces.test.ts:25",
+            "valid:no-unknown-namespaces.test.ts:29"
+        ],
+        "fix": [],
+        "missed": [],
+        "parseError": []
+    },
+    "no-write-in-pure-computation": {
+        "falsePositive": [],
+        "fix": [],
+        "missed": [],
+        "parseError": []
+    },
+    "prefer-class-object": {
+        "falsePositive": [
+            "valid:prefer-classlist.test.ts:6",
+            "valid:prefer-classlist.test.ts:15"
+        ],
+        "fix": [
+            "invalid:prefer-classlist.test.ts:22",
+            "invalid:prefer-classlist.test.ts:27",
+            "invalid:prefer-classlist.test.ts:32",
+            "invalid:prefer-classlist.test.ts:37",
+            "invalid:prefer-classlist.test.ts:43",
+            "invalid:prefer-classlist.test.ts:48"
+        ],
+        "missed": [],
+        "parseError": []
+    },
+    "prefer-for": {
+        "falsePositive": [],
+        "fix": [],
+        "missed": [],
+        "parseError": []
+    },
+    "prefer-show": {
+        "falsePositive": [],
+        "fix": [],
+        "missed": [],
+        "parseError": []
+    },
+    "reactivity": {
+        "falsePositive": [
+            "valid:reactivity.test.ts:49",
+            "valid:reactivity.test.ts:51",
+            "valid:reactivity.test.ts:138",
+            "valid:reactivity.test.ts:268",
+            "valid:reactivity.test.ts:447",
+            "valid:reactivity.test.ts:502",
+            "valid:reactivity.test.ts:506",
+            "valid:reactivity.test.ts:680"
+        ],
+        "fix": [],
+        "missed": [
+            "invalid:reactivity.test.ts:829",
+            "invalid:reactivity.test.ts:1247",
+            "invalid:reactivity.test.ts:1256",
+            "invalid:reactivity.test.ts:1391",
+            "invalid:reactivity.test.ts:1401",
+            "invalid:reactivity.test.ts:1413",
+            "invalid:reactivity.test.ts:1425",
+            "invalid:reactivity.test.ts:1437",
+            "invalid:reactivity.test.ts:1450",
+            "invalid:reactivity.test.ts:1462",
+            "invalid:reactivity.test.ts:1569"
+        ],
+        "parseError": []
+    },
+    "self-closing-comp": {
+        "falsePositive": [],
+        "fix": [],
+        "missed": [],
+        "parseError": []
+    },
+    "style-prop": {
+        "falsePositive": [],
+        "fix": [],
+        "missed": [],
+        "parseError": []
+    },
+    "validate-jsx-nesting": {
+        "falsePositive": [],
+        "fix": [],
+        "missed": [],
+        "parseError": []
+    }
+}
