@@ -12,6 +12,7 @@ import { noArrayHandlersRule } from "./rules/no_array_handlers.mjs";
 import noCleanupInEffectApplyRule from "./rules/no_cleanup_in_effect_apply.mjs";
 import noDestructureRule from "./rules/no_destructure.mjs";
 import noInnerhtmlRule from "./rules/no_innerhtml.mjs";
+import noMagicNumbersRule from "./rules/no_magic_numbers.mjs";
 import noModuleScopeReactivePrimitiveRule from "./rules/no_module_scope_reactive_primitive.mjs";
 import noOwnedPrimitivesInRefRule from "./rules/no_owned_primitives_in_ref.mjs";
 import noProxyApisRule from "./rules/no_proxy_apis.mjs";
@@ -58,6 +59,7 @@ const extendedPlugin = {
         "no-cleanup-in-effect-apply": noCleanupInEffectApplyRule,
         "no-destructure": noDestructureRule,
         "no-innerhtml": noInnerhtmlRule,
+        "no-magic-numbers": noMagicNumbersRule,
         "no-module-scope-reactive-primitive":
             noModuleScopeReactivePrimitiveRule,
         "no-owned-primitives-in-ref": noOwnedPrimitivesInRefRule,

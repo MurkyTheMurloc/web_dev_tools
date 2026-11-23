@@ -106,7 +106,23 @@
         "eslint/no-lonely-if": "error",
         "eslint/no-loop-func": "error",
         "eslint/no-loss-of-precision": "error",
-        "eslint/no-magic-numbers": "error",
+        // 0, 1, 2 and -1 are not magic; neither are defaults, enum values,
+        // literal types or readonly class fields. Array indexes are reported
+        // (match[3] should be a named capture group). solid.jsonc replaces
+        // this rule with solid/no-magic-numbers, a fork with the same options
+        // and an agent-ready message; projects without it keep this one.
+        "eslint/no-magic-numbers": [
+            "error",
+            {
+                "ignore": [-1, 0, 1, 2],
+                "ignoreDefaultValues": true,
+                "ignoreClassFieldInitialValues": true,
+                "ignoreEnums": true,
+                "ignoreNumericLiteralTypes": true,
+                "ignoreReadonlyClassProperties": true,
+                "ignoreTypeIndexes": true
+            }
+        ],
         "eslint/no-misleading-character-class": "error",
         "eslint/no-multi-assign": "error",
         "eslint/no-multi-str": "error",
