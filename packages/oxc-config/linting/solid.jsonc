@@ -16,6 +16,26 @@
         "solid/no-cleanup-in-effect-apply": "error",
         "solid/no-destructure": "error",
         "solid/no-innerhtml": "error",
+        // Fork of eslint/no-magic-numbers (off in eslint.jsonc). 0, 1, 2 and
+        // -1 are not magic (items[0], count + 1, length / 2,
+        // indexOf(...) === -1); neither are defaults, enum values, literal
+        // types or readonly class fields. Array indexes are NOT ignored:
+        // match[3] should be a named capture group or a destructured name.
+        // 1000, 60, 24 stay reported and become named constants with their
+        // unit (RETRY_DELAY_MS). A server project can add
+        // "allowHttpStatusCodes": true for c.json(body, 404) and the like.
+        "solid/no-magic-numbers": [
+            "error",
+            {
+                "ignore": [-1, 0, 1, 2],
+                "ignoreDefaultValues": true,
+                "ignoreClassFieldInitialValues": true,
+                "ignoreEnums": true,
+                "ignoreNumericLiteralTypes": true,
+                "ignoreReadonlyClassProperties": true,
+                "ignoreTypeIndexes": true
+            }
+        ],
         "solid/no-module-scope-reactive-primitive": "error",
         "solid/no-owned-primitives-in-ref": "error",
         // Only for targets without Proxy; createStore and createProjection are

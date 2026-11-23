@@ -13,6 +13,7 @@ const expectedRuleIds = Object.freeze([
     "no-cleanup-in-effect-apply",
     "no-destructure",
     "no-innerhtml",
+    "no-magic-numbers",
     "no-module-scope-reactive-primitive",
     "no-owned-primitives-in-ref",
     "no-proxy-apis",

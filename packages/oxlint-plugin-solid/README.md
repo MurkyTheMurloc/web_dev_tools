@@ -48,6 +48,8 @@ Aktuell sind enthalten:
   `solid/prefer-ref-shorthand` fuer Refs (siehe unten)
 - `solid/filename-matches-export` fuer Dateinamen (siehe unten)
 - `solid/function-size` fuer die Laenge von Funktionen (siehe unten)
+- `solid/no-magic-numbers`, ein Fork von eslints `no-magic-numbers` (siehe
+  unten)
 - ein Test-Harness, der die exportierte Rule-Surface und echte Diagnostik gegen
   Temp-Projekte prueft
 
@@ -282,6 +284,32 @@ Einheit, bleibt sie, mit einem einzeiligen Kommentar darueber, warum; kein
 `// oxlint-disable`. Ohne Autofix. In `oxc-config` steht sie auf `warn` und
 ersetzt `eslint/max-lines-per-function`, dessen Meldung oxlint nicht anpassen
 laesst; `*.generated.*` ist ausgenommen.
+
+### `solid/no-magic-numbers`
+
+Meldet dasselbe wie eslints `no-magic-numbers` mit den Optionen von eslint und
+typescript-eslint (`ignore`, `ignoreArrayIndexes`, `ignoreDefaultValues`,
+`ignoreClassFieldInitialValues`, `ignoreEnums`, `ignoreNumericLiteralTypes`,
+`ignoreReadonlyClassProperties`, `ignoreTypeIndexes`, `enforceConst`,
+`detectObjects`), nur die Meldung ist eine andere: Sie nennt die Zahl mit ihrem
+Code und als Fix eine Konstante auf Modul-Ebene samt Verwendung, etwa
+`` `const RETRY_DELAY_MS = 1000;` at module scope, used as `setTimeout(retry, RETRY_DELAY_MS)` ``.
+Der Name kommt aus der Variable, der Property oder dem Callback eines Timers,
+sonst steht `DESCRIPTIVE_NAME` da. Die Einheit haengt an, wenn der Code sie
+zeigt: `_MS` bei `setTimeout`/`setInterval`/`AbortSignal.timeout` und Namen mit
+`timeout`/`delay`/`interval`, `BYTES_PER_KIB` bzw. `_BYTES` bei `* 1024` und
+`/ 1024`. Fuer `match[3]` auf einem Ergebnis von `.exec`/`.match`/`.matchAll`
+nennt sie eine benannte Capture-Group (`match.groups.name`) oder Destructuring.
+
+Neue Option `allowHttpStatusCodes` (Standard `false`): eine ganze Zahl von 100
+bis 599 ist erlaubt, wo sie nur ein HTTP-Status sein kann: als zweites Argument
+von `c.json`, `c.text`, `c.html`, `c.body`, `c.newResponse` und `c.redirect`
+(beliebiger Receiver), in `c.status(…)`, als erstes Argument von
+`new HTTPException(…)`, als Wert einer Property `status` (`{ status: 404 }`) und
+im Vergleich mit `.status` (`res.status >= 500`). Ueberall sonst (`items[404]`,
+`size * 500`) bleibt sie gemeldet. `oxc-config` schaltet die Regel in
+`solid.jsonc` ohne diese Option ein und `eslint/no-magic-numbers` ab; ein
+Server-Projekt setzt sie selbst.
 
 ## Autofixes
 
