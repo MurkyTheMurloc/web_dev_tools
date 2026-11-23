@@ -1,6 +1,6 @@
 {
     "name": "@murky-web/oxc-config",
-    "version": "0.0.0",
+    "version": "0.1.0",
     "description": "Shared oxfmt and oxlint configuration",
     "license": "ISC",
     "repository": {
