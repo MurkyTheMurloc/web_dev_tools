@@ -80,6 +80,7 @@ const MESSAGE_CODE = `declare const retry: () => void;
 declare const poll: () => void;
 declare const input: string;
 declare const size: number;
+declare const Bun: { sleep: (ms: number) => Promise<void> };
 
 let retryDelay = 0;
 let maxUpload = 0;
@@ -96,6 +97,7 @@ export function start(): unknown[] {
     }
     return [
         AbortSignal.timeout(8000),
+        Bun.sleep(250),
         size / 1024,
         m?.[3],
         input.match(/(a)(b)(c)/u)?.[3],
@@ -114,6 +116,8 @@ const MESSAGES = {
         "Fix: `const POLL_INTERVAL_MS = 5000;` at module scope, used as `setInterval(poll, POLL_INTERVAL_MS);`.",
     "timeout from AbortSignal.timeout":
         "Fix: `const DESCRIPTIVE_NAME_TIMEOUT_MS = 8000;` at module scope, named for what the number means, used as `AbortSignal.timeout(DESCRIPTIVE_NAME_TIMEOUT_MS)`.",
+    "delay from Bun.sleep":
+        "Fix: `const DESCRIPTIVE_NAME_DELAY_MS = 250;` at module scope, named for what the number means, used as `Bun.sleep(DESCRIPTIVE_NAME_DELAY_MS)`.",
     "milliseconds from a name with delay":
         "Fix: `const RETRY_DELAY_MS = 750;` at module scope, used as `retryDelay = RETRY_DELAY_MS;`.",
     "bytes from a product with 1024":

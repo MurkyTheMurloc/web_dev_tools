@@ -394,6 +394,12 @@ export default {
             ) {
                 name = withUnit(name, "TIMEOUT_MS");
             } else if (
+                callee === "sleep" &&
+                holder.callee.object?.name === "Bun" &&
+                holder.arguments[0] === valueNode
+            ) {
+                name = withUnit(name, "DELAY_MS");
+            } else if (
                 valueNode !== numberNode &&
                 /(?:[*/]\s*1024|1024\s*\*)\b/u.test(value)
             ) {

@@ -16,7 +16,10 @@
         "solid/no-cleanup-in-effect-apply": "error",
         "solid/no-destructure": "error",
         "solid/no-innerhtml": "error",
-        // Fork of eslint/no-magic-numbers (off in eslint.jsonc). 0, 1, 2 and
+        // Replaces eslint/no-magic-numbers (eslint.jsonc) wherever this file
+        // is extended, so a number is reported once.
+        "eslint/no-magic-numbers": "off",
+        // Fork of eslint/no-magic-numbers. 0, 1, 2 and
         // -1 are not magic (items[0], count + 1, length / 2,
         // indexOf(...) === -1); neither are defaults, enum values, literal
         // types or readonly class fields. Array indexes are NOT ignored:
