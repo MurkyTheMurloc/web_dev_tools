@@ -459,7 +459,8 @@ describe("oxlint-plugin-solid", () => {
             fileName: "src/View.tsx"
         });
 
-        expect(result.exitCode).toBe(EXIT_SUCCESS);
+        // The output names the rule when anything reports, e.g. only in CI.
+        expect(result.exitCode, result.output).toBe(EXIT_SUCCESS);
         expect(result.output).not.toContain("no-unused-vars");
     });
 
