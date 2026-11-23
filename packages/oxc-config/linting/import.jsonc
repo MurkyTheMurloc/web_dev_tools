@@ -3,10 +3,13 @@
         "import/consistent-type-specifier-style": "error",
         "import/default": "error",
         "import/export": "error",
-        "import/exports-last": "error",
+        // Exports stay at the declaration (`export function a() {}`): the
+        // reader sees at once what is public, and a rename or deletion needs
+        // no export list kept in step. No major preset turns these on.
+        "import/exports-last": "off",
         "import/extensions": "error",
         "import/first": "error",
-        "import/group-exports": "error",
+        "import/group-exports": "off",
         "import/max-dependencies": "off",
         "import/named": "error",
         "import/namespace": "error",
