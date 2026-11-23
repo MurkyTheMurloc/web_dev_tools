@@ -46,7 +46,9 @@ const ruleCases = Object.freeze([
     return <button>0</button>;
 };
 `,
-        fileName: "src/components/counter.tsx",
+        // Not src/components/: Counter.tsx lives there in another case, and on
+        // a case-sensitive file system both land in the shared temp project.
+        fileName: "src/snake_case_files/counter.tsx",
         message: "Fix: rename the file to `Counter.tsx`.",
         ruleId: "filename-matches-export"
     }),
