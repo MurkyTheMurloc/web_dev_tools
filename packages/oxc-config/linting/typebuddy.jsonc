@@ -1,6 +1,7 @@
 {
     "rules": {
         "typebuddy/no-useless-undefined": "error",
+        "typebuddy/prefer-guards": "error",
         "typebuddy/prefer-maybe-promise": "error",
         "typebuddy/prefer-maybe": "error",
         "typebuddy/prefer-nullable": "error",
