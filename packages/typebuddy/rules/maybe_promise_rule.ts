@@ -174,6 +174,54 @@ function isNullLiteral(node: unknown): boolean {
     return isNode(node) && node.type === "Literal" && node["value"] === null;
 }
 
+/**
+ * Globals an older typebuddy defined, and the helper that replaces each. They
+ * are not defined any more, so a reference to one throws a `ReferenceError`.
+ */
+const REMOVED_RESULT_GLOBALS: ReadonlyMap<string, "ok" | "err"> = new Map([
+    ["FAILED_PROMISE", "err"],
+    ["VOID_PROMISE", "ok"]
+]);
+
+function isRemovedResultGlobal(node: unknown): boolean {
+    return (
+        isNode(node) &&
+        node.type === "Identifier" &&
+        typeof node["name"] === "string" &&
+        REMOVED_RESULT_GLOBALS.has(node["name"])
+    );
+}
+
+/**
+ * The identifiers of the references no scope of the file resolves: the global
+ * scope's `through`. A name the file declares, imports or takes as a parameter
+ * resolves and is not in it, nor is a property key.
+ */
+function getUnresolvedIdentifiers(scope: unknown): AstNode[] {
+    if (
+        typeof scope !== "object" ||
+        scope === null ||
+        !("through" in scope) ||
+        !Array.isArray(scope.through)
+    ) {
+        return [];
+    }
+
+    const identifiers: AstNode[] = [];
+    for (const reference of scope.through) {
+        if (
+            typeof reference === "object" &&
+            reference !== null &&
+            "identifier" in reference &&
+            isNode(reference.identifier)
+        ) {
+            identifiers.push(reference.identifier);
+        }
+    }
+
+    return identifiers;
+}
+
 const rule = {
     create(context: RuleContext) {
         const sourceCode = context.getSourceCode();
@@ -391,11 +439,9 @@ const rule = {
                 return;
             }
 
-            if (
-                argument.type === "Identifier" &&
-                (argument["name"] === "VOID_PROMISE" ||
-                    argument["name"] === "FAILED_PROMISE")
-            ) {
+            // `removedResultGlobal` reports the global itself; one the file
+            // defines is the author's own value.
+            if (isRemovedResultGlobal(argument)) {
                 return;
             }
 
@@ -506,10 +552,11 @@ const rule = {
         }
 
         function isSettledFailure(argument: unknown): boolean {
+            // A `FAILED_PROMISE` global is reported by `removedResultGlobal`,
+            // whose fix makes it `err()`; reporting it here as well would be
+            // two reports for one line.
             return (
-                (isNode(argument) &&
-                    argument.type === "Identifier" &&
-                    argument["name"] === "FAILED_PROMISE") ||
+                isIdentifierNamed(argument, "FAILED_PROMISE") ||
                 isResultHelperCall(argument, "err")
             );
         }
@@ -689,10 +736,56 @@ const rule = {
             });
         }
 
+        /**
+         * `FAILED_PROMISE` and `VOID_PROMISE` were globals of an older
+         * typebuddy. Nothing defines them now, so `return FAILED_PROMISE`
+         * throws instead of settling on a result. That holds wherever the name
+         * sits — a framework callback the other checks skip included — so every
+         * unresolved reference is reported, and fixed to the helper that builds
+         * the same value. A binding of that name the file declares itself
+         * resolves and is left alone.
+         */
+        function reportRemovedResultGlobal(identifier: AstNode) {
+            const name = identifier["name"];
+            if (typeof name !== "string") return;
+            const helperName = REMOVED_RESULT_GLOBALS.get(name);
+            if (helperName === undefined) return;
+            // `typeof FAILED_PROMISE` in a type and `export { FAILED_PROMISE }`
+            // have no expression to put `err()` in.
+            const parentType = identifier.parent?.type;
+            if (
+                parentType === "TSTypeQuery" ||
+                parentType === "ExportSpecifier"
+            )
+                return;
+
+            context.report({
+                node: identifier,
+                messageId: "removedResultGlobal",
+                data: { name, helper: helperName },
+                fix(fixer) {
+                    return withHelperFixes(
+                        identifier,
+                        fixer,
+                        helperName,
+                        fixer.replaceText(identifier, `${helperName}()`)
+                    );
+                }
+            });
+        }
+
         const { Program, guard } = createUseServerGuard();
+        const reportRemovedGlobal = guard(reportRemovedResultGlobal);
 
         return {
             Program,
+            "Program:exit"(node: AstNode) {
+                for (const identifier of getUnresolvedIdentifiers(
+                    sourceCode.getScope(node)
+                )) {
+                    reportRemovedGlobal(identifier);
+                }
+            },
             FunctionDeclaration: guard(checkReturnType),
             FunctionExpression: guard(checkReturnType),
             ArrowFunctionExpression: guard(checkReturnType),
@@ -725,6 +818,8 @@ const rule = {
                 '`{{object}}` builds the failed result by hand; without a return type its `isError` widens to `boolean` and `isSuccess` stops narrowing it. Fix: `err()` with `import { err } from "@murky-web/typebuddy";` (`--fix` applies it).',
             returnVoidPromise:
                 '`{{code}}` in the `try` of an async `void` function resolves to `undefined` instead of a result, so a caller reading `.isError` throws a `TypeError`. Fix: `return ok();` with `import { ok } from "@murky-web/typebuddy";` (`--fix` applies it).',
+            removedResultGlobal:
+                '`{{name}}` does not exist at runtime: typebuddy no longer defines the `FAILED_PROMISE` and `VOID_PROMISE` globals, so this line throws a `ReferenceError` instead of settling on a result. Fix: `{{helper}}()` with `import { {{helper}} } from "@murky-web/typebuddy";` (`--fix` applies it). Do not declare `{{name}}` yourself to keep the old name.',
             returnFailedPromise:
                 'The `catch` of this async function settles on {{found}} instead of `err()`, so the caller gets no `Failed` result and `isError` misses the failure. Fix: end the `catch` with `return err();` and `import { err } from "@murky-web/typebuddy";`, renaming a `catch (err)` parameter first; a fallback value belongs in the `try` as `return ok(fallback)`. Do not return `ok(...)` from the `catch`.'
         }
