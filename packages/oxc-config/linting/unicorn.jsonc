@@ -115,6 +115,9 @@
         "unicorn/prefer-set-has": "error",
         "unicorn/prefer-set-size": "error",
         "unicorn/prefer-spread": "error",
+        // murky.jsonc replaces this rule with murky/prefer-string-raw, which
+        // keeps plain literals at module load (String.raw there is a call a
+        // bundler cannot drop); projects without it keep this one.
         "unicorn/prefer-string-raw": "error",
         "unicorn/prefer-string-replace-all": "error",
         "unicorn/prefer-string-slice": "error",

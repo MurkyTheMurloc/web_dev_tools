@@ -1,0 +1,14 @@
+{
+    // Generic rules from @murky-web/oxlint-plugin (prefix murky); needs the
+    // plugin in your own jsPlugins.
+    "rules": {
+        // Replaces unicorn/prefer-string-raw (unicorn.jsonc) wherever this
+        // file is extended, so a literal is reported once.
+        "unicorn/prefer-string-raw": "off",
+        // unicorn's rule plus the module-load exception: inside a function
+        // "a\\b" becomes String.raw`a\b`; at module load the plain literal
+        // stays and String.raw is reported, because a bundler cannot drop the
+        // tagged-template call from client chunks when the value is unused.
+        "murky/prefer-string-raw": "error"
+    }
+}

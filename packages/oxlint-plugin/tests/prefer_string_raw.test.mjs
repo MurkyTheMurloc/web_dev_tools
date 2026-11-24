@@ -177,3 +177,32 @@ describe("murky/prefer-string-raw inside functions", () => {
         expect(output).toContain('`"e\\\\f"` escapes');
     });
 });
+
+describe("oxc-config", () => {
+    // The shared unicorn rules with and without linting/murky.jsonc.
+    const UNICORN = "packages/oxc-config/linting/unicorn.jsonc";
+    const MURKY = "packages/oxc-config/linting/murky.jsonc";
+    const CODE = `${MODULE_LITERAL_CODE}${FUNCTION_CODE}`;
+
+    test("murky.jsonc replaces unicorn/prefer-string-raw", () => {
+        const { output } = lint(CODE, {
+            extends: [UNICORN, MURKY],
+            plugins: ["unicorn"],
+            rules: {}
+        });
+
+        expect(output).not.toContain("unicorn(prefer-string-raw)");
+        expect(count(output, `${RULE}:`)).toBe(5);
+    });
+
+    test("without it, unicorn reports the module-level literals too", () => {
+        const { output } = lint(CODE, {
+            extends: [UNICORN],
+            plugins: ["unicorn"],
+            rules: {}
+        });
+
+        expect(output).not.toContain(RULE);
+        expect(output).toContain("unicorn(prefer-string-raw)");
+    });
+});

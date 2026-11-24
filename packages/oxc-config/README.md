@@ -22,6 +22,7 @@ own `jsPlugins`:
 
 | File                      | Plugin                           |
 | ------------------------- | -------------------------------- |
+| `linting/murky.jsonc`     | `@murky-web/oxlint-plugin`       |
 | `linting/solid.jsonc`     | `@murky-web/oxlint-plugin-solid` |
 | `linting/typebuddy.jsonc` | `@murky-web/typebuddy/oxlint`    |
 | `linting/simplelog.jsonc` | `@murky-web/simplelog/oxlint`    |
