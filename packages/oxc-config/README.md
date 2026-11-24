@@ -34,7 +34,9 @@ They are dependencies of this package, so installing it installs them:
 | `linting/typebuddy.jsonc` | `@murky-web/typebuddy/oxlint`    |
 | `linting/simplelog.jsonc` | `@murky-web/simplelog/oxlint`    |
 
-The type-aware rules need `oxlint-tsgolint` in the project.
+The type-aware rules need `oxlint-tsgolint` in the project; it is a peer
+dependency (`>=7.0.2007`, the range oxlint itself names), so install it next to
+`oxlint`.
 
 ### Base entry for libraries
 
