@@ -469,6 +469,216 @@ describe("prefer-maybe-promise", () => {
     });
 });
 
+// `FAILED_PROMISE` and `VOID_PROMISE` were globals of an older typebuddy. They
+// are gone, so a reference to one throws a `ReferenceError` wherever it sits —
+// a framework callback the rest of the rule leaves alone included.
+describe("prefer-maybe-promise: removed result globals", () => {
+    tester.run("prefer-maybe-promise", pluginRule("prefer-maybe-promise"), {
+        valid: [
+            {
+                name: "leaves a FAILED_PROMISE the file defines itself alone",
+                code: lines(
+                    `import { ok } from "${PACKAGE}";`,
+                    "const FAILED_PROMISE = { isError: true, value: null } as const;",
+                    "export async function load(): MaybePromise<string> {",
+                    "    try {",
+                    '        return ok("x");',
+                    "    } catch {",
+                    "        return FAILED_PROMISE;",
+                    "    }",
+                    "}"
+                )
+            },
+            {
+                name: "leaves a VOID_PROMISE parameter alone",
+                code: lines(
+                    `import { err } from "${PACKAGE}";`,
+                    "export async function run(VOID_PROMISE: Success<void>): MaybePromise<void> {",
+                    "    try {",
+                    "        return VOID_PROMISE;",
+                    "    } catch {",
+                    "        return err();",
+                    "    }",
+                    "}"
+                )
+            },
+            {
+                name: "leaves property names that only look like the globals alone",
+                code: lines(
+                    "export const results = { FAILED_PROMISE: 1, VOID_PROMISE: 2 };",
+                    "export const failed = results.FAILED_PROMISE;"
+                )
+            }
+        ],
+        invalid: [
+            {
+                name: "rewrites FAILED_PROMISE in a catch to err() and imports err",
+                code: lines(
+                    "export async function load(): MaybePromise<string> {",
+                    "    try {",
+                    '        return ok("x");',
+                    "    } catch {",
+                    "        return FAILED_PROMISE;",
+                    "    }",
+                    "}"
+                ),
+                errors: [
+                    {
+                        message: messageWith(
+                            "`FAILED_PROMISE` does not exist at runtime",
+                            "throws a `ReferenceError`",
+                            `Fix: \`err()\` with \`import { err } from "${PACKAGE}";\``,
+                            "Do not declare `FAILED_PROMISE` yourself"
+                        )
+                    }
+                ],
+                output: lines(
+                    `import { err } from "${PACKAGE}";`,
+                    "export async function load(): MaybePromise<string> {",
+                    "    try {",
+                    '        return ok("x");',
+                    "    } catch {",
+                    "        return err();",
+                    "    }",
+                    "}"
+                )
+            },
+            {
+                name: "joins err to an existing import from the result entry",
+                code: lines(
+                    `import { ok } from "${PACKAGE}/result";`,
+                    "export async function load(): MaybePromise<string> {",
+                    "    try {",
+                    '        return ok("x");',
+                    "    } catch {",
+                    "        return FAILED_PROMISE;",
+                    "    }",
+                    "}"
+                ),
+                errors: [{ messageId: "removedResultGlobal" }],
+                output: lines(
+                    `import { ok, err } from "${PACKAGE}/result";`,
+                    "export async function load(): MaybePromise<string> {",
+                    "    try {",
+                    '        return ok("x");',
+                    "    } catch {",
+                    "        return err();",
+                    "    }",
+                    "}"
+                )
+            },
+            {
+                name: "rewrites VOID_PROMISE in a try to ok() and keeps the ok import",
+                code: lines(
+                    `import { err, ok } from "${PACKAGE}";`,
+                    "export async function run(): MaybePromise<void> {",
+                    "    try {",
+                    "        return VOID_PROMISE;",
+                    "    } catch {",
+                    "        return err();",
+                    "    }",
+                    "}"
+                ),
+                errors: [
+                    {
+                        message: messageWith(
+                            "`VOID_PROMISE` does not exist at runtime",
+                            `Fix: \`ok()\` with \`import { ok } from "${PACKAGE}";\``
+                        )
+                    }
+                ],
+                output: lines(
+                    `import { err, ok } from "${PACKAGE}";`,
+                    "export async function run(): MaybePromise<void> {",
+                    "    try {",
+                    "        return ok();",
+                    "    } catch {",
+                    "        return err();",
+                    "    }",
+                    "}"
+                )
+            },
+            {
+                name: "rewrites FAILED_PROMISE in a framework callback the other checks skip",
+                code: lines(
+                    `import { err } from "${PACKAGE}";`,
+                    "app.use(async (c, next) => {",
+                    "    try {",
+                    "        await run(c, () => {",
+                    "            try {",
+                    "                return next();",
+                    "            } catch {",
+                    "                return FAILED_PROMISE;",
+                    "            }",
+                    "        });",
+                    "    } catch {",
+                    "        return err();",
+                    "    }",
+                    "});"
+                ),
+                errors: [{ messageId: "removedResultGlobal" }],
+                output: lines(
+                    `import { err } from "${PACKAGE}";`,
+                    "app.use(async (c, next) => {",
+                    "    try {",
+                    "        await run(c, () => {",
+                    "            try {",
+                    "                return next();",
+                    "            } catch {",
+                    "                return err();",
+                    "            }",
+                    "        });",
+                    "    } catch {",
+                    "        return err();",
+                    "    }",
+                    "});"
+                )
+            },
+            {
+                name: "rewrites FAILED_PROMISE outside a return too",
+                code: lines(
+                    `import { err } from "${PACKAGE}";`,
+                    "export const fallback = FAILED_PROMISE;"
+                ),
+                errors: [{ messageId: "removedResultGlobal" }],
+                output: lines(
+                    `import { err } from "${PACKAGE}";`,
+                    "export const fallback = err();"
+                )
+            },
+            {
+                name: "does not call a catch parameter named err",
+                code: lines(
+                    `import { ok } from "${PACKAGE}";`,
+                    "export async function load(): MaybePromise<string> {",
+                    "    try {",
+                    '        return ok("x");',
+                    "    } catch (err) {",
+                    "        return FAILED_PROMISE;",
+                    "    }",
+                    "}"
+                ),
+                errors: [{ messageId: "removedResultGlobal" }],
+                output: null
+            },
+            {
+                name: "reports without a fix in a script file that cannot take an import",
+                code: lines(
+                    "async function load(): MaybePromise<string> {",
+                    "    try {",
+                    '        return ok("x");',
+                    "    } catch {",
+                    "        return FAILED_PROMISE;",
+                    "    }",
+                    "}"
+                ),
+                errors: [{ messageId: "removedResultGlobal" }],
+                output: null
+            }
+        ]
+    });
+});
+
 describe("require-try-catch", () => {
     tester.run("require-try-catch", pluginRule("require-try-catch"), {
         valid: [
