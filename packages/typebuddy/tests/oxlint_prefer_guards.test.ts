@@ -111,18 +111,22 @@ function silent(name: string, expression: string, head: string[] = []): Valid {
 
 const valid: Valid[] = [
     // Close, but not the same for every value.
+    // `typeof document.all` is "undefined", `document.all === undefined` is
+    // false: isUndefined and isNullable are the `===` checks.
+    silent('typeof x === "undefined"', 'typeof x === "undefined"'),
+    silent('"undefined" !== typeof x', '"undefined" !== typeof x'),
     silent(
-        "x === undefined: document.all is undefined to typeof only",
-        "x === undefined"
+        'x === null || typeof x === "undefined": neither half',
+        'x === null || typeof x === "undefined"'
     ),
-    silent("x !== undefined", "x !== undefined"),
-    silent("undefined === x", "undefined === x"),
     silent(
-        "x === null || x === undefined: neither half",
-        "x === null || x === undefined"
+        'typeof x !== "undefined" && x !== null: neither half',
+        'typeof x !== "undefined" && x !== null'
     ),
-    silent("x === undefined || x === null", "x === undefined || x === null"),
-    silent("x !== null && x !== undefined", "x !== null && x !== undefined"),
+    // `document.all == null` is true, `isNullable(document.all)` is false.
+    silent("x == null", "x == null"),
+    silent("x != null", "x != null"),
+    silent("undefined == x", "undefined == x"),
     silent(
         'typeof x === "number": isNumber rejects NaN and Infinity',
         'typeof x === "number"'
@@ -142,8 +146,8 @@ const valid: Valid[] = [
     silent("typeof against typeof", "typeof x === typeof e"),
     silent("null === undefined", "null === undefined"),
 
-    // A name the file does not declare: `isUndefined(window)` throws.
-    silent("typeof of an undeclared name", 'typeof window === "undefined"'),
+    // A name the file does not declare: `isString(missing)` throws.
+    silent("typeof of an undeclared name", 'typeof missing === "string"'),
     silent(
         "typeof of an undeclared global function",
         'typeof require === "function"'
@@ -176,7 +180,7 @@ const valid: Valid[] = [
         name: "a parameter called undefined",
         code: lines(
             "export function check(x: unknown, undefined: unknown): boolean {",
-            "    return x == undefined;",
+            "    return x === undefined;",
             "}"
         )
     },
@@ -218,42 +222,32 @@ const invalid: Invalid[] = [
     fixed("!(x !== null)", "isNull(x)", "isNull"),
     fixed("f() === null", "isNull(f())", "isNull"),
     fixed("(f(), x) === null", "isNull((f(), x))", "isNull"),
-    fixed('typeof x === "undefined"', "isUndefined(x)", "isUndefined"),
-    fixed('"undefined" !== typeof x', "!isUndefined(x)", "isUndefined"),
-    fixed('typeof o.a === "undefined"', "isUndefined(o.a)", "isUndefined"),
-    fixed("x == null", "isNullable(x)", "isNullable"),
-    fixed("x != null", "!isNullable(x)", "isNullable"),
-    fixed("null == x", "isNullable(x)", "isNullable"),
-    fixed("x == undefined", "isNullable(x)", "isNullable"),
-    fixed("undefined != x", "!isNullable(x)", "isNullable"),
+    fixed("x === undefined", "isUndefined(x)", "isUndefined"),
+    fixed("undefined !== x", "!isUndefined(x)", "isUndefined"),
+    fixed("o.a === undefined", "isUndefined(o.a)", "isUndefined"),
+    fixed("x === null || x === undefined", "isNullable(x)", "isNullable"),
+    fixed("x === undefined || null === x", "isNullable(x)", "isNullable"),
+    fixed("x !== null && x !== undefined", "!isNullable(x)", "isNullable"),
+    fixed("!(x === null || x === undefined)", "!isNullable(x)", "isNullable"),
+    fixed("!(x !== null && x !== undefined)", "isNullable(x)", "isNullable"),
     fixed(
-        'x === null || typeof x === "undefined"',
-        "isNullable(x)",
-        "isNullable"
-    ),
-    fixed(
-        'typeof x === "undefined" || null === x',
-        "isNullable(x)",
-        "isNullable"
-    ),
-    fixed(
-        'x !== null && typeof x !== "undefined"',
-        "!isNullable(x)",
-        "isNullable"
-    ),
-    fixed(
-        '!(x === null || typeof x == "undefined")',
-        "!isNullable(x)",
-        "isNullable"
-    ),
-    fixed(
-        'o.a?.b === null || typeof o.a?.b === "undefined"',
+        "o.a?.b === null || o.a?.b === undefined",
         "isNullable(o.a?.b)",
         "isNullable"
     ),
     fixed(
-        'f() || x === null || typeof x === "undefined"',
+        "this.v === null || this.v === undefined",
+        "isNullable(this.v)",
+        "isNullable"
+    ),
+    fixed(
+        "f() || x === null || x === undefined",
         "f() || isNullable(x)",
+        "isNullable"
+    ),
+    fixed(
+        "x === null || x === undefined || f()",
+        "isNullable(x) || f()",
         "isNullable"
     ),
     fixed('typeof x === "string"', "isString(x)", "isString"),
@@ -321,7 +315,7 @@ const invalid: Invalid[] = [
     // A pair over calls is not one `isNullable`: each half is its own guard.
     {
         name: "a pair over a call becomes two guards, f() still runs twice",
-        code: source('f() === null || typeof f() === "undefined"', [
+        code: source("f() === null || f() === undefined", [
             `import { isNull, isUndefined } from "${PACKAGE}";`
         ]),
         errors: [{ messageId: "preferGuard" }, { messageId: "preferGuard" }],
@@ -331,7 +325,7 @@ const invalid: Invalid[] = [
     },
     {
         name: "a pair over two different references is not isNullable",
-        code: source('x === null || typeof e === "undefined"', [
+        code: source("x === null || e === undefined", [
             `import { isNull, isUndefined } from "${PACKAGE}";`
         ]),
         errors: [{ messageId: "preferGuard" }, { messageId: "preferGuard" }],
@@ -341,7 +335,7 @@ const invalid: Invalid[] = [
     },
     {
         name: "a pair with a parenthesised half inside a chain is left to its halves",
-        code: source('f() || (x === null) || typeof x === "undefined"', [
+        code: source("f() || (x === null) || x === undefined", [
             `import { isNull, isUndefined } from "${PACKAGE}";`
         ]),
         errors: [{ messageId: "preferGuard" }, { messageId: "preferGuard" }],

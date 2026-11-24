@@ -291,11 +291,11 @@ type MergeTarget = {
 
 /**
  * The import of the package that the name can join, or `null` when there is
- * none. A value or a guard joins `import { … }`. A type joins
- * `import type { … }`, or else an `import { … }` of the package as `type Name`
- * (an inline type specifier), so the file does not end up with two imports
- * from one module. An import with a namespace specifier, or with no named
- * specifier, is left alone.
+ * none. A value or a guard joins a value import (`import { … }`). A type joins
+ * a type import (`import type { … }`), or else a value import of the package as
+ * `type Name` (an inline type specifier), so the file does not end up with two
+ * imports from one module. An import with a namespace specifier, or with no
+ * named specifier, is left alone.
  */
 function findMergeTarget(
     imports: readonly AstNode[],

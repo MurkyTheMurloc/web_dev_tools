@@ -81,13 +81,19 @@ function isNull(value: unknown): value is null {
 }
 
 /**
- * Returns true if the value is undefined.
+ * Returns true if the value is `undefined`: `value === undefined`, nothing
+ * else.
+ *
+ * Not a `typeof` check on purpose. The two differ for exactly one value, the
+ * browser's legacy `document.all`, which `typeof` calls `"undefined"` although
+ * it is an object. `isUndefined(x)` is what `x === undefined` says, so the one
+ * can replace the other (`typebuddy/prefer-guards` does).
  *
  * @param {unknown} value - The value to check.
  * @returns {boolean} True if the value is undefined.
  */
 function isUndefined(value: unknown): value is undefined {
-    return typeof value === "undefined";
+    return value === undefined;
 }
 
 /**
@@ -111,7 +117,11 @@ function isMaybe<T>(value: Maybe<T>): value is null {
 }
 
 /**
- * Checks whether a Nullable value is currently in its missing state.
+ * Checks whether a Nullable value is currently in its missing state: `value ===
+ * null || value === undefined`.
+ *
+ * Not `value == null`: that is also true for the browser's `document.all`,
+ * which is an object, not a missing value.
  *
  * @param {Nullable<T>} value - The Nullable value to check.
  * @returns {boolean} True when the value is null or undefined.

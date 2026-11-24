@@ -98,15 +98,10 @@ const MAPPINGS = {
         apply: "fix",
         why: "`isNull` is `value === null`"
     },
-    isNullableLoose: {
-        guard: "isNullable",
-        apply: "fix",
-        why: '`== null` and `== undefined` are true for exactly `null`, `undefined` and `document.all`, and so is `isNullable` (`value === null || typeof value === "undefined"`)'
-    },
     isNullablePair: {
         guard: "isNullable",
         apply: "fix",
-        why: '`isNullable` is `value === null || typeof value === "undefined"`'
+        why: "`isNullable` is `value === null || value === undefined`"
     },
     isNumber: {
         guard: "isNumber",
@@ -132,20 +127,20 @@ const MAPPINGS = {
     isUndefined: {
         guard: "isUndefined",
         apply: "fix",
-        why: '`isUndefined` is `typeof value === "undefined"`'
+        why: "`isUndefined` is `value === undefined`"
     }
 } as const satisfies Record<string, Mapping>;
 
 /**
  * `typeof value === "<tag>"` → guard. `number`, `object` and `bigint` have
- * none.
+ * none, and `undefined` is not `isUndefined`: `typeof document.all` is
+ * `"undefined"`, `document.all === undefined` is `false`.
  */
 const TYPEOF_GUARDS: ReadonlyMap<string, Mapping> = new Map<string, Mapping>([
     ["boolean", MAPPINGS.isBoolean],
     ["function", MAPPINGS.isFunction],
     ["string", MAPPINGS.isString],
-    ["symbol", MAPPINGS.isSymbol],
-    ["undefined", MAPPINGS.isUndefined]
+    ["symbol", MAPPINGS.isSymbol]
 ]);
 
 /** `value instanceof <Global>` → guard. */
@@ -238,9 +233,9 @@ function isDeclaredInFile(
 }
 
 /**
- * Whether `node` is an identifier the file declares. `typeof missing` is
- * `"undefined"` for a name nothing declares, where `isUndefined(missing)`
- * throws a `ReferenceError` (`typeof window` on a server), so a bare name is
+ * Whether `node` is an identifier the file declares. `typeof missing` works for
+ * a name nothing declares, where `isFunction(missing)` throws a
+ * `ReferenceError` (`typeof Bun === "function"` outside Bun), so a bare name is
  * only rewritten when the file declares it.
  */
 function isDeclaredIdentifier(sourceCode: SourceCode, node: AstNode): boolean {
@@ -355,6 +350,40 @@ function classifyTypeof(sourceCode: SourceCode, node: AstNode): Check | null {
     return null;
 }
 
+/** `typeof <operand> <op> "undefined"`, either side. */
+function classifyTypeofUndefined(
+    node: AstNode
+): { readonly operand: AstNode; readonly negated: boolean } | null {
+    const operator = node["operator"];
+    const left = child(node, "left");
+    const right = child(node, "right");
+    if (
+        typeof operator !== "string" ||
+        !EQUALITY_OPERATORS.has(operator) ||
+        left === null ||
+        right === null
+    ) {
+        return null;
+    }
+
+    for (const [unary, literal] of [
+        [left, right],
+        [right, left]
+    ] as const) {
+        const operand = child(unary, "argument");
+        if (
+            unary.type === "UnaryExpression" &&
+            unary["operator"] === "typeof" &&
+            getStringLiteral(literal) === "undefined" &&
+            operand !== null
+        ) {
+            return { operand, negated: operator.startsWith("!") };
+        }
+    }
+
+    return null;
+}
+
 type NullComparison = {
     readonly operand: AstNode;
     readonly against: "null" | "undefined";
@@ -400,9 +429,9 @@ function classifyNullComparison(
 }
 
 /**
- * A single comparison that is exactly one guard. `x === undefined` is not
- * `isUndefined(x)`: `document.all === undefined` is `false`, `typeof
- * document.all` is `"undefined"`.
+ * A single comparison that is exactly one guard. Only `===`/`!==` against
+ * `null` or `undefined`: `x == null` is also true for `document.all`, which
+ * `isNullable` (`=== null || === undefined`) is not.
  */
 function classifyComparison(
     sourceCode: SourceCode,
@@ -414,28 +443,18 @@ function classifyComparison(
     }
 
     const comparison = classifyNullComparison(sourceCode, node);
-    if (comparison === null) {
+    if (comparison === null || comparison.operator.length === 2) {
         return null;
     }
 
-    const negated = comparison.operator.startsWith("!");
-    const loose = comparison.operator.length === 2;
-    if (loose) {
-        return {
-            mapping: MAPPINGS.isNullableLoose,
-            operand: comparison.operand,
-            negated
-        };
-    }
-    if (comparison.against === "null") {
-        return {
-            mapping: MAPPINGS.isNull,
-            operand: comparison.operand,
-            negated
-        };
-    }
-
-    return null;
+    return {
+        mapping:
+            comparison.against === "null"
+                ? MAPPINGS.isNull
+                : MAPPINGS.isUndefined,
+        operand: comparison.operand,
+        negated: comparison.operator.startsWith("!")
+    };
 }
 
 function classifyInstanceof(
@@ -467,11 +486,11 @@ type PairMatch =
     | null;
 
 /**
- * `x === null || typeof x === "undefined"` (any order, `&&` with `!==` for the
- * negation) is `isNullable(x)`. `x === null || x === undefined` is not:
- * `document.all` is `undefined` to `typeof` and `isNullable`, but `!==
- * undefined`. That pair is `"near"`: neither half is reported, a lone `isNull`
- * next to `x === undefined` would only be half a rewrite.
+ * `x === null || x === undefined` (any order, `&&` with `!==` for the negation)
+ * is `isNullable(x)` when both sides are the same plain reference. `x === null
+ * || typeof x === "undefined"` is not: `typeof document.all` is `"undefined"`,
+ * `isNullable(document.all)` is `false`. That pair is `"near"`: neither half is
+ * reported, a lone `isNull` next to the `typeof` would only be half a rewrite.
  */
 function matchNullablePair(
     sourceCode: SourceCode,
@@ -487,43 +506,38 @@ function matchNullablePair(
     }
 
     const strict = negated ? "!==" : "===";
-    for (const [nullSide, otherSide] of [
-        [first, second],
-        [second, first]
-    ] as const) {
-        const nullCheck = classifyNullComparison(sourceCode, nullSide);
-        if (
-            nullCheck === null ||
-            nullCheck.against !== "null" ||
-            nullCheck.operator !== strict
-        ) {
-            continue;
-        }
-        const operandText = sourceCode.getText(nullCheck.operand);
+    const firstCheck = classifyNullComparison(sourceCode, first);
+    const secondCheck = classifyNullComparison(sourceCode, second);
+    const [nullCheck, otherCheck, other] =
+        firstCheck?.against === "null"
+            ? [firstCheck, secondCheck, second]
+            : [secondCheck, firstCheck, first];
+    if (
+        nullCheck === null ||
+        nullCheck.against !== "null" ||
+        nullCheck.operator !== strict
+    ) {
+        return null;
+    }
 
-        const undefinedCheck = classifyNullComparison(sourceCode, otherSide);
-        if (
-            undefinedCheck !== null &&
-            undefinedCheck.against === "undefined" &&
-            undefinedCheck.operator === strict &&
-            sourceCode.getText(undefinedCheck.operand) === operandText
-        ) {
-            return { kind: "near" };
-        }
+    const operand = nullCheck.operand;
+    const operandText = sourceCode.getText(operand);
+    if (
+        otherCheck !== null &&
+        otherCheck.against === "undefined" &&
+        otherCheck.operator === strict &&
+        sourceCode.getText(otherCheck.operand) === operandText
+    ) {
+        return isPureReference(operand) ? { kind: "nullable", operand } : null;
+    }
 
-        const typeofCheck = classifyTypeof(sourceCode, otherSide);
-        if (
-            typeofCheck === null ||
-            typeofCheck.mapping !== MAPPINGS.isUndefined ||
-            typeofCheck.negated !== negated ||
-            sourceCode.getText(typeofCheck.operand) !== operandText ||
-            !isPureReference(nullCheck.operand) ||
-            !isDeclaredIdentifier(sourceCode, nullCheck.operand)
-        ) {
-            continue;
-        }
-
-        return { kind: "nullable", operand: nullCheck.operand };
+    const typeofCheck = classifyTypeofUndefined(other);
+    if (
+        typeofCheck !== null &&
+        typeofCheck.negated === negated &&
+        sourceCode.getText(typeofCheck.operand) === operandText
+    ) {
+        return { kind: "near" };
     }
 
     return null;
@@ -614,27 +628,27 @@ function getFilename(context: object): string {
  * objects without a prototype, arrays, class instances, functions and proxies.
  * A check that is only close to a guard is not reported at all.
  *
- * | Native check                                       | Guard            | Applied by |
- * | -------------------------------------------------- | ---------------- | ---------- |
- * | `x === null`                                       | `isNull(x)`      | `--fix`    |
- * | `typeof x === "undefined"`                         | `isUndefined(x)` | `--fix`    |
- * | `x == null`, `x == undefined`                      | `isNullable(x)`  | `--fix`    |
- * | `x === null` or-ed with `typeof x === "undefined"` | `isNullable(x)`  | `--fix`    |
- * | `typeof x === "string"`                            | `isString(x)`    | `--fix`    |
- * | `typeof x === "boolean"`                           | `isBoolean(x)`   | `--fix`    |
- * | `typeof x === "symbol"`                            | `isSymbol(x)`    | `--fix`    |
- * | `x instanceof Error`                               | `isError(x)`     | `--fix`    |
- * | `x instanceof Date`                                | `isDate(x)`      | `--fix`    |
- * | `x instanceof RegExp`                              | `isRegExp(x)`    | `--fix`    |
- * | `Array.isArray(x)`                                 | `isArray(x)`     | suggestion |
- * | `typeof x === "function"`                          | `isFunction(x)`  | suggestion |
- * | `Number.isFinite(x)`                               | `isNumber(x)`    | suggestion |
- * | `Number.isInteger(x)`                              | `isInteger(x)`   | suggestion |
+ * | Native check                              | Guard            | Applied by |
+ * | ----------------------------------------- | ---------------- | ---------- |
+ * | `x === null`                              | `isNull(x)`      | `--fix`    |
+ * | `x === undefined`                         | `isUndefined(x)` | `--fix`    |
+ * | `x === null` or-ed with `x === undefined` | `isNullable(x)`  | `--fix`    |
+ * | `typeof x === "string"`                   | `isString(x)`    | `--fix`    |
+ * | `typeof x === "boolean"`                  | `isBoolean(x)`   | `--fix`    |
+ * | `typeof x === "symbol"`                   | `isSymbol(x)`    | `--fix`    |
+ * | `x instanceof Error`                      | `isError(x)`     | `--fix`    |
+ * | `x instanceof Date`                       | `isDate(x)`      | `--fix`    |
+ * | `x instanceof RegExp`                     | `isRegExp(x)`    | `--fix`    |
+ * | `Array.isArray(x)`                        | `isArray(x)`     | suggestion |
+ * | `typeof x === "function"`                 | `isFunction(x)`  | suggestion |
+ * | `Number.isFinite(x)`                      | `isNumber(x)`    | suggestion |
+ * | `Number.isInteger(x)`                     | `isInteger(x)`   | suggestion |
  *
- * Every row also matches `!==`/`!=` (as `!guard(x)`), the operands mirrored
- * (`null === x`, `"string" === typeof x`), `!(…)` around the check, and `&&`
- * with `!==` for the pair (`!isNullable(x)`). `==` and `===` are the same thing
- * next to `typeof`, which always gives a string.
+ * Every row also matches `!==` (as `!guard(x)`), the operands mirrored (`null
+ * === x`, `"string" === typeof x`), `!(…)` around the check, and `&&` with
+ * `!==` for the pair (`!isNullable(x)`). Next to `typeof`, which always gives a
+ * string, `==`/`!=` count as `===`/`!==`. The pair is rewritten only when both
+ * sides are the same plain reference (no call).
  *
  * A suggestion row is the same at runtime, but the guard narrows the type more
  * strictly than the native check: `unknown`/`any` to `readonly unknown[]`
@@ -648,9 +662,12 @@ function getFilename(context: object): string {
  *
  * Not reported, because no guard gives the same answer for every value:
  *
- * - `x === undefined`: `document.all === undefined` is `false`, `isUndefined` (a
- *   `typeof` check) says `true`. So `x === null || x === undefined` is not
- *   `isNullable(x)` either; neither half is reported.
+ * - `typeof x === "undefined"`: `typeof document.all` is `"undefined"`,
+ *   `isUndefined(document.all)` (`=== undefined`) is `false`. So `x === null ||
+ *   typeof x === "undefined"` is not `isNullable(x)` either; neither half is
+ *   reported.
+ * - `x == null`, `x == undefined`: `document.all == null` is `true`,
+ *   `isNullable(document.all)` is `false`.
  * - `typeof x === "number"`: `isNumber` is `false` for `NaN` and `±Infinity`.
  * - `typeof x === "object"`: `isObject` only accepts plain objects (prototype
  *   `Object.prototype`); arrays, `null`, class instances and
@@ -665,13 +682,13 @@ function getFilename(context: object): string {
  *   parameter type; the rule writes the general guard.
  *
  * Left alone, too: `typeof name` of a name the file does not declare (`typeof
- * window === "undefined"` must not become `isUndefined(window)`, which throws
- * where `window` does not exist); `Array`, `Number`, `Date`, `Error`, `RegExp`
- * or `undefined` when the file declares its own binding of that name; an
- * `||`/`&&` pair whose two sides are not the same plain reference (`f() ===
- * null || typeof f() === "undefined"` calls `f` twice); a check whose guard
- * name is another binding there (a local `isNull`); script files (no
- * `import`/`export`: the guard cannot be imported) and `.d.ts` files;
+ * Bun === "function"` must not become `isFunction(Bun)`, which throws where
+ * `Bun` does not exist); `Array`, `Number`, `Date`, `Error`, `RegExp` or
+ * `undefined` when the file declares its own binding of that name; an `||`/`&&`
+ * pair whose two sides are not the same plain reference (`f() === null || f()
+ * === undefined` calls `f` twice; each half becomes its own guard); a check
+ * whose guard name is another binding there (a local `isNull`); script files
+ * (no `import`/`export`: the guard cannot be imported) and `.d.ts` files;
  * typebuddy's own source. A check with a comment inside is reported without a
  * fix, so the comment is not lost.
  */
@@ -765,8 +782,8 @@ const rule = {
         }
 
         /**
-         * `a || x === null || typeof x === "undefined"` parses as `(a || x ===
-         * null) || typeof …`: the pair is the last operand of the left side and
+         * `a || x === null || x === undefined` parses as `(a || x === null) ||
+         * x === undefined`: the pair is the last operand of the left side and
          * the right side. The rewrite spans from the one to the other, which
          * needs the source between them to be the bare operator.
          */

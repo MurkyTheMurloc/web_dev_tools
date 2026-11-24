@@ -3,7 +3,7 @@ export function describeValue(
     list: unknown,
     error: unknown
 ): string {
-    if (value === null || typeof value === "undefined") {
+    if (value === null || value === undefined) {
         return "nothing";
     }
     if (typeof value === "string") {
