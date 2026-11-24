@@ -18,7 +18,7 @@
     },
     "packages/oxc-config": {
       "name": "@murky-web/oxc-config",
-      "version": "0.2.0",
+      "version": "0.2.1",
       "dependencies": {
         "@murky-web/oxlint-plugin": "^0.1.0",
         "@murky-web/oxlint-plugin-solid": "^1.7.0",
