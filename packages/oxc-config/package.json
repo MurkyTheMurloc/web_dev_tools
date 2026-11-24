@@ -10,6 +10,7 @@
     },
     "files": [
         ".oxfmtrc.jsonc",
+        ".oxlintrc.base.jsonc",
         ".oxlintrc.jsonc",
         "linting",
         "README.md"
@@ -21,8 +22,15 @@
     "scripts": {
         "test": "bun ./check_prefixes.mjs"
     },
+    "dependencies": {
+        "@murky-web/oxlint-plugin": "^0.0.0",
+        "@murky-web/oxlint-plugin-solid": "^1.7.0",
+        "@murky-web/simplelog": "^3.1.2",
+        "@murky-web/typebuddy": "^3.1.0"
+    },
     "peerDependencies": {
         "oxfmt": ">=0.79.0",
-        "oxlint": ">=1.94.0"
+        "oxlint": ">=1.94.0",
+        "oxlint-tsgolint": ">=7.0.2007"
     }
 }

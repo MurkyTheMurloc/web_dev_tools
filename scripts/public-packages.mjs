@@ -10,6 +10,11 @@ export const publicPackages = [
         publishToJsr: false,
     },
     {
+        dir: "packages/oxlint-plugin",
+        name: "@murky-web/oxlint-plugin",
+        publishToJsr: false,
+    },
+    {
         dir: "packages/oxlint-plugin-solid",
         name: "@murky-web/oxlint-plugin-solid",
         publishToJsr: false,

@@ -1,28 +1,21 @@
 {
     "$schema": "../../node_modules/oxlint/configuration_schema.json",
+    // The full stack: the built-in rules from .oxlintrc.base.jsonc plus the
+    // rules of the four @murky-web plugins. An app extends only this file and
+    // adds its own rules. The plugins are dependencies of this package and
+    // resolve from here. Packages of this repo that the stack depends on
+    // (typebuddy, simplelog) extend .oxlintrc.base.jsonc instead.
     "extends": [
-        "./linting/base.jsonc",
-        "./linting/eslint.jsonc",
-        "./linting/typescript.jsonc",
-        "./linting/unicorn.jsonc",
-        "./linting/oxc.jsonc",
-        "./linting/import.jsonc",
-        "./linting/jsx_a11y.jsonc",
-        "./linting/vitest.jsonc",
-        "./linting/promise.jsonc",
-        "./linting/node.jsonc",
-        "./linting/jsdoc.jsonc"
+        "./.oxlintrc.base.jsonc",
+        "./linting/murky.jsonc",
+        "./linting/solid.jsonc",
+        "./linting/typebuddy.jsonc",
+        "./linting/simplelog.jsonc"
     ],
-    "plugins": [
-        "eslint",
-        "typescript",
-        "unicorn",
-        "oxc",
-        "import",
-        "jsx-a11y",
-        "vitest",
-        "promise",
-        "node",
-        "jsdoc"
+    "jsPlugins": [
+        "@murky-web/oxlint-plugin",
+        "@murky-web/oxlint-plugin-solid",
+        "@murky-web/typebuddy/oxlint",
+        "@murky-web/simplelog/oxlint"
     ]
 }

@@ -1,0 +1,34 @@
+{
+    "name": "@murky-web/oxlint-plugin",
+    "version": "0.0.0",
+    "private": false,
+    "description": "Base Oxlint JS plugin (prefix `murky`) with generic JavaScript rules and shared helpers; @murky-web/oxlint-plugin-solid and @murky-web/oxlint-plugin-typescript are its specialised children.",
+    "homepage": "https://github.com/MurkyTheMurloc/web_dev_tools/tree/main/packages/oxlint-plugin",
+    "bugs": {
+        "url": "https://github.com/MurkyTheMurloc/web_dev_tools/issues"
+    },
+    "license": "MIT",
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/MurkyTheMurloc/web_dev_tools.git",
+        "directory": "packages/oxlint-plugin"
+    },
+    "files": [
+        "README.md",
+        "THIRD_PARTY_NOTICES.md",
+        "src"
+    ],
+    "type": "module",
+    "sideEffects": false,
+    "exports": {
+        ".": "./src/index.mjs",
+        "./utils": "./src/utils.mjs"
+    },
+    "publishConfig": {
+        "access": "public",
+        "provenance": true
+    },
+    "scripts": {
+        "test": "vitest run"
+    }
+}
