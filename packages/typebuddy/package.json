@@ -78,6 +78,7 @@
     },
     "scripts": {
         "test": "vitest run",
+        "test:browser": "bun ./smoke/browser/run.ts",
         "build:local": "bun run build",
         "build": "bun run clean && tsdown",
         "clean": "rm -rf dist",

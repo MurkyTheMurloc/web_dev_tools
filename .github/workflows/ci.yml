@@ -37,6 +37,14 @@ jobs:
       - name: Test typebuddy
         run: bun run --cwd packages/typebuddy test
 
+      # Guards against native checks in Chrome, where document.all exists. The
+      # runner image ships Google Chrome; without it this fails instead of
+      # skipping.
+      - name: Test typebuddy in a browser
+        run: bun run --cwd packages/typebuddy test:browser
+        env:
+          TYPEBUDDY_REQUIRE_BROWSER: "1"
+
       - name: Smoke globals
         run: bun run --cwd packages/typebuddy smoke:globals
 
