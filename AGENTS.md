@@ -10,6 +10,7 @@ workflow with npm trusted publishing).
 |---|---|---|
 | `packages/typebuddy` | `@murky-web/typebuddy` | runtime guards, `Result`, utility and global types (`globals.d.ts`), and its oxlint plugin (`rules/`, `oxlint/`) |
 | `packages/simplelog` | `@murky-web/simplelog` | small logger, and its oxlint plugin (`oxlint/`) |
+| `packages/oxlint-plugin` | `@murky-web/oxlint-plugin` | base oxlint plugin (`murky/*`): generic JavaScript rules and shared helpers (`./utils`); `-solid` and `-typescript` specialise it |
 | `packages/oxlint-plugin-solid` | `@murky-web/oxlint-plugin-solid` | Solid rules for oxlint |
 | `packages/oxc-config` | `@murky-web/oxc-config` | shared oxfmt and oxlint rules, extended by the packages here and by consuming projects |
 | `packages/shadcn-lint/packages/lint` | `@murky-web/shadcn-lint` | Tailwind design-system rules for Solid 2.0 (fork of shadcn-ui/lint, see `docs/shadcn-lint-fork.md`) |
@@ -48,6 +49,6 @@ ships needs a changeset (`bun run changeset`).
 
 ## Lint plugins in general
 
-The lint plugins (`typebuddy/rules`, `simplelog/oxlint`, `oxlint-plugin-solid`,
+The lint plugins (`typebuddy/rules`, `simplelog/oxlint`, `oxlint-plugin`, `oxlint-plugin-solid`,
 `shadcn-lint`) walk an untyped AST and are not held to the strict shared config. Their
 tests are the check.

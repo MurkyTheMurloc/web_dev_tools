@@ -24,6 +24,10 @@
         "oxlint": ">=1.94.0",
       },
     },
+    "packages/oxlint-plugin": {
+      "name": "@murky-web/oxlint-plugin",
+      "version": "0.0.0",
+    },
     "packages/oxlint-plugin-solid": {
       "name": "@murky-web/oxlint-plugin-solid",
       "version": "1.7.0",
@@ -212,6 +216,8 @@
     "@manypkg/tools": ["@manypkg/tools@2.1.2", "", { "dependencies": { "jju": "^1.4.0", "tinyglobby": "^0.2.13", "yaml": "^2.9.0" } }, "sha512-6QEf6yqFbETdwGITKq57aYoPfX/3K8XFNwsAlx0C1M7o8cb79sv1M3w+tWuWvIcSbNqrLF7OD7YpZMVVz335hQ=="],
 
     "@murky-web/oxc-config": ["@murky-web/oxc-config@workspace:packages/oxc-config"],
+
+    "@murky-web/oxlint-plugin": ["@murky-web/oxlint-plugin@workspace:packages/oxlint-plugin"],
 
     "@murky-web/oxlint-plugin-solid": ["@murky-web/oxlint-plugin-solid@workspace:packages/oxlint-plugin-solid"],
 
