@@ -1,5 +1,39 @@
 # @murky-web/oxc-config
 
+## 0.2.0
+
+### Minor Changes
+
+- 04fc247: `.oxlintrc.jsonc` is the full stack now: besides the built-in plugins
+  it extends `linting/murky.jsonc`, `linting/solid.jsonc`,
+  `linting/typebuddy.jsonc` and `linting/simplelog.jsonc` and loads their
+  plugins through `jsPlugins`. An app extends this one file and adds only its
+  own rules. The four plugins (`@murky-web/oxlint-plugin`,
+  `@murky-web/oxlint-plugin-solid`, `@murky-web/typebuddy`,
+  `@murky-web/simplelog`) are dependencies of this package, because oxlint
+  resolves `jsPlugins` from the config file.
+
+    The built-in-only config moved to `.oxlintrc.base.jsonc`, for libraries the
+    stack depends on; `.oxlintrc.typebuddy.jsonc` and
+    `.oxlintrc.simplelog.jsonc` extend it.
+
+    `oxlint-tsgolint` (>=7.0.2007, the range oxlint itself names) is a peer
+    dependency now: the type-aware rules of the stack need it, and the package
+    manager says so on install instead of the first lint run failing.
+
+### Patch Changes
+
+- 5b98ac6: `import/group-exports` and `import/exports-last` are off: exports
+  stay at the declaration (`export function a() {}`), the common style, instead
+  of one export list at the end of the file.
+- 2ce6ef6: New rule set `linting/murky.jsonc` for `@murky-web/oxlint-plugin`: it
+  turns on `murky/prefer-string-raw` and switches `unicorn/prefer-string-raw`
+  off, so a plain literal with escaped backslashes at module load is no longer
+  reported (`String.raw` there is a call a bundler cannot drop from client
+  chunks). `unicorn.jsonc` keeps unicorn's rule for projects without the plugin.
+- Updated dependencies [e49bae8]
+    - @murky-web/oxlint-plugin@0.1.0
+
 ## 0.1.2
 
 ### Patch Changes
