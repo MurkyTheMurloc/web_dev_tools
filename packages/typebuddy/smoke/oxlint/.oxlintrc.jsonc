@@ -2,6 +2,7 @@
     "jsPlugins": ["../../dist/oxlint.js"],
     "rules": {
         "typebuddy/no-useless-undefined": "error",
+        "typebuddy/prefer-guards": "error",
         "typebuddy/prefer-maybe-promise": "error",
         "typebuddy/prefer-optional": "error",
         "typebuddy/prefer-maybe": "error",

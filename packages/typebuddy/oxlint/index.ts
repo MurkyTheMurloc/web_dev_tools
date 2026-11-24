@@ -3,6 +3,7 @@ import { errorSafeAsyncRule } from "../rules/maybe_promise_rule.js";
 import { maybeRule } from "../rules/maybe_rule.js";
 import { nullableRule } from "../rules/nullable_rule.js";
 import { optionalRule } from "../rules/optional_rule.js";
+import { preferGuardsRule } from "../rules/prefer_guards_rule.js";
 import { withoutTestFiles } from "../rules/test_file.js";
 import { uselessUndefinedRule } from "../rules/useless_undefined_rule.js";
 
@@ -11,6 +12,7 @@ import { uselessUndefinedRule } from "../rules/useless_undefined_rule.js";
 // as the unicorn rule it replaces did.
 const rules = {
     "no-useless-undefined": uselessUndefinedRule,
+    "prefer-guards": withoutTestFiles(preferGuardsRule),
     "prefer-maybe": withoutTestFiles(maybeRule),
     "prefer-maybe-promise": withoutTestFiles(errorSafeAsyncRule),
     "prefer-nullable": withoutTestFiles(nullableRule),

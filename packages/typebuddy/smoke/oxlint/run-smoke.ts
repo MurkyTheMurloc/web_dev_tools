@@ -9,9 +9,11 @@ const useServerFunctionPath = new URL("./use-server-function.ts", smokeDir);
 const useServerSiblingPath = new URL("./use-server-sibling.ts", smokeDir);
 const testNamedPath = new URL("./violations.bench.ts", smokeDir);
 const testDirectoryPath = new URL("./__tests__/async-helper.ts", smokeDir);
+const guardViolationsPath = new URL("./guard-violations.ts", smokeDir);
 
 const expectedRuleIds = [
     "typebuddy(no-useless-undefined)",
+    "typebuddy(prefer-guards)",
     "typebuddy(prefer-optional)",
     "typebuddy(prefer-maybe)",
     "typebuddy(prefer-nullable)",
@@ -20,7 +22,7 @@ const expectedRuleIds = [
 ] as const;
 
 const result =
-    await Bun.$`oxlint -f json -c ${configPath.pathname} ${violationsPath.pathname} ${asyncViolationsPath.pathname} ${frameworkCallbackPath.pathname} ${deliberateThrowPath.pathname} ${useServerModulePath.pathname} ${useServerFunctionPath.pathname} ${useServerSiblingPath.pathname} ${testNamedPath.pathname} ${testDirectoryPath.pathname}`
+    await Bun.$`oxlint -f json -c ${configPath.pathname} ${violationsPath.pathname} ${asyncViolationsPath.pathname} ${frameworkCallbackPath.pathname} ${deliberateThrowPath.pathname} ${useServerModulePath.pathname} ${useServerFunctionPath.pathname} ${useServerSiblingPath.pathname} ${testNamedPath.pathname} ${testDirectoryPath.pathname} ${guardViolationsPath.pathname}`
         .nothrow()
         .quiet();
 const output = `${result.stdout.toString()}${result.stderr.toString()}`;
@@ -131,6 +133,22 @@ const uselessUndefinedHits = diagnostics.filter(
 if (uselessUndefinedHits !== 1) {
     console.error(
         `Expected exactly 1 no-useless-undefined diagnostic in violations.ts (the un-annotated let), got ${uselessUndefinedHits}.`
+    );
+    console.error(output);
+    process.exit(1);
+}
+
+// guard-violations.ts: the `||` pair, `typeof "string"` and `instanceof Date`
+// are fixes, `Array.isArray` a suggestion; `typeof "number"` and `typeof window`
+// stay silent.
+const guardHits = diagnostics.filter(
+    (d) =>
+        d.filename.endsWith("/guard-violations.ts") &&
+        d.code === "typebuddy(prefer-guards)"
+).length;
+if (guardHits !== 4) {
+    console.error(
+        `Expected exactly 4 prefer-guards diagnostics in guard-violations.ts, got ${guardHits}.`
     );
     console.error(output);
     process.exit(1);

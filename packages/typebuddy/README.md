@@ -242,8 +242,8 @@ export async function flush(): MaybePromise<void> {
 
 ### Oxlint rules
 
-`@murky-web/typebuddy/oxlint` has `no-useless-undefined`, `prefer-maybe`,
-`prefer-maybe-promise`, `prefer-nullable`, `prefer-optional` and
+`@murky-web/typebuddy/oxlint` has `no-useless-undefined`, `prefer-guards`,
+`prefer-maybe`, `prefer-maybe-promise`, `prefer-nullable`, `prefer-optional` and
 `require-try-catch`. All but `no-useless-undefined` skip test files: `*.test.*`,
 `*.spec.*` and `*.bench.*`, anything under a `__tests__/`, `tests/`, `test/` or
 `__mocks__/` directory, and `vitest.setup.*`, `vitest-setup.*` and
@@ -262,6 +262,39 @@ that one off) and, like it, lints test files too. An un-annotated
 default, not `let x;`. Trailing `undefined` arguments are reported without an
 autofix too, because `arguments.length` and rest parameters see them (oxlint
 only removes them under `--fix-dangerously`).
+
+`prefer-guards` reports a native check that is exactly one of the guards, the
+same answer for every value (`NaN`, `-0`, boxed primitives, `document.all`,
+`Object.create(null)`, proxies), and rewrites it to the guard:
+
+| Native check                                       | Guard            | Applied by |
+| -------------------------------------------------- | ---------------- | ---------- |
+| `x === null`                                       | `isNull(x)`      | `--fix`    |
+| `typeof x === "undefined"`                         | `isUndefined(x)` | `--fix`    |
+| `x == null`, `x == undefined`                      | `isNullable(x)`  | `--fix`    |
+| `x === null` or-ed with `typeof x === "undefined"` | `isNullable(x)`  | `--fix`    |
+| `typeof x === "string"`                            | `isString(x)`    | `--fix`    |
+| `typeof x === "boolean"`                           | `isBoolean(x)`   | `--fix`    |
+| `typeof x === "symbol"`                            | `isSymbol(x)`    | `--fix`    |
+| `x instanceof Error` / `Date` / `RegExp`           | `isError(x)` …   | `--fix`    |
+| `Array.isArray(x)`                                 | `isArray(x)`     | suggestion |
+| `typeof x === "function"`                          | `isFunction(x)`  | suggestion |
+| `Number.isFinite(x)`                               | `isNumber(x)`    | suggestion |
+| `Number.isInteger(x)`                              | `isInteger(x)`   | suggestion |
+
+Negations (`!==`, `!=`, `!(…)`) become `!guard(x)`, mirrored operands
+(`null === x`) count too. The suggestion rows give the same answer but narrow
+more strictly (`readonly unknown[]` instead of `any[]`, a function taking
+`never` arguments instead of `Function`, the `FiniteNumber`/`IntegerNumber`
+brands), so code after them may need a type. Not reported, because they are only
+close: `x === undefined` and `x === null || x === undefined`
+(`document.all === undefined` is `false`, `typeof document.all` is
+`"undefined"`), `typeof x === "number"` (`isNumber` rejects `NaN`),
+`typeof x === "object"` (`isObject` only takes plain objects),
+`x instanceof Promise` (`isPromise` takes any thenable). `typeof name` of a name
+the file never declares (`typeof window`) is left alone, since
+`isUndefined(window)` would throw; so is an `||` pair over a call
+(`f() === null || typeof f() === "undefined"`), which stays two calls.
 
 Autofixes only do what cannot change what the code means:
 

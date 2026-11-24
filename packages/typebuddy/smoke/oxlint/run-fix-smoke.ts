@@ -11,10 +11,13 @@ const formatConfigPath = new URL(
 
 // Two shapes, because the import insertion behaves differently in each: a file
 // that already imports something gets the helper appended after the last
-// import, one that does not gets it prepended before the first statement.
+// import, one that does not gets it prepended before the first statement. The
+// third fixture is prefer-guards, whose fixes join the import pass by pass.
 const cases = [
     { input: "./fix-input.ts", expected: "./fix-expected.ts" },
-    { input: "./fix-input-bare.ts", expected: "./fix-expected-bare.ts" }
+    { input: "./fix-input-bare.ts", expected: "./fix-expected-bare.ts" },
+    // prefer-guards: three fixes that need three imports, one per pass.
+    { input: "./fix-input-guards.ts", expected: "./fix-expected-guards.ts" }
 ] as const;
 
 async function runCase(input: string, expected: string): Promise<void> {
