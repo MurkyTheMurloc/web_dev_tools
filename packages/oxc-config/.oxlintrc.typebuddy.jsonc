@@ -1,5 +1,5 @@
 {
     "$schema": "../../node_modules/oxlint/configuration_schema.json",
-    "extends": ["./.oxlintrc.jsonc", "./linting/typebuddy.jsonc"],
+    "extends": ["./.oxlintrc.base.jsonc", "./linting/typebuddy.jsonc"],
     "jsPlugins": ["@murky-web/typebuddy/oxlint"]
 }

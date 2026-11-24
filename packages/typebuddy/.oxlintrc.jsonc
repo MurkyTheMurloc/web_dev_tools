@@ -1,6 +1,6 @@
 {
     "$schema": "./node_modules/oxlint/configuration_schema.json",
-    "extends": ["../oxc-config/.oxlintrc.jsonc"],
+    "extends": ["../oxc-config/.oxlintrc.base.jsonc"],
     "ignorePatterns": ["smoke/treeshake/.output/**"],
     "globals": {
         "console": "readonly",
