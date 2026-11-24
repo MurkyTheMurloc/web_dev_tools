@@ -12,10 +12,13 @@
         "./linting/typebuddy.jsonc",
         "./linting/simplelog.jsonc"
     ],
+    // Through plugins/*.mjs, not by package name: with an isolated install
+    // (bun workspaces, pnpm) the names do not resolve from the project's
+    // node_modules (plugins/README.md).
     "jsPlugins": [
-        "@murky-web/oxlint-plugin",
-        "@murky-web/oxlint-plugin-solid",
-        "@murky-web/typebuddy/oxlint",
-        "@murky-web/simplelog/oxlint"
+        "./plugins/murky.mjs",
+        "./plugins/solid.mjs",
+        "./plugins/typebuddy.mjs",
+        "./plugins/simplelog.mjs"
     ]
 }

@@ -13,6 +13,7 @@
         ".oxlintrc.base.jsonc",
         ".oxlintrc.jsonc",
         "linting",
+        "plugins",
         "README.md"
     ],
     "publishConfig": {
