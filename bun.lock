@@ -21,6 +21,7 @@
       "version": "0.3.0",
       "dependencies": {
         "@murky-web/oxlint-plugin": "^0.1.0",
+        "@murky-web/oxlint-plugin-hono": "^0.0.0",
         "@murky-web/oxlint-plugin-solid": "^1.7.0",
         "@murky-web/simplelog": "^3.1.2",
         "@murky-web/typebuddy": "^3.2.0",
@@ -34,6 +35,13 @@
     "packages/oxlint-plugin": {
       "name": "@murky-web/oxlint-plugin",
       "version": "0.1.0",
+    },
+    "packages/oxlint-plugin-hono": {
+      "name": "@murky-web/oxlint-plugin-hono",
+      "version": "0.0.0",
+      "dependencies": {
+        "@murky-web/oxlint-plugin": "^0.1.0",
+      },
     },
     "packages/oxlint-plugin-solid": {
       "name": "@murky-web/oxlint-plugin-solid",
@@ -225,6 +233,8 @@
     "@murky-web/oxc-config": ["@murky-web/oxc-config@workspace:packages/oxc-config"],
 
     "@murky-web/oxlint-plugin": ["@murky-web/oxlint-plugin@workspace:packages/oxlint-plugin"],
+
+    "@murky-web/oxlint-plugin-hono": ["@murky-web/oxlint-plugin-hono@workspace:packages/oxlint-plugin-hono"],
 
     "@murky-web/oxlint-plugin-solid": ["@murky-web/oxlint-plugin-solid@workspace:packages/oxlint-plugin-solid"],
 
