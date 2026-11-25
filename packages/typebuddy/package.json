@@ -1,6 +1,6 @@
 {
     "name": "@murky-web/typebuddy",
-    "version": "3.1.0",
+    "version": "3.1.1",
     "private": false,
     "description": "Your new best friend for simple typescript guards every project needs.",
     "homepage": "https://github.com/MurkyTheMurloc/web_dev_tools/tree/main/packages/typebuddy",
