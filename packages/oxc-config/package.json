@@ -1,6 +1,6 @@
 {
     "name": "@murky-web/oxc-config",
-    "version": "0.2.1",
+    "version": "0.3.0",
     "description": "Shared oxfmt and oxlint configuration",
     "license": "ISC",
     "repository": {
@@ -27,7 +27,7 @@
         "@murky-web/oxlint-plugin": "^0.1.0",
         "@murky-web/oxlint-plugin-solid": "^1.7.0",
         "@murky-web/simplelog": "^3.1.2",
-        "@murky-web/typebuddy": "^3.1.0"
+        "@murky-web/typebuddy": "^3.2.0"
     },
     "peerDependencies": {
         "oxfmt": ">=0.79.0",

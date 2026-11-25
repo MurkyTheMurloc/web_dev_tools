@@ -18,12 +18,12 @@
     },
     "packages/oxc-config": {
       "name": "@murky-web/oxc-config",
-      "version": "0.2.1",
+      "version": "0.3.0",
       "dependencies": {
         "@murky-web/oxlint-plugin": "^0.1.0",
         "@murky-web/oxlint-plugin-solid": "^1.7.0",
         "@murky-web/simplelog": "^3.1.2",
-        "@murky-web/typebuddy": "^3.1.0",
+        "@murky-web/typebuddy": "^3.2.0",
       },
       "peerDependencies": {
         "oxfmt": ">=0.79.0",
@@ -104,7 +104,7 @@
     },
     "packages/typebuddy": {
       "name": "@murky-web/typebuddy",
-      "version": "3.1.1",
+      "version": "3.2.0",
       "devDependencies": {
         "@types/node": "^24.19.2",
         "oxlint": "^1.94.0",
