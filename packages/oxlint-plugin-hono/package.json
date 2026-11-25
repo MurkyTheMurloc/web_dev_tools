@@ -1,0 +1,36 @@
+{
+    "name": "@murky-web/oxlint-plugin-hono",
+    "version": "0.0.0",
+    "private": false,
+    "description": "Oxlint JS plugin (prefix `hono`) with Hono correctness rules and agent-ready diagnostics.",
+    "homepage": "https://github.com/MurkyTheMurloc/web_dev_tools/tree/main/packages/oxlint-plugin-hono",
+    "bugs": {
+        "url": "https://github.com/MurkyTheMurloc/web_dev_tools/issues"
+    },
+    "license": "MIT",
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/MurkyTheMurloc/web_dev_tools.git",
+        "directory": "packages/oxlint-plugin-hono"
+    },
+    "files": [
+        "README.md",
+        "THIRD_PARTY_NOTICES.md",
+        "src"
+    ],
+    "type": "module",
+    "sideEffects": false,
+    "exports": {
+        ".": "./src/index.mjs"
+    },
+    "publishConfig": {
+        "access": "public",
+        "provenance": true
+    },
+    "scripts": {
+        "test": "vitest run"
+    },
+    "dependencies": {
+        "@murky-web/oxlint-plugin": "^0.1.0"
+    }
+}

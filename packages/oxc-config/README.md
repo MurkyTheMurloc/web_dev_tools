@@ -24,12 +24,13 @@ An app extends one file and adds only its own rules and overrides:
 
 `.oxlintrc.jsonc` is the full stack: the built-in plugins (eslint, typescript,
 unicorn, oxc, import, jsx-a11y, vitest, promise, node, jsdoc) and the rules of
-the four `@murky-web` JS plugins, which it loads itself through `jsPlugins`.
+the five `@murky-web` JS plugins, which it loads itself through `jsPlugins`.
 They are dependencies of this package, so installing it installs them:
 
 | File                      | Plugin                           |
 | ------------------------- | -------------------------------- |
 | `linting/murky.jsonc`     | `@murky-web/oxlint-plugin`       |
+| `linting/hono.jsonc`      | `@murky-web/oxlint-plugin-hono`  |
 | `linting/solid.jsonc`     | `@murky-web/oxlint-plugin-solid` |
 | `linting/typebuddy.jsonc` | `@murky-web/typebuddy/oxlint`    |
 | `linting/simplelog.jsonc` | `@murky-web/simplelog/oxlint`    |

@@ -10,6 +10,7 @@ JavaScript-Regeln und gemeinsamen AST-Helfern.
 - `@murky-web/oxlint-plugin-typescript` (geplant): Regeln, die TypeScript
   brauchen.
 - `@murky-web/oxlint-plugin-solid`: Regeln fuer Solid.
+- `@murky-web/oxlint-plugin-hono`: Regeln fuer Hono.
 
 Die spezialisierten Plugins koennen dieses Paket als Dependency nehmen und die
 Helfer aus `./utils` nutzen: `sourceCodeOf(context)`, `runsAtModuleLoad(node)`

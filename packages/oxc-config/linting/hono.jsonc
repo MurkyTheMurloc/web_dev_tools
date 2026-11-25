@@ -1,0 +1,19 @@
+{
+    // Hono rules from @murky-web/oxlint-plugin-hono (prefix hono); needs the
+    // plugin in your own jsPlugins.
+    "rules": {
+        "hono/global-middleware-placement": "error",
+        "hono/no-commented-out-route": "warn",
+        "hono/no-duplicate-path-params": "error",
+        "hono/no-duplicate-routes": "error",
+        "hono/no-multiple-next": "error",
+        // Opt-in for edge runtimes (Cloudflare Workers, Deno Deploy) where
+        // process.env is unavailable; Bun/Node Hono apps legitimately read it.
+        "hono/no-process-env": "off",
+        "hono/no-unused-context-response": "error",
+        "hono/param-name-mismatch": "error",
+        // Opt-in for projects that want every throw inside a Hono handler to
+        // use HTTPException from hono/http-exception.
+        "hono/prefer-http-exception": "off"
+    }
+}
