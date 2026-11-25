@@ -137,10 +137,13 @@ That makes these names available globally:
 - `isObject(value: unknown): value is object`
 - `isBoolean(value: unknown): value is boolean`
 - `isNull(value: unknown): value is null`
-- `isUndefined(value: unknown): value is undefined`
+- `isUndefined(value: unknown): value is undefined` (`value === undefined`: the
+  browser's `document.all`, which `typeof` calls `"undefined"`, is not)
 - `isOptional<T>(value: Optional<T>): value is undefined`
 - `isMaybe<T>(value: Maybe<T>): value is null`
 - `isNullable<T>(value: Nullable<T>): value is null | undefined`
+  (`value === null || value === undefined`; `false` for `document.all`, which
+  `== null` accepts)
 - `isFunction(value: unknown): value is Function`
 - `isPromise(value: unknown): value is PromiseLike<unknown>` (any thenable, also
   a callable one; `false` when reading `then` throws)
@@ -242,8 +245,8 @@ export async function flush(): MaybePromise<void> {
 
 ### Oxlint rules
 
-`@murky-web/typebuddy/oxlint` has `no-useless-undefined`, `prefer-maybe`,
-`prefer-maybe-promise`, `prefer-nullable`, `prefer-optional` and
+`@murky-web/typebuddy/oxlint` has `no-useless-undefined`, `prefer-guards`,
+`prefer-maybe`, `prefer-maybe-promise`, `prefer-nullable`, `prefer-optional` and
 `require-try-catch`. All but `no-useless-undefined` skip test files: `*.test.*`,
 `*.spec.*` and `*.bench.*`, anything under a `__tests__/`, `tests/`, `test/` or
 `__mocks__/` directory, and `vitest.setup.*`, `vitest-setup.*` and
@@ -262,6 +265,42 @@ that one off) and, like it, lints test files too. An un-annotated
 default, not `let x;`. Trailing `undefined` arguments are reported without an
 autofix too, because `arguments.length` and rest parameters see them (oxlint
 only removes them under `--fix-dangerously`).
+
+`prefer-guards` reports a native check that is exactly one of the guards, the
+same answer for every value (`NaN`, `-0`, boxed primitives, `document.all`,
+`Object.create(null)`, proxies), and rewrites it to the guard:
+
+| Native check                              | Guard            | Applied by |
+| ----------------------------------------- | ---------------- | ---------- |
+| `x === null`                              | `isNull(x)`      | `--fix`    |
+| `x === undefined`                         | `isUndefined(x)` | `--fix`    |
+| `x === null` or-ed with `x === undefined` | `isNullable(x)`  | `--fix`    |
+| `typeof x === "string"`                   | `isString(x)`    | `--fix`    |
+| `typeof x === "boolean"`                  | `isBoolean(x)`   | `--fix`    |
+| `typeof x === "symbol"`                   | `isSymbol(x)`    | `--fix`    |
+| `x instanceof Error` / `Date` / `RegExp`  | `isError(x)` …   | `--fix`    |
+| `Array.isArray(x)`                        | `isArray(x)`     | suggestion |
+| `typeof x === "function"`                 | `isFunction(x)`  | suggestion |
+| `Number.isFinite(x)`                      | `isNumber(x)`    | suggestion |
+| `Number.isInteger(x)`                     | `isInteger(x)`   | suggestion |
+
+Negations (`!==`, `!(…)`) become `!guard(x)`, mirrored operands (`null === x`)
+count too. The `null`/`undefined` pair is rewritten when both sides are the same
+plain reference; over a call (`f() === null || f() === undefined`) each half
+becomes its own guard, so `f` still runs twice. The suggestion rows give the
+same answer but narrow more strictly (`readonly unknown[]` instead of `any[]`, a
+function taking `never` arguments instead of `Function`, the
+`FiniteNumber`/`IntegerNumber` brands), so code after them may need a type.
+
+Not reported, because they are only close: `typeof x === "undefined"`,
+`x == null` and `x === null || typeof x === "undefined"` (`typeof document.all`
+is `"undefined"` and `document.all == null` is `true`, but `document.all` is not
+`undefined`), `typeof x === "number"` (`isNumber` rejects `NaN`),
+`typeof x === "object"` (`isObject` only takes plain objects),
+`x instanceof Promise` (`isPromise` takes any thenable). `typeof name` of a name
+the file never declares (`typeof Bun === "function"`) is left alone, since
+`isFunction(Bun)` would throw there. `bun run test:browser` checks every row
+against its guard in headless Chromium, `document.all` included.
 
 Autofixes only do what cannot change what the code means:
 

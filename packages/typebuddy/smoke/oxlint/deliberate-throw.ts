@@ -2,11 +2,13 @@
 // failure is a broken invariant rather than a value to hand back, so neither
 // `require-try-catch` nor `prefer-maybe-promise` should touch it.
 
+import { isUndefined } from "@murky-web/typebuddy";
+
 declare const manifests: Record<string, () => Promise<{ default: string }>>;
 
 export async function loadManifest(route: string): Promise<string> {
     const loader = manifests[route];
-    if (loader === undefined) {
+    if (isUndefined(loader)) {
         // A missing manifest for a route being navigated to is a broken build.
         // Returning err() here would degrade politely and hide it.
         throw new Error(`Manifest missing for route:${route}`);

@@ -8,6 +8,7 @@ type Visitors = Record<string, unknown>;
 type CreatableRule = { create(context: unknown): Visitors };
 
 const RULE_IDS = [
+    "prefer-guards",
     "prefer-maybe",
     "prefer-maybe-promise",
     "prefer-nullable",

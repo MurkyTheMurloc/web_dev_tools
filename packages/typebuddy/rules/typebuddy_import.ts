@@ -12,9 +12,16 @@ const PACKAGE_NAME = "@murky-web/typebuddy";
  * file that imports them from there already has what the fix is about to add.
  */
 const RESULT_HELPER_SOURCES = new Set([PACKAGE_NAME, `${PACKAGE_NAME}/result`]);
+/** The entries that export the runtime guards (`isNull`, `isString`, …). */
+const GUARD_SOURCES = new Set([PACKAGE_NAME, `${PACKAGE_NAME}/guards`]);
 const TYPE_SOURCES = new Set([PACKAGE_NAME]);
 
-type ImportKind = "type" | "value";
+/**
+ * What the fix is about to name: `"value"` is a result helper (`ok`, `err`),
+ * `"guard"` a runtime guard, `"type"` a type. A value and a guard are both
+ * called and need a value import; they differ in the entries that export them.
+ */
+type ImportKind = "guard" | "type" | "value";
 
 /** What a rule needs from `context.getSourceCode()` to plan an import. */
 type ImportSourceCode = {
@@ -209,15 +216,19 @@ function getDefinitions(variable: unknown): unknown[] {
 }
 
 function sourcesFor(kind: ImportKind): ReadonlySet<string> {
-    return kind === "value" ? RESULT_HELPER_SOURCES : TYPE_SOURCES;
+    if (kind === "value") {
+        return RESULT_HELPER_SOURCES;
+    }
+
+    return kind === "guard" ? GUARD_SOURCES : TYPE_SOURCES;
 }
 
 /**
  * Whether one definition is `import { name } from "<package>"`, imported under
  * its own name. A renamed import (`import { ok as okay }`), a default import
  * and an import from another module are different bindings that happen to share
- * the name. For a value, a type-only import does not count either: it has no
- * runtime binding to call.
+ * the name. For a value or a guard, a type-only import does not count: it has
+ * no runtime binding to call.
  */
 function isPackageImport(
     definition: unknown,
@@ -252,7 +263,7 @@ function isPackageImport(
     if (getModuleExportName(specifier["imported"]) !== name) {
         return false;
     }
-    if (kind === "value") {
+    if (kind !== "type") {
         return (
             declaration["importKind"] !== "type" &&
             specifier["importKind"] !== "type"
@@ -280,10 +291,11 @@ type MergeTarget = {
 
 /**
  * The import of the package that the name can join, or `null` when there is
- * none. A value joins `import { … }`. A type joins `import type { … }`, or else
- * an `import { … }` of the package as `type Name` (an inline type specifier),
- * so the file does not end up with two imports from one module. An import with
- * a namespace specifier, or with no named specifier, is left alone.
+ * none. A value or a guard joins a value import (`import { … }`). A type joins
+ * a type import (`import type { … }`), or else a value import of the package as
+ * `type Name` (an inline type specifier), so the file does not end up with two
+ * imports from one module. An import with a namespace specifier, or with no
+ * named specifier, is left alone.
  */
 function findMergeTarget(
     imports: readonly AstNode[],
@@ -298,7 +310,7 @@ function findMergeTarget(
         if (source === null || !sources.has(source)) {
             continue;
         }
-        if (kind === "value" && isTypeImport) {
+        if (kind !== "type" && isTypeImport) {
             continue;
         }
 
@@ -319,7 +331,7 @@ function findMergeTarget(
             continue;
         }
 
-        if (kind === "value" || isTypeImport) {
+        if (kind !== "type" || isTypeImport) {
             return { at: range[1], inlineType: false };
         }
 
@@ -354,8 +366,9 @@ function findMergeTarget(
  * @param {ImportSourceCode} sourceCode - Source code of the file, for scopes.
  * @param {unknown} node - The node the fix uses `name` at.
  * @param {string} name - The named export to import, e.g. `"err"`.
- * @param {ImportKind} kind - `"value"` for a helper that is called, `"type"`
- *   for a type that is only named.
+ * @param {ImportKind} kind - `"value"` for a result helper that is called,
+ *   `"guard"` for a guard that is called, `"type"` for a type that is only
+ *   named.
  * @returns {ImportPlan} Whether to insert, with the zero-width insertion to
  *   apply.
  */
@@ -520,7 +533,9 @@ function createImportPlanner(sourceCode: ImportSourceCode) {
 export {
     canAddImport,
     createImportPlanner,
+    findBinding,
     getBodyStartAfterDirectives,
+    getDefinitions,
     planTypeBuddyImport
 };
 export type { ImportFixer, ImportKind, ImportPlan, ImportSourceCode };
