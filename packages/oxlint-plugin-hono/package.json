@@ -1,6 +1,6 @@
 {
     "name": "@murky-web/oxlint-plugin-hono",
-    "version": "0.0.0",
+    "version": "0.1.0",
     "private": false,
     "description": "Oxlint JS plugin (prefix `hono`) with Hono correctness rules and agent-ready diagnostics.",
     "homepage": "https://github.com/MurkyTheMurloc/web_dev_tools/tree/main/packages/oxlint-plugin-hono",
