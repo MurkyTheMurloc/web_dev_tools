@@ -93,6 +93,152 @@ function isResultHelperCall(node: unknown, name: "ok" | "err"): boolean {
     );
 }
 
+const RESULT_BOUNDARY_HELPERS = new Set([
+    "allResults",
+    "fromPromise",
+    "fromTry",
+    "mapError",
+    "mapResult",
+    "withRetry",
+    "withTimeout"
+]);
+
+function isPropagatedFailureReturn(
+    returnStatement: AstNode,
+    argument: AstNode
+): boolean {
+    if (
+        argument.type !== "Identifier" ||
+        typeof argument["name"] !== "string"
+    ) {
+        return false;
+    }
+
+    const returnedName = argument["name"];
+    let current = returnStatement.parent;
+
+    while (current) {
+        if (current.type === "IfStatement") {
+            const test = current["test"];
+            if (isFailureGuardFor(test, returnedName)) {
+                return true;
+            }
+        }
+        if (
+            current.type === "TryStatement" ||
+            current.type === "FunctionDeclaration" ||
+            current.type === "FunctionExpression" ||
+            current.type === "ArrowFunctionExpression"
+        ) {
+            break;
+        }
+        current = current.parent;
+    }
+
+    return false;
+}
+
+function isFailureGuardFor(test: unknown, name: string): boolean {
+    if (!isNode(test)) {
+        return false;
+    }
+
+    // `if (res.isError)` or `if (res.isError === true)`
+    if (
+        test.type === "MemberExpression" &&
+        test["computed"] !== true &&
+        isIdentifierNamed(test["object"], name) &&
+        isIdentifierNamed(test["property"], "isError")
+    ) {
+        return true;
+    }
+
+    if (
+        test.type === "BinaryExpression" &&
+        (test["operator"] === "===" || test["operator"] === "==") &&
+        ((isFailureGuardFor(test["left"], name) &&
+            isBooleanLiteral(test["right"], true)) ||
+            (isFailureGuardFor(test["right"], name) &&
+                isBooleanLiteral(test["left"], true)))
+    ) {
+        return true;
+    }
+
+    // `if (isErr(res))`
+    if (
+        test.type === "CallExpression" &&
+        isIdentifierNamed(test["callee"], "isErr") &&
+        Array.isArray(test["arguments"]) &&
+        test["arguments"].length === 1 &&
+        isIdentifierNamed(test["arguments"][0], name)
+    ) {
+        return true;
+    }
+
+    // `if (!isSuccess(res))`
+    if (
+        test.type === "UnaryExpression" &&
+        test["operator"] === "!" &&
+        isNode(test["argument"]) &&
+        test["argument"].type === "CallExpression" &&
+        isIdentifierNamed(test["argument"]["callee"], "isSuccess") &&
+        Array.isArray(test["argument"]["arguments"]) &&
+        test["argument"]["arguments"].length === 1 &&
+        isIdentifierNamed(test["argument"]["arguments"][0], name)
+    ) {
+        return true;
+    }
+
+    return false;
+}
+
+function hasExplicitErrorTypeArgument(fnNode: AstNode): boolean {
+    if (!isNode(fnNode["returnType"])) {
+        return false;
+    }
+
+    const annotation = fnNode["returnType"]["typeAnnotation"];
+    if (!isNode(annotation) || annotation.type !== "TSTypeReference") {
+        return false;
+    }
+
+    const typeName = annotation["typeName"];
+    if (
+        !isNode(typeName) ||
+        typeName.type !== "Identifier" ||
+        typeof typeName["name"] !== "string" ||
+        !AWAITED_TYPE_NAMES.has(typeName["name"])
+    ) {
+        return false;
+    }
+
+    const typeArguments = annotation["typeArguments"];
+    if (!hasTypeParameters(typeArguments) || typeArguments.params.length < 2) {
+        return false;
+    }
+
+    const secondParam = typeArguments.params[1];
+    return isNode(secondParam) && secondParam.type !== "TSNullKeyword";
+}
+
+function isResultBoundaryCall(node: unknown): boolean {
+    if (!isNode(node)) {
+        return false;
+    }
+
+    if (node.type === "AwaitExpression") {
+        return isResultBoundaryCall(node["argument"]);
+    }
+
+    return (
+        node.type === "CallExpression" &&
+        isNode(node["callee"]) &&
+        node["callee"].type === "Identifier" &&
+        typeof node["callee"]["name"] === "string" &&
+        RESULT_BOUNDARY_HELPERS.has(node["callee"]["name"])
+    );
+}
+
 function hasIsErrorFlag(node: unknown, expected: boolean): boolean {
     if (
         !isNode(node) ||
@@ -312,13 +458,13 @@ const rule = {
         }
 
         /**
-         * `Promise<T>` to `MaybePromise<T>`.
+         * `Promise<T>` to `AsyncResult<T>`.
          *
          * Only on a function this file defines (`own`) is it a fix: the author
-         * is moving that function's contract to `MaybePromise`. A function
-         * type, an interface method or an overload describes a shape that other
-         * code, often a library's, has to match, so there it is a suggestion
-         * the author decides on.
+         * is moving that function's contract to `AsyncResult`. A function type,
+         * an interface method or an overload describes a shape that other code,
+         * often a library's, has to match, so there it is a suggestion the
+         * author decides on.
          */
         function reportPromiseReturnType(node: AstNode, own: boolean) {
             if (!isNode(node["returnType"])) return;
@@ -337,14 +483,14 @@ const rule = {
                 const typeImport = imports.fixes(
                     typeName,
                     fixer,
-                    "MaybePromise",
+                    "AsyncResult",
                     "type"
                 );
                 if (typeImport === null) return null;
 
                 return [
                     ...typeImport,
-                    fixer.replaceText(typeName, "MaybePromise")
+                    fixer.replaceText(typeName, "AsyncResult")
                 ];
             };
 
@@ -447,7 +593,9 @@ const rule = {
 
             if (
                 isResultHelperCall(argument, "ok") ||
-                isResultHelperCall(argument, "err")
+                isResultHelperCall(argument, "err") ||
+                isResultBoundaryCall(argument) ||
+                isPropagatedFailureReturn(node, argument)
             ) {
                 return;
             }
@@ -485,19 +633,22 @@ const rule = {
 
             if (
                 isBooleanLiteral(isErrorValue, true) &&
-                isNullLiteral(objectValue) &&
+                objectValue &&
                 hasOnlyResultProperties(argument)
             ) {
+                const errCall = isNullLiteral(objectValue)
+                    ? "err()"
+                    : `err(${sourceCode.getText(objectValue)})`;
                 context.report({
                     node: argument,
                     messageId: "preferErrResult",
-                    data: { object: sourceCode.getText(argument) },
+                    data: { errCall, object: sourceCode.getText(argument) },
                     fix(fixer) {
                         return withHelperFixes(
                             node,
                             fixer,
                             "err",
-                            fixer.replaceText(argument, "err()")
+                            fixer.replaceText(argument, errCall)
                         );
                     }
                 });
@@ -571,7 +722,7 @@ const rule = {
          * Where the fallback matters, moving it into the try block is a
          * decision the author has to make, so the rule reports and stops.
          */
-        function reportCatchReturn(statement: AstNode) {
+        function reportCatchReturn(statement: AstNode, hasTypedError: boolean) {
             const argument = statement["argument"];
 
             if (isSettledFailure(argument)) return;
@@ -579,40 +730,50 @@ const rule = {
             // `return;` — adding the result is pure addition, nothing is lost.
             // `statement` is where the scope is read: the catch parameter is in
             // scope there, and `catch (err)` makes `err()` the caught value.
+            // When the function declares a typed error channel (`AsyncResult<T, E>`),
+            // inserting bare `err()` would fail typecheck, so report without autofix.
             if (!isNode(argument)) {
                 context.report({
                     node: statement,
                     messageId: "returnFailedPromise",
                     data: { found: `\`${sourceCode.getText(statement)}\`` },
-                    fix(fixer) {
-                        return withHelperFixes(
-                            statement,
-                            fixer,
-                            "err",
-                            fixer.replaceText(statement, "return err();")
-                        );
-                    }
+                    ...(hasTypedError
+                        ? {}
+                        : {
+                              fix(fixer: RuleFixer) {
+                                  return withHelperFixes(
+                                      statement,
+                                      fixer,
+                                      "err",
+                                      fixer.replaceText(
+                                          statement,
+                                          "return err();"
+                                      )
+                                  );
+                              }
+                          })
                 });
                 return;
             }
 
             if (hasIsErrorFlag(argument, true)) {
-                // `{ isError: true, value: null }` says the right thing the
-                // long way round; `err()` is the same value.
-                if (
-                    isNullLiteral(getObjectPropertyValue(argument, "value")) &&
-                    hasOnlyResultProperties(argument)
-                ) {
+                // `{ isError: true, value: ... }` says the right thing the
+                // long way round; `err()` / `err(error)` is the same value.
+                const errorValue = getObjectPropertyValue(argument, "value");
+                if (errorValue && hasOnlyResultProperties(argument)) {
+                    const errCall = isNullLiteral(errorValue)
+                        ? "err()"
+                        : `err(${sourceCode.getText(errorValue)})`;
                     context.report({
                         node: argument,
                         messageId: "preferErrResult",
-                        data: { object: sourceCode.getText(argument) },
+                        data: { errCall, object: sourceCode.getText(argument) },
                         fix(fixer) {
                             return withHelperFixes(
                                 statement,
                                 fixer,
                                 "err",
-                                fixer.replaceText(argument, "err()")
+                                fixer.replaceText(argument, errCall)
                             );
                         }
                     });
@@ -684,8 +845,10 @@ const rule = {
             // with opposite fixes.
             const catchReturns = collectOwnReturns(handler["body"]);
 
+            const hasTypedError = hasExplicitErrorTypeArgument(parentFunction);
+
             for (const statement of catchReturns) {
-                reportCatchReturn(statement);
+                reportCatchReturn(statement, hasTypedError);
             }
 
             // A nested try/catch inside this catch settles the branch on its
@@ -705,34 +868,38 @@ const rule = {
                 node: handler,
                 messageId: "returnFailedPromise",
                 data: { found: "nothing (it has no `return`)" },
-                fix(fixer) {
-                    const handlerBody = handler["body"];
-                    if (
-                        !isNode(handlerBody) ||
-                        !Array.isArray(handlerBody["range"])
-                    ) {
-                        return null;
-                    }
+                ...(hasTypedError
+                    ? {}
+                    : {
+                          fix(fixer: RuleFixer) {
+                              const handlerBody = handler["body"];
+                              if (
+                                  !isNode(handlerBody) ||
+                                  !Array.isArray(handlerBody["range"])
+                              ) {
+                                  return null;
+                              }
 
-                    // The scope is the catch body's: `catch (err)` puts the
-                    // caught value under the name `err`, and `return err()`
-                    // would call it.
-                    return withHelperFixes(
-                        handlerBody,
-                        fixer,
-                        "err",
-                        fixer.insertTextBeforeRange(
-                            [
-                                handlerBody["range"][1] - 1,
-                                handlerBody["range"][1] - 1
-                            ],
-                            // The newline matters: `catch { log() }` would
-                            // otherwise become `catch { log() return err(); }`,
-                            // which does not parse.
-                            "\nreturn err();\n"
-                        )
-                    );
-                }
+                              // The scope is the catch body's: `catch (err)` puts the
+                              // caught value under the name `err`, and `return err()`
+                              // would call it.
+                              return withHelperFixes(
+                                  handlerBody,
+                                  fixer,
+                                  "err",
+                                  fixer.insertTextBeforeRange(
+                                      [
+                                          handlerBody["range"][1] - 1,
+                                          handlerBody["range"][1] - 1
+                                      ],
+                                      // The newline matters: `catch { log() }` would
+                                      // otherwise become `catch { log() return err(); }`,
+                                      // which does not parse.
+                                      "\nreturn err();\n"
+                                  )
+                              );
+                          }
+                      })
             });
         }
 
@@ -807,21 +974,21 @@ const rule = {
         schema: [],
         messages: {
             replaceWithMaybePromise:
-                '`{{promise}}` makes a failure a rejection the caller has to catch; typebuddy\'s async functions resolve to a result instead, which the caller checks with `isError`. Fix: `MaybePromise<{{type}}>` with `import type { MaybePromise } from "@murky-web/typebuddy";`, then `return ok(value)` from the `try` and `return err()` from the `catch`. Do not cast the returns with `as` to make them fit.',
-            suggestMaybePromise: "Replace 'Promise' with 'MaybePromise'.",
+                '`{{promise}}` makes a failure a rejection the caller has to catch; typebuddy\'s async functions resolve to a result instead, which the caller checks with `isError`. Fix: `AsyncResult<{{type}}>` with `import type { AsyncResult } from "@murky-web/typebuddy";`, then `return ok(value)` from the `try` and `return err()` (or a typed `return err(error)`) from the `catch`. Do not cast the returns with `as` to make them fit.',
+            suggestMaybePromise: "Replace 'Promise' with 'AsyncResult'.",
             wrapReturn:
-                "`return {{argument}}` in the `try` of an async function resolves to a bare value, and a caller reading `.isError` gets `undefined`. Fix: `return ok({{argument}})`; if `{{argument}}` already is a `Result`, unwrap it: `const settled = {{argument}}; if (settled.isError) return err(); return ok(settled.value);`. Do not cast it with `as`.",
+                "`return {{argument}}` in the `try` of an async function resolves to a bare value, and a caller reading `.isError` gets `undefined`. Fix: `return ok({{argument}})`; if `{{argument}}` already is a `Result`, unwrap it: `const settled = {{argument}}; if (settled.isError) return err(settled.value); return ok(settled.value);`. Do not cast it with `as`.",
             suggestWrapReturn: "Wrap the return value in ok(...).",
             preferOkResult:
                 '`{{object}}` builds the success result by hand; without a return type its `isError` widens to `boolean` and `isSuccess` stops narrowing it. Fix: `ok({{value}})` with `import { ok } from "@murky-web/typebuddy";` (`--fix` applies it).',
             preferErrResult:
-                '`{{object}}` builds the failed result by hand; without a return type its `isError` widens to `boolean` and `isSuccess` stops narrowing it. Fix: `err()` with `import { err } from "@murky-web/typebuddy";` (`--fix` applies it).',
+                '`{{object}}` builds the failed result by hand; without a return type its `isError` widens to `boolean` and `isSuccess` stops narrowing it. Fix: `{{errCall}}` with `import { err } from "@murky-web/typebuddy";` (`--fix` applies it).',
             returnVoidPromise:
                 '`{{code}}` in the `try` of an async `void` function resolves to `undefined` instead of a result, so a caller reading `.isError` throws a `TypeError`. Fix: `return ok();` with `import { ok } from "@murky-web/typebuddy";` (`--fix` applies it).',
             removedResultGlobal:
                 '`{{name}}` does not exist at runtime: typebuddy no longer defines the `FAILED_PROMISE` and `VOID_PROMISE` globals, so this line throws a `ReferenceError` instead of settling on a result. Fix: `{{helper}}()` with `import { {{helper}} } from "@murky-web/typebuddy";` (`--fix` applies it). Do not declare `{{name}}` yourself to keep the old name.',
             returnFailedPromise:
-                'The `catch` of this async function settles on {{found}} instead of `err()`, so the caller gets no `Failed` result and `isError` misses the failure. Fix: end the `catch` with `return err();` and `import { err } from "@murky-web/typebuddy";`, renaming a `catch (err)` parameter first; a fallback value belongs in the `try` as `return ok(fallback)`. Do not return `ok(...)` from the `catch`.'
+                'The `catch` of this async function settles on {{found}} instead of `err()`, so the caller gets no `Failed` result and `isError` misses the failure. Fix: end the `catch` with `return err();` (or a typed `return err(error);`) and `import { err } from "@murky-web/typebuddy";`, renaming a `catch (err)` parameter first; a fallback value belongs in the `try` as `return ok(fallback)`. Do not return `ok(...)` from the `catch`.'
         }
     }
 };

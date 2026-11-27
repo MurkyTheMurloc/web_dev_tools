@@ -1,3 +1,4 @@
+import type { Brand, NonEmptyString, UlidString, UuidString } from "./brand.js";
 import type { JsonifiedObject, JsonifiedValue, Stringified } from "./json.js";
 import type { Maybe, ResolveMaybe } from "./maybe.js";
 import type {
@@ -5,18 +6,21 @@ import type {
     Failed,
     MaybePromise,
     Result,
-    Success
+    Success,
+    TaggedError
 } from "./maybe_promise.js";
 import type { Nullable, ResolveNullable } from "./nullable.js";
 import type { Optional, ResolveOptional } from "./optional.js";
 
 export type {
     AsyncResult,
+    Brand,
     Failed,
     JsonifiedObject,
     JsonifiedValue,
     Maybe,
     MaybePromise,
+    NonEmptyString,
     Nullable,
     Optional,
     ResolveMaybe,
@@ -24,5 +28,8 @@ export type {
     ResolveOptional,
     Result,
     Stringified,
-    Success
+    Success,
+    TaggedError,
+    UlidString,
+    UuidString
 };

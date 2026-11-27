@@ -6,11 +6,13 @@ export * from "./type_helper.js";
 
 export type {
     AsyncResult,
+    Brand,
     Failed,
     JsonifiedObject,
     JsonifiedValue,
     Maybe,
     MaybePromise,
+    NonEmptyString,
     Nullable,
     Optional,
     ResolveMaybe,
@@ -18,5 +20,8 @@ export type {
     ResolveOptional,
     Result,
     Stringified,
-    Success
+    Success,
+    TaggedError,
+    UlidString,
+    UuidString
 } from "./types/index.js";

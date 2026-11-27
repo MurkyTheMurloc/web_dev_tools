@@ -1,4 +1,5 @@
 import { throwsDeliberately } from "./deliberate_throw.js";
+import { walkOwnSubtree } from "./own_subtree.js";
 import {
     createImportPlanner,
     getBodyStartAfterDirectives
@@ -35,10 +36,158 @@ type RuleContext = {
     }): void;
 };
 
+const PACKAGE_BOUNDARY_SOURCES = new Set([
+    "@murky-web/typebuddy",
+    "@murky-web/typebuddy/async",
+    "@murky-web/typebuddy/result"
+]);
+
+const BOUNDARY_RESULT_HELPERS = new Set([
+    "fromPromise",
+    "fromTry",
+    "withRetry",
+    "withTimeout"
+]);
+
+function collectBoundaryHelperAliases(program: AstNode): Set<string> {
+    const names = new Set<string>(BOUNDARY_RESULT_HELPERS);
+    const body = program["body"];
+    if (!Array.isArray(body)) {
+        return names;
+    }
+
+    for (const statement of body) {
+        if (
+            typeof statement !== "object" ||
+            statement === null ||
+            !("type" in statement) ||
+            statement.type !== "ImportDeclaration"
+        ) {
+            continue;
+        }
+        const decl = statement as AstNode;
+        const sourceNode = decl["source"];
+        const source =
+            typeof sourceNode === "object" &&
+            sourceNode !== null &&
+            "value" in sourceNode &&
+            typeof sourceNode.value === "string"
+                ? sourceNode.value
+                : null;
+        if (source === null || !PACKAGE_BOUNDARY_SOURCES.has(source)) {
+            continue;
+        }
+        const specifiers = decl["specifiers"];
+        if (!Array.isArray(specifiers)) {
+            continue;
+        }
+        for (const spec of specifiers) {
+            if (
+                typeof spec !== "object" ||
+                spec === null ||
+                !("type" in spec) ||
+                spec.type !== "ImportSpecifier"
+            ) {
+                continue;
+            }
+            const s = spec as AstNode;
+            const imported = s["imported"] as AstNode | undefined;
+            const local = s["local"] as AstNode | undefined;
+            const importedName =
+                typeof imported?.["name"] === "string"
+                    ? imported["name"]
+                    : null;
+            const localName =
+                typeof local?.["name"] === "string" ? local["name"] : null;
+            if (
+                importedName !== null &&
+                localName !== null &&
+                BOUNDARY_RESULT_HELPERS.has(importedName)
+            ) {
+                names.add(localName);
+            }
+        }
+    }
+
+    return names;
+}
+
+function isBoundaryResultExpression(
+    node: unknown,
+    boundaryHelpers: ReadonlySet<string>
+): boolean {
+    if (typeof node !== "object" || node === null || !("type" in node)) {
+        return false;
+    }
+
+    const ast = node as AstNode;
+    if (ast.type === "AwaitExpression") {
+        return isBoundaryResultExpression(ast["argument"], boundaryHelpers);
+    }
+
+    if (ast.type !== "CallExpression") {
+        return false;
+    }
+
+    const callee = ast["callee"];
+    return (
+        typeof callee === "object" &&
+        callee !== null &&
+        "type" in callee &&
+        callee.type === "Identifier" &&
+        "name" in callee &&
+        typeof callee.name === "string" &&
+        boundaryHelpers.has(callee.name)
+    );
+}
+
 function hasTryCatch(nodes: AstNode[]): boolean {
     return nodes.some((node) => {
         return node.type === "TryStatement";
     });
+}
+
+function returnsBoundaryResultDirectly(
+    nodes: AstNode[],
+    boundaryHelpers: ReadonlySet<string>
+): boolean {
+    const nonDirective = nodes.filter((node) => {
+        return !(
+            node.type === "ExpressionStatement" &&
+            typeof node["directive"] === "string"
+        );
+    });
+    if (nonDirective.length === 1) {
+        const [only] = nonDirective;
+        if (
+            only?.type === "ReturnStatement" &&
+            isBoundaryResultExpression(only["argument"], boundaryHelpers)
+        ) {
+            return true;
+        }
+    }
+
+    // Multi-statement async body where every `await` settles through a boundary
+    // helper (`fromPromise`, `withTimeout`, `withRetry`): the I/O boundary is
+    // already guarded without wrapping the whole function in a catch-all that
+    // would swallow defects.
+    let sawBoundaryAwait = false;
+    let sawUnguardedAwait = false;
+    for (const statement of nonDirective) {
+        walkOwnSubtree(statement, (candidate) => {
+            if (candidate.type === "AwaitExpression") {
+                if (isBoundaryResultExpression(candidate, boundaryHelpers)) {
+                    sawBoundaryAwait = true;
+                } else {
+                    sawUnguardedAwait = true;
+                }
+                return false;
+            }
+            return true;
+        });
+    }
+
+    return sawBoundaryAwait && !sawUnguardedAwait;
 }
 
 /**
@@ -84,6 +233,7 @@ const rule = {
         const sourceCode = context.getSourceCode();
         const imports = createImportPlanner(sourceCode);
         const getText = (node: unknown) => sourceCode.getText(node);
+        let boundaryHelpers: ReadonlySet<string> = BOUNDARY_RESULT_HELPERS;
 
         // Two zero-width insertions leave the body's own text untouched, byte
         // for byte. Rebuilding it statement by statement used to strip leading
@@ -221,8 +371,13 @@ const rule = {
 
             // An expression-bodied arrow (`async () => fetch(url)`) returns the
             // one value the try/catch exists to guard, so it needs a block
-            // before it can get one.
+            // before it can get one — unless it delegates directly to a
+            // boundary helper such as `fromPromise(...)`.
             if (bodyNode.type !== "BlockStatement") {
+                if (isBoundaryResultExpression(bodyNode, boundaryHelpers)) {
+                    return;
+                }
+
                 context.report({
                     node,
                     messageId: "missingTryCatch",
@@ -235,7 +390,12 @@ const rule = {
             }
 
             const body = Array.isArray(bodyNode.body) ? bodyNode.body : [];
-            if (hasTryCatch(body)) return;
+            if (
+                hasTryCatch(body) ||
+                returnsBoundaryResultDirectly(body, boundaryHelpers)
+            ) {
+                return;
+            }
 
             context.report({
                 node,
@@ -250,7 +410,10 @@ const rule = {
         const { Program, guard } = createUseServerGuard();
 
         return {
-            Program,
+            Program(node: AstNode) {
+                Program(node);
+                boundaryHelpers = collectBoundaryHelperAliases(node);
+            },
             FunctionDeclaration: guard(checkFunction),
             FunctionExpression: guard(checkFunction),
             ArrowFunctionExpression: guard(checkFunction)

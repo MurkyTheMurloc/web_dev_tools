@@ -8,6 +8,7 @@ const config = [
             // One entry per published subpath. Without them tsdown emits a single
             // graph reachable from `index`, so `exports["./guards"]` would point at
             // a file that was never built.
+            async: "./src/async.ts",
             collections: "./src/collections.ts",
             empty: "./src/empty.ts",
             guards: "./src/guards.ts",
