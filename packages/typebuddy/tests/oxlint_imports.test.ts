@@ -380,7 +380,7 @@ describe("prefer-maybe-promise imports", () => {
                             {
                                 messageId: "suggestMaybePromise",
                                 output: lines(
-                                    "async function load(): MaybePromise<string> {",
+                                    "async function load(): AsyncResult<string> {",
                                     '    return "x";',
                                     "}"
                                 )

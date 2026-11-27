@@ -79,6 +79,22 @@ describe("prefer-maybe-promise", () => {
                     "    }",
                     "}"
                 )
+            },
+            {
+                name: "allows propagating a narrowed error result with isErr or isError inside try",
+                code: lines(
+                    `import { err, isErr, ok } from "${PACKAGE}";`,
+                    "export async function load(): AsyncResult<string, string> {",
+                    "    try {",
+                    "        const res = await loadInner();",
+                    "        if (isErr(res)) return res;",
+                    "        if (res.isError) return res;",
+                    "        return ok(res.value);",
+                    "    } catch {",
+                    '        return err("failed");',
+                    "    }",
+                    "}"
+                )
             }
         ],
         invalid: [
@@ -97,7 +113,7 @@ describe("prefer-maybe-promise", () => {
                     {
                         message: messageWith(
                             "settles on nothing (it has no `return`) instead of `err()`",
-                            `Fix: end the \`catch\` with \`return err();\` and \`import { err } from "${PACKAGE}";\`, renaming a \`catch (err)\` parameter first`,
+                            `Fix: end the \`catch\` with \`return err();\` (or a typed \`return err(error);\`) and \`import { err } from "${PACKAGE}";\`, renaming a \`catch (err)\` parameter first`,
                             "Do not return `ok(...)` from the `catch`."
                         )
                     }
@@ -194,7 +210,7 @@ describe("prefer-maybe-promise", () => {
                     {
                         message: messageWith(
                             "`return session` in the `try`",
-                            "Fix: `return ok(session)`; if `session` already is a `Result`, unwrap it: `const settled = session; if (settled.isError) return err(); return ok(settled.value);`.",
+                            "Fix: `return ok(session)`; if `session` already is a `Result`, unwrap it: `const settled = session; if (settled.isError) return err(settled.value); return ok(settled.value);`.",
                             "Do not cast it with `as`."
                         ),
                         suggestions: [
@@ -310,7 +326,7 @@ describe("prefer-maybe-promise", () => {
                 output: null
             },
             {
-                name: "rewrites the Promise return type of the file's own async function and imports MaybePromise",
+                name: "rewrites the Promise return type of the file's own async function and imports AsyncResult",
                 code: lines(
                     "export async function load(): Promise<string> {",
                     '    return ok("x");',
@@ -320,38 +336,38 @@ describe("prefer-maybe-promise", () => {
                     {
                         message: messageWith(
                             "`Promise<string>` makes a failure a rejection",
-                            `Fix: \`MaybePromise<string>\` with \`import type { MaybePromise } from "${PACKAGE}";\`, then \`return ok(value)\` from the \`try\` and \`return err()\` from the \`catch\`.`,
+                            `Fix: \`AsyncResult<string>\` with \`import type { AsyncResult } from "${PACKAGE}";\`, then \`return ok(value)\` from the \`try\` and \`return err()\` (or a typed \`return err(error)\`) from the \`catch\`.`,
                             "Do not cast the returns with `as`"
                         )
                     }
                 ],
                 output: lines(
-                    `import type { MaybePromise } from "${PACKAGE}";`,
-                    "export async function load(): MaybePromise<string> {",
+                    `import type { AsyncResult } from "${PACKAGE}";`,
+                    "export async function load(): AsyncResult<string> {",
                     '    return ok("x");',
                     "}"
                 )
             },
             {
-                name: "does not import MaybePromise a second time",
+                name: "does not import AsyncResult a second time",
                 code: lines(
-                    `import type { MaybePromise } from "${PACKAGE}";`,
+                    `import type { AsyncResult } from "${PACKAGE}";`,
                     "export async function load(): Promise<string> {",
                     '    return ok("x");',
                     "}"
                 ),
                 errors: [{ messageId: "replaceWithMaybePromise" }],
                 output: lines(
-                    `import type { MaybePromise } from "${PACKAGE}";`,
-                    "export async function load(): MaybePromise<string> {",
+                    `import type { AsyncResult } from "${PACKAGE}";`,
+                    "export async function load(): AsyncResult<string> {",
                     '    return ok("x");',
                     "}"
                 )
             },
             {
-                name: "does not rewrite to another library's MaybePromise",
+                name: "does not rewrite to another library's AsyncResult",
                 code: lines(
-                    'import type { MaybePromise } from "some-other-library";',
+                    'import type { AsyncResult } from "some-other-library";',
                     "export async function load(): Promise<string> {",
                     '    return ok("x");',
                     "}"
@@ -360,7 +376,7 @@ describe("prefer-maybe-promise", () => {
                 output: null
             },
             {
-                name: "only suggests MaybePromise for an interface method",
+                name: "only suggests AsyncResult for an interface method",
                 code: lines(
                     "export interface Loader {",
                     "    load(): Promise<string>;",
@@ -373,9 +389,9 @@ describe("prefer-maybe-promise", () => {
                             {
                                 messageId: "suggestMaybePromise",
                                 output: lines(
-                                    `import type { MaybePromise } from "${PACKAGE}";`,
+                                    `import type { AsyncResult } from "${PACKAGE}";`,
                                     "export interface Loader {",
-                                    "    load(): MaybePromise<string>;",
+                                    "    load(): AsyncResult<string>;",
                                     "}"
                                 )
                             }
@@ -385,7 +401,7 @@ describe("prefer-maybe-promise", () => {
                 output: null
             },
             {
-                name: "only suggests MaybePromise for a function type",
+                name: "only suggests AsyncResult for a function type",
                 code: "export type LoadFn = () => Promise<string>;",
                 errors: [
                     {
@@ -394,14 +410,60 @@ describe("prefer-maybe-promise", () => {
                             {
                                 messageId: "suggestMaybePromise",
                                 output: lines(
-                                    `import type { MaybePromise } from "${PACKAGE}";`,
-                                    "export type LoadFn = () => MaybePromise<string>;"
+                                    `import type { AsyncResult } from "${PACKAGE}";`,
+                                    "export type LoadFn = () => AsyncResult<string>;"
                                 )
                             }
                         ]
                     }
                 ],
                 output: null
+            },
+            {
+                name: "does not autofix missing catch return to bare err() when AsyncResult declares a typed error E",
+                code: lines(
+                    `import { ok } from "${PACKAGE}";`,
+                    "export async function load(): AsyncResult<string, string> {",
+                    "    try {",
+                    '        return ok("x");',
+                    "    } catch {",
+                    "        log();",
+                    "    }",
+                    "}"
+                ),
+                errors: [{ messageId: "returnFailedPromise" }],
+                output: null
+            },
+            {
+                name: "rewrites an inline typed failed object in a catch to err(error)",
+                code: lines(
+                    `import { err, ok } from "${PACKAGE}";`,
+                    "export async function load(): AsyncResult<string, string> {",
+                    "    try {",
+                    '        return ok("x");',
+                    "    } catch {",
+                    '        return { isError: true, value: "boom" };',
+                    "    }",
+                    "}"
+                ),
+                errors: [
+                    {
+                        message: messageWith(
+                            '`{ isError: true, value: "boom" }` builds the failed result by hand',
+                            `Fix: \`err("boom")\` with \`import { err } from "${PACKAGE}";\``
+                        )
+                    }
+                ],
+                output: lines(
+                    `import { err, ok } from "${PACKAGE}";`,
+                    "export async function load(): AsyncResult<string, string> {",
+                    "    try {",
+                    '        return ok("x");',
+                    "    } catch {",
+                    '        return err("boom");',
+                    "    }",
+                    "}"
+                )
             },
             {
                 name: "rewrites an inline failed object in a catch to err()",
@@ -689,6 +751,33 @@ describe("require-try-catch", () => {
                     "    yield 1;",
                     "}"
                 )
+            },
+            {
+                name: "accepts a direct fromPromise boundary return without outer try/catch",
+                code: lines(
+                    `import { fromPromise } from "${PACKAGE}/result";`,
+                    "export async function load() {",
+                    "    return fromPromise(fetchName(), (cause) => cause);",
+                    "}"
+                )
+            },
+            {
+                name: "accepts an expression-bodied arrow delegating to withTimeout",
+                code: lines(
+                    `import { withTimeout } from "${PACKAGE}/async";`,
+                    "export const load = async () => withTimeout((s) => fetchName(s), 1000);"
+                )
+            },
+            {
+                name: "accepts a multi-statement function whose awaits all go through fromPromise",
+                code: lines(
+                    `import { fromPromise, isErr, ok } from "${PACKAGE}/result";`,
+                    "export async function load() {",
+                    "    const res = await fromPromise(fetchName(), (cause) => cause);",
+                    "    if (isErr(res)) return res;",
+                    "    return ok(res.value);",
+                    "}"
+                )
             }
         ],
         invalid: [
@@ -962,6 +1051,101 @@ describe.each(TYPE_RULES)("$name imports the type it rewrites to", (entry) => {
                 code: lines(`type ${typeName}<T> = T[];`, declaration),
                 errors: [{ messageId }],
                 output: null
+            }
+        ]
+    });
+});
+
+describe("no-double-type-assertion", () => {
+    tester.run(
+        "no-double-type-assertion",
+        pluginRule("no-double-type-assertion"),
+        {
+            valid: [
+                {
+                    name: "allows a single type assertion",
+                    code: "export const x = value as string;"
+                },
+                {
+                    name: "allows casting to const",
+                    code: "export const x = { a: 1 } as const;"
+                }
+            ],
+            invalid: [
+                {
+                    name: "flags casting through unknown",
+                    code: "export const x = value as unknown as string;",
+                    errors: [{ messageId: "noDoubleAssertion" }]
+                },
+                {
+                    name: "flags casting through any",
+                    code: "export const x = (value as any) as number;",
+                    errors: [{ messageId: "noDoubleAssertion" }]
+                }
+            ]
+        }
+    );
+});
+
+describe("no-ignored-result", () => {
+    tester.run("no-ignored-result", pluginRule("no-ignored-result"), {
+        valid: [
+            {
+                name: "allows assigning an AsyncResult call",
+                code: lines(
+                    "export async function save(): AsyncResult<void> { return ok(); }",
+                    "export async function run() {",
+                    "    const res = await save();",
+                    "    return res;",
+                    "}"
+                )
+            },
+            {
+                name: "allows explicitly discarding with void",
+                code: lines(
+                    "export async function save(): AsyncResult<void> { return ok(); }",
+                    "export async function run() {",
+                    "    void (await save());",
+                    "}"
+                )
+            },
+            {
+                name: "allows non-Result function calls as statements",
+                code: lines("function log(msg: string): void {}", 'log("hi");')
+            },
+            {
+                name: "ignores a local ok() helper that is not imported from typebuddy",
+                code: lines("function ok(value: boolean): void {}", "ok(true);")
+            }
+        ],
+        invalid: [
+            {
+                name: "flags an ignored local AsyncResult call",
+                code: lines(
+                    "export async function save(): AsyncResult<void> { return ok(); }",
+                    "export async function run() {",
+                    "    await save();",
+                    "}"
+                ),
+                errors: [{ messageId: "ignoredResult" }]
+            },
+            {
+                name: "flags an ignored imported fromPromise call (including aliases)",
+                code: lines(
+                    `import { fromPromise as fp } from "${PACKAGE}/result";`,
+                    "export async function run() {",
+                    "    await fp(doWork(), () => null);",
+                    "}"
+                ),
+                errors: [{ messageId: "ignoredResult" }]
+            },
+            {
+                name: "flags an ignored local Result arrow function call",
+                code: lines(
+                    "const parse = (): Result<number> => ok(1);",
+                    "parse();"
+                ),
+                errors: [{ messageId: "ignoredResult" }]
             }
         ]
     });

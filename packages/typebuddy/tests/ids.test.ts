@@ -1,6 +1,17 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, expectTypeOf, it } from "vitest";
 
-import { isUlidString, isUuidString } from "../src/type_helper.js";
+import {
+    createBrandGuard,
+    isNonEmptyString,
+    isUlidString,
+    isUuidString
+} from "../src/type_helper.js";
+import type {
+    Brand,
+    NonEmptyString,
+    UlidString,
+    UuidString
+} from "../src/types/index.js";
 
 describe(isUuidString, () => {
     it.each([
@@ -57,5 +68,48 @@ describe(isUlidString, () => {
         ["too long", "01ARZ3NDEKTSV4RRFFQ69G5FAVV"]
     ])("rejects %s", (_name, input) => {
         expect(isUlidString(input)).toBeFalsy();
+    });
+});
+
+describe("branding guards", () => {
+    it("narrows UUID, ULID and non-empty strings to their nominal brands", () => {
+        const rawUuid: unknown = "550e8400-e29b-41d4-a716-446655440000";
+        if (!isUuidString(rawUuid)) {
+            throw new Error("Expected UUID.");
+        }
+        expectTypeOf(rawUuid).toEqualTypeOf<UuidString>();
+        expectTypeOf<UuidString>().toExtend<string>();
+        expectTypeOf<string>().not.toExtend<UuidString>();
+        expectTypeOf<UlidString>().not.toExtend<UuidString>();
+
+        const rawUlid: unknown = "01ARZ3NDEKTSV4RRFFQ69G5FAV";
+        if (!isUlidString(rawUlid)) {
+            throw new Error("Expected ULID.");
+        }
+        expectTypeOf(rawUlid).toEqualTypeOf<UlidString>();
+
+        const rawText: unknown = "hello";
+        expect(isNonEmptyString("   ")).toBeFalsy();
+        expect(isNonEmptyString("")).toBeFalsy();
+        if (!isNonEmptyString(rawText)) {
+            throw new Error("Expected non-empty string.");
+        }
+        expectTypeOf(rawText).toEqualTypeOf<NonEmptyString>();
+    });
+
+    it("builds custom nominal brand guards with createBrandGuard", () => {
+        type UserId = Brand<string, "UserId">;
+        const isUserId = createBrandGuard<string, "UserId">((value) => {
+            return value.startsWith("usr_");
+        });
+
+        const candidate: string = "usr_123";
+        expect(isUserId("ord_123")).toBeFalsy();
+        if (!isUserId(candidate)) {
+            throw new Error("Expected UserId.");
+        }
+
+        expectTypeOf(candidate).toEqualTypeOf<UserId>();
+        expectTypeOf<string>().not.toExtend<UserId>();
     });
 });

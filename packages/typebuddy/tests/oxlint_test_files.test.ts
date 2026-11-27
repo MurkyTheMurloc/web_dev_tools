@@ -8,6 +8,8 @@ type Visitors = Record<string, unknown>;
 type CreatableRule = { create(context: unknown): Visitors };
 
 const RULE_IDS = [
+    "no-double-type-assertion",
+    "no-ignored-result",
     "prefer-guards",
     "prefer-maybe",
     "prefer-maybe-promise",
@@ -143,7 +145,7 @@ describe("typebuddy oxlint rules in test files", () => {
     it("registers every rule this suite checks", () => {
         expect(
             Object.keys(typebuddyOxlintPlugin.rules).toSorted()
-        ).toStrictEqual(["no-useless-undefined", ...RULE_IDS]);
+        ).toStrictEqual(["no-useless-undefined", ...RULE_IDS].toSorted());
     });
 
     describe.each(RULE_IDS)("%s", (ruleId) => {

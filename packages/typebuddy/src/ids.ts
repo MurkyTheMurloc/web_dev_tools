@@ -1,10 +1,16 @@
 /**
- * Identifier-format checks. Their two regex literals are the only module-level
- * allocations in the package, which is the whole reason they live alone: a
- * bundler that keeps anything in a module keeps those too.
+ * Identifier-format checks and brand guards. Their two regex literals are the
+ * only module-level allocations in the package, which is the whole reason they
+ * live alone: a bundler that keeps anything in a module keeps those too.
  */
 
 import { isString } from "./guards.js";
+import type {
+    Brand,
+    NonEmptyString,
+    UlidString,
+    UuidString
+} from "./types/brand.js";
 
 // RFC 9562: versions 1 to 8 with the `10xx` variant, plus the two special
 // values, nil (all zero) and max (all one). Case-insensitive.
@@ -18,23 +24,51 @@ const ulidRegex = /^[0-7][0-9A-HJKMNP-TV-Z]{25}$/i;
 
 /**
  * Returns true if the input is a UUID string: versions 1 to 8, or the nil or
- * max UUID, in either case.
+ * max UUID, in either case. Narrows to the branded `UuidString` type.
  *
- * @param {string} input - The input to check.
+ * @param {unknown} input - The input to check.
  * @returns {boolean} True if the input is a UUID string.
  */
-function isUuidString(input: unknown): input is string {
+function isUuidString(input: unknown): input is UuidString {
     return isString(input) && uuidRegex.test(input);
 }
 
 /**
- * Returns true if the input is a ULID string, in either case.
+ * Returns true if the input is a ULID string, in either case. Narrows to the
+ * branded `UlidString` type.
  *
- * @param {string} input - The input to check.
+ * @param {unknown} input - The input to check.
  * @returns {boolean} True if the input is a ULID string.
  */
-function isUlidString(input: unknown): input is string {
-    return typeof input === "string" && ulidRegex.test(input);
+function isUlidString(input: unknown): input is UlidString {
+    return isString(input) && ulidRegex.test(input);
 }
 
-export { isUlidString, isUuidString };
+/**
+ * Returns true if the input is a string containing at least one non-whitespace
+ * character. Narrows to the branded `NonEmptyString` type.
+ *
+ * @param {unknown} input - The input to check.
+ * @returns {boolean} True if the input is a non-empty string.
+ */
+function isNonEmptyString(input: unknown): input is NonEmptyString {
+    return isString(input) && input.trim() !== "";
+}
+
+/**
+ * Turns a boolean validation predicate into a type guard that narrows `T` to a
+ * nominal `Brand<T, Tag>` without any unsafe cast at call sites.
+ *
+ * @param {(value: T) => boolean} predicate - Runtime check that must hold.
+ * @returns {(value: T) => value is Brand<T, Tag>} A narrowing guard for the
+ *   brand.
+ */
+function createBrandGuard<T, Tag extends string>(
+    predicate: (value: T) => boolean
+): (value: T) => value is Brand<T, Tag> {
+    return (value: T): value is Brand<T, Tag> => {
+        return predicate(value);
+    };
+}
+
+export { createBrandGuard, isNonEmptyString, isUlidString, isUuidString };

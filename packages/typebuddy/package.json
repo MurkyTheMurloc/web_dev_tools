@@ -42,6 +42,11 @@
             "import": "./dist/result.js",
             "default": "./dist/result.js"
         },
+        "./async": {
+            "types": "./src/async.ts",
+            "import": "./dist/async.js",
+            "default": "./dist/async.js"
+        },
         "./parse": {
             "types": "./src/parse.ts",
             "import": "./dist/parse.js",

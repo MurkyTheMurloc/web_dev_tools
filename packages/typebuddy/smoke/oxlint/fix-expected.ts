@@ -2,7 +2,7 @@ import type {
     Maybe,
     Nullable,
     Optional,
-    MaybePromise
+    AsyncResult
 } from "@murky-web/typebuddy";
 import { err, ok } from "@murky-web/typebuddy";
 
@@ -10,7 +10,7 @@ export type OptionalCandidate = Optional<string>;
 export type MaybeCandidate = Maybe<string>;
 export type NullableCandidate = Nullable<string>;
 
-export async function getGreeting(): MaybePromise<string> {
+export async function getGreeting(): AsyncResult<string> {
     try {
         return "hello";
     } catch {
@@ -18,7 +18,7 @@ export async function getGreeting(): MaybePromise<string> {
     }
 }
 
-export async function complete(): MaybePromise<void> {
+export async function complete(): AsyncResult<void> {
     try {
         return ok();
     } catch {
@@ -26,7 +26,7 @@ export async function complete(): MaybePromise<void> {
     }
 }
 
-export async function loadGreeting(): MaybePromise<string> {
+export async function loadGreeting(): AsyncResult<string> {
     try {
         return "hi";
     } catch {
@@ -42,7 +42,7 @@ export async function fromObject(): MaybePromise<string> {
     }
 }
 
-export async function wrapMe(): MaybePromise<string> {
+export async function wrapMe(): AsyncResult<string> {
     return "wrapped";
 }
 
@@ -50,7 +50,7 @@ declare function log(message: string): void;
 
 // A catch whose last statement has no semicolon: the inserted `return err()`
 // used to be glued onto it, producing code that does not parse.
-export async function oneLineCatch(): MaybePromise<string> {
+export async function oneLineCatch(): AsyncResult<string> {
     try {
         return "one-line";
     } catch {
@@ -61,7 +61,7 @@ export async function oneLineCatch(): MaybePromise<string> {
 
 // The wrapping fix used to strip leading whitespace on every line, which
 // silently rewrote the contents of template literals.
-export async function keepsTemplate(): MaybePromise<string> {
+export async function keepsTemplate(): AsyncResult<string> {
     return `multi
   line template`;
 }

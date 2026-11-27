@@ -5,6 +5,7 @@
  * and friends) so a caller can pull in one group instead of all of them.
  */
 
+export * from "./async.js";
 export * from "./collections.js";
 export * from "./empty.js";
 export * from "./guards.js";
